@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Secrets — aucun fichier d'environnement reel ne doit etre versionne (SEC-01)
+.env
+.env.*
+!.env.example
+
+.DS_Store
+Thumbs.db
+.vercel
+/tests/.tmp/

@@ -1,0 +1,379 @@
+@import "tailwindcss";
+
+/* ===========================================================================
+   study. — jetons de design
+   Source : cahier des charges v2.0, chapitre 03 « Direction artistique exacte ».
+   Aucune valeur de couleur ne doit etre ecrite en dur ailleurs que dans ce bloc.
+   =========================================================================== */
+
+@theme {
+  /* -- Couleurs ---------------------------------------------------------- */
+  --color-fond: #faf9f9;          /* fond general */
+  --color-surface: #ffffff;       /* surfaces et champs */
+  --color-encre: #19191d;         /* texte principal / boutons */
+  --color-encre-faible: #60606a;  /* texte secondaire */
+  --color-rose-selection: #f6dce7;
+  --color-rose-decor: #e9b6c8;
+  --color-accent: #9f315c;        /* accent fonctionnel fonce */
+  --color-bordure: #e5e3e7;
+  --color-succes: #216847;
+  --color-erreur: #b42335;
+
+  /* Etats derives, volontairement sobres */
+  --color-succes-fond: #eef5f1;
+  --color-erreur-fond: #fbeef0;
+  --color-survol: #f2f0f2;
+
+  /* -- Typographies (ch. 03, v2.0) ---------------------------------------
+     La v2.0 change la règle : le site public est en Inter, titres gras
+     700/800 à espacement resserré. Le serif Source Serif 4 est réservé au
+     mot-symbole « study. » et aux titres DANS l'application, conformément
+     aux trois planches validées.
+     ---------------------------------------------------------------------- */
+  --font-texte: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* Titres du site public : la même famille que le texte, en gras resserré. */
+  --font-titre: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* Mot-symbole et titres applicatifs. */
+  --font-serif: "Source Serif 4", "Source Serif Pro", Georgia, "Times New Roman", serif;
+
+  --text-aide: 0.8125rem;      /* 13 px */
+  --text-aide--line-height: 1.125rem;   /* 18 px */
+  --text-tableau: 0.875rem;    /* 14 px */
+  --text-tableau--line-height: 1.25rem; /* 20 px */
+  --text-corps: 1rem;          /* 16 px */
+  --text-corps--line-height: 1.5rem;    /* 24 px */
+  --text-h2-app: 1.5rem;       /* 24 px */
+  --text-h2-app--line-height: 1.875rem; /* 30 px */
+  --text-h1-app: 2rem;         /* 32 px */
+  --text-h1-app--line-height: 2.375rem; /* 38 px */
+  --text-h1-public-mobile: 2.375rem;    /* 38 px */
+  --text-h1-public-mobile--line-height: 2.625rem; /* 42 px */
+  --text-h1-public: 4rem;      /* 64 px */
+  --text-h1-public--line-height: 4.25rem; /* 68 px */
+
+  /* -- Geometrie : grille de 8 px, demi-pas de 4 ------------------------- */
+  --radius-champ: 8px;   /* champs et boutons */
+  --radius-carte: 12px;  /* cartes */
+
+  --shadow-carte: 0 4px 20px rgba(25, 25, 29, 0.05);
+
+  /* -- Composition ------------------------------------------------------- */
+  --spacing-nav-laterale: 224px;
+  --spacing-entete: 64px;
+  --spacing-cible: 44px;      /* hauteur mini champs / boutons / cible tactile */
+  --spacing-lecture: 760px;   /* largeur de lecture d'un cours */
+  --spacing-app: 1280px;      /* largeur utile application */
+  --spacing-landing: 1200px;  /* largeur landing */
+}
+
+/* ===========================================================================
+   Polices auto-hebergees (licences SIL OFL conservees dans public/fonts/).
+   Les fichiers .woff2 sont deposes par la procedure decrite dans
+   public/fonts/README.md. Tant qu'ils sont absents, la pile de repli
+   ci-dessus s'applique : la mise en page reste correcte, le rendu differe.
+   =========================================================================== */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url("/fonts/inter-variable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/source-serif-4-variable.woff2") format("woff2");
+}
+
+/* ===========================================================================
+   Base
+   =========================================================================== */
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-fond);
+    color: var(--color-encre);
+    font-family: var(--font-texte);
+    font-size: var(--text-corps);
+    line-height: var(--text-corps--line-height);
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Titres du site public : Inter gras, espacement légèrement resserré. */
+  h1, h2, h3, h4 {
+    font-family: var(--font-titre);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  h1 {
+    font-weight: 800;
+    letter-spacing: -0.035em;
+  }
+
+  p, li, td, th, label, input, textarea, select, button {
+    font-family: var(--font-texte);
+  }
+
+  /* Focus visible obligatoire (WCAG 2.2 AA — ch. 19). */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Aucune animation permanente ; tout mouvement est coupe sur demande. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  [hidden] { display: none !important; }
+}
+
+@layer utilities {
+  /* Lien d'evitement : premier element focusable de chaque page. */
+  .lien-evitement {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+    background: var(--color-surface);
+    color: var(--color-encre);
+    padding: 12px 16px;
+    border: 1px solid var(--color-bordure);
+    border-radius: var(--radius-champ);
+  }
+  .lien-evitement:focus {
+    left: 16px;
+    top: 16px;
+  }
+}
+
+/* ===========================================================================
+   Chorégraphie de la landing — chapitre 34.
+
+   Deux principes tiennent tout ce bloc :
+   1. Le texte est present dans le HTML rendu serveur et reste lisible si le
+      JavaScript echoue. Les entrees au defilement sont donc pilotees par un
+      composant client qui pose lui-meme l etat initial : sans JavaScript,
+      aucune classe n est ajoutee et tout reste visible.
+   2. prefers-reduced-motion supprime deplacements et sequences automatiques,
+      affiche l etat final et conserve les controles.
+   =========================================================================== */
+
+@layer components {
+  /* Mot-symbole : seule occurrence du serif sur le site public (ch. 03). */
+  .mot-symbole {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  /* Titres a l interieur de l application : serif, conformement aux planches. */
+  .titre-app {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  /* --- Hero : revele ligne par ligne, 24 px, 650 ms, decalage 100 ms ------ */
+  .hero-ligne {
+    display: block;
+    animation: hero-monte 650ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
+    animation-delay: var(--delai, 0ms);
+  }
+
+  @keyframes hero-monte {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* --- Surlignage rose : extension de gauche a droite, scaleX 500 ms ----- */
+  .surlignage {
+    position: relative;
+    display: inline-block;
+    isolation: isolate;
+  }
+
+  .surlignage::before {
+    content: "";
+    position: absolute;
+    inset: 0.06em -0.18em 0.1em -0.18em;
+    z-index: -1;
+    background: var(--color-rose-selection);
+    border-radius: 4px;
+    transform: scaleX(0);
+    transform-origin: left center;
+    animation: surligne 500ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
+    animation-delay: var(--delai, 0ms);
+  }
+
+  @keyframes surligne {
+    to { transform: scaleX(1); }
+  }
+
+  /* --- Entree des sections : 20 px, 550 ms, une seule fois --------------- */
+  /* L etat masque n est applique que par le composant client, apres montage. */
+  [data-apparition="prete"] {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  [data-apparition="visible"] {
+    opacity: 1;
+    transform: none;
+    transition: opacity 550ms ease-out, transform 550ms cubic-bezier(0.16, 0.84, 0.44, 1);
+    transition-delay: var(--delai, 0ms);
+  }
+
+  /* --- Boutons et liens : 160 ms, fleche deplacee de 4 px ---------------- */
+  .bouton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: var(--spacing-cible);
+    padding: 0 24px;
+    border-radius: var(--radius-champ);
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 160ms ease, color 160ms ease,
+                border-color 160ms ease, box-shadow 160ms ease;
+  }
+
+  .bouton .fleche {
+    transition: transform 160ms ease;
+  }
+
+  .bouton:hover .fleche,
+  .bouton:focus-visible .fleche {
+    transform: translateX(4px);
+  }
+
+  .bouton-noir {
+    background: var(--color-encre);
+    color: var(--color-surface);
+    border: 1px solid var(--color-encre);
+  }
+
+  .bouton-noir:hover {
+    background: #000;
+    box-shadow: var(--shadow-carte);
+  }
+
+  .bouton-rose {
+    background: var(--color-rose-selection);
+    color: var(--color-encre);
+    border: 1px solid var(--color-rose-selection);
+  }
+
+  .bouton-rose:hover {
+    background: var(--color-rose-decor);
+  }
+
+  .bouton-clair {
+    background: var(--color-surface);
+    color: var(--color-encre);
+    border: 1px solid var(--color-bordure);
+  }
+
+  .bouton-clair:hover {
+    background: var(--color-survol);
+  }
+
+  /* --- FAQ : ouverture fluide, 220 ms ------------------------------------ */
+  .faq-corps {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 220ms ease;
+  }
+
+  .faq-corps[data-ouvert="true"] {
+    grid-template-rows: 1fr;
+  }
+
+  .faq-corps > div {
+    overflow: hidden;
+  }
+
+  /* --- Onglets d usage : soulignement mobile, 220 ms --------------------- */
+  .onglet-souligne {
+    position: relative;
+    transition: color 220ms ease;
+  }
+
+  .onglet-souligne::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--color-encre);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 220ms ease;
+  }
+
+  .onglet-souligne[aria-selected="true"]::after {
+    transform: scaleX(1);
+  }
+
+  /* Fondu de l apercu lie a l onglet. */
+  .apercu-fondu {
+    animation: fondu 220ms ease both;
+  }
+
+  @keyframes fondu {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* --- Sequences de demonstration ---------------------------------------- */
+  .etape-sequence {
+    transition: opacity 220ms ease, transform 220ms ease, background-color 220ms ease;
+  }
+}
+
+/* Reduction des mouvements : etat final, controles conserves (ch. 34). */
+@media (prefers-reduced-motion: reduce) {
+  .hero-ligne,
+  .surlignage::before,
+  .apercu-fondu {
+    animation: none !important;
+  }
+
+  .surlignage::before {
+    transform: scaleX(1) !important;
+  }
+
+  [data-apparition="prete"],
+  [data-apparition="visible"] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .faq-corps {
+    transition: none !important;
+  }
+}
