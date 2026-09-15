@@ -26,7 +26,7 @@ const PARCOURS_A_AUTOMATISER = [
   ["Eleve", "ouvrir sa correction et l'enregistrer pour revision"],
   ["Groupe", "ecrire a deux, recharger, retrouver le brouillon partage"],
   ["Groupe", "retirer un membre et verifier sa revocation"],
-  ["Gestion", "facture Stripe test, paiement simule, webhook rejoue, un seul rapprochement"],
+  ["Gestion", "creer un devis, un contrat, une facture, et rapprocher un virement"],
   ["Recette visuelle", "landing et vues 01-18 a 390, 768 et 1440 px"],
   ["Accessibilite", "parcours principal au clavier et au lecteur d'ecran"],
 ];

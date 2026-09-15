@@ -215,11 +215,22 @@ insert into study.quiz_answer_keys (organization_id, quiz_id, answers) values
 insert into study.buyers (id, legal_name, siret, billing_email) values
   ('aaaaaaaa-aaaa-4000-8000-000000000001', 'Region de recette', '12345678901234', 'facturation@exemple-recette.test');
 
+-- La vente passe desormais par un devis, et par lui seul : un contrat actif
+-- sans devis accepte est refuse par la base (migration 0012).
+insert into study.quotes
+  (id, organization_id, buyer_id, reference, state, academic_year_label,
+   agreed_headcount, amount_cents, accepted_at, accepted_by_name, accepted_snapshot) values
+  ('aaaaaaaa-dddd-4000-8000-000000000002', 'aaaaaaaa-0000-4000-8000-000000000001',
+   'aaaaaaaa-aaaa-4000-8000-000000000001', 'DEV-RECETTE-001', 'accepte', '2026-2027',
+   842, 252600, now(), 'Proviseur de recette',
+   '{"effectif": 842, "montant_centimes": 252600, "version": 1}'::jsonb);
+
 insert into study.contracts
-  (id, organization_id, buyer_id, reference, state, billing_adapter,
+  (id, organization_id, buyer_id, quote_id, reference, state, billing_adapter,
    service_starts_on, service_ends_on, agreed_headcount, amount_cents) values
   ('aaaaaaaa-bbbb-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-000000000001',
-   'aaaaaaaa-aaaa-4000-8000-000000000001', 'CTR-RECETTE-001', 'actif', 'manual_public',
+   'aaaaaaaa-aaaa-4000-8000-000000000001', 'aaaaaaaa-dddd-4000-8000-000000000002',
+   'CTR-RECETTE-001', 'actif', 'manual_public',
    '2026-09-01', '2027-08-31', 842, 252600);
 
 insert into study.invoice_refs
@@ -254,3 +265,12 @@ insert into study_prive.auth_aliases
    'samir.nguyen', 'e3d9a6c2f7b418e5@eleves.exemple-recette.test', 'alias_technique'),
   ('aaaaaaaa-0000-4000-8000-000000000001', 'aaaaaaaa-1111-4000-8000-000000000002',
    'helene.martin', 'martin.professeur@exemple-recette.test', 'email_professionnel');
+
+-- --- Compte exploitant (ch. 13 de ce depot, migration 0013) --------------------
+-- L equipe editeur du jeu de recette recoit la capacite d administration, pour
+-- que les tests puissent verifier ce qu elle peut faire ET ce qu elle ne peut
+-- pas faire. Aucun mot de passe n est pose ici : le compte reel est cree par
+-- « npm run bootstrap:editeur », qui lit le secret dans l environnement.
+update study_prive.editor_staff
+   set capabilities = array['administration', 'commercial', 'assistance']
+ where profile_id = 'eeeeeeee-1111-4000-8000-000000000001';

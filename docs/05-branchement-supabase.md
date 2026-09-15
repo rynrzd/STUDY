@@ -13,10 +13,10 @@ aucun projet n'est créé, aucun abonnement n'est souscrit.
 | Connexion | Supabase Auth via serveur | Activation, MFA, reset et révocation testés | **bloqué** — projet absent |
 | Sessions privées | `study_prive.sessions` | Cookie opaque, aucun jeton dans le navigateur | schéma fait, **flux bloqué** |
 | Fichiers | Supabase Storage privé + worker antivirus | Fichier propre accessible, infecté bloqué | schéma fait, **stockage absent** |
-| Emails adultes | SMTP personnalisé | Invitation et récupération réellement reçues | **bloqué** — fournisseur non choisi |
+| Courrier électronique | **retiré** | — | study. n'envoie aucun message (voir `08-sans-courrier.md`) |
 | Imports et exports | Worker Node + file PostgreSQL | Reprise après interruption sans doublon | file **faite et testée**, gestionnaires à écrire |
 | Brouillon partagé | Service WebSocket dédié | Deux navigateurs éditent et sauvegardent | **non commencé** |
-| Paiement privé | Stripe Invoicing test puis live | Webhook, rapprochement et contrat cohérents | invariants **testés**, intégration absente |
+| Paiement privé | **retiré** | — | Vente sur devis uniquement, aucun prestataire de paiement |
 | Paiement public | Suivi commande et référence Chorus Pro | Facture déposée ≠ facture payée | modèle **fait**, suivi à écrire |
 
 Un point mérite d'être dit franchement : **tout le reste dépend du premier
@@ -39,7 +39,6 @@ plafonds de dépense **avant** de souscrire. Ne rien acheter sans autorisation.
   incluse — le RPO en dépend directement ;
 - fournisseur du service conteneurisé pour le worker et la collaboration, qui
   n'est pas Supabase et n'est pas une fonction serverless ;
-- fournisseur SMTP et domaine d'envoi ;
 - plafond de dépense mensuel et alerte associée.
 
 ### 2. Deux projets, jamais un seul
@@ -70,7 +69,7 @@ contenu a changé depuis : une migration appliquée ne se réécrit pas, on en
 ajoute une corrective.
 
 Le schéma est déjà séparé en deux : `study` pour les données pédagogiques,
-`study_prive` pour les sessions, jetons, alias, jobs et accusés de webhook.
+`study_prive` pour les sessions, jetons, alias et file de travaux.
 Ni `anon` ni `authenticated` n'ont le moindre droit sur `study_prive`.
 
 ### 4. Configurer Auth
@@ -113,7 +112,38 @@ Trois règles qui ne sont pas techniques mais qui comptent autant :
 3. La confirmation technique d'un alias créé par l'administration **ne doit pas
    être décrite comme la vérification d'une boîte mail**. Ce serait faux.
 
-Les adultes, eux, utilisent leur adresse professionnelle vérifiée.
+**Cette règle vaut désormais pour tout le monde**, adultes compris : study.
+n'envoie aucun courrier, donc personne n'a d'adresse dans le produit. Un
+enseignant se connecte comme un élève, avec l'identifiant que son établissement
+lui a remis. Voir `08-sans-courrier.md`.
+
+### 5 bis. Créer le compte exploitant
+
+Un seul chemin, et il passe par un script exécuté à la main :
+
+```bash
+STUDY_EDITEUR_IDENTIFIANT=rayan \
+STUDY_EDITEUR_MOT_DE_PASSE='une phrase de passe longue et unique' \
+npm run bootstrap:editeur -- --prenom Rayan --nom Nom
+```
+
+Le secret passe par l'environnement, **jamais en argument** : un argument de
+ligne de commande reste dans l'historique du shell et dans la liste des
+processus de la machine.
+
+Le script est idempotent : relancé, il ne recrée rien et ne réinitialise aucun
+mot de passe. Il refuse un secret de moins de 15 caractères (AUTH-01), un secret
+contenant l'identifiant, ou une suite trop courante. Il n'affiche jamais le mot
+de passe, et ne le journalise pas.
+
+Ce compte contrôle tout l'opérationnel sur tous les établissements. Il
+**n'atteint pas** les copies, corrections, notes personnelles et messages
+d'entraide : cela passe par un accès d'assistance approuvé par un administrateur
+du lycée concerné.
+
+**Enrôler la MFA à la première connexion.** Sans second facteur vérifié sur la
+session, ce compte ne peut rien administrer — les politiques l'exigent, et un
+test le vérifie.
 
 ### 6. Connexion BFF, pas à pas
 
@@ -150,7 +180,7 @@ Points de vigilance, tous déjà pris en compte dans le schéma :
   chaque requête. Un booléen « MFA activée » sur le compte ne prouve rien
   (test T16).
 
-### 7. Storage et SMTP
+### 7. Storage
 
 Quatre buckets, **tous privés** : `course-materials`, `student-submissions`,
 `import-quarantine`, `generated-exports`. Leur liste de référence est en base
@@ -175,9 +205,8 @@ politique la laissait écrire la ligne.
 Pourquoi ce détour plutôt qu'un dépôt classique : un fichier de 25 ou 50 Mo ne
 doit pas transiter dans une fonction web dont la limite de corps est inférieure.
 
-SMTP : le service par défaut d'un hébergeur n'est pas une solution de
-production. Configurer le domaine d'envoi, SPF/DKIM, une politique DMARC
-adaptée, et **désactiver les réécritures de liens** qui cassent l'activation.
+Aucun réglage SMTP : study. n'envoie aucun message. Les invitations et les
+réinitialisations se font de la main à la main — voir `08-sans-courrier.md`.
 
 ### 8. Recette puis production
 
@@ -202,9 +231,7 @@ chacune : l'écran à ouvrir, et le résultat attendu.
 | Créer le projet **production** | idem | Référence notée, distincte |
 | Relever les clés | Project settings → API | Clés saisies dans le gestionnaire d'environnement, **jamais collées dans une conversation** |
 | Vérifier le plan de sauvegarde | Project settings → Database → Backups | Savoir si PITR est inclus, et le noter |
-| Choisir le SMTP | Fournisseur retenu | Domaine d'envoi vérifié, SPF/DKIM posés |
 | Choisir l'hébergeur du worker | Fournisseur conteneur UE | Région confirmée, coût mensuel connu |
-| Ouvrir Stripe | dashboard.stripe.com | Compte en mode test, clés test relevées |
 
 Une fois la première ligne de ce tableau franchie, `npm run diagnostic` dira
 exactement ce qui reste à renseigner, sans jamais afficher de valeur.
@@ -217,5 +244,5 @@ exactement ce qui reste à renseigner, sans jamais afficher de valeur.
 - Laisser une politique « tout autoriser » temporaire.
 - Copier un jeu de production dans une préversion.
 - Considérer qu'une fonction est active parce qu'un SDK est installé :
-  l'antivirus, les tâches planifiées et les emails ne le sont pas.
+  l'antivirus et les tâches planifiées ne le sont pas.
 - Écrire quelque part qu'une fonctionnalité marche parce que le build est vert.

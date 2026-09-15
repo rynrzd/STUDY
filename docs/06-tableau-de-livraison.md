@@ -8,7 +8,10 @@ Le ch. 42 ajoute une règle que ce tableau respecte : « Ne pas utiliser
 "terminé" pour une intégration dont les identifiants manquent. » Aucun module
 n'est donc marqué autrement que par ce qui a réellement été exécuté.
 
-Date : 14 septembre 2026. Cahier des charges v2.0.
+Date : 15 septembre 2026. Cahier des charges v2.0, plus trois décisions prises
+par Rayan le 15 septembre : **vente sur devis uniquement** (retrait de Stripe),
+**aucun courrier électronique**, **hébergement Vercel**. Elles sont consignées
+dans `01-decisions-architecture.md`.
 
 ## Comment lire ce tableau
 
@@ -30,7 +33,7 @@ Date : 14 septembre 2026. Cahier des charges v2.0.
 | Chorégraphie de la landing (ch. 34) | testé en local | composants `landing/`, dégradation sans JS, `prefers-reduced-motion` | 14/09 |
 | 12 pages publiques (ch. 02) | testé en local | les 13 routes répondent 200, `/inexistant` répond 404 | 14/09 |
 | Page 404 utile | testé en local | route `/inexistant` → 404 avec actions | 14/09 |
-| Formulaire établissement (ch. 05) | **bloqué** | affiché, envoi désactivé et expliqué — base et SMTP absents | — |
+| Formulaire établissement (ch. 05) | **bloqué** | affiché, envoi désactivé et expliqué — base absente | — |
 | Démonstration isolée (ch. 05) | **à faire** | page présente, parcours non construits | — |
 | Pages légales (ch. 26) | **bloqué** | structure écrite, identité de l'éditeur non arrêtée | — |
 
@@ -38,9 +41,9 @@ Date : 14 septembre 2026. Cahier des charges v2.0.
 
 | Module | État | Preuve | Date |
 |---|---|---|---|
-| Schéma complet (ch. 21) | testé en local | 11 migrations, 53 tables `study` + 7 `study_prive` | 14/09 |
+| Schéma complet (ch. 21) | testé en local | 13 migrations, 53 tables `study` + 6 `study_prive` | 15/09 |
 | Séparation du schéma privé (ch. 36 §3) | testé en local | test « refus par défaut » : `permission denied` pour un admin lycée | 14/09 |
-| Politiques RLS (ch. 24) | testé en local | 97 politiques, `npm run test:rls` → **38/38** | 14/09 |
+| Politiques RLS (ch. 24) | testé en local | 118 politiques, `npm run test:rls` → **48/48** | 15/09 |
 | Invariants SQL (ch. 21) | testé en local | les six invariants couverts par des tests | 14/09 |
 | Activation bloquante (ch. 37) | testé en local | T07, T07b | 14/09 |
 | MFA effective par session (ch. 37) | testé en local | T16, T16b | 14/09 |
@@ -75,11 +78,22 @@ Date : 14 septembre 2026. Cahier des charges v2.0.
 | Module | État | Preuve | Date |
 |---|---|---|---|
 | Modèle devis / contrat / facture (ch. 07) | testé en local | états séparés, contraintes testées | 14/09 |
-| Invariants de paiement (ch. 08) | testé en local | T14, T14b, T14c | 14/09 |
-| Intégration Stripe | **à faire** | aucune clé, aucun appel | — |
+| Invariants de paiement | testé en local | T14 (aucun mouvement sans preuve), T14b, T14c | 15/09 |
+| Paiement par prestataire | **retiré** | décision du 15/09 : vente sur devis uniquement | 15/09 |
 | Suivi Chorus Pro manuel | **à faire** | champs présents, suivi non écrit | — |
 
-## Exploitation
+## Exploitation du service
+
+| Module | État | Preuve | Date |
+|---|---|---|---|
+| Compte exploitant : périmètre complet | testé en local | 4 tests : deux lycées, création de lycée, commercial, journal | 15/09 |
+| Compte exploitant : frontière du travail des élèves | testé en local | 3 tests : 12 tables fermées en lecture, écriture refusée, garde-fou sur les politiques | 15/09 |
+| Compte exploitant : second facteur obligatoire | testé en local | 1 test : sans MFA, ni lecture ni écriture | 15/09 |
+| Assistance : demandée, pas auto-accordée | testé en local | 1 test : l'auto-approbation est refusée | 15/09 |
+| Script de bootstrap | **bloqué** | écrit, idempotent, politique de mot de passe appliquée — aucun fournisseur d'identité | — |
+| Suppression du courrier électronique | fait | groupe SMTP retiré de la configuration, `08-sans-courrier.md` | 15/09 |
+
+## Outillage et procédures
 
 | Module | État | Preuve | Date |
 |---|---|---|---|
@@ -99,8 +113,8 @@ npm run typecheck   → 0 erreur
 npm run lint        → 0 erreur, 0 avertissement
 npm run build       → build de production réussi, 14 routes
 npm run test:unite  → 45 tests, 45 réussis
-npm run test:rls    → 38 tests, 38 réussis
-npm run diagnostic  → sortie 1 : groupes manquants nommés, aucune valeur affichée
+npm run test:rls    → 48 tests, 48 réussis
+npm run diagnostic  → groupes manquants nommés, aucune valeur affichée
 ```
 
 ## Go / no-go du chapitre 42
@@ -113,13 +127,14 @@ npm run diagnostic  → sortie 1 : groupes manquants nommés, aucune valeur affi
 | Remise persistante | **non** : aucune base, aucune remise possible |
 | Stockage privé | **non** : aucun stockage |
 | Jobs reprenables | **vérifié en local** : bail, reprise après crash, idempotence |
-| Emails reçus | **non** : aucun fournisseur |
-| Facturation test cohérente | **non** : aucune intégration |
+| Emails reçus | **sans objet** : study. n'envoie aucun courrier (décision du 15/09) |
+| Facturation test cohérente | **sans objet** : vente sur devis, aucun prestataire (décision du 15/09) |
 | Restauration mesurée | **non** : aucune sauvegarde |
 | Animateurs / modérateurs désignés, cadre contractuel | **non** : décisions ouvertes |
 
-**Go/no-go : non.** Quatre critères sur dix sont hors d'atteinte tant qu'aucun
-projet Supabase n'existe. Le ch. 42 le dit mieux que je ne le ferais : « Une
+**Go/no-go : non.** Deux critères sont désormais sans objet, mais trois restent
+hors d'atteinte tant qu'aucun projet Supabase n'existe : remise persistante,
+stockage privé, restauration mesurée. Le ch. 42 le dit mieux que je ne le ferais : « Une
 simple landing belle et un build vert ne valident pas ce passage. »
 
 ## Le chemin critique

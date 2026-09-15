@@ -21,8 +21,13 @@ const environnement = z.enum(["developpement", "recette", "production"]);
 
 /**
  * Ce qui est exigé en permanence. Le reste est exigé par fonctionnalité :
- * l'absence de SMTP n'empêche pas de travailler sur les cours, elle empêche
- * d'envoyer une invitation — et le produit doit le dire, pas le simuler.
+ * l'absence de worker n'empêche pas de consulter un cours, elle empêche
+ * d'importer une classe — et le produit doit le dire, pas le simuler.
+ *
+ * Le courrier électronique ne figure plus ici : study. n'envoie aucun message.
+ * Élèves comme adultes se connectent avec un identifiant remis par leur
+ * établissement, et une réinitialisation se fait sur place. Voir ch. 37 et
+ * docs/08-sans-courrier.md.
  */
 const schemaBase = z.object({
   APP_ORIGIN: z.string().url("APP_ORIGIN doit etre une URL absolue"),
@@ -57,23 +62,20 @@ const schemaWorker = z.object({
   WORKER_DATABASE_URL: z.string().startsWith("postgres"),
 });
 
-const schemaEmail = z.object({
-  SMTP_HOST: z.string().min(1),
-  SMTP_USER: z.string().min(1),
-  SMTP_PASSWORD: z.string().min(1),
-  EMAIL_FROM: z.string().email(),
-  SUPPORT_EMAIL: z.string().email(),
-});
-
 const schemaCollaboration = z.object({
   COLLAB_ORIGIN: z.string().url(),
   COLLAB_TICKET_KEY: z.string().min(32),
 });
 
+/**
+ * Facturation — décision du 15 septembre 2026 : **vente sur devis uniquement**.
+ *
+ * Plus aucun prestataire de paiement, donc plus aucune clé de prestataire, plus
+ * aucun webhook entrant, et plus aucun secret de signature à protéger. Il ne
+ * reste qu'un choix de circuit, qui n'est pas un secret.
+ */
 const schemaFacturation = z.object({
-  BILLING_MODE: z.enum(["manual_public", "external_invoice", "stripe_invoice"]),
-  STRIPE_SECRET_KEY: z.string().startsWith("sk_"),
-  STRIPE_WEBHOOK_SECRET: z.string().startsWith("whsec_"),
+  BILLING_MODE: z.enum(["manual_public", "external_invoice"]),
 });
 
 const schemaTaches = z.object({
@@ -90,7 +92,6 @@ export type Groupe =
   | "donnees"
   | "sessions"
   | "worker"
-  | "email"
   | "collaboration"
   | "facturation"
   | "taches"
@@ -101,7 +102,6 @@ const SCHEMAS: Record<Groupe, z.ZodObject<z.ZodRawShape>> = {
   donnees: schemaDonnees,
   sessions: schemaSessions,
   worker: schemaWorker,
-  email: schemaEmail,
   collaboration: schemaCollaboration,
   facturation: schemaFacturation,
   taches: schemaTaches,
@@ -113,9 +113,8 @@ export const LIBELLES: Record<Groupe, string> = {
   donnees: "Base de données et identité",
   sessions: "Chiffrement du magasin de sessions",
   worker: "Worker et file de travaux",
-  email: "Courrier transactionnel (adultes)",
   collaboration: "Service temps réel du brouillon partagé",
-  facturation: "Facturation privée",
+  facturation: "Facturation sur devis",
   taches: "Tâches planifiées",
   alias: "Alias techniques élèves",
 };

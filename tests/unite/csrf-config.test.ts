@@ -177,9 +177,9 @@ test("un message derreur de configuration ne contient jamais de valeur", () => {
 test("une cle privilegiee exposee au navigateur bloque le demarrage", () => {
   for (const nom of [
     "NEXT_PUBLIC_SUPABASE_SECRET_KEY",
-    "NEXT_PUBLIC_SMTP_PASSWORD",
+    "NEXT_PUBLIC_SESSION_ENCRYPTION_KEY",
     "NEXT_PUBLIC_WORKER_DATABASE_URL",
-    "NEXT_PUBLIC_STRIPE_SECRET_KEY",
+    "NEXT_PUBLIC_CRON_SECRET",
   ]) {
     const source = { ...BASE_VALIDE, [nom]: "peu importe" };
     assert.deepEqual(clesPubliquesSuspectes(source), [nom]);
@@ -200,7 +200,7 @@ test("un groupe incomplet rend sa fonction indisponible, sans empecher le demarr
   assert.doesNotThrow(() => verifierAuDemarrage(BASE_VALIDE));
 
   assert.equal(groupeUtilisable("base", BASE_VALIDE), true);
-  assert.equal(groupeUtilisable("email", BASE_VALIDE), false);
+  assert.equal(groupeUtilisable("worker", BASE_VALIDE), false);
   assert.equal(groupeUtilisable("donnees", BASE_VALIDE), false);
 
   const etat = diagnostiquer(BASE_VALIDE);
@@ -209,16 +209,16 @@ test("un groupe incomplet rend sa fonction indisponible, sans empecher le demarr
 });
 
 test("le diagnostic nexpose aucune valeur", () => {
-  const secret = "sk_test_valeur_qui_ne_doit_pas_sortir";
+  const secret = "cle-privilegiee-qui-ne-doit-pas-sortir";
   const etat = diagnostiquer({
     ...BASE_VALIDE,
-    STRIPE_SECRET_KEY: secret,
-    SMTP_PASSWORD: "mot-de-passe-smtp",
+    SUPABASE_SECRET_KEY: secret,
+    WORKER_DATABASE_URL: "postgres://utilisateur:mot-de-passe-bdd@hote/base",
   });
 
   const serialise = JSON.stringify(etat);
   assert.ok(!serialise.includes(secret));
-  assert.ok(!serialise.includes("mot-de-passe-smtp"));
+  assert.ok(!serialise.includes("mot-de-passe-bdd"));
 });
 
 test("une cle de chiffrement de session mal formee est signalee comme invalide", () => {

@@ -38,7 +38,6 @@ const CONSEQUENCES = {
   donnees: "Aucune connexion, aucune donnee. Les espaces prives sont hors service.",
   sessions: "Impossible d'ouvrir une session : les jetons ne peuvent pas etre chiffres.",
   worker: "Import, analyse de fichiers, lots PDF et exports ne s'executent pas.",
-  email: "Invitations et recuperations adultes ne partent pas. Le produit doit le dire.",
   collaboration: "Le brouillon partage fonctionne sans edition simultanee.",
   facturation: "Le paiement prive est indisponible. Le circuit public reste manuel.",
   taches: "Les taches planifiees ne sont pas appelables de maniere protegee.",

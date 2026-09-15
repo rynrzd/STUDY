@@ -110,7 +110,7 @@ export default function Offre() {
               </tr>
               <tr className="border-b border-[color:var(--color-bordure)]">
                 <th scope="row" className="p-3 text-left font-normal">Établissement privé</th>
-                <td className="p-3 text-[color:var(--color-encre-faible)]">Devis accepté, facture ; virement ou carte</td>
+                <td className="p-3 text-[color:var(--color-encre-faible)]">Devis accepté, facture réglée par virement</td>
                 <td className="p-3 text-[color:var(--color-encre-faible)]">Au paiement, ou sur crédit autorisé</td>
               </tr>
               <tr>
@@ -123,6 +123,12 @@ export default function Offre() {
         </div>
 
         <div className="mt-8 max-w-[62ch] space-y-4 text-[color:var(--color-encre-faible)]">
+          <p>
+            Tout passe par un devis nominatif, puis par une facture réglée par
+            virement. Il n&apos;y a <strong>aucun paiement par carte</strong>,
+            aucun prélèvement automatique et aucun compte à ouvrir chez un
+            prestataire de paiement : study. n&apos;en utilise aucun.
+          </p>
           <p>
             L&apos;effectif facturé est fixé au devis. Ajouter un élève en cours
             d&apos;année ne déclenche aucun prélèvement supplémentaire : un

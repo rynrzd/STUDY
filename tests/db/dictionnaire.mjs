@@ -35,7 +35,7 @@ const GROUPES = [
   // droit. Ces tables n'ont donc aucune politique — c'est voulu, et c'est une
   // protection plus forte qu'une politique restrictive.
   ["Schéma privé", ["sessions", "activation_tokens", "editor_staff", "auth_aliases",
-    "jobs", "outbox_events", "webhook_receipts"]],
+    "jobs", "outbox_events"]],
 ];
 
 /** Schéma d'appartenance d'un groupe, pour un titrage exact. */
@@ -48,7 +48,10 @@ const colonnes = (await db.query(`
   select c.table_name, c.column_name, c.data_type, c.udt_name,
          c.is_nullable, c.column_default
     from information_schema.columns c
+    join information_schema.tables t
+      on t.table_schema = c.table_schema and t.table_name = c.table_name
    where c.table_schema in ('study', 'study_prive')
+     and t.table_type = 'BASE TABLE'
    order by c.table_name, c.ordinal_position`)).rows;
 
 const contraintes = (await db.query(`

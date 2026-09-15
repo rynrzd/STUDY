@@ -516,23 +516,50 @@ test("T15 — hors du groupe, ni message ni brouillon partage", async (t) => {
 });
 
 // -----------------------------------------------------------------------------
-// T14 — webhooks de paiement
+// T14 — vente sur devis : aucun paiement automatique
+//
+// Depuis le retrait de Stripe (migration 0012), il n'existe plus de webhook
+// entrant : aucun evenement exterieur ne peut declarer une facture reglee. Le
+// scenario T14 « rejouer un webhook » devient sans objet ; ce qui le remplace
+// verifie que la seule voie restante — le rapprochement humain — exige un
+// acteur identifie et une preuve.
 // -----------------------------------------------------------------------------
-test("T14 — un webhook rejoue nest enregistre quune fois", async (t) => {
+test("T14 — aucun mouvement financier sans acteur habilite ni preuve", async (t) => {
   const db = await baseDeTest();
   t.after(() => db.close());
 
-  await db.query(
-    `insert into study_prive.webhook_receipts
-       (provider, event_id, event_type, payload_sha256, signature_verified)
-     values ('stripe', 'evt_test_001', 'invoice.paid', decode('00', 'hex'), true)`);
+  // Plus aucune table d accuses de webhook : la surface a disparu.
+  const tableWebhooks = await db.query(
+    `select count(*)::int as n from pg_tables
+      where schemaname = 'study_prive' and tablename = 'webhook_receipts'`);
+  assert.equal(tableWebhooks.rows[0].n, 0, "la table des webhooks est retiree, pas laissee vide");
 
+  // Un mouvement sans acteur ni preuve est refuse par la base.
   const erreur = await doitEchouer(() =>
     db.query(
-      `insert into study_prive.webhook_receipts
-         (provider, event_id, event_type, payload_sha256, signature_verified)
-       values ('stripe', 'evt_test_001', 'invoice.paid', decode('00', 'hex'), true)`));
-  assert.match(erreur.message, /webhook_receipts_event_key|duplicate|unique/i);
+      `insert into study.payment_events
+         (organization_id, contract_id, kind, amount_cents)
+       values ($1, $2, 'paiement_recu', 252600)`,
+      [ACTEURS.lyceeA, "aaaaaaaa-bbbb-4000-8000-000000000001"]));
+  assert.match(erreur.message, /toujours_justifie|check/i);
+
+  // Avec acteur et preuve, il passe.
+  await db.query(
+    `insert into study.payment_events
+       (organization_id, contract_id, kind, amount_cents, recorded_by, evidence)
+     values ($1, $2, 'rapprochement_manuel', 252600, $3, 'Releve bancaire du 12/09, ligne 4')`,
+    [ACTEURS.lyceeA, "aaaaaaaa-bbbb-4000-8000-000000000001", ACTEURS.facturationA]);
+
+  // Le circuit ne connait plus que deux adaptateurs.
+  const adaptateurs = await db.query(
+    `select enumlabel from pg_enum e
+       join pg_type t on t.oid = e.enumtypid
+      where t.typname = 'billing_adapter' order by enumlabel`);
+  assert.deepEqual(
+    adaptateurs.rows.map((ligne) => ligne.enumlabel),
+    ["external_invoice", "manual_public"],
+    "plus aucun adaptateur de prestataire de paiement",
+  );
 });
 
 test("T14b — un reglement partiel ne devient jamais un reglement integral", async (t) => {

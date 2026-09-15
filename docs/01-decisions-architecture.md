@@ -46,7 +46,7 @@ Conséquence pratique : chaque lecture de données passe par une route serveur q
 crée un client Supabase porteur du jeton d'accès de l'utilisateur, et les
 politiques RLS s'appliquent. `service_role` n'est **jamais** utilisé pour une
 lecture ordinaire — uniquement pour les tâches techniques nommées (worker
-d'import, relais d'outbox, réception de webhook).
+d'import, relais d'outbox, purges planifiées).
 
 ## Contexte d'autorisation en base
 
@@ -110,13 +110,13 @@ worker. Aucun de ces traitements ne s'exécute dans une requête web : importer
 laisse la rentrée dans un état incertain.
 
 Les événements suivent une **outbox transactionnelle** (`study.outbox_events`) :
-l'événement est écrit dans la transaction de la mutation, puis relayé. Un envoi
-d'e-mail qui échoue ne remet donc jamais en cause une copie remise.
+l'événement est écrit dans la transaction de la mutation, puis relayé. Une
+notification qui échoue ne remet donc jamais en cause une copie remise.
 
 ## Environnements
 
 Trois environnements séparés — développement, recette, production — avec des
-projets de données distincts et des clés Stripe test/live distinctes. Aucun jeu
+projets de données distincts. Aucun jeu
 de production n'est copié dans une préversion. Les tests ne s'exécutent jamais
 contre un lycée réel : le jeu de recette (`supabase/seed/seed_recette.sql`)
 contient exclusivement des personnes fictives.
@@ -125,12 +125,61 @@ contient exclusivement des personnes fictives.
 
 Ces points sont ouverts et ne doivent pas être inventés (ch. 30) :
 
-- hébergeur et région effective de la base, du stockage et des workers ;
-- fournisseur d'e-mail transactionnel ;
-- fournisseur de facturation électronique raccordé au circuit applicable ;
+- région effective de la base et du stockage, et hébergeur du worker ;
+- fournisseur de facturation électronique, si le volume le justifie un jour ;
 - serveur de collaboration temps réel (nécessaire seulement au Lot 3) ;
 - marque, domaine, identité contractuelle de l'éditeur, tarif et TVA.
 
 Tant qu'ils sont ouverts, aucune promesse du type « toutes les données sont en
 Europe » ne peut être écrite nulle part dans le produit ou dans un document
 commercial.
+
+## Décisions du 15 septembre 2026
+
+Trois choix pris par Rayan après la v2.0, qui réduisent le périmètre et
+simplifient l'exploitation. Ils sont consignés ici parce qu'ils s'écartent du
+cahier des charges et que personne ne doit avoir à le deviner.
+
+### Vente sur devis uniquement — retrait de Stripe
+
+Le chapitre 06 prévoyait Stripe Invoicing comme **option** pour les
+établissements privés. L'option est retirée : tout passe par devis puis facture
+réglée par virement, public et privé confondus.
+
+Ce que cela supprime : les webhooks entrants, le rejeu d'événements, le
+rapprochement automatique, les secrets de prestataire, les frais de
+transaction, et la conformité qui accompagne un flux de paiement.
+
+Ce que cela coûte : **plus aucun paiement par carte**. Un établissement privé
+qui voudrait régler par carte ne le pourra pas. Pour une clientèle scolaire,
+qui règle sur facture de toute façon, c'est un coût faible.
+
+Traduit en base par la migration `0012` : l'adaptateur de facturation perd sa
+valeur `stripe_invoice`, la table des accusés de webhook est **retirée** plutôt
+que laissée vide, et tout mouvement financier exige désormais un acteur
+identifié et une preuve.
+
+### Aucun courrier électronique
+
+study. n'envoie aucun message. Détaillé dans `08-sans-courrier.md`, avec ce que
+cela coûte — toute réinitialisation devient un geste humain, et l'exploitant
+devient le point de reprise pour les comptes d'administration.
+
+Traduit en configuration : le groupe SMTP disparaît des variables attendues.
+
+### Hébergement sur Vercel
+
+Pour l'application web seulement. Le worker et le service temps réel ne peuvent
+pas y vivre : ce sont des processus longs. Détaillé dans
+`09-deploiement-vercel.md`.
+
+### Compte exploitant
+
+Un compte unique gère la plateforme, créé par un script de bootstrap
+idempotent, avec un secret lu dans l'environnement — jamais dans Git, jamais en
+argument de ligne de commande.
+
+Il contrôle tout l'opérationnel sur tous les établissements. Il **n'atteint pas**
+le travail des élèves sans accès d'assistance approuvé par un administrateur du
+lycée. Cette frontière est posée dans la migration `0013` et vérifiée par un
+test qui échoue si quelqu'un ajoute un jour une politique la contournant.

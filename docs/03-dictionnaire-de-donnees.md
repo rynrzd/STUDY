@@ -3,7 +3,7 @@
 > Fichier **généré** par `npm run db:dictionnaire` à partir des migrations.
 > Ne pas le modifier à la main : toute correction se fait dans `supabase/migrations/`.
 
-Schémas `study` (données pédagogiques) et `study_prive` (sessions, jetons, jobs) — 59 tables, 97 politiques RLS.
+Schémas `study` (données pédagogiques) et `study_prive` (sessions, jetons, jobs) — 58 tables, 118 politiques RLS.
 
 Conventions communes :
 
@@ -51,7 +51,7 @@ Conventions communes :
 - `organizations_public_code_key`
 - `organizations_slug_key`
 
-**Politiques RLS** : `organizations_read` (SELECT), `organizations_write` (UPDATE)
+**Politiques RLS** : `organizations_admin_lycee` (UPDATE), `organizations_editeur` (ALL), `organizations_read` (SELECT)
 
 ### `study.academic_years`
 
@@ -86,7 +86,7 @@ Conventions communes :
 - `academic_years_pkey`
 - `academic_years_single_current`
 
-**Politiques RLS** : `academic_years_admin` (ALL), `academic_years_read` (SELECT)
+**Politiques RLS** : `academic_years_admin` (ALL), `academic_years_editeur` (ALL), `academic_years_read` (SELECT)
 
 ### `study.profiles`
 
@@ -116,7 +116,7 @@ Conventions communes :
 - `profiles_pkey`
 - `profiles_professional_email_key`
 
-**Politiques RLS** : `profiles_read` (SELECT), `profiles_self_update` (UPDATE)
+**Politiques RLS** : `profiles_editeur` (ALL), `profiles_read` (SELECT), `profiles_self_update` (UPDATE)
 
 ### `study.organization_memberships`
 
@@ -161,7 +161,7 @@ Conventions communes :
 - `memberships_person_per_org`
 - `organization_memberships_pkey`
 
-**Politiques RLS** : `memberships_admin` (ALL), `memberships_read` (SELECT)
+**Politiques RLS** : `memberships_admin` (ALL), `memberships_editeur` (ALL), `memberships_read` (SELECT)
 
 ### `study.external_identities`
 
@@ -192,7 +192,7 @@ Conventions communes :
 - `external_identities_pkey`
 - `external_identities_source_key`
 
-**Politiques RLS** : `external_identities_admin` (ALL)
+**Politiques RLS** : `external_identities_admin` (ALL), `external_identities_editeur` (ALL)
 
 ## Structure scolaire
 
@@ -228,7 +228,7 @@ Conventions communes :
 - `classes_org_id_unique`
 - `classes_pkey`
 
-**Politiques RLS** : `classes_admin` (ALL), `classes_read` (SELECT)
+**Politiques RLS** : `classes_admin` (ALL), `classes_editeur` (ALL), `classes_read` (SELECT)
 
 ### `study.teaching_groups`
 
@@ -264,7 +264,7 @@ Conventions communes :
 - `teaching_groups_org_id_unique`
 - `teaching_groups_pkey`
 
-**Politiques RLS** : `teaching_groups_admin` (ALL), `teaching_groups_read` (SELECT)
+**Politiques RLS** : `teaching_groups_admin` (ALL), `teaching_groups_editeur` (ALL), `teaching_groups_read` (SELECT)
 
 ### `study.class_enrollments`
 
@@ -298,7 +298,7 @@ Conventions communes :
 - `class_enrollments_single_principal`
 - `class_enrollments_unique`
 
-**Politiques RLS** : `class_enrollments_admin` (ALL), `class_enrollments_read` (SELECT)
+**Politiques RLS** : `class_enrollments_admin` (ALL), `class_enrollments_editeur` (ALL), `class_enrollments_read` (SELECT)
 
 ### `study.group_memberships`
 
@@ -329,7 +329,7 @@ Conventions communes :
 - `group_memberships_pkey`
 - `group_memberships_unique`
 
-**Politiques RLS** : `group_memberships_admin` (ALL), `group_memberships_read` (SELECT)
+**Politiques RLS** : `group_memberships_admin` (ALL), `group_memberships_editeur` (ALL), `group_memberships_read` (SELECT)
 
 ### `study.subjects`
 
@@ -357,7 +357,7 @@ Conventions communes :
 - `subjects_org_id_unique`
 - `subjects_pkey`
 
-**Politiques RLS** : `subjects_admin` (ALL), `subjects_read` (SELECT)
+**Politiques RLS** : `subjects_admin` (ALL), `subjects_editeur` (ALL), `subjects_read` (SELECT)
 
 ### `study.teaching_spaces`
 
@@ -393,7 +393,7 @@ Conventions communes :
 - `teaching_spaces_org_id_unique`
 - `teaching_spaces_pkey`
 
-**Politiques RLS** : `teaching_spaces_admin` (ALL), `teaching_spaces_read` (SELECT)
+**Politiques RLS** : `teaching_spaces_admin` (ALL), `teaching_spaces_editeur` (ALL), `teaching_spaces_read` (SELECT)
 
 ### `study.teacher_assignments`
 
@@ -429,7 +429,7 @@ Conventions communes :
 - `teacher_assignments_pkey`
 - `teacher_assignments_unique`
 
-**Politiques RLS** : `teacher_assignments_admin` (ALL), `teacher_assignments_read` (SELECT)
+**Politiques RLS** : `teacher_assignments_admin` (ALL), `teacher_assignments_editeur` (ALL), `teacher_assignments_read` (SELECT)
 
 ## Pédagogie
 
@@ -1459,7 +1459,7 @@ Conventions communes :
 - `import_jobs_pkey`
 - `import_jobs_single_active`
 
-**Politiques RLS** : `import_jobs_admin` (ALL)
+**Politiques RLS** : `import_jobs_admin` (ALL), `import_jobs_editeur` (SELECT)
 
 ### `study.import_rows`
 
@@ -1491,7 +1491,7 @@ Conventions communes :
 - `import_rows_pkey`
 - `import_rows_unique`
 
-**Politiques RLS** : `import_rows_admin` (ALL)
+**Politiques RLS** : `import_rows_admin` (ALL), `import_rows_editeur` (SELECT)
 
 ### `study.notifications`
 
@@ -1555,7 +1555,7 @@ Conventions communes :
 
 - `audit_events_pkey`
 
-**Politiques RLS** : `audit_events_admin_read` (SELECT)
+**Politiques RLS** : `audit_events_admin_read` (SELECT), `audit_events_editeur` (SELECT)
 
 ### `study.support_grants`
 
@@ -1592,7 +1592,7 @@ Conventions communes :
 
 - `support_grants_pkey`
 
-**Politiques RLS** : `support_grants_admin` (UPDATE), `support_grants_visible` (SELECT)
+**Politiques RLS** : `support_grants_admin` (UPDATE), `support_grants_editeur_demande` (INSERT), `support_grants_editeur_lecture` (SELECT), `support_grants_visible` (SELECT)
 
 ## Commercial
 
@@ -1638,7 +1638,7 @@ Conventions communes :
 - `leads_pkey`
 - `leads_reference_key`
 
-**Politiques RLS** : `leads_editor` (ALL)
+**Politiques RLS** : `leads_editeur` (ALL)
 
 ### `study.buyers`
 
@@ -1665,9 +1665,11 @@ Conventions communes :
 
 - `buyers_pkey`
 
-**Politiques RLS** : `buyers_editor` (ALL)
+**Politiques RLS** : `buyers_editeur` (ALL)
 
 ### `study.quotes`
+
+> Point d entree unique de la vente : tout tarif passe par un devis nominatif.
 
 | Colonne | Type | Null | Défaut | Note |
 |---|---|---|---|---|
@@ -1712,7 +1714,7 @@ Conventions communes :
 - `quotes_pkey`
 - `quotes_reference_key`
 
-**Politiques RLS** : `quotes_editor_write` (ALL), `quotes_read` (SELECT)
+**Politiques RLS** : `quotes_editeur` (ALL), `quotes_editor_write` (ALL), `quotes_read` (SELECT)
 
 ### `study.contracts`
 
@@ -1737,6 +1739,7 @@ Conventions communes :
 
 **Contraintes**
 
+- `contracts_actif_exige_devis` — `CHECK (((state = ANY (ARRAY['preparation'::study.contract_state, 'resilie'::study.contract_state])) OR (quote_id IS NOT NULL)))`
 - `contracts_agreed_headcount_check` — `CHECK ((agreed_headcount >= 0))`
 - `contracts_agreed_headcount_not_null` — `NOT NULL agreed_headcount`
 - `contracts_amount_cents_check` — `CHECK ((amount_cents >= 0))`
@@ -1764,7 +1767,7 @@ Conventions communes :
 - `contracts_reference_key`
 - `contracts_single_active`
 
-**Politiques RLS** : `contracts_editor_write` (ALL), `contracts_read` (SELECT)
+**Politiques RLS** : `contracts_editeur` (ALL), `contracts_editor_write` (ALL), `contracts_read` (SELECT)
 
 ### `study.invoice_refs`
 
@@ -1814,9 +1817,11 @@ Conventions communes :
 - `invoice_refs_issuer_key`
 - `invoice_refs_pkey`
 
-**Politiques RLS** : `invoice_refs_editor_write` (ALL), `invoice_refs_read` (SELECT)
+**Politiques RLS** : `invoice_refs_editeur` (ALL), `invoice_refs_editor_write` (ALL), `invoice_refs_read` (SELECT)
 
 ### `study.payment_events`
+
+> Mouvements financiers, tous saisis par une personne habilitee avec preuve et journal.
 
 | Colonne | Type | Null | Défaut | Note |
 |---|---|---|---|---|
@@ -1824,7 +1829,6 @@ Conventions communes :
 | `organization_id` | uuid | non | — |  |
 | `contract_id` | uuid | non | — |  |
 | `invoice_ref_id` | uuid | oui | — |  |
-| `webhook_receipt_id` | uuid | oui | — |  |
 | `kind` | text | non | — |  |
 | `amount_cents` | bigint | non | — |  |
 | `currency` | char | non | `'EUR'::bpchar` |  |
@@ -1845,18 +1849,17 @@ Conventions communes :
 - `payment_events_invoice_ref_id_fkey` — `FOREIGN KEY (invoice_ref_id) REFERENCES study.invoice_refs(id) ON DELETE SET NULL`
 - `payment_events_kind_check` — `CHECK ((kind = ANY (ARRAY['paiement_recu'::text, 'paiement_partiel'::text, 'remboursement'::text, 'litige'::text, 'annulation'::text, 'rapprochement_manuel'::text])))`
 - `payment_events_kind_not_null` — `NOT NULL kind`
-- `payment_events_manual_needs_proof` — `CHECK (((kind <> 'rapprochement_manuel'::text) OR ((recorded_by IS NOT NULL) AND (evidence IS NOT NULL))))`
 - `payment_events_occurred_at_not_null` — `NOT NULL occurred_at`
 - `payment_events_organization_id_fkey` — `FOREIGN KEY (organization_id) REFERENCES study.organizations(id) ON DELETE RESTRICT`
 - `payment_events_organization_id_not_null` — `NOT NULL organization_id`
 - `payment_events_recorded_by_fkey` — `FOREIGN KEY (recorded_by) REFERENCES study.profiles(id) ON DELETE SET NULL`
-- `payment_events_webhook_receipt_id_fkey` — `FOREIGN KEY (webhook_receipt_id) REFERENCES study_prive.webhook_receipts(id) ON DELETE SET NULL`
+- `payment_events_toujours_justifie` — `CHECK (((recorded_by IS NOT NULL) AND (evidence IS NOT NULL)))`
 
 **Unicité**
 
 - `payment_events_pkey`
 
-**Politiques RLS** : `payment_events_read` (SELECT)
+**Politiques RLS** : `payment_events_editeur` (ALL), `payment_events_read` (SELECT)
 
 ## Schéma privé
 
@@ -1953,13 +1956,13 @@ Conventions communes :
 | Colonne | Type | Null | Défaut | Note |
 |---|---|---|---|---|
 | `profile_id` | uuid | non | — |  |
-| `capabilities` | text[] | non | `ARRAY['commercial'::text]` |  |
+| `capabilities` | text[] | non | `ARRAY['commercial'::text]` | administration = exploitation complete ; commercial = devis et contrats ; assistance = acces support borne. |
 | `state` | membership_state | non | `'active'::study.membership_state` |  |
 | `created_at` | timestamptz | non | `now()` |  |
 
 **Contraintes**
 
-- `editor_staff_capabilities_not_empty` — `CHECK ((array_length(capabilities, 1) >= 1))`
+- `editor_staff_capabilities_connues` — `CHECK (((array_length(capabilities, 1) >= 1) AND (capabilities <@ ARRAY['administration'::text, 'commercial'::text, 'assistance'::text])))`
 - `editor_staff_capabilities_not_null` — `NOT NULL capabilities`
 - `editor_staff_created_at_not_null` — `NOT NULL created_at`
 - `editor_staff_profile_id_fkey` — `FOREIGN KEY (profile_id) REFERENCES study.profiles(id) ON DELETE CASCADE`
@@ -1979,7 +1982,7 @@ Conventions communes :
 | Colonne | Type | Null | Défaut | Note |
 |---|---|---|---|---|
 | `id` | uuid | non | `gen_random_uuid()` |  |
-| `organization_id` | uuid | non | — |  |
+| `organization_id` | uuid | oui | — |  |
 | `profile_id` | uuid | non | — |  |
 | `local_login` | text | non | — |  |
 | `alias` | text | non | — |  |
@@ -1991,19 +1994,20 @@ Conventions communes :
 - `auth_aliases_alias_not_null` — `NOT NULL alias`
 - `auth_aliases_created_at_not_null` — `NOT NULL created_at`
 - `auth_aliases_email_shape` — `CHECK ((alias ~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'::text))`
-- `auth_aliases_forme` — `CHECK (((kind <> 'alias_technique'::text) OR (alias ~ '^[a-f0-9]{16,64}@[a-z0-9.-]+$'::text)))`
+- `auth_aliases_forme` — `CHECK (((kind = 'email_professionnel'::text) OR (alias ~ '^[a-f0-9]{16,64}@[a-z0-9.-]+$'::text)))`
 - `auth_aliases_id_not_null` — `NOT NULL id`
-- `auth_aliases_kind_check` — `CHECK ((kind = ANY (ARRAY['alias_technique'::text, 'email_professionnel'::text])))`
+- `auth_aliases_kind_connu` — `CHECK ((kind = ANY (ARRAY['alias_technique'::text, 'email_professionnel'::text, 'exploitant'::text])))`
 - `auth_aliases_kind_not_null` — `NOT NULL kind`
 - `auth_aliases_local_login_not_null` — `NOT NULL local_login`
 - `auth_aliases_organization_id_fkey` — `FOREIGN KEY (organization_id) REFERENCES study.organizations(id) ON DELETE RESTRICT`
-- `auth_aliases_organization_id_not_null` — `NOT NULL organization_id`
+- `auth_aliases_portee` — `CHECK ((((organization_id IS NOT NULL) AND (kind = ANY (ARRAY['alias_technique'::text, 'email_professionnel'::text]))) OR ((organization_id IS NULL) AND (kind = 'exploitant'::text))))`
 - `auth_aliases_profile_id_fkey` — `FOREIGN KEY (profile_id) REFERENCES study.profiles(id) ON DELETE CASCADE`
 - `auth_aliases_profile_id_not_null` — `NOT NULL profile_id`
 
 **Unicité**
 
 - `auth_aliases_alias_key`
+- `auth_aliases_exploitant_login_key`
 - `auth_aliases_login_key`
 - `auth_aliases_pkey`
 - `auth_aliases_profile_key`
@@ -2075,38 +2079,6 @@ Conventions communes :
 
 - `outbox_events_key`
 - `outbox_events_pkey`
-
-**Politiques RLS** : aucune — table réservée au rôle de service, inaccessible depuis une session utilisateur.
-
-### `study_prive.webhook_receipts`
-
-| Colonne | Type | Null | Défaut | Note |
-|---|---|---|---|---|
-| `id` | uuid | non | `gen_random_uuid()` |  |
-| `provider` | text | non | `'stripe'::text` |  |
-| `event_id` | text | non | — |  |
-| `event_type` | text | non | — |  |
-| `payload_sha256` | bytea | non | — |  |
-| `signature_verified` | boolean | non | `false` |  |
-| `received_at` | timestamptz | non | `now()` |  |
-| `processed_at` | timestamptz | oui | — |  |
-| `processing_error` | text | oui | — |  |
-| `event_created_at` | timestamptz | oui | — |  |
-
-**Contraintes**
-
-- `webhook_receipts_event_id_not_null` — `NOT NULL event_id`
-- `webhook_receipts_event_type_not_null` — `NOT NULL event_type`
-- `webhook_receipts_id_not_null` — `NOT NULL id`
-- `webhook_receipts_payload_sha256_not_null` — `NOT NULL payload_sha256`
-- `webhook_receipts_provider_not_null` — `NOT NULL provider`
-- `webhook_receipts_received_at_not_null` — `NOT NULL received_at`
-- `webhook_receipts_signature_verified_not_null` — `NOT NULL signature_verified`
-
-**Unicité**
-
-- `webhook_receipts_event_key`
-- `webhook_receipts_pkey`
 
 **Politiques RLS** : aucune — table réservée au rôle de service, inaccessible depuis une session utilisateur.
 
