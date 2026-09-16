@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { originesAutorisees } from "./lib/csrf.ts";
 
 /**
  * Proxy (ex-middleware) — WEB-02 et WEB-03.
@@ -63,20 +64,13 @@ function origineAcceptable(requete: NextRequest): boolean {
   const origine = requete.headers.get("origin");
   if (origine === null) return true; // Le contrôle fin a lieu côté route.
 
-  // Origine canonique du service (APP_ORIGIN, ch. 40). En son absence, on se
-  // rabat sur l'origine de la requête elle-même : c'est le cas du
-  // développement local, jamais celui de la production, où APP_ORIGIN est
-  // requise au démarrage.
-  const canonique = (process.env.APP_ORIGIN ?? "").trim();
-  if (canonique === "" || canonique === "*") {
-    return origine === requete.nextUrl.origin;
-  }
+  const acceptees = originesAutorisees(requete.nextUrl.origin);
 
-  try {
-    return origine === new URL(canonique).origin;
-  } catch {
-    return false;
-  }
+  // Aucune origine déclarée : développement local, où APP_ORIGIN peut manquer.
+  // En production elle est exigée au démarrage, ce cas n'y survient pas.
+  if (acceptees.length === 0) return origine === requete.nextUrl.origin;
+
+  return acceptees.includes(origine);
 }
 
 export default function proxy(requete: NextRequest) {

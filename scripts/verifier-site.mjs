@@ -40,9 +40,11 @@ const BASE = process.env.SITE_BASE ?? "http://localhost:3100";
  */
 const BYPASS = process.env.VERCEL_AUTOMATION_BYPASS_SECRET ?? "";
 
-const ENTETES = BYPASS === ""
-  ? {}
-  : { "x-vercel-protection-bypass": BYPASS, "x-vercel-set-bypass-cookie": "true" };
+// Seulement l'en-tête de contournement. `x-vercel-set-bypass-cookie` ferait
+// répondre 307 vers la même adresse — le temps que Vercel pose son cookie —
+// et toutes les vérifications de code de réponse verraient cette redirection
+// au lieu de la page.
+const ENTETES = BYPASS === "" ? {} : { "x-vercel-protection-bypass": BYPASS };
 
 /** Toutes les requêtes du script passent par ici, pour porter l'en-tête. */
 async function demander(chemin, options = {}) {
