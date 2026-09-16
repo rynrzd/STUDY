@@ -966,3 +966,223 @@ test("E02 — un groupe complet le reste, meme si deux eleves cliquent ensemble"
   );
   assert.equal(historique.rows[0].n, 3, "le depart est date, pas efface");
 });
+
+/* ========================================================================== */
+/* ST — Studio : documents importés et publication (Refonte fidèle, S13-S15)  */
+/* ========================================================================== */
+
+/** Cree un document de Studio deja converti, avec sa revision. */
+async function documentPret(db, { organisation, proprietaire, titre }) {
+  return enTantQue(db, proprietaire, async () => {
+    const version = await db.query(
+      "insert into study.content_versions (organization_id, body, version_number, created_by) " +
+        "values ($1, $2::jsonb, 1, $3) returning id",
+      [
+        organisation,
+        JSON.stringify({
+          document: {
+            version: 1,
+            titre,
+            format: "pdf",
+            blocs: [{ type: "paragraphe", texte: "Une fonction affine s ecrit f(x) = ax + b." }],
+            rapport: { pagesLues: 1, blocsExtraits: 1, imagesConservees: 0, alertes: [] },
+          },
+          reglages: { modele: "classique", taille: 1, interligne: 1.6 },
+        }),
+        proprietaire,
+      ],
+    );
+
+    const doc = await db.query(
+      "insert into study.studio_documents (organization_id, owner_id, title, state, current_revision_id) " +
+        "values ($1, $2, $3, 'a_verifier', $4) returning id",
+      [organisation, proprietaire, titre, version.rows[0].id],
+    );
+
+    return { document: doc.rows[0].id, revision: version.rows[0].id };
+  });
+}
+
+test("ST01 — un document du Studio n appartient qu a son auteur", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { document } = await documentPret(db, {
+    organisation: ACTEURS.lyceeA,
+    proprietaire: ACTEURS.profMartin,
+    titre: "Les fonctions affines",
+  });
+
+  const requete = "select id from study.studio_documents where id = $1";
+
+  const cotAuteur = await lirePour(db, ACTEURS.profMartin, requete, [document]);
+  assert.equal(cotAuteur.length, 1, "l auteur voit son document");
+
+  // Un collegue du meme lycee : rien. Un brouillon de cours est personnel.
+  const cotCollegue = await lirePour(db, ACTEURS.profAutre, requete, [document]);
+  assert.equal(cotCollegue.length, 0, "un autre professeur ne voit pas ce brouillon");
+
+  // L administration non plus : ce n est pas une piece administrative.
+  const cotAdmin = await lirePour(db, ACTEURS.adminA, requete, [document]);
+  assert.equal(cotAdmin.length, 0, "l administration ne voit pas les brouillons");
+
+  const cotEleve = await lirePour(db, ACTEURS.eleveA1Rayan, requete, [document]);
+  assert.equal(cotEleve.length, 0, "un eleve non plus");
+
+  const cotExploitant = await lirePour(db, ACTEURS.editeur, requete, [document]);
+  assert.equal(cotExploitant.length, 0, "l exploitant AvecStudy non plus");
+});
+
+test("ST02 — publier cree une seance, et republier ne la duplique pas", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { document, revision } = await documentPret(db, {
+    organisation: ACTEURS.lyceeA,
+    proprietaire: ACTEURS.profMartin,
+    titre: "Les fonctions affines",
+  });
+
+  const seance = await enTantQueServeur(db, async () => {
+    const { rows } = await db.query("select study.studio_publier($1, $2, $3, $4) as id", [
+      ACTEURS.profMartin,
+      document,
+      OBJETS.espaceMathsA1,
+      "Les fonctions affines",
+    ]);
+    // Double clic : la meme seance, pas deux.
+    await db.query("select study.studio_publier($1, $2, $3, $4)", [
+      ACTEURS.profMartin,
+      document,
+      OBJETS.espaceMathsA1,
+      "Les fonctions affines",
+    ]);
+    return rows[0].id;
+  });
+
+  const seances = await enTantQueServeur(db, () =>
+    db.query(
+      "select count(*)::int as n from study.lessons where origin_studio_document = $1",
+      [document],
+    ),
+  );
+  assert.equal(seances.rows[0].n, 1, "un seul cours, malgre deux publications");
+
+  // L eleve de la classe voit la seance et sa revision.
+  const vueEleve = await lirePour(
+    db,
+    ACTEURS.eleveA1Rayan,
+    "select title, content_version_id from study.lessons where id = $1",
+    [seance],
+  );
+  assert.equal(vueEleve.length, 1);
+  assert.equal(vueEleve[0].content_version_id, revision);
+
+  // L eleve de l autre classe ne voit ni la seance, ni le document.
+  const autreClasse = await lirePour(
+    db,
+    ACTEURS.eleveA2Samir,
+    "select id from study.lessons where id = $1",
+    [seance],
+  );
+  assert.equal(autreClasse.length, 0);
+
+  const autreLycee = await lirePour(
+    db,
+    ACTEURS.eleveB,
+    "select id from study.lessons where id = $1",
+    [seance],
+  );
+  assert.equal(autreLycee.length, 0);
+});
+
+test("ST03 — publier dans un cours qu on n enseigne pas est refuse", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { document } = await documentPret(db, {
+    organisation: ACTEURS.lyceeA,
+    proprietaire: ACTEURS.profAutre,
+    titre: "Cours d un autre",
+  });
+
+  await enTantQueServeur(db, async () => {
+    // profAutre n est pas affecte a espaceMathsA1 : la fonction relit
+    // l affectation en base, elle ne croit pas l ecran sur parole.
+    const erreur = await doitEchouer(() =>
+      db.query("select study.studio_publier($1, $2, $3, $4)", [
+        ACTEURS.profAutre,
+        document,
+        OBJETS.espaceMathsA1,
+        "Cours d un autre",
+      ]),
+    );
+    assert.match(erreur.message, /enseignez pas/i);
+
+    // Et publier le document de quelqu un d autre, meme dans son propre cours :
+    // le document n est pas le sien.
+    const vol = await doitEchouer(() =>
+      db.query("select study.studio_publier($1, $2, $3, $4)", [
+        ACTEURS.profMartin,
+        document,
+        OBJETS.espaceMathsA1,
+        "Vol de cours",
+      ]),
+    );
+    assert.match(vol.message, /introuvable/i);
+  });
+
+  const seances = await enTantQueServeur(db, () =>
+    db.query("select count(*)::int as n from study.lessons where origin_studio_document = $1", [
+      document,
+    ]),
+  );
+  assert.equal(seances.rows[0].n, 0, "aucune seance n a ete creee");
+});
+
+test("ST04 — publier dans une seconde classe n affecte pas la premiere", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { document } = await documentPret(db, {
+    organisation: ACTEURS.lyceeA,
+    proprietaire: ACTEURS.profMartin,
+    titre: "Les fonctions affines",
+  });
+
+  await enTantQueServeur(db, () =>
+    db.query("select study.studio_publier($1, $2, $3, $4)", [
+      ACTEURS.profMartin,
+      document,
+      OBJETS.espaceMathsA1,
+      "Les fonctions affines",
+    ]),
+  );
+
+  const avant = await enTantQueServeur(db, () =>
+    db.query("select count(*)::int as n from study.lessons where origin_studio_document = $1", [
+      document,
+    ]),
+  );
+  assert.equal(avant.rows[0].n, 1);
+
+  // La Seconde 2 est un autre espace : publier la-bas cree une seconde seance,
+  // distincte, et la premiere ne bouge pas.
+  await enTantQueServeur(db, () =>
+    db.query("select study.studio_publier($1, $2, $3, $4)", [
+      ACTEURS.profMartin,
+      document,
+      OBJETS.espaceMathsA2,
+      "Les fonctions affines",
+    ]),
+  );
+
+  const apres = await enTantQueServeur(db, () =>
+    db.query(
+      "select teaching_space_id from study.lessons where origin_studio_document = $1 order by created_at",
+      [document],
+    ),
+  );
+  assert.equal(apres.rows.length, 2, "une publication par classe");
+  assert.notEqual(apres.rows[0].teaching_space_id, apres.rows[1].teaching_space_id);
+});

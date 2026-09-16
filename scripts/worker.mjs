@@ -16,6 +16,7 @@
 import { chargerEnv, titre, exiger, connecter } from "./_commun.mjs";
 
 const TYPES_CONNUS = [
+  "import_cours",
   "import_eleves",
   "import_enseignants",
   "analyse_fichier",
@@ -44,6 +45,34 @@ function lireArgument(nom) {
  * plutôt que de le déclarer terminé sans rien faire.
  */
 const GESTIONNAIRES = {
+  /**
+   * Conversion d'un document importé au Studio (ch. 05, S04).
+   *
+   * Le travail lourd — lire le PDF ou le DOCX, en tirer la structure — se fait
+   * ici et pas dans une action serveur : une fonction Vercel a une durée et une
+   * taille de requête bornées, et un cours de cinquante pages les dépasse le
+   * jour où cela compte (T03).
+   *
+   * Le module de conversion est chargé à la demande : le worker démarre même si
+   * les bibliothèques d'extraction manquent, et l'erreur est alors lisible.
+   */
+  async import_cours(_client, job) {
+    const { document, fichier, proprietaire, organisation } = job.payload ?? {};
+    if (!document || !fichier || !proprietaire || !organisation) {
+      throw new Error("job import_cours incomplet");
+    }
+
+    const { convertir } = await import("../src/lib/studio-documents.ts");
+    const resultat = await convertir({ organisation, document, fichier, proprietaire });
+
+    // Un refus d'import n'est pas une panne : le professeur a déposé un scan ou
+    // un fichier abîmé, et l'état du document porte déjà le message. Rejouer
+    // trois fois ne changerait rien — on ne lève pas.
+    if (!resultat.ok) {
+      console.log(`  [refus]  import_cours ${document} — ${resultat.message}`);
+    }
+  },
+
   async import_eleves() {
     throw new Error("import de comptes : le fournisseur d'identite n'est pas raccorde");
   },

@@ -12,7 +12,10 @@ import type { LienEspace } from "./Cadre";
 export const LIENS_PROFESSEUR: readonly LienEspace[] = [
   { href: "/professeur", libelle: "Accueil" },
   { href: "/professeur/classes", libelle: "Mes classes" },
-  { href: "/studio", libelle: "Studio" },
+  // « Mes cours » ouvre les chapitres et séances ; « Studio » ouvre l'import
+  // d'un document existant. Deux gestes distincts, deux entrées distinctes.
+  { href: "/studio", libelle: "Mes cours" },
+  { href: "/professeur/studio", libelle: "Studio" },
   { href: "/professeur/devoirs", libelle: "Devoirs" },
   { href: "/parametres", libelle: "Paramètres" },
 ];

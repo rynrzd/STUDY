@@ -1,128 +1,111 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useState } from "react";
 import { MARQUE } from "@/lib/identite-legale";
 
 /**
- * Navigation du site public — cahier V2, §4.1.
+ * En-tête du site public — L01.
  *
- * Logo à gauche, quatre ancres, puis les deux actions : se connecter et
- * découvrir. L'en-tête est transparent en haut de page et devient blanc au
- * défilement — rien de plus, pas d'ombre ni de flou marqué.
+ * Blanc, 72 px, mot-symbole à gauche, deux liens, deux actions. Sur téléphone,
+ * la navigation se replie derrière un bouton : elle ne doit jamais recouvrir le
+ * titre du hero, qui est la première chose qu'on vient lire.
  *
- * Sur mobile, la connexion reste atteignable sans ouvrir le menu : c'est le
- * geste le plus fréquent d'un élève qui arrive sur le site.
+ * Le menu se ferme avec Échap et rend le focus au bouton — sans quoi on y reste
+ * enfermé au clavier.
  */
 
 const LIENS = [
-  { href: "/#fonctionnement", libelle: "Fonctionnement" },
-  { href: "/#professeurs", libelle: "Professeurs" },
-  { href: "/#eleves", libelle: "Élèves" },
-  { href: "/#etablissements", libelle: "Établissements" },
+  { href: "/produit", libelle: "La plateforme" },
+  { href: "/etablissements", libelle: "Pour les lycées" },
 ] as const;
 
 export function Entete() {
-  const [defile, setDefile] = useState(false);
   const [ouvert, setOuvert] = useState(false);
-  const base = useId();
-
-  useEffect(() => {
-    const auDefilement = () => setDefile(window.scrollY > 8);
-    auDefilement();
-    window.addEventListener("scroll", auDefilement, { passive: true });
-    return () => window.removeEventListener("scroll", auDefilement);
-  }, []);
 
   useEffect(() => {
     if (!ouvert) return;
-    const auClavier = (evenement: KeyboardEvent) => {
+    const fermer = (evenement: KeyboardEvent) => {
       if (evenement.key === "Escape") setOuvert(false);
     };
-    document.addEventListener("keydown", auClavier);
-    return () => document.removeEventListener("keydown", auClavier);
+    document.addEventListener("keydown", fermer);
+    return () => document.removeEventListener("keydown", fermer);
   }, [ouvert]);
 
   return (
-    <header className="entete" data-defile={defile}>
-      <div className="contenu flex h-[66px] items-center justify-between gap-6">
-        <Link
-          href="/"
-          onClick={() => setOuvert(false)}
-          className="text-[1.3125rem] font-extrabold tracking-[-0.035em] text-[color:var(--color-encre)] no-underline"
-        >
-          {MARQUE}
+    <header className="sticky top-0 z-30 border-b border-[color:var(--color-bordure)] bg-[color:var(--color-surface)]">
+      <div className="contenu-site flex h-[72px] items-center justify-between gap-6">
+        <Link href="/" className="marque text-[1.375rem] no-underline">
+          {MARQUE}.
         </Link>
 
-        <nav aria-label="Navigation principale" className="hidden lg:block">
-          <ul className="m-0 flex list-none items-center gap-7 p-0">
-            {LIENS.map((lien) => (
-              <li key={lien.href}>
-                <Link
-                  href={lien.href}
-                  className="text-[length:var(--text-tableau)] font-medium text-[color:var(--color-encre-faible)] no-underline transition-colors hover:text-[color:var(--color-encre)]"
-                >
-                  {lien.libelle}
-                </Link>
-              </li>
-            ))}
-          </ul>
+        <nav aria-label="Navigation principale" className="hidden items-center gap-7 md:flex">
+          {LIENS.map((lien) => (
+            <Link
+              key={lien.href}
+              href={lien.href}
+              className="text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)] no-underline transition-colors duration-[120ms] hover:text-[color:var(--color-encre)]"
+            >
+              {lien.libelle}
+            </Link>
+          ))}
         </nav>
 
-        <div className="flex items-center gap-2">
-          <Link href="/connexion" className="bouton bouton-discret bouton-compact sm:min-h-[var(--spacing-cible)] sm:text-[length:var(--text-corps)]">
+        <div className="hidden items-center gap-4 md:flex">
+          <Link
+            href="/connexion"
+            className="text-[length:var(--text-tableau)] text-[color:var(--color-encre)] no-underline"
+          >
             Se connecter
           </Link>
-          <Link
-            href="/#decouvrir"
-            className="bouton bouton-rose bouton-compact hidden sm:inline-flex sm:min-h-[var(--spacing-cible)] sm:text-[length:var(--text-corps)]"
-          >
-            Découvrir AvecStudy
+          <Link href="/etablissements" className="bouton bouton-primaire bouton-compact">
+            Demander une démo
           </Link>
-
-          <button
-            type="button"
-            aria-expanded={ouvert}
-            aria-controls={`${base}-menu`}
-            aria-label={ouvert ? "Fermer le menu" : "Ouvrir le menu"}
-            onClick={() => setOuvert(!ouvert)}
-            className="bouton bouton-secondaire bouton-compact px-3 lg:hidden"
-          >
-            <span aria-hidden="true" className="flex flex-col gap-[4px]">
-              <span className="block h-[2px] w-[16px] bg-current" />
-              <span className="block h-[2px] w-[16px] bg-current" />
-            </span>
-            Menu
-          </button>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setOuvert((valeur) => !valeur)}
+          aria-expanded={ouvert}
+          aria-controls="menu-mobile"
+          className="flex h-11 w-11 items-center justify-center rounded-[var(--radius-champ)] border border-[color:var(--color-bordure)] md:hidden"
+        >
+          <span className="sr-only">{ouvert ? "Fermer le menu" : "Ouvrir le menu"}</span>
+          <span aria-hidden="true" className="text-[1.125rem]">
+            {ouvert ? "✕" : "☰"}
+          </span>
+        </button>
       </div>
 
       <div
-        id={`${base}-menu`}
+        id="menu-mobile"
         hidden={!ouvert}
-        className="border-t border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] lg:hidden"
+        className="border-t border-[color:var(--color-bordure)] md:hidden"
       >
-        <nav aria-label="Sections du site" className="contenu py-4">
-          <ul className="m-0 list-none space-y-1 p-0">
-            {LIENS.map((lien) => (
-              <li key={lien.href}>
-                <Link
-                  href={lien.href}
-                  onClick={() => setOuvert(false)}
-                  className="flex min-h-[var(--spacing-cible)] items-center rounded-[var(--radius-champ)] px-3 font-medium text-[color:var(--color-encre)] no-underline hover:bg-[color:var(--color-survol)]"
-                >
-                  {lien.libelle}
-                </Link>
-              </li>
-            ))}
-          </ul>
-
+        <nav aria-label="Navigation" className="contenu-site flex flex-col py-3">
+          {LIENS.map((lien) => (
+            <Link
+              key={lien.href}
+              href={lien.href}
+              onClick={() => setOuvert(false)}
+              className="flex min-h-[var(--spacing-cible)] items-center text-[length:var(--text-corps)] no-underline"
+            >
+              {lien.libelle}
+            </Link>
+          ))}
           <Link
-            href="/#decouvrir"
+            href="/connexion"
             onClick={() => setOuvert(false)}
-            className="bouton bouton-rose mt-4 w-full"
+            className="flex min-h-[var(--spacing-cible)] items-center text-[length:var(--text-corps)] no-underline"
           >
-            Découvrir AvecStudy
+            Se connecter
+          </Link>
+          <Link
+            href="/etablissements"
+            onClick={() => setOuvert(false)}
+            className="bouton bouton-primaire mt-2"
+          >
+            Demander une démo
           </Link>
         </nav>
       </div>

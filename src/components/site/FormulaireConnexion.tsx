@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { seConnecter } from "@/app/connexion/actions";
 import { ETAT_INITIAL, type EtatConnexion } from "@/app/connexion/etats";
@@ -18,6 +18,8 @@ import { ETAT_INITIAL, type EtatConnexion } from "@/app/connexion/etats";
 export function FormulaireConnexion() {
   const [etat, action] = useActionState<EtatConnexion, FormData>(seConnecter, ETAT_INITIAL);
   const alerte = useRef<HTMLDivElement>(null);
+  const [motDePasseVisible, setMotDePasseVisible] = useState(false);
+  const aideVisibilite = useId();
 
   useEffect(() => {
     if (etat.etat === "refus") alerte.current?.focus();
@@ -55,6 +57,7 @@ export function FormulaireConnexion() {
             autoComplete="off"
             spellCheck={false}
             aria-describedby="aide-code"
+            defaultValue={etat.saisie?.code ?? ""}
             required
           />
           <span className="aide-champ" id="aide-code">
@@ -74,6 +77,7 @@ export function FormulaireConnexion() {
             type="text"
             autoComplete="username"
             spellCheck={false}
+            defaultValue={etat.saisie?.identifiant ?? ""}
             required
           />
         </div>
@@ -82,14 +86,30 @@ export function FormulaireConnexion() {
           <label className="etiquette" htmlFor="motDePasse">
             Mot de passe
           </label>
-          <input
-            className="champ"
-            id="motDePasse"
-            name="motDePasse"
-            type="password"
-            autoComplete="current-password"
-            required
-          />
+          <div className="relative">
+            <input
+              className="champ pr-[5.5rem]"
+              id="motDePasse"
+              name="motDePasse"
+              type={motDePasseVisible ? "text" : "password"}
+              autoComplete="current-password"
+              aria-describedby={aideVisibilite}
+              required
+            />
+            {/* Utile sur un clavier de téléphone, où une faute de frappe reste
+                invisible. Le champ repart toujours masqué. */}
+            <button
+              type="button"
+              onClick={() => setMotDePasseVisible((valeur) => !valeur)}
+              aria-pressed={motDePasseVisible}
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-[length:var(--text-aide)] font-semibold text-[color:var(--color-accent)]"
+            >
+              {motDePasseVisible ? "Masquer" : "Afficher"}
+            </button>
+          </div>
+          <span className="sr-only" id={aideVisibilite}>
+            {motDePasseVisible ? "Le mot de passe est visible." : "Le mot de passe est masqué."}
+          </span>
         </div>
 
         <label className="flex min-h-[var(--spacing-cible)] items-start gap-3">

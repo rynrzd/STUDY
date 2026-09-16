@@ -71,7 +71,7 @@ const PRIVEES = ["/administration", "/administration/etablissements", "/administ
   "/admin", "/admin/classes", "/admin/utilisateurs", "/admin/import",
   "/professeur", "/professeur/classes", "/professeur/devoirs",
   "/eleve", "/eleve/cours", "/eleve/devoirs", "/eleve/entraide",
-  "/studio", "/parametres", "/app", "/activation"];
+  "/studio", "/professeur/studio", "/parametres", "/app", "/activation"];
 
 /**
  * Termes qui ne doivent apparaître sur aucune page publique.
@@ -272,12 +272,13 @@ async function verifierMiseEnPage() {
   // Valeurs du systeme de design V2 (ch. 03). Elles sont verifiees sur la page
   // servie, pas sur la feuille de style : ce qui compte est ce qui arrive au
   // navigateur d un lycee, apres compilation et minification.
-  verifier(jeton("spacing-contenu", "1180px"), "conteneur de 1180 px");
+  verifier(jeton("spacing-contenu", "1160px"), "conteneur de 1160 px");
   verifier(jeton("spacing-app", "1320px"), "cadre applicatif de 1320 px");
   verifier(jeton("spacing-cible", "44px"), "cible tactile de 44 px");
-  verifier(jeton("text-h1", "4rem"), "H1 desktop a 64 px");
-  verifier(jeton("text-h1-mobile", "2\.5rem"), "H1 mobile a 40 px");
-  verifier(jeton("color-accent", "#9f315c"), "rose AvecStudy comme couleur d accent");
+  verifier(jeton("text-h1", "3\.875rem"), "H1 desktop a 62 px");
+  verifier(jeton("text-h1-mobile", "2\.625rem"), "H1 mobile a 42 px");
+  verifier(jeton("color-accent", "#a43760"), "rose AvecStudy comme couleur d accent");
+  verifier(jeton("color-surlignage", "#f7dfeb"), "rose de surlignage du hero");
   verifier(css.includes("prefers-reduced-motion"), "mouvement reduit respecte");
   verifier(/overflow-x:\s*clip/.test(css), "aucun debordement horizontal");
 }

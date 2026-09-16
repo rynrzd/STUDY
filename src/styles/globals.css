@@ -17,21 +17,22 @@
 
 @theme {
   /* -- Couleurs ---------------------------------------------------------- */
-  --color-fond: #faf9f9;          /* blanc légèrement cassé */
+  --color-fond: #ffffff;          /* la landing est blanche (ch. 02) */
   --color-surface: #ffffff;
-  --color-surface-douce: #f6f4f5; /* aplats de section, très discrets */
+  --color-surface-douce: #faf9fa; /* aplats de section, très discrets */
 
-  --color-encre: #19191d;         /* texte principal, boutons pleins */
-  --color-encre-faible: #60606a;  /* texte secondaire */
+  --color-encre: #17171b;         /* texte principal, boutons pleins */
+  --color-encre-faible: #62626a;  /* texte secondaire */
   --color-encre-tres-faible: #8b8b95;
 
   /* Le rose, en trois intensités et pas une de plus. */
-  --color-accent: #9f315c;        /* texte, liens, boutons — contraste 7:1 */
-  --color-accent-fonce: #7d2448;  /* survol et focus */
-  --color-rose-clair: #f6dce7;    /* surlignage, fond d'état */
+  --color-accent: #a43760;        /* petits libellés roses, lisibles */
+  --color-accent-fonce: #832c4d;  /* survol et focus */
+  --color-rose-clair: #f8e3eb;    /* bandes et fonds roses */
+  --color-surlignage: #f7dfeb;    /* le trait rose sous le hero */
   --color-rose-decor: #e9b6c8;    /* filets et repères, jamais du texte */
 
-  --color-bordure: #e5e3e7;
+  --color-bordure: #e7e4e7;
   --color-bordure-forte: #cfcbd2;
   --color-survol: #f2f0f2;
 
@@ -43,15 +44,17 @@
   --color-attention-fond: #fdf4e3;
 
   /* -- Typographie : une seule famille ----------------------------------- */
-  --font-texte: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif;
+  --font-texte: Arial, "Helvetica Neue", Helvetica, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Le mot-symbole, et lui seul, retrouve l'empattement de la référence. */
+  --font-marque: Georgia, "Times New Roman", serif;
 
   --text-aide: 0.8125rem;                          /* 13 px */
   --text-aide--line-height: 1.25rem;
   --text-tableau: 0.875rem;                        /* 14 px */
   --text-tableau--line-height: 1.375rem;
   --text-corps: 1.0625rem;                         /* 17 px */
-  --text-corps--line-height: 1.65rem;
+  --text-corps--line-height: 1.6575rem;            /* 1,55 */
   --text-grand: 1.1875rem;                         /* 19 px, chapeaux */
   --text-grand--line-height: 1.85rem;
 
@@ -61,10 +64,14 @@
   --text-h2--line-height: 2.125rem;
   --text-h2-large: 2.375rem;                       /* 38 px, desktop */
   --text-h2-large--line-height: 2.75rem;
-  --text-h1-mobile: 2.5rem;                        /* 40 px */
-  --text-h1-mobile--line-height: 2.625rem;
-  --text-h1: 4rem;                                 /* 64 px */
-  --text-h1--line-height: 4.25rem;
+  --text-h2-mobile: 1.875rem;                      /* 30 px */
+  --text-h2-mobile--line-height: 2.25rem;
+  --text-h1-mobile: 2.625rem;                      /* 42 px a 390 px */
+  --text-h1-mobile--line-height: 2.75rem;          /* 1,05 */
+  --text-h1-etroit: 2.25rem;                       /* 36 px a 320 px */
+  --text-h1-etroit--line-height: 2.375rem;
+  --text-h1: 3.875rem;                             /* 62 px */
+  --text-h1--line-height: 4.0625rem;               /* 1,05 */
 
   /* Échelle de l'application connectée : plus dense que le site public. */
   --text-h1-app: 1.5rem;                           /* 24 px */
@@ -80,7 +87,7 @@
   --shadow-flottant: 0 2px 4px rgba(25, 25, 29, 0.04), 0 8px 24px rgba(25, 25, 29, 0.08);
 
   /* -- Composition ------------------------------------------------------- */
-  --spacing-contenu: 1180px;   /* site public */
+  --spacing-contenu: 1160px;   /* site public (ch. 02) */
   --spacing-app: 1320px;       /* application connectée */
   --spacing-lecture: 68ch;     /* textes longs */
   --spacing-cible: 44px;       /* hauteur minimale des cibles tactiles */
@@ -160,7 +167,11 @@
 
 @layer components {
   /* --- Conteneurs -------------------------------------------------------- */
-  .contenu {
+  /* Marges du ch. 02 : 20 px sur mobile, 24 px a partir de la tablette, et
+     pas davantage — au-dela, la colonne de 1160 px cesse d'etre centree sur
+     les ecrans intermediaires. `.contenu-site` en est l'alias lisible. */
+  .contenu,
+  .contenu-site {
     margin-inline: auto;
     width: 100%;
     max-width: var(--spacing-contenu);
@@ -175,11 +186,11 @@
   }
 
   @media (min-width: 640px) {
-    .contenu, .contenu-app { padding-inline: 24px; }
+    .contenu, .contenu-site, .contenu-app { padding-inline: 24px; }
   }
 
   @media (min-width: 1024px) {
-    .contenu, .contenu-app { padding-inline: 32px; }
+    .contenu-app { padding-inline: 32px; }
   }
 
   /* --- Boutons ----------------------------------------------------------- */
@@ -307,18 +318,46 @@
   .surligne {
     position: relative;
     display: inline;
-    background-image: linear-gradient(var(--color-rose-clair), var(--color-rose-clair));
+    background-image: linear-gradient(var(--color-surlignage), var(--color-surlignage));
     background-repeat: no-repeat;
     background-position: 0 88%;
     background-size: 100% 0.38em;
   }
 
+  /* Le trait rose se trace une seule fois, de gauche a droite, en 450 ms
+     (ch. 10, P02). L'animation est en CSS pur : elle ne depend d'aucun script,
+     et le texte reste lisible si rien ne s'execute. */
   .surligne-anime {
-    background-size: 0% 0.38em;
-    transition: background-size 500ms cubic-bezier(0.16, 0.84, 0.44, 1);
+    animation: tracer-surlignage 450ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
   }
 
-  [data-revele="visible"] .surligne-anime { background-size: 100% 0.38em; }
+  @keyframes tracer-surlignage {
+    from { background-size: 0% 0.38em; }
+    to { background-size: 100% 0.38em; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .surligne-anime { animation: none; background-size: 100% 0.38em; }
+  }
+
+  /* --- Mot-symbole -------------------------------------------------------
+     La seule entorse à la famille unique : « AvecStudy. » retrouve
+     l'empattement de la référence, et rien d'autre ne l'emploie. */
+  .marque {
+    font-family: var(--font-marque);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+
+  /* --- Bande pleine largeur ---------------------------------------------
+     Le fond déborde de la colonne de lecture, le contenu reste dedans. */
+  .bande {
+    width: 100%;
+  }
+
+  .bande-rose { background: var(--color-rose-clair); }
+  .bande-douce { background: var(--color-surface-douce); }
+  .bande-noire { background: var(--color-encre); color: #fff; }
 
   /* --- Apparition au défilement : 150 à 300 ms -------------------------- */
   [data-revele="prete"] {

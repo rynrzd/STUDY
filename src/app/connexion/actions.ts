@@ -55,6 +55,11 @@ export async function seConnecter(
   _precedent: EtatConnexion,
   donnees: FormData,
 ): Promise<EtatConnexion> {
+  // Conservé pour le réaffichage en cas de refus. Jamais le mot de passe.
+  const reafficher = {
+    code: String(donnees.get("code") ?? "").slice(0, 40),
+    identifiant: String(donnees.get("identifiant") ?? "").slice(0, 40),
+  };
   if (!baseConfiguree()) {
     return {
       etat: "refus",
@@ -70,7 +75,7 @@ export async function seConnecter(
     postePartage: donnees.get("postePartage") === "oui",
   });
 
-  if (!analyse.success) return REFUS_SAISIE;
+  if (!analyse.success) return { ...REFUS_SAISIE, saisie: reafficher };
 
   const saisie = analyse.data;
   const magasin = await cookies();
@@ -106,6 +111,7 @@ export async function seConnecter(
       etat: "refus",
       message: messageDeRefus(resultat),
       reprendreDansSecondes: resultat.reprendreDansSecondes,
+      saisie: reafficher,
     };
   }
 
