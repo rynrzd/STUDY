@@ -3,8 +3,9 @@ import { ImageResponse } from "next/og";
 /**
  * Favicon — généré, pour n'avoir qu'une seule définition de la marque.
  *
- * L'ancien favicon appartenait à « study. » ; le cahier de finition impose de
- * supprimer les anciens logos, favicon, titres et métadonnées.
+ * Le cahier de finition impose de supprimer les anciens logos, favicon, titres
+ * et métadonnées : celui-ci est donc dérivé du nom actuel, et d'aucune image
+ * héritée du prototype.
  */
 
 export const size = { width: 32, height: 32 };

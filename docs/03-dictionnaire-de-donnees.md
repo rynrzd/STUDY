@@ -3,7 +3,7 @@
 > Fichier **généré** par `npm run db:dictionnaire` à partir des migrations.
 > Ne pas le modifier à la main : toute correction se fait dans `supabase/migrations/`.
 
-Schémas `study` (données pédagogiques) et `study_prive` (sessions, jetons, jobs) — 58 tables, 118 politiques RLS.
+Schémas `study` (données pédagogiques) et `study_prive` (sessions, jetons, jobs) — 59 tables, 118 politiques RLS.
 
 Conventions communes :
 
@@ -30,6 +30,7 @@ Conventions communes :
 
 **Contraintes**
 
+- `organizations_code_reserve` — `CHECK ((public_code <> 'AVECSTUDY'::text))`
 - `organizations_created_at_not_null` — `NOT NULL created_at`
 - `organizations_id_not_null` — `NOT NULL id`
 - `organizations_id_unique` — `UNIQUE (id)`
@@ -1596,7 +1597,9 @@ Conventions communes :
 
 ## Commercial
 
-### `study.leads`
+### `study.commercial_requests`
+
+> Demandes de démonstration et de devis venant du site public. Aucun e-mail n'est envoyé : la référence affichée à l'écran est la preuve de dépôt.
 
 | Colonne | Type | Null | Défaut | Note |
 |---|---|---|---|---|
@@ -1611,13 +1614,22 @@ Conventions communes :
 | `contact_email` | text | non | — |  |
 | `contact_phone` | text | oui | — |  |
 | `message` | text | oui | — |  |
-| `state` | text | non | `'nouveau'::text` |  |
+| `state` | etat_demande_commerciale | non | `'nouvelle'::study.etat_demande_…` |  |
 | `dedupe_digest` | text | non | — |  |
 | `created_at` | timestamptz | non | `now()` |  |
-| `purge_after` | timestamptz | non | `(now() + '1 year'::interval)` |  |
+| `purge_after` | timestamptz | non | `(now() + '3 years'::interval)` |  |
+| `consent_given_at` | timestamptz | non | `now()` | Horodatage du consentement explicite à être recontacté. Sans consentement, pas de ligne. |
+| `last_contact_at` | timestamptz | non | `now()` | Dernier contact avec le demandeur. Point de départ des trois ans de conservation. |
+| `internal_note` | text | oui | — | Note de suivi de l'exploitant. Jamais affichée au demandeur. |
+| `source` | text | non | `'site'::text` |  |
 
 **Contraintes**
 
+- `commercial_requests_consent_given_at_not_null` — `NOT NULL consent_given_at`
+- `commercial_requests_last_contact_at_not_null` — `NOT NULL last_contact_at`
+- `commercial_requests_reference_non_vide` — `CHECK ((length(btrim(reference)) >= 6))`
+- `commercial_requests_source_check` — `CHECK ((source = ANY (ARRAY['site'::text, 'saisie_manuelle'::text])))`
+- `commercial_requests_source_not_null` — `NOT NULL source`
 - `leads_approximate_size_check` — `CHECK (((approximate_size IS NULL) OR ((approximate_size >= 0) AND (approximate_size <= 10000))))`
 - `leads_contact_email_not_null` — `NOT NULL contact_email`
 - `leads_contact_name_not_null` — `NOT NULL contact_name`
@@ -1629,16 +1641,15 @@ Conventions communes :
 - `leads_legal_kind_not_null` — `NOT NULL legal_kind`
 - `leads_purge_after_not_null` — `NOT NULL purge_after`
 - `leads_reference_not_null` — `NOT NULL reference`
-- `leads_state_check` — `CHECK ((state = ANY (ARRAY['nouveau'::text, 'qualifie'::text, 'devis_envoye'::text, 'sans_suite'::text, 'converti'::text])))`
 - `leads_state_not_null` — `NOT NULL state`
 
 **Unicité**
 
-- `leads_dedupe_key`
+- `commercial_requests_dedupe_key`
+- `commercial_requests_reference_key`
 - `leads_pkey`
-- `leads_reference_key`
 
-**Politiques RLS** : `leads_editeur` (ALL)
+**Politiques RLS** : `commercial_requests_editeur` (ALL)
 
 ### `study.buyers`
 
@@ -2081,4 +2092,10 @@ Conventions communes :
 - `outbox_events_pkey`
 
 **Politiques RLS** : aucune — table réservée au rôle de service, inaccessible depuis une session utilisateur.
+
+## Tables non classées
+
+Ces tables existent dans le schéma mais ne figurent dans aucun groupe de ce générateur — signe qu'il faut mettre à jour `tests/db/dictionnaire.mjs` :
+
+- `study.tentatives_connexion`
 

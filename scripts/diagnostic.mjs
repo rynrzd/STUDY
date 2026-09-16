@@ -55,7 +55,7 @@ async function principal() {
 
   const ligne = "-".repeat(72);
   console.log(ligne);
-  console.log("study. — diagnostic de configuration");
+  console.log("AvecStudy — diagnostic de configuration");
   console.log(`environnement declare : ${etat.environnement}`);
   console.log(ligne);
 

@@ -44,7 +44,7 @@ async function principal() {
   );
 
   titre(
-    `study. — migrations\n` +
+    `AvecStudy — migrations\n` +
     `environnement : ${environnement}\n` +
     `mode          : ${appliquer ? "APPLICATION" : "verification (aucune ecriture)"}`,
   );

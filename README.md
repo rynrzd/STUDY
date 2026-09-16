@@ -32,11 +32,12 @@ L'état de livraison détaillé est dans
 | 4 — Commercial | landing, demande de devis, administration commerciale | **fait** |
 | 5 — Pilote | revue indépendante, restauration, charge, accessibilité, DPA | non commencé |
 
-**Deux blocages restants, tous deux hors du code :**
+**Blocages restants, tous deux hors du code :**
 
-1. `WORKER_DATABASE_URL` contient encore `[YOUR-PASSWORD]` : les migrations ne
-   peuvent pas être appliquées sur le projet Supabase. Cette variable ne bloque
-   plus l'application elle-même — elle ne sert qu'aux migrations et au worker.
+1. Le mot de passe de la base est refusé. `npm run verifier:base` le confirme et
+   donne l'URL exacte à utiliser : le pooler IPv4, l'hôte direct
+   `db.<ref>.supabase.co` n'ayant plus d'enregistrement A. Tant que ce n'est pas
+   corrigé, aucune migration n'est appliquée — mais l'application démarre.
 2. `avecstudy.fr` pointe sur IONOS et répond 404 : le domaine n'est pas branché
    sur Vercel.
 
@@ -53,18 +54,20 @@ Le site public fonctionne sans base. La connexion, les demandes de devis et
 l'administration demandent un projet Supabase migré : voir
 [`docs/05-branchement-supabase.md`](docs/05-branchement-supabase.md).
 
-Un réglage n'est pas dans le code et s'oublie facilement : **le schéma `study`
-doit être déclaré dans Settings → API → Exposed schemas** du projet Supabase.
-`study_prive` ne doit jamais l'être.
+L'exposition du schéma `study` à PostgREST est posée par la migration `0018` :
+il n'y a plus de case à cocher à ne pas oublier dans le tableau de bord, et
+`study_prive` ne peut pas être exposé — la migration échoue si on essaie.
 
 ## Vérifier
 
 ```bash
+npm run verifier:base    # projet joignable, schema expose, base accessible
+npm run verifier:site    # recette du site servi : routes, structure, securite
 npm run typecheck        # TypeScript strict
 npm run lint             # ESLint
 npm run build            # build de production
 npm run test:unite       # sessions, CSRF, connexion, devis, mots de passe, import
-npm run test:rls         # isolation sur PostgreSQL réel
+npm run test:rls         # isolation et parcours complets sur PostgreSQL réel
 npm run test:navigateur  # sort en échec : aucun parcours automatisé (et le dit)
 npm run diagnostic       # état de la configuration, sans secrets
 npm run db:dictionnaire  # régénère docs/03-dictionnaire-de-donnees.md
@@ -106,9 +109,9 @@ src/components/site/       chrome public, landing, formulaires
 src/lib/                   sessions, CSRF, chiffrement, identité, connexion,
                            devis, import, tableur, identité légale
 src/proxy.ts               CSP à nonce, refus des mutations d'origine étrangère
-supabase/migrations/       17 migrations : schéma, contraintes, RLS, schéma privé
+supabase/migrations/       18 migrations : schéma, contraintes, RLS, schéma privé
 tests/unite/               logique applicative, sans base
-tests/db/                  isolation sur PostgreSQL réel
+tests/db/                  isolation et parcours complets sur PostgreSQL réel
 ```
 
 ## Le compte propriétaire

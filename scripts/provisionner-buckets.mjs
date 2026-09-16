@@ -26,7 +26,7 @@ async function principal() {
   );
 
   titre(
-    `study. — buckets de stockage\n` +
+    `AvecStudy — buckets de stockage\n` +
     `mode : ${appliquer ? "APPLICATION" : "verification (aucune ecriture)"}`,
   );
 
@@ -60,7 +60,7 @@ async function principal() {
   if (publics.length > 0) {
     abandonner(
       `${publics.length} bucket(s) declare(s) publics. ` +
-        "Aucun bucket de study. ne doit etre public (ch. 38).",
+        "Aucun bucket de AvecStudy ne doit etre public (ch. 38).",
     );
   }
 
