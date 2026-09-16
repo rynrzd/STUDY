@@ -3,7 +3,7 @@ import { randomBytes } from "node:crypto";
 /**
  * Fournisseur d'identité — chapitre 37.
  *
- * study. ne stocke aucun mot de passe (AUTH-01). Cette interface est le seul
+ * AvecStudy ne stocke aucun mot de passe (AUTH-01). Cette interface est le seul
  * point de contact avec le fournisseur qui, lui, les conserve. Elle est
  * volontairement étroite : tout ce qui n'y figure pas ne peut pas être demandé
  * au fournisseur depuis le reste du code.

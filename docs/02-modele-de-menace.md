@@ -1,6 +1,6 @@
 # Modèle de menace
 
-Lot 0, ch. 29. Ce document décrit ce contre quoi study. se défend, comment, et
+Lot 0, ch. 29. Ce document décrit ce contre quoi AvecStudy se défend, comment, et
 ce qui reste ouvert. Il n'affirme aucune conformité et ne vaut pas audit.
 
 ## Ce qu'il y a à protéger

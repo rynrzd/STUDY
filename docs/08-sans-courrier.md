@@ -1,6 +1,6 @@
-# study. sans courrier électronique
+# AvecStudy sans courrier électronique
 
-Décision du 15 septembre 2026, prise par Rayan : **study. n'envoie aucun
+Décision du 15 septembre 2026, prise par Rayan : **AvecStudy n'envoie aucun
 message électronique.** Pas d'invitation, pas de lien de récupération, pas de
 notification par mail — ni pour les élèves, ni pour les enseignants, ni pour
 l'administration.
@@ -82,7 +82,7 @@ tests :
    décrite comme la vérification d'une adresse réelle.
 
 Cette règle vaut désormais pour **tout le monde**, y compris le compte de
-l'exploitant : lui non plus n'a pas d'adresse dans study.
+l'exploitant : lui non plus n'a pas d'adresse dans AvecStudy
 
 ## Ce qui reste à décider avant un vrai pilote
 

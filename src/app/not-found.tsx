@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { EntetePublic, PiedDePage, LARGEUR } from "@/components/public/Chrome";
+import { Entete } from "@/components/site/Entete";
+import { PiedDePage } from "@/components/site/PiedDePage";
 
 /**
  * Page 404 — ch. 19, « vide utile avec action ».
@@ -12,7 +13,7 @@ import { EntetePublic, PiedDePage, LARGEUR } from "@/components/public/Chrome";
 
 const PISTES = [
   ["/", "Accueil"],
-  ["/fonctionnalites", "Fonctionnalités"],
+  ["/produit", "Produit"],
   ["/etablissements", "Pour les établissements"],
   ["/offre", "Offre"],
   ["/aide", "Aide"],
@@ -20,20 +21,19 @@ const PISTES = [
 
 export default function Introuvable() {
   return (
-    <>
-      <EntetePublic />
-      <main id="contenu" className={LARGEUR}>
-        <div className="py-16 md:py-24">
-          <p className="mb-3 text-[color:var(--color-encre-faible)]">Erreur 404</p>
-          <h1 className="max-w-[18ch] text-[length:var(--text-h1-public-mobile)] leading-[var(--text-h1-public-mobile--line-height)] md:text-[length:var(--text-h1-public)] md:leading-[var(--text-h1-public--line-height)]">
+    <div className="sans-debordement flex min-h-screen flex-col">
+      <Entete />
+      <main id="contenu" className="flex-1">
+        <div className="contenu py-20 md:py-28">
+          <p className="surtitre m-0">Erreur 404</p>
+          <h1 className="mt-4 max-w-[18ch] text-[length:var(--text-h1-mobile)] leading-[var(--text-h1-mobile--line-height)] md:text-[3.25rem] md:leading-[3.5rem]">
             Cette page n&apos;existe pas.
           </h1>
-          <p className="mt-6 max-w-[62ch] text-[color:var(--color-encre-faible)]">
-            Soit l&apos;adresse est incorrecte, soit la page n&apos;a pas encore
-            été construite : study. est en cours de réalisation, et plusieurs
-            sections annoncées ne sont pas livrées.
+          <p className="mt-6 max-w-[58ch] text-[length:var(--text-grand)] leading-[var(--text-grand--line-height)] text-[color:var(--color-encre-faible)]">
+            L&apos;adresse est probablement incorrecte, ou la page a changé de
+            nom.
           </p>
-          <p className="mt-4 max-w-[62ch] text-[color:var(--color-encre-faible)]">
+          <p className="mt-4 max-w-[58ch] text-[color:var(--color-encre-faible)]">
             Si vous cherchez vos cours ou vos devoirs, passez par{" "}
             <Link href="/connexion" className="text-[color:var(--color-accent)]">
               la connexion
@@ -41,17 +41,11 @@ export default function Introuvable() {
             .
           </p>
 
-          <nav aria-label="Pages disponibles" className="mt-10">
-            <h2 className="text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
-              Pages disponibles
-            </h2>
-            <ul className="mt-4 flex list-none flex-wrap gap-3 p-0">
+          <nav aria-label="Pages du site" className="mt-10">
+            <ul className="m-0 flex list-none flex-wrap gap-3 p-0">
               {PISTES.map(([href, libelle]) => (
                 <li key={href}>
-                  <Link
-                    href={href}
-                    className="inline-flex min-h-[44px] items-center rounded-[var(--radius-champ)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] px-4 no-underline text-[color:var(--color-encre)]"
-                  >
+                  <Link href={href} className="bouton bouton-secondaire">
                     {libelle}
                   </Link>
                 </li>
@@ -61,6 +55,6 @@ export default function Introuvable() {
         </div>
       </main>
       <PiedDePage />
-    </>
+    </div>
   );
 }

@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 // =============================================================================
-// Compte exploitant — chapitre 41, et migration 0013.
+// Compte propriétaire AvecStudy — chapitre 41, migrations 0013 et 0016.
 //
-// Crée le compte qui gère la plateforme : celui de Rayan. Un seul chemin,
-// volontairement : ce script, exécuté à la main, avec un secret lu dans
-// l'environnement.
+// Crée le compte qui gère la plateforme. Un seul chemin, volontairement : ce
+// script, exécuté à la main, avec un secret lu dans l'environnement.
 //
 //   STUDY_EDITEUR_IDENTIFIANT=rayan \
 //   STUDY_EDITEUR_MOT_DE_PASSE='...' \
-//   npm run bootstrap:editeur -- --prenom Rayan --nom Nom
+//   npm run bootstrap:editeur -- --prenom Rayan --nom Tifouti
 //
 // Pourquoi le mot de passe passe par l'environnement et jamais par un argument :
 // un argument de ligne de commande apparaît dans l'historique du shell et dans
@@ -21,12 +20,17 @@
 //   - aucune promotion automatique du premier inscrit ;
 //   - idempotent : relancé, il ne recrée rien et ne réinitialise rien.
 //
-// study. n'envoie aucun courrier : ce compte n'a pas d'adresse électronique
+// Depuis la finition V1, il n'a **plus besoin de WORKER_DATABASE_URL** : il
+// passe par la clé de service et la fonction study.amorcer_exploitant. Le
+// cahier demande de ne pas faire dépendre la V1 d'une URL PostgreSQL complète
+// quand ce n'est pas indispensable.
+//
+// AvecStudy n'envoie aucun courrier : ce compte n'a pas d'adresse électronique
 // mais une identité technique opaque, comme celle d'un élève.
 // =============================================================================
 
-import { randomBytes, randomUUID } from "node:crypto";
-import { chargerEnv, titre, exiger, abandonner, connecter } from "./_commun.mjs";
+import { randomBytes } from "node:crypto";
+import { chargerEnv, titre, exiger, abandonner } from "./_commun.mjs";
 
 /** AUTH-01 : 15 caractères minimum pour un compte sans MFA encore enrôlée. */
 const LONGUEUR_MINIMALE = 15;
@@ -69,7 +73,7 @@ function verifierMotDePasse(secret, identifiant) {
   if (/^(.)\1+$/.test(secret)) {
     problemes.push("il ne doit pas etre une repetition d'un seul caractere");
   }
-  for (const courant of ["password", "motdepasse", "azerty", "qwerty", "123456", "study"]) {
+  for (const courant of ["password", "motdepasse", "azerty", "qwerty", "123456", "avecstudy"]) {
     if (secret.toLowerCase().includes(courant)) {
       problemes.push(`il contient une suite trop courante (« ${courant} »)`);
       break;
@@ -80,9 +84,7 @@ function verifierMotDePasse(secret, identifiant) {
     // On dit ce qui ne va pas, jamais ce qui a ete saisi.
     console.error("\nMot de passe refuse :");
     for (const probleme of problemes) console.error(`  - ${probleme}`);
-    console.error(
-      "\nUne phrase de passe longue vaut mieux qu'une suite courte et compliquee.",
-    );
+    console.error("\nUne phrase de passe longue vaut mieux qu'une suite courte et compliquee.");
     process.exit(1);
   }
 }
@@ -93,15 +95,15 @@ async function principal() {
   const identifiant = process.env.STUDY_EDITEUR_IDENTIFIANT ?? null;
   const secret = process.env.STUDY_EDITEUR_MOT_DE_PASSE;
   const prenom = lireArgument("prenom") ?? "Exploitant";
-  const nom = lireArgument("nom") ?? "study.";
+  const nom = lireArgument("nom") ?? "AvecStudy";
 
   verifierIdentifiant(identifiant);
   verifierMotDePasse(secret, identifiant);
 
   exiger(
-    ["WORKER_DATABASE_URL", "SUPABASE_URL", "SUPABASE_SECRET_KEY", "STUDENT_ALIAS_DOMAIN"],
-    "creer le compte exploitant demande la base et l'API d'administration du " +
-      "fournisseur d'identite.",
+    ["SUPABASE_URL", "SUPABASE_SECRET_KEY", "STUDENT_ALIAS_DOMAIN"],
+    "creer le compte proprietaire demande l'API d'administration du fournisseur " +
+      "d'identite et le domaine d'alias.",
   );
 
   const environnement = (process.env.APP_ENV ?? "").trim();
@@ -113,141 +115,97 @@ async function principal() {
   }
 
   titre(
-    `study. — compte exploitant\n` +
-    `environnement : ${environnement || "(non defini)"}\n` +
-    `identifiant   : ${identifiant}`,
+    `AvecStudy — compte proprietaire\n` +
+      `environnement : ${environnement || "(non defini)"}\n` +
+      `identifiant   : ${identifiant}`,
   );
 
-  const client = await connecter(process.env.WORKER_DATABASE_URL, {
-    application: "study-bootstrap",
+  const { createClient } = await import("@supabase/supabase-js");
+  const fournisseur = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+    db: { schema: "study" },
   });
 
-  let identifiantFournisseur = null;
-  let fournisseur = null;
+  // --- Création côté fournisseur d'identité --------------------------------
+  // L'ordre compte : on crée d'abord chez le fournisseur, puis en base. Si la
+  // base échoue, on défait la création. L'inverse laisserait une ligne sans
+  // moyen de connexion.
+  const alias = `${randomBytes(8).toString("hex")}@${process.env.STUDENT_ALIAS_DOMAIN}`;
 
-  try {
-    // --- Idempotence -------------------------------------------------------
-    const existant = await client.query(
-      `select a.profile_id, p.first_name, p.last_name, e.capabilities, e.state::text as etat
-         from study_prive.auth_aliases a
-         join study.profiles p on p.id = a.profile_id
-         left join study_prive.editor_staff e on e.profile_id = a.profile_id
-        where a.organization_id is null and a.local_login = $1`,
-      [identifiant],
-    );
+  const creation = await fournisseur.auth.admin.createUser({
+    email: alias,
+    password: secret,
+    // L'alias n'est pas une boite aux lettres : rien ne sera jamais envoye
+    // dessus, et il n'y a donc rien a confirmer par courrier.
+    email_confirm: true,
+    app_metadata: { role: "exploitant" },
+  });
 
-    if (existant.rows.length > 0) {
-      const ligne = existant.rows[0];
-      console.log("Ce compte exploitant existe deja. Rien n'a ete modifie.\n");
-      console.log(`  personne   : ${ligne.first_name} ${ligne.last_name}`);
-      console.log(`  etat       : ${ligne.etat ?? "(pas de capacite editeur)"}`);
-      console.log(`  capacites  : ${(ligne.capabilities ?? []).join(", ") || "(aucune)"}`);
-      console.log(
-        "\nCe script ne reinitialise pas un mot de passe : ce serait un chemin " +
-          "de reprise de compte sans controle. Pour changer le secret, passer par " +
-          "le fournisseur d'identite.",
-      );
-      return;
-    }
-
-    // --- Création côté fournisseur d'identité ------------------------------
-    // L'ordre compte : on crée d'abord chez le fournisseur, puis en base. Si la
-    // base échoue, on défait la création. L'inverse laisserait une ligne sans
-    // moyen de connexion.
-    const alias = `${randomBytes(8).toString("hex")}@${process.env.STUDENT_ALIAS_DOMAIN}`;
-
-    const { createClient } = await import("@supabase/supabase-js");
-    fournisseur = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-
-    const creation = await fournisseur.auth.admin.createUser({
-      email: alias,
-      password: secret,
-      // L'alias n'est pas une boite aux lettres : rien ne sera jamais envoye
-      // dessus, et il n'y a donc rien a confirmer par courrier.
-      email_confirm: true,
-      app_metadata: { role: "exploitant" },
-    });
-
-    if (creation.error !== null) {
-      abandonner(`le fournisseur d'identite a refuse la creation : ${creation.error.message}`);
-    }
-    identifiantFournisseur = creation.data.user.id;
-
-    // --- Écriture en base, en une transaction ------------------------------
-    const profileId = identifiantFournisseur ?? randomUUID();
-
-    await client.query("begin");
-
-    await client.query(
-      `insert into study.profiles (id, first_name, last_name, professional_email)
-       values ($1, $2, $3, null)`,
-      [profileId, prenom, nom],
-    );
-
-    await client.query(
-      `insert into study_prive.editor_staff (profile_id, capabilities, state)
-       values ($1, array['administration', 'commercial', 'assistance'], 'active')`,
-      [profileId],
-    );
-
-    await client.query(
-      `insert into study_prive.auth_aliases
-         (organization_id, profile_id, local_login, alias, kind)
-       values (null, $1, $2, $3, 'exploitant')`,
-      [profileId, identifiant, alias],
-    );
-
-    await client.query(
-      `insert into study.audit_events (organization_id, actor_id, actor_kind, action, object_kind, object_id, reason)
-       values (null, $1, 'systeme', 'bootstrap.exploitant', 'editor_staff', $1,
-               'Creation du compte exploitant par script de bootstrap')`,
-      [profileId],
-    );
-
-    await client.query("commit");
-
-    console.log("Compte exploitant cree.\n");
-    console.log(`  identifiant : ${identifiant}`);
-    console.log(`  personne    : ${prenom} ${nom}`);
-    console.log("  capacites   : administration, commercial, assistance");
-    console.log("\nCe que ce compte permet :");
-    console.log("  - creer un lycee, son annee scolaire et son premier administrateur ;");
-    console.log("  - gerer classes, groupes, matieres, affectations et inscriptions ;");
-    console.log("  - suivre prospects, devis, contrats, factures et reglements ;");
-    console.log("  - lire le journal d'audit de tous les etablissements.");
-    console.log("\nCe qu'il ne permet PAS, par conception :");
-    console.log("  - lire une copie, une correction, une note personnelle ou un message");
-    console.log("    d'entraide. Cela passe par un acces d'assistance : motif ecrit,");
-    console.log("    accord d'un administrateur du lycee, expiration et journal.");
-    console.log("\nAvant toute operation privilegiee : enroler la MFA.");
-    console.log("  Les politiques de la base exigent un second facteur verifie sur la");
-    console.log("  session elle-meme. Sans lui, ce compte ne peut rien administrer.");
-    console.log("\nLe mot de passe n'a ete affiche nulle part, et n'est pas journalise.");
-  } catch (erreur) {
-    await client.query("rollback").catch(() => {});
-
-    // Défaire la création côté fournisseur : ne pas laisser un compte
-    // d'authentification orphelin, sans adhésion ni capacité (ch. 12).
-    if (identifiantFournisseur !== null && fournisseur !== null) {
-      const suppression = await fournisseur.auth.admin
-        .deleteUser(identifiantFournisseur)
-        .catch(() => ({ error: { message: "suppression impossible" } }));
-      if (suppression?.error) {
-        console.error(
-          `\nAttention : un compte a ete cree chez le fournisseur d'identite (${identifiantFournisseur}) ` +
-            "et n'a pas pu etre supprime. Le supprimer a la main avant de relancer.",
-        );
-      } else {
-        console.error("\nLa creation a ete defaite chez le fournisseur d'identite.");
-      }
-    }
-
-    abandonner(erreur.message);
-  } finally {
-    await client.end();
+  if (creation.error !== null) {
+    abandonner(`le fournisseur d'identite a refuse la creation : ${creation.error.message}`);
   }
+
+  const profileId = creation.data.user.id;
+
+  // --- Écriture en base, en une seule fonction atomique --------------------
+  const { data, error } = await fournisseur.rpc("amorcer_exploitant", {
+    p_profile: profileId,
+    p_prenom: prenom,
+    p_nom: nom,
+    p_identifiant: identifiant,
+    p_alias: alias,
+  });
+
+  if (error !== null) {
+    const suppression = await fournisseur.auth.admin
+      .deleteUser(profileId)
+      .catch(() => ({ error: { message: "suppression impossible" } }));
+
+    if (suppression?.error) {
+      console.error(
+        `\nAttention : un compte a ete cree chez le fournisseur d'identite (${profileId}) ` +
+          "et n'a pas pu etre supprime. Le supprimer a la main avant de relancer.",
+      );
+    } else {
+      console.error("\nLa creation a ete defaite chez le fournisseur d'identite.");
+    }
+
+    abandonner(
+      `la base a refuse l'amorcage (${error.code ?? "code inconnu"}). ` +
+        "Verifier que les migrations sont appliquees et que le schema « study » " +
+        "est expose dans Settings > API du projet Supabase.",
+    );
+  }
+
+  if (data === "existant") {
+    // Le compte fournisseur qui vient d'être créé n'a plus lieu d'être : c'est
+    // un doublon d'un compte déjà amorcé.
+    await fournisseur.auth.admin.deleteUser(profileId).catch(() => undefined);
+
+    console.log("Ce compte proprietaire existe deja. Rien n'a ete modifie.\n");
+    console.log(
+      "Ce script ne reinitialise pas un mot de passe : ce serait un chemin de " +
+        "reprise de compte sans controle. Pour changer le secret, passer par le " +
+        "fournisseur d'identite.",
+    );
+    return;
+  }
+
+  console.log("Compte proprietaire cree.\n");
+  console.log(`  code a saisir : AVECSTUDY`);
+  console.log(`  identifiant   : ${identifiant}`);
+  console.log(`  personne      : ${prenom} ${nom}`);
+  console.log("  capacites     : administration, commercial, assistance");
+  console.log("\nCe que ce compte permet :");
+  console.log("  - consulter les demandes commerciales et leur statut ;");
+  console.log("  - creer un lycee, le suspendre, creer son administrateur ;");
+  console.log("  - suivre prospects, devis, contrats et reglements ;");
+  console.log("  - lire le journal d'audit de tous les etablissements.");
+  console.log("\nCe qu'il ne permet PAS, par conception :");
+  console.log("  - lire une copie, une correction, une note personnelle ou un message");
+  console.log("    d'entraide. Cela passe par un acces d'assistance : motif ecrit,");
+  console.log("    accord d'un administrateur du lycee, expiration et journal.");
+  console.log("\nLe mot de passe n'a ete affiche nulle part, et n'est pas journalise.");
 }
 
 principal().catch((erreur) => {

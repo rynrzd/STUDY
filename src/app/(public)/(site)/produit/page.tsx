@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { TitrePage, Carte } from "@/components/public/Chrome";
+import { AppelFinal, Carte, Section, TitrePage } from "@/components/site/Ui";
+import { Reveler } from "@/components/site/Reveler";
+import { MARQUE } from "@/lib/identite-legale";
 
 export const metadata: Metadata = {
-  title: "Fonctionnalités",
+  title: "Produit",
   description:
-    "Séances, devoirs, copies, corrections, entraide et révisions. Ce que fait study., " +
+    "Séances, devoirs, copies, corrections, entraide et révisions. Ce que fait AvecStudy, " +
     "et ce qu'il ne fait pas.",
+  alternates: { canonical: "/produit" },
 };
 
 const FAMILLES = [
@@ -50,7 +53,7 @@ const FAMILLES = [
     titre: "Administration",
     entrees: [
       ["Import de rentrée", "Un fichier .xlsx ou .csv crée les classes manquantes et rattache les élèves — après un récapitulatif et une confirmation."],
-      ["Remise des accès", "Identifiant lisible et secret temporaire, sur fiche imprimable. Après la première activation, aucun PDF ne permet de retrouver le mot de passe."],
+      ["Remise des accès", "Identifiant lisible et secret temporaire, sur fiche imprimable. Après la première activation, aucun document ne permet de retrouver le mot de passe."],
       ["Affectations datées", "Un remplacement a une date de début et de fin. La révocation est automatique."],
       ["Journal", "Les actions sensibles sont tracées, avec leur auteur, leur portée et leur motif."],
     ],
@@ -59,7 +62,7 @@ const FAMILLES = [
 
 const ABSENT = [
   ["Aucune intelligence artificielle", "Pas de chatbot, pas de génération de cours, pas de correction intelligente, pas de transcription, pas d'analyse automatique de l'écriture."],
-  ["Aucune gestion administrative", "Ni sanctions, ni cantine, ni bulletins officiels, ni absences. study. est un outil pédagogique."],
+  ["Aucune gestion administrative", "Ni sanctions, ni cantine, ni bulletins officiels, ni absences. AvecStudy est un outil pédagogique."],
   ["Aucun mécanisme d'accrochage", "Pas de fil infini, pas de série quotidienne punitive, pas de classement public entre élèves."],
   ["Aucune surveillance", "Pas d'enregistrement vidéo de session, pas de mesure d'attention. Une ouverture de document ne prouve pas qu'un contenu a été appris."],
 ] as const;
@@ -73,72 +76,91 @@ const HORS_PREMIERE_LIVRAISON = [
   "Surveillance d'examens",
 ] as const;
 
-export default function Fonctionnalites() {
+export default function PageProduit() {
   return (
     <>
       <TitrePage
-        surtitre="Fonctionnalités"
-        titre="Ce que fait study."
+        surtitre="Produit"
+        titre={`Ce que fait ${MARQUE}`}
         chapeau="Le cours, les devoirs et l'entraide, dans la continuité de la classe. Le reste est dit aussi clairement : ce qui n'existe pas, et ce qui n'est pas prévu pour la première livraison."
+        actions={
+          <>
+            <Link href="/etablissements" className="bouton bouton-primaire">
+              Demander une démonstration
+              <span aria-hidden="true" className="fleche">→</span>
+            </Link>
+            <Link href="/securite" className="bouton bouton-secondaire">
+              Sécurité et données
+            </Link>
+          </>
+        }
       />
 
-      {FAMILLES.map((famille) => (
-        <section key={famille.titre} className="border-t border-[color:var(--color-bordure)] py-12">
-          <h2 className="text-[length:var(--text-h1-app)] leading-[var(--text-h1-app--line-height)]">
-            {famille.titre}
-          </h2>
-          <dl className="mt-8 grid gap-6 md:grid-cols-2">
-            {famille.entrees.map(([nom, description]) => (
-              <div
-                key={nom}
-                className="rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-6"
-              >
-                <dt className="font-semibold">{nom}</dt>
-                <dd className="mt-2 ml-0 text-[color:var(--color-encre-faible)]">{description}</dd>
-              </div>
+      {FAMILLES.map((famille, index) => (
+        <Section key={famille.titre} fond={index % 2 === 1 ? "doux" : "clair"}>
+          <Reveler>
+            <h2 className="text-[length:var(--text-h2)] leading-[var(--text-h2--line-height)] md:text-[length:var(--text-h2-large)] md:leading-[var(--text-h2-large--line-height)]">
+              {famille.titre}
+            </h2>
+          </Reveler>
+          <dl className="m-0 mt-10 grid gap-5 md:grid-cols-2">
+            {famille.entrees.map(([nom, description], rang) => (
+              <Reveler key={nom} delai={rang * 60}>
+                <div className="carte h-full p-6 md:p-7">
+                  <dt className="font-semibold">{nom}</dt>
+                  <dd className="m-0 mt-2 text-[color:var(--color-encre-faible)]">
+                    {description}
+                  </dd>
+                </div>
+              </Reveler>
             ))}
           </dl>
-        </section>
+        </Section>
       ))}
 
-      <section className="border-t border-[color:var(--color-bordure)] py-12">
-        <h2 className="text-[length:var(--text-h1-app)] leading-[var(--text-h1-app--line-height)]">
-          Ce que study. ne fait pas
-        </h2>
-        <p className="mt-2 max-w-[62ch] text-[color:var(--color-encre-faible)]">
-          Ce ne sont pas des manques à combler plus tard. Ce sont des décisions.
-        </p>
-        <div className="mt-8 grid gap-6 md:grid-cols-2">
-          {ABSENT.map(([nom, description]) => (
-            <Carte key={nom} titre={nom}>
-              <p className="m-0 text-[color:var(--color-encre-faible)]">{description}</p>
-            </Carte>
+      <Section>
+        <Reveler className="max-w-[46ch]">
+          <h2 className="text-[length:var(--text-h2)] leading-[var(--text-h2--line-height)] md:text-[length:var(--text-h2-large)] md:leading-[var(--text-h2-large--line-height)]">
+            Ce que {MARQUE} ne fait pas
+          </h2>
+          <p className="mt-5 text-[color:var(--color-encre-faible)]">
+            Ce ne sont pas des manques à combler plus tard. Ce sont des
+            décisions.
+          </p>
+        </Reveler>
+
+        <div className="mt-10 grid gap-5 md:grid-cols-2">
+          {ABSENT.map(([nom, description], rang) => (
+            <Reveler key={nom} delai={rang * 60}>
+              <Carte titre={nom} className="h-full">
+                <p>{description}</p>
+              </Carte>
+            </Reveler>
           ))}
         </div>
-      </section>
+      </Section>
 
-      <section className="border-t border-[color:var(--color-bordure)] py-12">
-        <h2 className="text-[length:var(--text-h1-app)] leading-[var(--text-h1-app--line-height)]">
-          Hors première livraison
-        </h2>
-        <p className="mt-2 max-w-[62ch] text-[color:var(--color-encre-faible)]">
-          Ces éléments ne sont pas inclus. Les annoncer serait vous vendre
-          quelque chose qui n&apos;existe pas.
-        </p>
-        <ul className="mt-6 list-none space-y-2 p-0 text-[color:var(--color-encre-faible)]">
+      <Section fond="doux">
+        <Reveler className="max-w-[46ch]">
+          <h2 className="text-[length:var(--text-h2)] leading-[var(--text-h2--line-height)] md:text-[length:var(--text-h2-large)] md:leading-[var(--text-h2-large--line-height)]">
+            Hors première livraison
+          </h2>
+          <p className="mt-5 text-[color:var(--color-encre-faible)]">
+            Ces éléments ne sont pas inclus. Les annoncer serait vous vendre
+            quelque chose qui n&apos;existe pas.
+          </p>
+        </Reveler>
+
+        <ul className="m-0 mt-8 grid list-none gap-x-10 gap-y-3 p-0 text-[color:var(--color-encre-faible)] md:grid-cols-2">
           {HORS_PREMIERE_LIVRAISON.map((element) => (
-            <li key={element} className="flex gap-3">
-              <span aria-hidden="true" className="mt-2 h-px w-4 shrink-0 bg-[color:var(--color-bordure)]" />
+            <li key={element} className="flex gap-3 border-t border-[color:var(--color-bordure)] pt-3">
               {element}
             </li>
           ))}
         </ul>
-        <p className="mt-8">
-          <Link href="/etablissements" className="text-[color:var(--color-accent)]">
-            Parler de vos classes avec nous
-          </Link>
-        </p>
-      </section>
+      </Section>
+
+      <AppelFinal />
     </>
   );
 }

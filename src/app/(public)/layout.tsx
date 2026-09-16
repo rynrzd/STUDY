@@ -1,12 +1,12 @@
-import { EntetePublic, PiedDePage } from "@/components/public/Chrome";
+import { Entete } from "@/components/site/Entete";
+import { PiedDePage } from "@/components/site/PiedDePage";
 
 /**
- * Gabarit du site public (ch. 02) : en-tête et pied de page communs.
+ * Gabarit du site public : en-tête collant et pied de page légal.
  *
- * Ce gabarit ne contraint volontairement pas la largeur. La landing a besoin
- * de bandes pleine largeur (la bande rose des élèves, la bande noire finale de
- * la nouvelle maquette) ; les pages secondaires ajoutent leur propre
- * conteneur de 1 200 px via le gabarit du groupe (site).
+ * La largeur n'est pas contrainte ici. Les pages ont besoin de bandes pleine
+ * largeur ; c'est la classe `.contenu` de chaque section qui ramène le texte
+ * aux 1 220 px du cahier de finition.
  *
  * L'entrée privée (/connexion) n'utilise pas ce gabarit : elle a son propre
  * cadre, dépouillé, pour qu'on ne confonde pas une page commerciale avec
@@ -14,10 +14,10 @@ import { EntetePublic, PiedDePage } from "@/components/public/Chrome";
  */
 export default function GabaritPublic({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      <EntetePublic />
-      {children}
+    <div className="sans-debordement flex min-h-screen flex-col">
+      <Entete />
+      <div className="flex-1">{children}</div>
       <PiedDePage />
-    </>
+    </div>
   );
 }

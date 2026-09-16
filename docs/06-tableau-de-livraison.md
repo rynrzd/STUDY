@@ -127,7 +127,7 @@ npm run diagnostic  → groupes manquants nommés, aucune valeur affichée
 | Remise persistante | **non** : aucune base, aucune remise possible |
 | Stockage privé | **non** : aucun stockage |
 | Jobs reprenables | **vérifié en local** : bail, reprise après crash, idempotence |
-| Emails reçus | **sans objet** : study. n'envoie aucun courrier (décision du 15/09) |
+| Emails reçus | **sans objet** : AvecStudy n'envoie aucun courrier (décision du 15/09) |
 | Facturation test cohérente | **sans objet** : vente sur devis, aucun prestataire (décision du 15/09) |
 | Restauration mesurée | **non** : aucune sauvegarde |
 | Animateurs / modérateurs désignés, cadre contractuel | **non** : décisions ouvertes |
