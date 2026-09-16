@@ -300,3 +300,94 @@ test("une mutation d apercu est acceptee par verifierMutation", () => {
   const etrangere: RequeteAVerifier = { ...requete, origine: "https://ailleurs.test" };
   assert.equal(verifierMutation(etrangere, acceptees).accepte, false);
 });
+
+/* -------------------------------------------------------------------------- */
+/* Le domaine canonique declare par l hebergeur                               */
+/*                                                                            */
+/* Ces tests viennent d une panne reelle : en production, APP_ORIGIN ne        */
+/* correspondait pas a l adresse reellement servie, et TOUTES les mutations    */
+/* etaient refusees — formulaire de devis compris. Rien ne le signalait : la   */
+/* compilation passait, les tests locaux passaient, la page d accueil          */
+/* repondait 200.                                                             */
+/* -------------------------------------------------------------------------- */
+
+test("le domaine canonique de l hebergeur est accepte, en plus d APP_ORIGIN", () => {
+  const acceptees = originesAutorisees(null, {
+    APP_ORIGIN: "https://avecstudy.test",
+    VERCEL_ENV: "production",
+    VERCEL_PROJECT_PRODUCTION_URL: "etude.vercel.app",
+  });
+
+  assert.deepEqual(acceptees, ["https://avecstudy.test", "https://etude.vercel.app"]);
+});
+
+test("il suffit a lui seul quand APP_ORIGIN manque ou se trompe", () => {
+  // Le cas constate : APP_ORIGIN pointe ailleurs, le site repond quand meme.
+  const acceptees = originesAutorisees(null, {
+    APP_ORIGIN: "http://localhost:3100",
+    VERCEL_ENV: "production",
+    VERCEL_PROJECT_PRODUCTION_URL: "etude.vercel.app",
+  });
+
+  const requete: RequeteAVerifier = {
+    methode: "POST",
+    origine: "https://etude.vercel.app",
+    referer: null,
+    fetchSite: "same-origin",
+    fetchMode: "cors",
+    jetonEnvoye: "jeton-identique",
+    jetonCookie: "jeton-identique",
+  };
+
+  assert.equal(verifierMutation(requete, acceptees).accepte, true);
+});
+
+test("il ne vient jamais de la requete : une origine tierce reste refusee", () => {
+  const acceptees = originesAutorisees("https://attaquant.test", {
+    APP_ORIGIN: "https://avecstudy.test",
+    VERCEL_ENV: "production",
+    VERCEL_PROJECT_PRODUCTION_URL: "etude.vercel.app",
+  });
+
+  assert.ok(!acceptees.includes("https://attaquant.test"));
+
+  const requete: RequeteAVerifier = {
+    methode: "POST",
+    origine: "https://attaquant.test",
+    referer: null,
+    fetchSite: null,
+    fetchMode: null,
+    jetonEnvoye: "jeton-identique",
+    jetonCookie: "jeton-identique",
+  };
+
+  assert.equal(verifierMutation(requete, acceptees).motif, "origine_etrangere");
+});
+
+test("une valeur d hebergeur illisible est ignoree, pas devinee", () => {
+  assert.deepEqual(
+    originesAutorisees(null, {
+      APP_ORIGIN: "https://avecstudy.test",
+      VERCEL_PROJECT_PRODUCTION_URL: "pas une url du tout",
+    }),
+    ["https://avecstudy.test"],
+  );
+
+  assert.deepEqual(
+    originesAutorisees(null, { VERCEL_PROJECT_PRODUCTION_URL: "" }),
+    [],
+  );
+});
+
+test("le protocole est ajoute quand l hebergeur donne un domaine nu", () => {
+  assert.deepEqual(
+    originesAutorisees(null, { VERCEL_PROJECT_PRODUCTION_URL: "etude.vercel.app" }),
+    ["https://etude.vercel.app"],
+  );
+
+  // Et une valeur deja complete n est pas doublee.
+  assert.deepEqual(
+    originesAutorisees(null, { VERCEL_PROJECT_PRODUCTION_URL: "https://etude.vercel.app" }),
+    ["https://etude.vercel.app"],
+  );
+});

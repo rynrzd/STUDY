@@ -132,6 +132,9 @@ function origineDepuisReferer(referer: string | null): string | null {
  *
  * @param origineDeLaRequete origine du déploiement qui reçoit la requête. Elle
  *   n'est acceptée que sur un déploiement d'aperçu — voir ci-dessous.
+ *
+ * S'y ajoute, en production, le domaine canonique déclaré par l'hébergeur
+ * (`VERCEL_PROJECT_PRODUCTION_URL`), qui vient lui aussi de l'environnement.
  */
 export function originesAutorisees(
   origineDeLaRequete: string | null = null,
@@ -163,6 +166,30 @@ export function originesAutorisees(
       if (!acceptees.includes(propre)) acceptees.push(propre);
     } catch {
       // Origine illisible : rien à ajouter.
+    }
+  }
+
+  // Le domaine canonique du déploiement, tel que l'hébergeur le déclare.
+  //
+  // Il vient de l'environnement, comme APP_ORIGIN, et **jamais de la requête** :
+  // une page tierce ne peut donc pas le fabriquer. La sécurité est la même ;
+  // ce qui change, c'est qu'une seule variable mal renseignée ne suffit plus à
+  // rendre tous les formulaires du site inutilisables — panne silencieuse,
+  // constatée en production, et invisible à la compilation comme aux tests
+  // locaux.
+  //
+  // APP_ORIGIN reste la valeur qui fait foi partout ailleurs (liens absolus,
+  // plan du site, métadonnées) : celle-ci ne la remplace pas, elle la double.
+  const canoniqueHebergeur = (source.VERCEL_PROJECT_PRODUCTION_URL ?? "").trim();
+  if (canoniqueHebergeur !== "") {
+    try {
+      const avecProtocole = canoniqueHebergeur.includes("://")
+        ? canoniqueHebergeur
+        : `https://${canoniqueHebergeur}`;
+      const origine = new URL(avecProtocole).origin;
+      if (!acceptees.includes(origine)) acceptees.push(origine);
+    } catch {
+      // Valeur illisible : on ne devine pas.
     }
   }
 
