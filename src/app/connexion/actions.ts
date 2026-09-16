@@ -127,5 +127,5 @@ export async function seConnecter(
   }
 
   // `redirect` lève : rien de ce qui suit ne s'exécute.
-  redirect(resultat.activationRequise ? "/activation" : "/apres-connexion");
+  redirect(resultat.activationRequise ? "/activation" : "/app");
 }

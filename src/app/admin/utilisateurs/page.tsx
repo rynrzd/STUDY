@@ -1,0 +1,197 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { TitreEspace, Vide } from "@/components/app/Cadre";
+import { FormulaireCompte } from "@/components/admin/Formulaires";
+import { classes, contexte, membres } from "@/lib/etablissement";
+import { sessionCourante } from "@/lib/session-serveur";
+
+export const metadata: Metadata = { title: "Utilisateurs" };
+
+/**
+ * Utilisateurs de l'établissement — cahier V2, §14.3.
+ *
+ * Le filtre passe par l'adresse plutôt que par un champ de recherche en
+ * JavaScript : « les comptes à activer » est un lien qu'on envoie à un collègue,
+ * et la page fonctionne sans JS.
+ *
+ * Aucun mot de passe n'apparaît ici, même masqué : ils n'existent que le temps
+ * d'une création, sur la fiche imprimable.
+ */
+export const dynamic = "force-dynamic";
+
+const FILTRES = [
+  { cle: "", libelle: "Tous" },
+  { cle: "eleve", libelle: "Élèves" },
+  { cle: "professeur", libelle: "Professeurs" },
+  { cle: "a_activer", libelle: "À activer" },
+] as const;
+
+export default async function PageUtilisateurs({
+  searchParams,
+}: {
+  searchParams: Promise<{ etat?: string; classe?: string }>;
+}) {
+  const personne = await sessionCourante();
+  if (personne === null) redirect("/connexion");
+
+  const situation = await contexte(personne.profileId);
+  if (situation === null) redirect("/admin");
+
+  const [listeMembres, listeClasses] = await Promise.all([
+    membres(personne.profileId),
+    classes(personne.profileId),
+  ]);
+
+  const parametres = await searchParams;
+  const filtre = parametres.etat ?? "";
+
+  const visibles = listeMembres.filter((membre) => {
+    if (filtre === "eleve") return membre.roles.includes("eleve");
+    if (filtre === "professeur") return membre.roles.includes("professeur");
+    if (filtre === "a_activer") return membre.account_state === "a_activer";
+    return true;
+  });
+
+  const optionsClasses = listeClasses.map((classe) => ({ id: classe.id, label: classe.label }));
+
+  return (
+    <>
+      <TitreEspace
+        titre="Utilisateurs"
+        sousTitre={`${listeMembres.length} compte${listeMembres.length > 1 ? "s" : ""} dans ${
+          situation.organisation
+        }`}
+      />
+
+      <div className="mt-8">
+        <FormulaireCompte listeClasses={optionsClasses} />
+      </div>
+
+      <section className="mt-11">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h2 className="text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
+            Comptes
+          </h2>
+          <Link
+            href="/admin/import"
+            className="text-[length:var(--text-aide)] text-[color:var(--color-accent)]"
+          >
+            Import de rentrée
+          </Link>
+        </div>
+
+        <nav aria-label="Filtrer les comptes" className="mt-4">
+          <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
+            {FILTRES.map((option) => {
+              const active = option.cle === filtre;
+              return (
+                <li key={option.cle || "tous"}>
+                  <Link
+                    href={
+                      option.cle === "" ? "/admin/utilisateurs" : `/admin/utilisateurs?etat=${option.cle}`
+                    }
+                    aria-current={active ? "page" : undefined}
+                    className={`inline-flex min-h-9 items-center rounded-full border px-3.5 text-[length:var(--text-tableau)] no-underline ${
+                      active
+                        ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)] font-semibold text-[color:var(--color-accent)]"
+                        : "border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] text-[color:var(--color-encre-faible)] hover:border-[color:var(--color-bordure-forte)]"
+                    }`}
+                  >
+                    {option.libelle}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {visibles.length === 0 ? (
+          <div className="mt-6">
+            <Vide
+              titre="Aucun compte ne correspond."
+              texte="Changez de filtre, ou créez un compte avec le formulaire ci-dessus. L'import de rentrée reste le chemin le plus rapide pour une classe entière."
+            />
+          </div>
+        ) : (
+          <div className="carte mt-5 overflow-x-auto">
+            <table className="w-full min-w-[40rem] border-collapse text-[length:var(--text-tableau)]">
+              <caption className="sr-only">
+                Comptes de {situation.organisation}
+              </caption>
+              <thead>
+                <tr className="border-b border-[color:var(--color-bordure-forte)] text-left">
+                  <th scope="col" className="p-3 font-semibold">
+                    Personne
+                  </th>
+                  <th scope="col" className="p-3 font-semibold">
+                    Identifiant
+                  </th>
+                  <th scope="col" className="p-3 font-semibold">
+                    Rôle
+                  </th>
+                  <th scope="col" className="p-3 font-semibold">
+                    Classe
+                  </th>
+                  <th scope="col" className="p-3 font-semibold">
+                    État
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibles.slice(0, 500).map((membre) => (
+                  <tr
+                    key={membre.profile_id}
+                    className="border-b border-[color:var(--color-bordure)] last:border-b-0"
+                  >
+                    <td className="p-3">
+                      <span className="font-medium">{membre.nom.toUpperCase()}</span>{" "}
+                      {membre.prenom}
+                    </td>
+                    <td className="p-3 font-mono text-[color:var(--color-encre-faible)]">
+                      {membre.local_login}
+                    </td>
+                    <td className="p-3 text-[color:var(--color-encre-faible)]">
+                      {membre.roles.includes("professeur")
+                        ? "Professeur"
+                        : membre.roles.includes("admin_etablissement")
+                          ? "Administration"
+                          : "Élève"}
+                    </td>
+                    <td className="p-3 text-[color:var(--color-encre-faible)]">
+                      {membre.classe ?? "—"}
+                    </td>
+                    <td className="p-3">
+                      <span
+                        className={`pastille ${
+                          membre.account_state === "actif"
+                            ? "pastille-publie"
+                            : membre.account_state === "a_activer"
+                              ? "pastille-attention"
+                              : "pastille-brouillon"
+                        }`}
+                      >
+                        {membre.account_state === "actif"
+                          ? "Actif"
+                          : membre.account_state === "a_activer"
+                            ? "À activer"
+                            : membre.account_state}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {visibles.length > 500 ? (
+          <p className="m-0 mt-3 text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)]">
+            Les 500 premiers comptes sont affichés. Affinez avec un filtre pour
+            voir les suivants.
+          </p>
+        ) : null}
+      </section>
+    </>
+  );
+}

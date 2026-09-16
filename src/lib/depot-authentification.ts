@@ -140,12 +140,49 @@ export class DepotSupabase implements DepotAuthentification {
     return ligne ?? null;
   }
 
+  /**
+   * Remplace les jetons du fournisseur sur une session vivante.
+   *
+   * Sert au renouvellement : le jeton d'accès expire au bout d'une heure, et
+   * sans cela une personne au travail depuis plus longtemps verrait ses pages
+   * cesser de charger sans explication.
+   */
+  async remplacerJetons(empreinte: Buffer, jetonsChiffres: string): Promise<void> {
+    const cles = lireCles();
+    const { error } = await this.client().rpc("auth_remplacer_jetons", {
+      p_empreinte: enHexa(empreinte),
+      p_jetons_chiffres: enHexa(Buffer.from(jetonsChiffres, "utf8")),
+      p_cle_version: cles[0]?.version ?? 1,
+    });
+    if (error !== null) journaliser("remplacement_jetons", error.code);
+  }
+
   async prolongerSession(empreinte: Buffer, nouvelleEcheance: Date): Promise<void> {
     const { error } = await this.client().rpc("auth_prolonger_session", {
       p_empreinte: enHexa(empreinte),
       p_nouvelle_idle: nouvelleEcheance.toISOString(),
     });
     if (error !== null) journaliser("prolongation_session", error.code);
+  }
+
+  /**
+   * L'alias technique de la personne, pour verifier son mot de passe actuel.
+   *
+   * Necessaire au changement de mot de passe depuis les parametres : le
+   * fournisseur d'identite ne connait pas les identifiants locaux, il ne
+   * connait que cet alias. Il ne sort d'ici que pour la personne elle-meme.
+   */
+  async aliasCourant(profileId: string, organizationId: string): Promise<string | null> {
+    const { data, error } = await this.client().rpc("auth_alias_courant", {
+      p_profile: profileId,
+      p_organisation: organizationId,
+    });
+
+    if (error !== null) {
+      journaliser("alias_courant", error.code);
+      return null;
+    }
+    return typeof data === "string" && data !== "" ? data : null;
   }
 
   async activerCompte(

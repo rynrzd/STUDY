@@ -168,19 +168,40 @@ async function creerBuckets(attendus) {
       console.log(`  ALERTE   ${bucket.nom} etait PUBLIC — remis en prive`);
     }
 
-    const reponse = await fetch(new URL(`/storage/v1/bucket/${bucket.nom}`, base), {
+    const ajustement = {
+      public: false,
+      file_size_limit: Number(bucket.taille_max_octets),
+      allowed_mime_types: bucket.types_autorises,
+    };
+
+    let reponse = await fetch(new URL(`/storage/v1/bucket/${bucket.nom}`, base), {
       method: "PUT",
       headers: entetes,
-      body: JSON.stringify({
-        public: false,
-        file_size_limit: Number(bucket.taille_max_octets),
-        allowed_mime_types: bucket.types_autorises,
-      }),
+      body: JSON.stringify(ajustement),
     });
 
+    // Meme plafond qu'a la creation, et meme reponse : on reessaie sans limite
+    // propre — le bucket herite alors du plafond du projet — et on le DIT.
+    // Abandonner ici laissait les buckets suivants non verifies a cause d'un
+    // bucket dont la limite declaree est simplement trop haute pour le plan.
     if (!reponse.ok) {
       const detail = await reponse.text();
-      abandonner(`mise a jour du bucket ${bucket.nom} refusee (HTTP ${reponse.status}) : ${detail}`);
+
+      if (detail.includes("EntityTooLarge") || detail.includes("exceeded the maximum")) {
+        plafonnes.push(bucket);
+        reponse = await fetch(new URL(`/storage/v1/bucket/${bucket.nom}`, base), {
+          method: "PUT",
+          headers: entetes,
+          body: JSON.stringify({ ...ajustement, file_size_limit: null }),
+        });
+      }
+
+      if (!reponse.ok) {
+        const second = await reponse.text();
+        abandonner(
+          `mise a jour du bucket ${bucket.nom} refusee (HTTP ${reponse.status}) : ${second}`,
+        );
+      }
     }
 
     console.log(`  ajuste   ${bucket.nom}`);

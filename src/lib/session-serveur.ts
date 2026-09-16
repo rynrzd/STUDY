@@ -2,7 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { DepotSupabase, type LigneSession } from "./depot-authentification.ts";
-import { dechiffrer, lireCles } from "./chiffrement.ts";
+import { chiffrer, dechiffrer, lireCles } from "./chiffrement.ts";
 import {
   dureesPour,
   empreinteJeton,
@@ -113,18 +113,60 @@ export async function marquerActivite(personne: Personne): Promise<void> {
   await depot.prolongerSession(personne.empreinte, prolongee.idleExpiresAt);
 }
 
-/** Jeton d'accès du fournisseur, déchiffré, pour agir au nom de la personne. */
+/**
+ * Jeton d'accès du fournisseur, déchiffré, pour agir au nom de la personne.
+ *
+ * Le jeton expire au bout d'une heure. Sans renouvellement, un professeur qui
+ * prépare une séance perdrait la main au milieu de son travail, avec une page
+ * qui ne charge plus et aucune explication. On le renouvelle donc dès qu'il
+ * approche de son échéance, et on réenregistre le nouveau couple chiffré.
+ *
+ * La marge de deux minutes évite le cas limite : un jeton valide à la lecture
+ * mais périmé à l'arrivée de la requête.
+ */
+const MARGE_RENOUVELLEMENT_MS = 2 * 60 * 1000;
+
 export async function jetonAccesDe(personne: Personne): Promise<string | null> {
   const ligne = await depot.lireSession(personne.empreinte);
   if (ligne === null || ligne.provider_tokens_chiffres === null) return null;
 
+  let jetons: { access?: string; refresh?: string; expire?: string };
   try {
     const scelle = decoderBytea(ligne.provider_tokens_chiffres);
-    const clair = dechiffrer(scelle, lireCles());
-    const jetons = JSON.parse(clair) as { access?: string };
-    return typeof jetons.access === "string" ? jetons.access : null;
+    jetons = JSON.parse(dechiffrer(scelle, lireCles()));
   } catch {
     return null;
+  }
+
+  if (typeof jetons.access !== "string") return null;
+
+  const echeance = typeof jetons.expire === "string" ? Date.parse(jetons.expire) : Number.NaN;
+  const encoreBon =
+    !Number.isFinite(echeance) || echeance - Date.now() > MARGE_RENOUVELLEMENT_MS;
+
+  if (encoreBon || typeof jetons.refresh !== "string") return jetons.access;
+
+  try {
+    const { FournisseurSupabase } = await import("./fournisseur-supabase.ts");
+    const neufs = await new FournisseurSupabase().renouveler(jetons.refresh);
+
+    await depot.remplacerJetons(
+      personne.empreinte,
+      chiffrer(
+        JSON.stringify({
+          access: neufs.accessToken,
+          refresh: neufs.refreshToken,
+          expire: neufs.expireLe.toISOString(),
+        }),
+        lireCles(),
+      ),
+    );
+
+    return neufs.accessToken;
+  } catch {
+    // Le renouvellement a échoué : on rend le jeton courant. S'il est périmé,
+    // la requête suivante échouera proprement et la personne se reconnectera.
+    return jetons.access;
   }
 }
 
@@ -136,12 +178,26 @@ export function estExploitant(personne: Personne): boolean {
   return personne.roles.includes("editeur");
 }
 
-/** Où envoyer quelqu'un après une connexion réussie. */
+export function estEnseignant(personne: Personne): boolean {
+  return personne.roles.includes("professeur");
+}
+
+export function estEleve(personne: Personne): boolean {
+  return personne.roles.includes("eleve");
+}
+
+/**
+ * Où envoyer quelqu'un après une connexion réussie — cahier V2, §5 et §21.
+ *
+ * L'ordre compte : une personne qui cumule les rôles arrive dans l'espace le
+ * plus large dont elle dispose, et navigue vers les autres depuis là.
+ */
 export function destinationApresConnexion(personne: Personne): string {
   if (personne.activationRequise) return "/activation";
   if (estExploitant(personne)) return "/administration";
-  if (estAdministrateur(personne)) return "/etablissement";
-  return "/mes-cours";
+  if (estAdministrateur(personne)) return "/admin";
+  if (estEnseignant(personne)) return "/professeur";
+  return "/eleve";
 }
 
 export { depot as depotAuthentification };

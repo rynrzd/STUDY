@@ -147,7 +147,7 @@ function BoutonEnregistrer() {
 
 function Pastille({ etat }: { etat: string }) {
   const tons: Record<string, string> = {
-    nouvelle: "bg-[color:var(--color-accent-doux)] text-[color:var(--color-accent)]",
+    nouvelle: "bg-[color:var(--color-rose-clair)] text-[color:var(--color-accent)]",
     contactee: "bg-[color:var(--color-surface-douce)] text-[color:var(--color-encre-faible)]",
     devis_envoye: "bg-[color:var(--color-surface-douce)] text-[color:var(--color-encre)]",
     gagnee: "bg-[color:var(--color-succes-fond)] text-[color:var(--color-succes)]",

@@ -60,10 +60,18 @@ const PUBLIQUES = [
   "/mentions-legales", "/confidentialite", "/conditions",
 ];
 
+// Pages ouvertes mais hors index : elles doivent repondre, sans etre referencees.
+const OUVERTES_NON_INDEXEES = ["/connexion", "/mot-de-passe-oublie"];
+
 const RESSOURCES = ["/robots.txt", "/sitemap.xml", "/manifest.webmanifest", "/icon", "/opengraph-image"];
-const REDIRECTIONS = [["/fonctionnalites", "/produit"], ["/demo", "/etablissements"]];
+const REDIRECTIONS = [["/fonctionnalites", "/produit"], ["/demo", "/etablissements"],
+  ["/mes-cours", "/eleve"], ["/etablissement", "/admin"], ["/etablissement/import", "/admin/import"],
+  ["/apres-connexion", "/app"]];
 const PRIVEES = ["/administration", "/administration/etablissements", "/administration/journal",
-  "/etablissement", "/etablissement/import", "/mes-cours", "/apres-connexion", "/activation"];
+  "/admin", "/admin/classes", "/admin/utilisateurs", "/admin/import",
+  "/professeur", "/professeur/classes", "/professeur/devoirs",
+  "/eleve", "/eleve/cours", "/eleve/devoirs",
+  "/studio", "/parametres", "/app", "/activation"];
 
 /**
  * Termes qui ne doivent apparaître sur aucune page publique.
@@ -136,6 +144,20 @@ async function verifierRoutes() {
   for (const route of [...PUBLIQUES, ...RESSOURCES]) {
     const reponse = await demander(route, { redirect: "manual" });
     verifier(reponse.status === 200, `${route} repond 200`, `HTTP ${reponse.status}`);
+  }
+
+  // Ouvertes, mais jamais indexees : elles doivent repondre 200 et porter
+  // l en-tete de non-indexation. Une page de connexion referencee par un
+  // moteur, c est une page de connexion qu on attaque.
+  for (const route of OUVERTES_NON_INDEXEES) {
+    const reponse = await demander(route, { redirect: "manual" });
+    verifier(reponse.status === 200, `${route} repond 200`, `HTTP ${reponse.status}`);
+    const corps = await reponse.text();
+    verifier(
+      corps.includes("noindex"),
+      `${route} demande a ne pas etre indexee`,
+      "aucune directive noindex",
+    );
   }
 
   for (const [ancienne, nouvelle] of REDIRECTIONS) {
@@ -247,10 +269,15 @@ async function verifierMiseEnPage() {
   // La feuille est minifiée en production : aucun espace n'est garanti.
   const jeton = (nom, valeur) => new RegExp(`--${nom}:\\s*${valeur}`).test(css);
 
-  verifier(jeton("spacing-contenu", "1220px"), "conteneur de 1220 px");
+  // Valeurs du systeme de design V2 (ch. 03). Elles sont verifiees sur la page
+  // servie, pas sur la feuille de style : ce qui compte est ce qui arrive au
+  // navigateur d un lycee, apres compilation et minification.
+  verifier(jeton("spacing-contenu", "1180px"), "conteneur de 1180 px");
+  verifier(jeton("spacing-app", "1320px"), "cadre applicatif de 1320 px");
   verifier(jeton("spacing-cible", "44px"), "cible tactile de 44 px");
-  verifier(jeton("text-h1", "4\\.5rem"), "H1 desktop a 72 px");
-  verifier(jeton("text-h1-mobile", "2\\.75rem"), "H1 mobile a 44 px");
+  verifier(jeton("text-h1", "4rem"), "H1 desktop a 64 px");
+  verifier(jeton("text-h1-mobile", "2\.5rem"), "H1 mobile a 40 px");
+  verifier(jeton("color-accent", "#9f315c"), "rose AvecStudy comme couleur d accent");
   verifier(css.includes("prefers-reduced-motion"), "mouvement reduit respecte");
   verifier(/overflow-x:\s*clip/.test(css), "aucun debordement horizontal");
 }

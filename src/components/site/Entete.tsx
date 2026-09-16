@@ -5,23 +5,21 @@ import { useEffect, useId, useState } from "react";
 import { MARQUE } from "@/lib/identite-legale";
 
 /**
- * Navigation du site public.
+ * Navigation du site public — cahier V2, §4.1.
  *
- * Structure imposée par la section 4 du cahier de finition : logo, Produit,
- * Pour les établissements, Sécurité, Offre, Connexion, puis le bouton de
- * demande de démonstration.
+ * Logo à gauche, quatre ancres, puis les deux actions : se connecter et
+ * découvrir. L'en-tête est transparent en haut de page et devient blanc au
+ * défilement — rien de plus, pas d'ombre ni de flou marqué.
  *
- * L'en-tête change discrètement au défilement — une bordure et un fond un peu
- * plus opaques, rien de plus. Sur mobile, le menu est un panneau accessible,
- * fermé à l'échappement et au changement de page, et la connexion reste
- * atteignable sans l'ouvrir.
+ * Sur mobile, la connexion reste atteignable sans ouvrir le menu : c'est le
+ * geste le plus fréquent d'un élève qui arrive sur le site.
  */
 
 const LIENS = [
-  { href: "/produit", libelle: "Produit" },
-  { href: "/etablissements", libelle: "Pour les établissements" },
-  { href: "/securite", libelle: "Sécurité" },
-  { href: "/offre", libelle: "Offre" },
+  { href: "/#fonctionnement", libelle: "Fonctionnement" },
+  { href: "/#professeurs", libelle: "Professeurs" },
+  { href: "/#eleves", libelle: "Élèves" },
+  { href: "/#etablissements", libelle: "Établissements" },
 ] as const;
 
 export function Entete() {
@@ -47,17 +45,17 @@ export function Entete() {
 
   return (
     <header className="entete" data-defile={defile}>
-      <div className="contenu flex h-[68px] items-center justify-between gap-6">
+      <div className="contenu flex h-[66px] items-center justify-between gap-6">
         <Link
           href="/"
           onClick={() => setOuvert(false)}
-          className="text-[1.3125rem] font-extrabold tracking-[-0.03em] text-[color:var(--color-encre)] no-underline"
+          className="text-[1.3125rem] font-extrabold tracking-[-0.035em] text-[color:var(--color-encre)] no-underline"
         >
           {MARQUE}
         </Link>
 
         <nav aria-label="Navigation principale" className="hidden lg:block">
-          <ul className="m-0 flex list-none items-center gap-8 p-0">
+          <ul className="m-0 flex list-none items-center gap-7 p-0">
             {LIENS.map((lien) => (
               <li key={lien.href}>
                 <Link
@@ -72,11 +70,14 @@ export function Entete() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link href="/connexion" className="bouton bouton-discret hidden sm:inline-flex">
-            Connexion
+          <Link href="/connexion" className="bouton bouton-discret bouton-compact sm:min-h-[var(--spacing-cible)] sm:text-[length:var(--text-corps)]">
+            Se connecter
           </Link>
-          <Link href="/etablissements" className="bouton bouton-primaire hidden sm:inline-flex">
-            Demander une démo
+          <Link
+            href="/#decouvrir"
+            className="bouton bouton-rose bouton-compact hidden sm:inline-flex sm:min-h-[var(--spacing-cible)] sm:text-[length:var(--text-corps)]"
+          >
+            Découvrir AvecStudy
           </Link>
 
           <button
@@ -85,13 +86,13 @@ export function Entete() {
             aria-controls={`${base}-menu`}
             aria-label={ouvert ? "Fermer le menu" : "Ouvrir le menu"}
             onClick={() => setOuvert(!ouvert)}
-            className="bouton bouton-secondaire px-3 lg:hidden"
+            className="bouton bouton-secondaire bouton-compact px-3 lg:hidden"
           >
-            <span aria-hidden="true" className="flex flex-col gap-[5px]">
-              <span className="block h-[2px] w-[18px] bg-current" />
-              <span className="block h-[2px] w-[18px] bg-current" />
+            <span aria-hidden="true" className="flex flex-col gap-[4px]">
+              <span className="block h-[2px] w-[16px] bg-current" />
+              <span className="block h-[2px] w-[16px] bg-current" />
             </span>
-            <span className="text-[length:var(--text-tableau)]">Menu</span>
+            Menu
           </button>
         </div>
       </div>
@@ -101,7 +102,7 @@ export function Entete() {
         hidden={!ouvert}
         className="border-t border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] lg:hidden"
       >
-        <nav aria-label="Navigation" className="contenu py-4">
+        <nav aria-label="Sections du site" className="contenu py-4">
           <ul className="m-0 list-none space-y-1 p-0">
             {LIENS.map((lien) => (
               <li key={lien.href}>
@@ -116,22 +117,13 @@ export function Entete() {
             ))}
           </ul>
 
-          <div className="mt-4 flex flex-col gap-2 border-t border-[color:var(--color-bordure)] pt-4">
-            <Link
-              href="/connexion"
-              onClick={() => setOuvert(false)}
-              className="bouton bouton-secondaire w-full"
-            >
-              Connexion
-            </Link>
-            <Link
-              href="/etablissements"
-              onClick={() => setOuvert(false)}
-              className="bouton bouton-primaire w-full"
-            >
-              Demander une démo
-            </Link>
-          </div>
+          <Link
+            href="/#decouvrir"
+            onClick={() => setOuvert(false)}
+            className="bouton bouton-rose mt-4 w-full"
+          >
+            Découvrir AvecStudy
+          </Link>
         </nav>
       </div>
     </header>

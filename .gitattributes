@@ -1,0 +1,15 @@
+# Les migrations sont lues octet pour octet par le suivi de schema et par les
+# tests. Leur forme doit donc etre la meme sur toutes les machines : sans cette
+# regle, `core.autocrlf` reecrit les fichiers en CRLF au premier `git checkout`
+# et le suivi croit que des migrations deja appliquees ont ete modifiees.
+*.sql text eol=lf
+
+# Meme raison pour le reste du code : une difference de fin de ligne n'est
+# jamais une difference interessante dans une revue.
+*.ts text eol=lf
+*.tsx text eol=lf
+*.mjs text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.md text eol=lf

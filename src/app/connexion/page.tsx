@@ -66,9 +66,9 @@ export default async function PageConnexion({
 
       <div className="mt-10 border-t border-[color:var(--color-bordure)] pt-6 text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)] text-[color:var(--color-encre-faible)]">
         <p className="m-0">
-          <strong className="text-[color:var(--color-encre)]">
+          <Link href="/mot-de-passe-oublie" className="font-semibold text-[color:var(--color-accent)]">
             Mot de passe oublié ?
-          </strong>{" "}
+          </Link>{" "}
           Adressez-vous à l&apos;administrateur de votre établissement. Il
           réinitialise votre accès après avoir vérifié votre identité sur place.
           Personne ne peut lire votre mot de passe : il n&apos;est stocké nulle

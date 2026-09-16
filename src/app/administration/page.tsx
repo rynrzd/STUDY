@@ -108,7 +108,7 @@ function Filtre({
       aria-current={actif ? "page" : undefined}
       className={`inline-flex min-h-9 items-center rounded-full border px-3.5 text-[length:var(--text-tableau)] no-underline ${
         actif
-          ? "border-[color:var(--color-accent)] bg-[color:var(--color-accent-doux)] font-semibold text-[color:var(--color-accent)]"
+          ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)] font-semibold text-[color:var(--color-accent)]"
           : "border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] text-[color:var(--color-encre-faible)] hover:border-[color:var(--color-bordure-forte)]"
       }`}
     >

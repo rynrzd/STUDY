@@ -5,7 +5,7 @@ conservees :
 
 | Famille | Usage | Licence |
 |---|---|---|
-| Source Serif 4 | titres et mot-symbole `study.` | SIL Open Font License 1.1 |
+| Source Serif 4 | titres et mot-symbole AvecStudy | SIL Open Font License 1.1 |
 | Inter | texte fonctionnel, tableaux, formulaires | SIL Open Font License 1.1 |
 
 ## Fichiers attendus

@@ -229,3 +229,209 @@ export function empreinteApercu(lignes: readonly LigneImport[]): string {
     .join("\n");
   return createHash("sha256").update(contenu).digest("hex");
 }
+
+/* -------------------------------------------------------------------------- */
+/* Gestes unitaires — cahier V2, §14.2 a §14.4                                */
+/*                                                                            */
+/* L'import de rentree est le bon geste pour huit cents eleves en septembre.   */
+/* Il ne l'est pas pour l'eleve qui arrive en janvier, ni pour le remplacant   */
+/* nomme un mardi matin. D'ou ces fonctions, qui creent une ligne a la fois.   */
+/* -------------------------------------------------------------------------- */
+
+export interface Matiere {
+  readonly id: string;
+  readonly label: string;
+  readonly subject_code: string;
+}
+
+export async function matieres(acteur: string): Promise<Matiere[]> {
+  const client = clientExploitation("administration_des_comptes");
+  const { data, error } = await client.rpc("etab_matieres", { p_acteur: acteur });
+  if (error !== null) return [];
+  return (data ?? []) as unknown as Matiere[];
+}
+
+export interface Affectation {
+  readonly teaching_space_id: string;
+  readonly class_id: string;
+  readonly classe: string;
+  readonly matiere: string;
+  readonly professeur_id: string | null;
+  readonly prenom: string | null;
+  readonly nom: string | null;
+}
+
+export async function affectations(acteur: string): Promise<Affectation[]> {
+  const client = clientExploitation("administration_des_comptes");
+  const { data, error } = await client.rpc("etab_affectations", { p_acteur: acteur });
+  if (error !== null) return [];
+  return (data ?? []) as unknown as Affectation[];
+}
+
+/** Cree une classe. Renvoie son identifiant, ou `null` si la base a refuse. */
+export async function creerClasse(
+  acteur: string,
+  annee: string,
+  label: string,
+): Promise<string | null> {
+  const client = clientExploitation("administration_des_comptes");
+  const { data, error } = await client.rpc("etab_creer_classe", {
+    p_acteur: acteur,
+    p_annee: annee,
+    p_label: label,
+  });
+
+  if (error !== null) {
+    console.error(JSON.stringify({ niveau: "erreur", contexte: "etab.creer_classe", code: error.code }));
+    return null;
+  }
+  return typeof data === "string" ? data : null;
+}
+
+export async function creerMatiere(acteur: string, label: string): Promise<string | null> {
+  const client = clientExploitation("administration_des_comptes");
+  const { data, error } = await client.rpc("etab_creer_matiere", {
+    p_acteur: acteur,
+    p_label: label,
+  });
+
+  if (error !== null) {
+    console.error(JSON.stringify({ niveau: "erreur", contexte: "etab.creer_matiere", code: error.code }));
+    return null;
+  }
+  return typeof data === "string" ? data : null;
+}
+
+export interface AccesCree {
+  readonly prenom: string;
+  readonly nom: string;
+  readonly role: "eleve" | "professeur";
+  readonly classe: string | null;
+  readonly login: string;
+  readonly motDePasseTemporaire: string;
+}
+
+export type ResultatCreationCompte =
+  | { readonly etat: "cree"; readonly acces: AccesCree }
+  | { readonly etat: "existant" }
+  | { readonly etat: "echec"; readonly raison: string };
+
+/**
+ * Cree un compte eleve ou professeur.
+ *
+ * Meme sequence que l'import, et pour la meme raison : le compte chez le
+ * fournisseur d'identite d'abord, les lignes en base ensuite, et suppression du
+ * compte fournisseur si la base refuse — sans quoi l'alias resterait pris et
+ * l'identifiant deviendrait inutilisable a jamais.
+ *
+ * Le mot de passe temporaire n'est renvoye qu'ici, une seule fois, pour la
+ * fiche imprimable. Rien ne le conserve.
+ */
+export async function creerCompte(options: {
+  acteur: string;
+  prenom: string;
+  nom: string;
+  login: string;
+  role: "eleve" | "professeur";
+  classe: string | null;
+  classeLabel: string | null;
+  email: string | null;
+  domaineAlias: string;
+}): Promise<ResultatCreationCompte> {
+  const client = clientExploitation("administration_des_comptes");
+  const motDePasse = genererMotDePasseTemporaire(16);
+  const alias = genererAliasTechnique(options.domaineAlias);
+
+  const creation = await client.auth.admin.createUser({
+    email: alias,
+    password: motDePasse,
+    email_confirm: true,
+  });
+
+  if (creation.error !== null || creation.data.user === null) {
+    return { etat: "echec", raison: "Compte de connexion non cree" };
+  }
+
+  const profileId = creation.data.user.id;
+
+  const { data, error } = await client.rpc("etab_creer_membre", {
+    p_acteur: options.acteur,
+    p_profile: profileId,
+    p_prenom: options.prenom,
+    p_nom: options.nom,
+    p_login: options.login,
+    p_alias: alias,
+    p_role: options.role,
+    p_classe: options.classe,
+    p_email: options.email,
+  });
+
+  if (error !== null) {
+    await client.auth.admin.deleteUser(profileId).catch(() => undefined);
+    return {
+      etat: "echec",
+      raison: error.code === "23505" ? "Identifiant deja utilise" : "Ecriture refusee",
+    };
+  }
+
+  if (data === "existant") {
+    await client.auth.admin.deleteUser(profileId).catch(() => undefined);
+    return { etat: "existant" };
+  }
+
+  return {
+    etat: "cree",
+    acces: {
+      prenom: options.prenom,
+      nom: options.nom,
+      role: options.role,
+      classe: options.classeLabel,
+      login: options.login,
+      motDePasseTemporaire: motDePasse,
+    },
+  };
+}
+
+/** Affecte un professeur a une classe pour une matiere. */
+export async function affecterProfesseur(options: {
+  acteur: string;
+  professeur: string;
+  classe: string;
+  matiere: string;
+  annee: string;
+}): Promise<boolean> {
+  const client = clientExploitation("administration_des_comptes");
+  const { error } = await client.rpc("etab_affecter_professeur", {
+    p_acteur: options.acteur,
+    p_professeur: options.professeur,
+    p_classe: options.classe,
+    p_matiere: options.matiere,
+    p_annee: options.annee,
+  });
+
+  if (error !== null) {
+    console.error(JSON.stringify({ niveau: "erreur", contexte: "etab.affecter", code: error.code }));
+    return false;
+  }
+  return true;
+}
+
+/** Inscrit un eleve existant dans une classe (changement de classe en cours d'annee). */
+export async function inscrireEleve(
+  acteur: string,
+  eleve: string,
+  classe: string,
+): Promise<boolean> {
+  const client = clientExploitation("administration_des_comptes");
+  const { error } = await client.rpc("etab_inscrire_eleve", {
+    p_acteur: acteur,
+    p_eleve: eleve,
+    p_classe: classe,
+  });
+
+  if (error !== null) {
+    console.error(JSON.stringify({ niveau: "erreur", contexte: "etab.inscrire", code: error.code }));
+    return false;
+  }
+  return true;
+}

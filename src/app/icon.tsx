@@ -5,7 +5,7 @@ import { ImageResponse } from "next/og";
  *
  * Le cahier de finition impose de supprimer les anciens logos, favicon, titres
  * et métadonnées : celui-ci est donc dérivé du nom actuel, et d'aucune image
- * héritée du prototype.
+ * héritée de la première version du produit.
  */
 
 export const size = { width: 32, height: 32 };
