@@ -831,3 +831,138 @@ test("D03 — un fichier retire cesse d etre telechargeable, sans etre efface", 
   );
   assert.equal(trace.rows[0].state, "supprime");
 });
+
+/* ========================================================================== */
+/* E — Groupes d'entraide (chapitre 13)                                       */
+/* ========================================================================== */
+
+test("E01 — un groupe reunit les eleves d un cours, et personne d autre", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  // Rayan, eleve de Seconde 1, ouvre un groupe dans son cours de maths.
+  const groupe = await enTantQue(db, ACTEURS.eleveA1Rayan, async () => {
+    const { rows } = await db.query(
+      "insert into study.workgroups (organization_id, teaching_space_id, label, max_members, created_by) " +
+        "values ($1, $2, 'Revisions chapitre 4', 3, $3) returning id",
+      [ACTEURS.lyceeA, OBJETS.espaceMathsA1, ACTEURS.eleveA1Rayan],
+    );
+    await db.query(
+      "insert into study.workgroup_members (organization_id, workgroup_id, profile_id) values ($1, $2, $3)",
+      [ACTEURS.lyceeA, rows[0].id, ACTEURS.eleveA1Rayan],
+    );
+    return rows[0].id;
+  });
+
+  // Lina, de la meme classe, le rejoint.
+  await enTantQue(db, ACTEURS.eleveA1Lina, () =>
+    db.query(
+      "insert into study.workgroup_members (organization_id, workgroup_id, profile_id) values ($1, $2, $3)",
+      [ACTEURS.lyceeA, groupe, ACTEURS.eleveA1Lina],
+    ),
+  );
+
+  // Samir, de Seconde 2, n assiste pas a ce cours : la base refuse.
+  await enTantQue(db, ACTEURS.eleveA2Samir, () =>
+    doitEchouer(() =>
+      db.query(
+        "insert into study.workgroup_members (organization_id, workgroup_id, profile_id) values ($1, $2, $3)",
+        [ACTEURS.lyceeA, groupe, ACTEURS.eleveA2Samir],
+      ),
+    ),
+  );
+
+  const membres = await lirePour(
+    db,
+    ACTEURS.eleveA1Rayan,
+    "select profile_id from study.workgroup_members where workgroup_id = $1 and left_at is null",
+    [groupe],
+  );
+  assert.equal(membres.length, 2, "le groupe compte exactement ses deux membres");
+
+  // Le professeur du cours voit le groupe : c est son cours.
+  const cotProfesseur = await lirePour(
+    db,
+    ACTEURS.profMartin,
+    "select id from study.workgroups where id = $1",
+    [groupe],
+  );
+  assert.equal(cotProfesseur.length, 1, "l enseignant du cours voit les groupes de son cours");
+
+  // L eleve de l autre lycee ne voit rien.
+  const autreLycee = await lirePour(
+    db,
+    ACTEURS.eleveB,
+    "select id from study.workgroups where id = $1",
+    [groupe],
+  );
+  assert.equal(autreLycee.length, 0, "rien ne traverse la frontiere de l etablissement");
+});
+
+test("E02 — un groupe complet le reste, meme si deux eleves cliquent ensemble", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  // Un groupe de deux places, deja rempli par Rayan et Lina.
+  const groupe = await enTantQue(db, ACTEURS.eleveA1Rayan, async () => {
+    const { rows } = await db.query(
+      "insert into study.workgroups (organization_id, teaching_space_id, label, max_members, created_by) " +
+        "values ($1, $2, 'Binome', 2, $3) returning id",
+      [ACTEURS.lyceeA, OBJETS.espaceMathsA1, ACTEURS.eleveA1Rayan],
+    );
+    await db.query(
+      "insert into study.workgroup_members (organization_id, workgroup_id, profile_id) values ($1, $2, $3)",
+      [ACTEURS.lyceeA, rows[0].id, ACTEURS.eleveA1Rayan],
+    );
+    return rows[0].id;
+  });
+
+  await enTantQue(db, ACTEURS.eleveA1Lina, () =>
+    db.query(
+      "insert into study.workgroup_members (organization_id, workgroup_id, profile_id) values ($1, $2, $3)",
+      [ACTEURS.lyceeA, groupe, ACTEURS.eleveA1Lina],
+    ),
+  );
+
+  // Un troisieme eleve du meme cours est refuse par le declencheur, pas par
+  // l ecran : c est ce qui tient quand deux personnes cliquent en meme temps.
+  const erreur = await enTantQue(db, ACTEURS.eleveA1Homonyme1, () =>
+    doitEchouer(() =>
+      db.query(
+        "insert into study.workgroup_members (organization_id, workgroup_id, profile_id) values ($1, $2, $3)",
+        [ACTEURS.lyceeA, groupe, ACTEURS.eleveA1Homonyme1],
+      ),
+    ),
+  );
+  assert.match(erreur.message, /complet/i);
+
+  // Quand Lina part, la place se libere — et sa ligne reste, datee.
+  await enTantQue(db, ACTEURS.eleveA1Lina, () =>
+    db.query(
+      "update study.workgroup_members set left_at = now() where workgroup_id = $1 and profile_id = $2",
+      [groupe, ACTEURS.eleveA1Lina],
+    ),
+  );
+
+  await enTantQue(db, ACTEURS.eleveA1Homonyme1, () =>
+    db.query(
+      "insert into study.workgroup_members (organization_id, workgroup_id, profile_id) values ($1, $2, $3)",
+      [ACTEURS.lyceeA, groupe, ACTEURS.eleveA1Homonyme1],
+    ),
+  );
+
+  const actifs = await lirePour(
+    db,
+    ACTEURS.eleveA1Rayan,
+    "select profile_id from study.workgroup_members where workgroup_id = $1 and left_at is null",
+    [groupe],
+  );
+  assert.equal(actifs.length, 2);
+
+  const historique = await enTantQueServeur(db, () =>
+    db.query("select count(*)::int as n from study.workgroup_members where workgroup_id = $1", [
+      groupe,
+    ]),
+  );
+  assert.equal(historique.rows[0].n, 3, "le depart est date, pas efface");
+});

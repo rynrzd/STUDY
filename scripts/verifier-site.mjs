@@ -70,7 +70,7 @@ const REDIRECTIONS = [["/fonctionnalites", "/produit"], ["/demo", "/etablissemen
 const PRIVEES = ["/administration", "/administration/etablissements", "/administration/journal",
   "/admin", "/admin/classes", "/admin/utilisateurs", "/admin/import",
   "/professeur", "/professeur/classes", "/professeur/devoirs",
-  "/eleve", "/eleve/cours", "/eleve/devoirs",
+  "/eleve", "/eleve/cours", "/eleve/devoirs", "/eleve/entraide",
   "/studio", "/parametres", "/app", "/activation"];
 
 /**
