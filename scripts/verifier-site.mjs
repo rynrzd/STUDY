@@ -15,6 +15,13 @@
 // fautes structurelles, pas une hiérarchie visuelle ratée.
 // =============================================================================
 
+import { chargerEnv } from "./_commun.mjs";
+
+// Les deux réglages peuvent venir de la ligne de commande ou de .env.local,
+// comme le reste de la configuration : un secret se saisit dans un fichier,
+// pas dans un historique de terminal.
+chargerEnv();
+
 const BASE = process.env.SITE_BASE ?? "http://localhost:3100";
 
 /**
@@ -27,7 +34,9 @@ const BASE = process.env.SITE_BASE ?? "http://localhost:3100";
  * qui donne un secret à présenter en en-tête. On le lit ici, jamais on ne
  * l'affiche.
  *
- *   SITE_BASE=https://…vercel.app VERCEL_AUTOMATION_BYPASS_SECRET=… npm run verifier:site
+ *   # dans .env.local
+ *   SITE_BASE=https://…vercel.app
+ *   VERCEL_AUTOMATION_BYPASS_SECRET=…
  */
 const BYPASS = process.env.VERCEL_AUTOMATION_BYPASS_SECRET ?? "";
 
@@ -83,7 +92,25 @@ function verifier(condition, texte, detail) {
 }
 
 async function principal() {
-  console.log(`Recette du site servi sur ${BASE}\n`);
+  console.log(`Recette du site servi sur ${BASE}`);
+  if (BYPASS !== "") console.log("Protection de deploiement contournee par secret d automatisation.");
+  console.log("");
+
+  // Un déploiement protégé renvoie 302 vers l'authentification Vercel. Le dire
+  // tout de suite évite une page de résultats entièrement rouge dont la seule
+  // cause est qu'on n'a jamais atteint le site.
+  const sonde = await demander("/", { redirect: "manual" });
+  if (sonde.status === 302 && (sonde.headers.get("location") ?? "").includes("vercel.com/sso")) {
+    console.log(
+      "Ce deploiement est protege par l'authentification Vercel : le site n'est\n" +
+        "pas joignable par un script.\n\n" +
+        "  Project Settings > Deployment Protection > Protection Bypass for\n" +
+        "  Automation, puis mettre le secret dans .env.local :\n\n" +
+        "    SITE_BASE=" + BASE + "\n" +
+        "    VERCEL_AUTOMATION_BYPASS_SECRET=...\n",
+    );
+    process.exit(2);
+  }
 
   await verifierRoutes();
   await verifierStructure();
