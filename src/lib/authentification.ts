@@ -26,7 +26,7 @@ import {
 
 export interface IdentiteResolue {
   readonly profileId: string;
-  readonly organizationId: string;
+  readonly organizationId: string | null;
   /** Identité technique transmise au fournisseur : alias ou email pro. */
   readonly alias: string;
   readonly mustChangePassword: boolean;
@@ -34,11 +34,17 @@ export interface IdentiteResolue {
   readonly membershipState: "active" | "suspendue" | "terminee";
   /** Vrai si la personne porte un rôle exigeant la MFA (AUTH-02). */
   readonly mfaObligatoire: boolean;
+  /**
+   * Portée de la session à ouvrir. L'exploitant n'appartient à aucun
+   * établissement : sa session est de portée « editeur », et son
+   * `organizationId` est nul.
+   */
+  readonly portee?: Exclude<PorteeSession, "activation">;
 }
 
 export interface SessionACreer {
   readonly profileId: string;
-  readonly organizationId: string;
+  readonly organizationId: string | null;
   readonly tokenSha256: Buffer;
   readonly scope: PorteeSession;
   readonly deviceKind: TypeAppareil;
@@ -82,6 +88,8 @@ export interface Refus {
 
 export interface Succes {
   readonly reussi: true;
+  /** Compte connecté. Sert à l'appelant pour effacer l'ardoise des tentatives. */
+  readonly profileId: string;
   /** Valeur en clair du cookie. Elle n'existe qu'ici et dans le navigateur. */
   readonly jetonSession: string;
   readonly portee: PorteeSession;
@@ -135,7 +143,7 @@ export interface DependancesConnexion {
  *     secret** contre une identité factice, pour ne pas répondre plus vite que
  *     dans le cas d'un compte existant, puis on renvoie le refus générique ;
  *  2. on applique la limitation de tentatives **avant** de parler au
- *     fournisseur, pour ne pas transformer study. en oracle de mots de passe ;
+ *     fournisseur, pour ne pas transformer le service en oracle de mots de passe ;
  *  3. on vérifie le secret ;
  *  4. seulement ensuite, on regarde l'état du compte. Un compte suspendu et un
  *     mot de passe faux produisent le même refus vu du navigateur.
@@ -196,7 +204,9 @@ export async function tenterConnexion(
   // Activation : tant que le mot de passe doit être changé, la session n'ouvre
   // que l'activation. Aucune donnée pédagogique n'est atteignable — c'est
   // garanti une seconde fois par les politiques RLS (test T07).
-  const portee: PorteeSession = identite.mustChangePassword ? "activation" : "etablissement";
+  const portee: PorteeSession = identite.mustChangePassword
+    ? "activation"
+    : (identite.portee ?? "etablissement");
 
   const durees = dureesPour({
     portee,
@@ -229,6 +239,7 @@ export async function tenterConnexion(
 
   return {
     reussi: true,
+    profileId: identite.profileId,
     jetonSession,
     portee,
     activationRequise: identite.mustChangePassword,

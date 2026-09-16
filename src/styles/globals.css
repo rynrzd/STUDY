@@ -1,92 +1,95 @@
 @import "tailwindcss";
 
 /* ===========================================================================
-   study. — jetons de design
-   Source : cahier des charges v2.0, chapitre 03 « Direction artistique exacte ».
-   Aucune valeur de couleur ne doit etre ecrite en dur ailleurs que dans ce bloc.
+   AvecStudy — jetons de design
+   Source : cahier des charges de finition V1, section 4.
+
+   Identité claire, scolaire et premium : fond blanc cassé, texte bleu nuit,
+   un seul accent, beaucoup d'espace, grille rigoureuse. Une seule police
+   sans-serif pour toute l'interface.
+
+   Aucune valeur de couleur ne doit être écrite en dur ailleurs que dans ce
+   bloc.
    =========================================================================== */
 
 @theme {
   /* -- Couleurs ---------------------------------------------------------- */
-  --color-fond: #faf9f9;          /* fond general */
-  --color-surface: #ffffff;       /* surfaces et champs */
-  --color-encre: #19191d;         /* texte principal / boutons */
-  --color-encre-faible: #60606a;  /* texte secondaire */
-  --color-rose-selection: #f6dce7;
-  --color-rose-decor: #e9b6c8;
-  --color-accent: #9f315c;        /* accent fonctionnel fonce */
-  --color-bordure: #e5e3e7;
-  --color-succes: #216847;
+  --color-fond: #fafbfd;          /* blanc cassé, légèrement bleuté */
+  --color-surface: #ffffff;
+  --color-surface-douce: #f4f6fb; /* aplats de section */
+  --color-encre: #0e1a33;         /* bleu nuit : texte et boutons pleins */
+  --color-encre-faible: #55607a;  /* texte secondaire */
+
+  /* Un seul accent dans tout le produit. */
+  --color-accent: #2b4fff;
+  --color-accent-fonce: #1e3ad4;  /* survol et focus */
+  --color-accent-doux: #eef1ff;   /* fond d'accent, jamais du texte */
+
+  --color-bordure: #e2e7f0;
+  --color-bordure-forte: #cdd5e4;
+  --color-succes: #15803d;
   --color-erreur: #b42335;
+  --color-succes-fond: #edf7f0;
+  --color-erreur-fond: #fdf0f1;
+  --color-survol: #f1f4fa;
 
-  /* Etats derives, volontairement sobres */
-  --color-succes-fond: #eef5f1;
-  --color-erreur-fond: #fbeef0;
-  --color-survol: #f2f0f2;
+  /* -- Typographie : une seule famille ----------------------------------- */
+  --font-texte: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
 
-  /* -- Typographies (ch. 03, v2.0) ---------------------------------------
-     La v2.0 change la règle : le site public est en Inter, titres gras
-     700/800 à espacement resserré. Le serif Source Serif 4 est réservé au
-     mot-symbole « study. » et aux titres DANS l'application, conformément
-     aux trois planches validées.
-     ---------------------------------------------------------------------- */
-  --font-texte: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  /* Titres du site public : la même famille que le texte, en gras resserré. */
-  --font-titre: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  /* Mot-symbole et titres applicatifs. */
-  --font-serif: "Source Serif 4", "Source Serif Pro", Georgia, "Times New Roman", serif;
+  --text-aide: 0.8125rem;                          /* 13 px */
+  --text-aide--line-height: 1.25rem;
+  --text-tableau: 0.875rem;                        /* 14 px */
+  --text-tableau--line-height: 1.375rem;
+  --text-corps: 1.0625rem;                         /* 17 px — mobile 16 à 18 */
+  --text-corps--line-height: 1.65rem;
+  --text-grand: 1.1875rem;                         /* 19 px, chapeaux */
+  --text-grand--line-height: 1.85rem;
 
-  --text-aide: 0.8125rem;      /* 13 px */
-  --text-aide--line-height: 1.125rem;   /* 18 px */
-  --text-tableau: 0.875rem;    /* 14 px */
-  --text-tableau--line-height: 1.25rem; /* 20 px */
-  --text-corps: 1rem;          /* 16 px */
-  --text-corps--line-height: 1.5rem;    /* 24 px */
-  --text-h2-app: 1.5rem;       /* 24 px */
-  --text-h2-app--line-height: 1.875rem; /* 30 px */
-  --text-h1-app: 2rem;         /* 32 px */
-  --text-h1-app--line-height: 2.375rem; /* 38 px */
-  --text-h1-public-mobile: 2.375rem;    /* 38 px */
-  --text-h1-public-mobile--line-height: 2.625rem; /* 42 px */
-  --text-h1-public: 4rem;      /* 64 px */
-  --text-h1-public--line-height: 4.25rem; /* 68 px */
+  --text-h3: 1.1875rem;                            /* 19 px */
+  --text-h3--line-height: 1.6rem;
+  --text-h2: 1.75rem;                              /* 28 px */
+  --text-h2--line-height: 2.125rem;
+  --text-h2-large: 2.375rem;                       /* 38 px, desktop */
+  --text-h2-large--line-height: 2.75rem;
+  --text-h1-mobile: 2.75rem;                       /* 44 px — plafond mobile */
+  --text-h1-mobile--line-height: 2.875rem;         /* 1.045 */
+  --text-h1: 4.5rem;                               /* 72 px — 68 à 76 */
+  --text-h1--line-height: 4.625rem;                /* 1.02 */
 
-  /* -- Geometrie : grille de 8 px, demi-pas de 4 ------------------------- */
-  --radius-champ: 8px;   /* champs et boutons */
-  --radius-carte: 12px;  /* cartes */
+  /* -- Échelle de l'application connectée --------------------------------- */
+  /* L'application interne est dense : ses titres sont plus petits que ceux du
+     site public, où l'on cherche l'impact. Même famille, même accent. */
+  --text-h1-app: 1.5rem;                           /* 24 px */
+  --text-h1-app--line-height: 2rem;
+  --text-h2-app: 1.1875rem;                        /* 19 px */
+  --text-h2-app--line-height: 1.6rem;
 
-  --shadow-carte: 0 4px 20px rgba(25, 25, 29, 0.05);
+  /* -- Géométrie --------------------------------------------------------- */
+  --radius-champ: 10px;
+  --radius-carte: 16px;
+
+  --shadow-carte: 0 1px 2px rgba(14, 26, 51, 0.04), 0 8px 24px rgba(14, 26, 51, 0.05);
 
   /* -- Composition ------------------------------------------------------- */
-  --spacing-nav-laterale: 224px;
-  --spacing-entete: 64px;
-  --spacing-cible: 44px;      /* hauteur mini champs / boutons / cible tactile */
-  --spacing-lecture: 760px;   /* largeur de lecture d'un cours */
-  --spacing-app: 1280px;      /* largeur utile application */
-  --spacing-landing: 1200px;  /* largeur landing */
+  --spacing-contenu: 1220px;   /* 1180 à 1240 */
+  --spacing-cible: 44px;       /* hauteur minimale des boutons */
+  --spacing-app: 1320px;       /* largeur maximale de l'application connectée */
+  --spacing-lecture: 68ch;     /* largeur de lecture des textes longs */
 }
 
 /* ===========================================================================
-   Polices auto-hebergees (licences SIL OFL conservees dans public/fonts/).
-   Les fichiers .woff2 sont deposes par la procedure decrite dans
-   public/fonts/README.md. Tant qu'ils sont absents, la pile de repli
-   ci-dessus s'applique : la mise en page reste correcte, le rendu differe.
+   Police auto-hébergée (SIL Open Font License, notice dans public/fonts/).
+   Tant que le fichier n'est pas déposé, la pile de repli s'applique : la mise
+   en page reste correcte, seul le rendu des lettres diffère.
    =========================================================================== */
 
 @font-face {
   font-family: "Inter";
   font-style: normal;
-  font-weight: 400 900;
+  font-weight: 400 800;
   font-display: swap;
   src: url("/fonts/inter-variable.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Source Serif 4";
-  font-style: normal;
-  font-weight: 400 700;
-  font-display: swap;
-  src: url("/fonts/source-serif-4-variable.woff2") format("woff2");
 }
 
 /* ===========================================================================
@@ -100,6 +103,7 @@
 
   html {
     -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
   }
 
   body {
@@ -110,14 +114,14 @@
     line-height: var(--text-corps--line-height);
     margin: 0;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
-  /* Titres du site public : Inter gras, espacement légèrement resserré. */
   h1, h2, h3, h4 {
-    font-family: var(--font-titre);
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.022em;
     margin: 0;
+    text-wrap: balance;
   }
 
   h1 {
@@ -125,32 +129,271 @@
     letter-spacing: -0.035em;
   }
 
-  p, li, td, th, label, input, textarea, select, button {
-    font-family: var(--font-texte);
-  }
+  p { text-wrap: pretty; }
 
-  /* Focus visible obligatoire (WCAG 2.2 AA — ch. 19). */
+  /* Focus visible obligatoire. */
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
     border-radius: 4px;
   }
 
-  /* Aucune animation permanente ; tout mouvement est coupe sur demande. */
+  [hidden] { display: none !important; }
+
+  /* Aucune animation permanente ; tout mouvement est coupé sur demande. */
   @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
     }
   }
+}
 
-  [hidden] { display: none !important; }
+@layer components {
+  /* --- Conteneur : 1220 px, gouttières 20 px puis 24 px ------------------ */
+  .contenu {
+    margin-inline: auto;
+    width: 100%;
+    max-width: var(--spacing-contenu);
+    padding-inline: 20px;
+  }
+
+  @media (min-width: 640px) {
+    .contenu { padding-inline: 24px; }
+  }
+
+  @media (min-width: 1024px) {
+    .contenu { padding-inline: 32px; }
+  }
+
+  /* --- Boutons ---------------------------------------------------------- */
+  .bouton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: var(--spacing-cible);
+    padding-inline: 22px;
+    border-radius: var(--radius-champ);
+    border: 1px solid transparent;
+    font-size: var(--text-corps);
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 180ms ease, border-color 180ms ease,
+                color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  }
+
+  .bouton:disabled { cursor: not-allowed; }
+
+  .bouton-primaire {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #fff;
+  }
+
+  .bouton-primaire:hover {
+    background: var(--color-accent-fonce);
+    border-color: var(--color-accent-fonce);
+    box-shadow: 0 6px 18px rgba(43, 79, 255, 0.24);
+  }
+
+  .bouton-sombre {
+    background: var(--color-encre);
+    border-color: var(--color-encre);
+    color: #fff;
+  }
+
+  .bouton-sombre:hover {
+    background: #08101f;
+    box-shadow: var(--shadow-carte);
+  }
+
+  .bouton-secondaire {
+    background: var(--color-surface);
+    border-color: var(--color-bordure-forte);
+    color: var(--color-encre);
+  }
+
+  .bouton-secondaire:hover {
+    background: var(--color-survol);
+    border-color: var(--color-encre-faible);
+  }
+
+  .bouton-discret {
+    background: transparent;
+    color: var(--color-encre);
+  }
+
+  .bouton-discret:hover { background: var(--color-survol); }
+
+  /* La flèche avance au survol : 4 px, jamais plus. */
+  .fleche { transition: transform 180ms ease; }
+  .bouton:hover .fleche,
+  .bouton:focus-visible .fleche,
+  .lien-fleche:hover .fleche { transform: translateX(4px); }
+
+  .lien-fleche {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .lien-fleche:hover { color: var(--color-accent-fonce); }
+
+  /* --- Cartes ----------------------------------------------------------- */
+  .carte {
+    background: var(--color-surface);
+    border: 1px solid var(--color-bordure);
+    border-radius: var(--radius-carte);
+    transition: border-color 200ms ease, box-shadow 200ms ease,
+                transform 200ms ease;
+  }
+
+  .carte-survol:hover {
+    border-color: var(--color-bordure-forte);
+    box-shadow: var(--shadow-carte);
+    transform: translateY(-2px);
+  }
+
+  /* --- Étiquette de section --------------------------------------------- */
+  .surtitre {
+    display: inline-block;
+    font-size: var(--text-tableau);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+
+  /* --- Apparition au défilement : 250 à 450 ms, léger décalage ----------- */
+  /* L'état masqué n'est posé que par le composant client, après montage :
+     sans JavaScript, le contenu reste visible. */
+  [data-revele="prete"] {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  [data-revele="visible"] {
+    opacity: 1;
+    transform: none;
+    transition: opacity 380ms ease-out,
+                transform 380ms cubic-bezier(0.16, 0.84, 0.44, 1);
+    transition-delay: var(--delai, 0ms);
+  }
+
+  /* --- En-tête : changement doux au défilement --------------------------- */
+  .entete {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: color-mix(in srgb, var(--color-fond) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid transparent;
+    transition: border-color 220ms ease, background-color 220ms ease,
+                box-shadow 220ms ease;
+  }
+
+  .entete[data-defile="true"] {
+    background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+    border-bottom-color: var(--color-bordure);
+  }
+
+  /* --- Champs de formulaire --------------------------------------------- */
+  .champ {
+    display: block;
+    width: 100%;
+    min-height: var(--spacing-cible);
+    padding: 10px 14px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-bordure-forte);
+    border-radius: var(--radius-champ);
+    font-size: var(--text-corps);
+    font-family: inherit;
+    color: var(--color-encre);
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+
+  .champ:hover { border-color: var(--color-encre-faible); }
+
+  .champ:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(43, 79, 255, 0.14);
+  }
+
+  .champ[aria-invalid="true"] { border-color: var(--color-erreur); }
+
+  .champ[aria-invalid="true"]:focus {
+    box-shadow: 0 0 0 3px rgba(180, 35, 53, 0.14);
+  }
+
+  .etiquette {
+    display: block;
+    font-size: var(--text-tableau);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .aide-champ {
+    display: block;
+    margin-top: 6px;
+    font-size: var(--text-aide);
+    line-height: var(--text-aide--line-height);
+    color: var(--color-encre-faible);
+  }
+
+  .erreur-champ {
+    display: block;
+    margin-top: 6px;
+    font-size: var(--text-aide);
+    line-height: var(--text-aide--line-height);
+    color: var(--color-erreur);
+    font-weight: 500;
+  }
+
+  /* --- Onglets ---------------------------------------------------------- */
+  .onglet {
+    position: relative;
+    min-height: var(--spacing-cible);
+    padding-inline: 4px;
+    padding-bottom: 12px;
+    font-weight: 500;
+    color: var(--color-encre-faible);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    transition: color 200ms ease;
+  }
+
+  .onglet[aria-selected="true"] {
+    color: var(--color-encre);
+    font-weight: 600;
+  }
+
+  .onglet::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--color-accent);
+    transform: scaleX(0);
+    transition: transform 220ms ease;
+  }
+
+  .onglet[aria-selected="true"]::after { transform: scaleX(1); }
 }
 
 @layer utilities {
-  /* Lien d'evitement : premier element focusable de chaque page. */
+  /* Lien d'évitement : premier élément focusable de chaque page. */
   .lien-evitement {
     position: absolute;
     left: -9999px;
@@ -158,222 +401,14 @@
     z-index: 100;
     background: var(--color-surface);
     color: var(--color-encre);
-    padding: 12px 16px;
-    border: 1px solid var(--color-bordure);
+    padding: 12px 18px;
+    border: 1px solid var(--color-bordure-forte);
     border-radius: var(--radius-champ);
-  }
-  .lien-evitement:focus {
-    left: 16px;
-    top: 16px;
-  }
-}
-
-/* ===========================================================================
-   Chorégraphie de la landing — chapitre 34.
-
-   Deux principes tiennent tout ce bloc :
-   1. Le texte est present dans le HTML rendu serveur et reste lisible si le
-      JavaScript echoue. Les entrees au defilement sont donc pilotees par un
-      composant client qui pose lui-meme l etat initial : sans JavaScript,
-      aucune classe n est ajoutee et tout reste visible.
-   2. prefers-reduced-motion supprime deplacements et sequences automatiques,
-      affiche l etat final et conserve les controles.
-   =========================================================================== */
-
-@layer components {
-  /* Mot-symbole : seule occurrence du serif sur le site public (ch. 03). */
-  .mot-symbole {
-    font-family: var(--font-serif);
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    font-weight: 600;
   }
 
-  /* Titres a l interieur de l application : serif, conformement aux planches. */
-  .titre-app {
-    font-family: var(--font-serif);
-    font-weight: 700;
-    letter-spacing: -0.01em;
-  }
+  .lien-evitement:focus { left: 16px; top: 16px; }
 
-  /* --- Hero : revele ligne par ligne, 24 px, 650 ms, decalage 100 ms ------ */
-  .hero-ligne {
-    display: block;
-    animation: hero-monte 650ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
-    animation-delay: var(--delai, 0ms);
-  }
-
-  @keyframes hero-monte {
-    from { opacity: 0; transform: translateY(24px); }
-    to   { opacity: 1; transform: none; }
-  }
-
-  /* --- Surlignage rose : extension de gauche a droite, scaleX 500 ms ----- */
-  .surlignage {
-    position: relative;
-    display: inline-block;
-    isolation: isolate;
-  }
-
-  .surlignage::before {
-    content: "";
-    position: absolute;
-    inset: 0.06em -0.18em 0.1em -0.18em;
-    z-index: -1;
-    background: var(--color-rose-selection);
-    border-radius: 4px;
-    transform: scaleX(0);
-    transform-origin: left center;
-    animation: surligne 500ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
-    animation-delay: var(--delai, 0ms);
-  }
-
-  @keyframes surligne {
-    to { transform: scaleX(1); }
-  }
-
-  /* --- Entree des sections : 20 px, 550 ms, une seule fois --------------- */
-  /* L etat masque n est applique que par le composant client, apres montage. */
-  [data-apparition="prete"] {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  [data-apparition="visible"] {
-    opacity: 1;
-    transform: none;
-    transition: opacity 550ms ease-out, transform 550ms cubic-bezier(0.16, 0.84, 0.44, 1);
-    transition-delay: var(--delai, 0ms);
-  }
-
-  /* --- Boutons et liens : 160 ms, fleche deplacee de 4 px ---------------- */
-  .bouton {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    min-height: var(--spacing-cible);
-    padding: 0 24px;
-    border-radius: var(--radius-champ);
-    text-decoration: none;
-    font-weight: 500;
-    transition: background-color 160ms ease, color 160ms ease,
-                border-color 160ms ease, box-shadow 160ms ease;
-  }
-
-  .bouton .fleche {
-    transition: transform 160ms ease;
-  }
-
-  .bouton:hover .fleche,
-  .bouton:focus-visible .fleche {
-    transform: translateX(4px);
-  }
-
-  .bouton-noir {
-    background: var(--color-encre);
-    color: var(--color-surface);
-    border: 1px solid var(--color-encre);
-  }
-
-  .bouton-noir:hover {
-    background: #000;
-    box-shadow: var(--shadow-carte);
-  }
-
-  .bouton-rose {
-    background: var(--color-rose-selection);
-    color: var(--color-encre);
-    border: 1px solid var(--color-rose-selection);
-  }
-
-  .bouton-rose:hover {
-    background: var(--color-rose-decor);
-  }
-
-  .bouton-clair {
-    background: var(--color-surface);
-    color: var(--color-encre);
-    border: 1px solid var(--color-bordure);
-  }
-
-  .bouton-clair:hover {
-    background: var(--color-survol);
-  }
-
-  /* --- FAQ : ouverture fluide, 220 ms ------------------------------------ */
-  .faq-corps {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 220ms ease;
-  }
-
-  .faq-corps[data-ouvert="true"] {
-    grid-template-rows: 1fr;
-  }
-
-  .faq-corps > div {
-    overflow: hidden;
-  }
-
-  /* --- Onglets d usage : soulignement mobile, 220 ms --------------------- */
-  .onglet-souligne {
-    position: relative;
-    transition: color 220ms ease;
-  }
-
-  .onglet-souligne::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -1px;
-    height: 2px;
-    background: var(--color-encre);
-    transform: scaleX(0);
-    transform-origin: center;
-    transition: transform 220ms ease;
-  }
-
-  .onglet-souligne[aria-selected="true"]::after {
-    transform: scaleX(1);
-  }
-
-  /* Fondu de l apercu lie a l onglet. */
-  .apercu-fondu {
-    animation: fondu 220ms ease both;
-  }
-
-  @keyframes fondu {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-
-  /* --- Sequences de demonstration ---------------------------------------- */
-  .etape-sequence {
-    transition: opacity 220ms ease, transform 220ms ease, background-color 220ms ease;
-  }
-}
-
-/* Reduction des mouvements : etat final, controles conserves (ch. 34). */
-@media (prefers-reduced-motion: reduce) {
-  .hero-ligne,
-  .surlignage::before,
-  .apercu-fondu {
-    animation: none !important;
-  }
-
-  .surlignage::before {
-    transform: scaleX(1) !important;
-  }
-
-  [data-apparition="prete"],
-  [data-apparition="visible"] {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
-  }
-
-  .faq-corps {
-    transition: none !important;
-  }
+  /* Aucun débordement horizontal, à aucune largeur. */
+  .sans-debordement { overflow-x: clip; }
 }

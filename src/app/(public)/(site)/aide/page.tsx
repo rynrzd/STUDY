@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { TitrePage, Prose } from "@/components/public/Chrome";
+import { Prose, Section, TitrePage } from "@/components/site/Ui";
 
 export const metadata: Metadata = {
   title: "Aide",
   description: "Les questions les plus fréquentes, et à qui s'adresser.",
+  alternates: { canonical: "/aide" },
 };
 
 const QUESTIONS = [
   {
     q: "J'ai perdu mon identifiant ou mon mot de passe.",
-    r: "Adressez-vous à l'administrateur study. de votre établissement. Il réinitialise votre accès après avoir vérifié votre identité sur place. L'ancien secret devient alors inutilisable. Personne, y compris votre administrateur, ne peut lire votre mot de passe personnel : il n'est affiché nulle part.",
+    r: "Adressez-vous à l'administrateur de votre établissement. Il réinitialise votre accès après avoir vérifié votre identité sur place. L'ancien secret devient alors inutilisable. Personne, y compris votre administrateur, ne peut lire votre mot de passe personnel : il n'est affiché nulle part.",
   },
   {
     q: "Mon professeur a publié un cours mais je ne le vois pas.",
@@ -51,28 +52,30 @@ export default function Aide() {
         chapeau="Ces réponses valent pour les élèves et les enseignants. Pour une question sur votre compte, votre établissement est le bon interlocuteur : c'est lui qui gère les accès."
       />
 
-      <section className="border-t border-[color:var(--color-bordure)] py-12">
-        <dl className="max-w-[var(--spacing-lecture)] space-y-8">
+      <Section>
+        <dl className="m-0 max-w-[var(--spacing-lecture)] space-y-8 p-0">
           {QUESTIONS.map((item) => (
             <div key={item.q} className="border-b border-[color:var(--color-bordure)] pb-8">
-              <dt className="text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)] titre-app">
+              <dt className="text-[length:var(--text-h3)] font-bold leading-[var(--text-h3--line-height)]">
                 {item.q}
               </dt>
-              <dd className="mt-3 ml-0 text-[color:var(--color-encre-faible)]">{item.r}</dd>
+              <dd className="m-0 mt-3 text-[color:var(--color-encre-faible)]">{item.r}</dd>
             </div>
           ))}
         </dl>
 
-        <Prose>
-          <h2>Vous n&apos;avez pas trouvé votre réponse</h2>
-          <p>
-            Les guides détaillés — administrateur, professeur, élève — seront
-            publiés avec la première livraison complète. En attendant, la page{" "}
-            <Link href="/contact" className="text-[color:var(--color-accent)]">contact</Link>{" "}
-            indique à qui s&apos;adresser selon votre situation.
-          </p>
-        </Prose>
-      </section>
+        <div className="mt-12">
+          <Prose>
+            <h2>Vous n&apos;avez pas trouvé votre réponse</h2>
+            <p>
+              La page <Link href="/contact">contact</Link> indique à qui
+              s&apos;adresser selon votre situation. Pour une question sur un
+              compte, votre établissement répond plus vite que nous : c&apos;est
+              lui qui gère les accès.
+            </p>
+          </Prose>
+        </div>
+      </Section>
     </>
   );
 }

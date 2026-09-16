@@ -13,7 +13,7 @@ aucun projet n'est créé, aucun abonnement n'est souscrit.
 | Connexion | Supabase Auth via serveur | Activation, MFA, reset et révocation testés | **bloqué** — projet absent |
 | Sessions privées | `study_prive.sessions` | Cookie opaque, aucun jeton dans le navigateur | schéma fait, **flux bloqué** |
 | Fichiers | Supabase Storage privé + worker antivirus | Fichier propre accessible, infecté bloqué | schéma fait, **stockage absent** |
-| Courrier électronique | **retiré** | — | study. n'envoie aucun message (voir `08-sans-courrier.md`) |
+| Courrier électronique | **retiré** | — | AvecStudy n'envoie aucun message (voir `08-sans-courrier.md`) |
 | Imports et exports | Worker Node + file PostgreSQL | Reprise après interruption sans doublon | file **faite et testée**, gestionnaires à écrire |
 | Brouillon partagé | Service WebSocket dédié | Deux navigateurs éditent et sauvegardent | **non commencé** |
 | Paiement privé | **retiré** | — | Vente sur devis uniquement, aucun prestataire de paiement |
@@ -46,7 +46,7 @@ plafonds de dépense **avant** de souscrire. Ne rien acheter sans autorisation.
 Un projet **recette** et un projet **production**, sous un compte éditeur
 protégé par MFA. Les membres de l'organisation sont restreints aux techniciens
 habilités. **Un administrateur de lycée ne reçoit jamais l'accès au tableau de
-bord Supabase** : il administre son établissement depuis study., pas depuis la
+bord Supabase** : il administre son établissement depuis AvecStudy, pas depuis la
 base.
 
 Développement local : la CLI Supabase demande un moteur de conteneurs. S'il
@@ -112,7 +112,7 @@ Trois règles qui ne sont pas techniques mais qui comptent autant :
 3. La confirmation technique d'un alias créé par l'administration **ne doit pas
    être décrite comme la vérification d'une boîte mail**. Ce serait faux.
 
-**Cette règle vaut désormais pour tout le monde**, adultes compris : study.
+**Cette règle vaut désormais pour tout le monde**, adultes compris : AvecStudy
 n'envoie aucun courrier, donc personne n'a d'adresse dans le produit. Un
 enseignant se connecte comme un élève, avec l'identifiant que son établissement
 lui a remis. Voir `08-sans-courrier.md`.
@@ -205,7 +205,7 @@ politique la laissait écrire la ligne.
 Pourquoi ce détour plutôt qu'un dépôt classique : un fichier de 25 ou 50 Mo ne
 doit pas transiter dans une fonction web dont la limite de corps est inférieure.
 
-Aucun réglage SMTP : study. n'envoie aucun message. Les invitations et les
+Aucun réglage SMTP : AvecStudy n'envoie aucun message. Les invitations et les
 réinitialisations se font de la main à la main — voir `08-sans-courrier.md`.
 
 ### 8. Recette puis production

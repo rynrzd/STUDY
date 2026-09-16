@@ -21,7 +21,7 @@ async function principal() {
   exiger(["WORKER_DATABASE_URL"], "charger le jeu de recette demande une connexion PostgreSQL.");
 
   titre(
-    `study. — jeu de recette (donnees entierement fictives)\n` +
+    `AvecStudy — jeu de recette (donnees entierement fictives)\n` +
     `environnement : ${environnement}`,
   );
 

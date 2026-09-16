@@ -17,20 +17,20 @@ Dépôt examiné : `../study-ai-v3` — `study-ai` v2.0.0, dépôt Git avec remo
 | Gamification | XP, séries quotidiennes, badges, niveaux |
 | Volume | ~5 600 lignes, dont 3 264 dans `src/pages/Chat.jsx` |
 
-## Ce qui est réutilisable pour study.
+## Ce qui est réutilisable pour AvecStudy
 
 **Rien du code applicatif.** Le cahier des charges impose l'inverse de chacune
 des décisions structurantes du prototype :
 
-- study. est **sans IA** ; le prototype est construit autour d'un chat IA.
-- study. est **financé par l'établissement** ; le prototype vend des abonnements
+- AvecStudy est **sans IA** ; le prototype est construit autour d'un chat IA.
+- AvecStudy est **financé par l'établissement** ; le prototype vend des abonnements
   individuels, et le ch. 01 les exclut explicitement.
-- study. proscrit la **série quotidienne punitive** et le classement (ch. 01) ;
+- AvecStudy proscrit la **série quotidienne punitive** et le classement (ch. 01) ;
   le prototype en fait son cœur.
-- study. exige une **authentification BFF avec session serveur** (ch. 20) ; le
+- AvecStudy exige une **authentification BFF avec session serveur** (ch. 20) ; le
   prototype conserve l'identité en `localStorage`, ce que le ch. 20 interdit
   nommément.
-- study. repose sur **PostgreSQL avec RLS** ; le prototype n'a pas de base.
+- AvecStudy repose sur **PostgreSQL avec RLS** ; le prototype n'a pas de base.
 
 Le prototype garde une valeur de **référence historique** : il montre ce que
 Rayan avait déjà tranché sur le ton, et il documente une pile Vercel qui
@@ -56,14 +56,14 @@ Vérification faite sur l'historique Git complet, pas seulement sur l'état actu
 
 ### Actions
 
-1. **Ne réutiliser aucune de ces clés dans study.** (SEC-01). Le nouveau projet
+1. **Ne réutiliser aucune de ces clés dans AvecStudy** (SEC-01). Le nouveau projet
    ouvre ses propres identifiants, distincts par environnement.
-2. La clé Anthropic du prototype n'a pas d'usage dans study. — le produit est
+2. La clé Anthropic du prototype n'a pas d'usage dans AvecStudy — le produit est
    sans IA. Si le prototype est abandonné, révoquer la clé plutôt que la laisser
    active sur un projet dormant.
 3. Le dépôt GitHub `rynrzd/studyai` est public ou privé selon le compte : à
    vérifier avant toute réutilisation du nom. Le README y annonce des tarifs et
-   une promesse produit qui ne sont plus ceux de study.
+   une promesse produit qui ne sont plus ceux de AvecStudy
 
 ## Licences des composants du prototype
 

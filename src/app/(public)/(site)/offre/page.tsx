@@ -1,22 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { TitrePage, Carte } from "@/components/public/Chrome";
+import { Reveler } from "@/components/site/Reveler";
+import { AppelFinal, Carte, Section, TitrePage } from "@/components/site/Ui";
+import { MARQUE } from "@/lib/identite-legale";
 
 export const metadata: Metadata = {
   title: "Offre",
   description:
     "Une licence annuelle par établissement, comptes enseignants inclus. " +
-    "Aucun abonnement élève ou professeur.",
+    "Aucun abonnement élève ou professeur, aucun paiement en ligne.",
+  alternates: { canonical: "/offre" },
 };
 
 /**
- * /offre — ch. 05.
+ * /offre.
  *
- * Le prix commercial n'est pas validé. Tant qu'il ne l'est pas, la page affiche
- * « Sur devis selon l'effectif » — et surtout pas un faux tarif barré, ni une
- * remise fictive, ni un compte à rebours. Le ch. 06 chiffre une hypothèse à
- * tester (3 € par élève et par an, minimum 1 200 €) : c'est une hypothèse
- * interne, elle n'a rien à faire sur une page publique.
+ * Le tarif n'est pas publié : il est établi sur devis. Pas de faux tarif barré,
+ * pas de remise fictive, pas de compte à rebours. L'hypothèse de prix interne
+ * n'a rien à faire sur une page publique tant qu'elle n'a pas été confrontée à
+ * de vrais acheteurs.
  */
 
 const INCLUS = [
@@ -36,7 +38,26 @@ const NON_INCLUS = [
   "Aucune intégration officielle ENT, EduConnect ou GAR en première livraison",
 ] as const;
 
-export default function Offre() {
+const CIRCUITS = [
+  {
+    acheteur: "Lycée public",
+    circuit:
+      "Devis, commande validée, facture déposée dans le circuit de facturation publique, virement",
+    activation: "Sur commande validée et date contractuelle",
+  },
+  {
+    acheteur: "Établissement privé",
+    circuit: "Devis accepté, facture réglée par virement",
+    activation: "Au paiement, ou sur crédit autorisé",
+  },
+  {
+    acheteur: "Élève, enseignant",
+    circuit: "Aucun paiement personnel",
+    activation: "Compte créé par l'établissement",
+  },
+] as const;
+
+export default function PageOffre() {
   return (
     <>
       <TitrePage
@@ -45,89 +66,100 @@ export default function Offre() {
         chapeau="Un seul contrat, souscrit par le lycée. Les élèves et les enseignants ne paient jamais, n'ont pas de carte à saisir et n'ont aucune option à acheter."
       />
 
-      <section className="pb-12">
-        <div className="rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-8">
-          <p className="m-0 text-[color:var(--color-encre-faible)]">Tarif</p>
-          <p className="mt-2 m-0 text-[length:var(--text-h1-app)] leading-[var(--text-h1-app--line-height)] titre-app">
-            Sur devis, selon l&apos;effectif
-          </p>
-          <p className="mt-4 max-w-[62ch] text-[color:var(--color-encre-faible)]">
-            Le tarif dépend du nombre d&apos;élèves couverts et de la durée du
-            contrat. Il n&apos;est pas arrêté : il sera publié quand il aura été
-            validé avec des acheteurs réels et rapporté au coût réel de
-            stockage, d&apos;assistance et d&apos;exploitation.
-          </p>
-          <Link
-            href="/etablissements"
-            className="mt-6 inline-flex min-h-[44px] items-center rounded-[var(--radius-champ)] bg-[color:var(--color-encre)] px-6 text-[color:var(--color-surface)] no-underline"
-          >
-            Demander un devis
-          </Link>
+      <Section>
+        <Reveler>
+          <div className="carte p-8 md:p-10">
+            <p className="surtitre m-0">Tarif</p>
+            <p className="mt-4 m-0 text-[length:var(--text-h2)] leading-[var(--text-h2--line-height)] font-bold md:text-[length:var(--text-h2-large)] md:leading-[var(--text-h2-large--line-height)]">
+              Sur devis, selon l&apos;effectif
+            </p>
+            <p className="mt-5 max-w-[62ch] text-[color:var(--color-encre-faible)]">
+              Le tarif dépend du nombre d&apos;élèves couverts et de la durée du
+              contrat. Il est établi après un échange sur votre organisation, et
+              tient dans un devis nominatif — pas dans une grille affichée qui
+              ne correspondrait à personne.
+            </p>
+            <Link href="/etablissements" className="bouton bouton-primaire mt-8">
+              Demander un devis
+              <span aria-hidden="true" className="fleche">→</span>
+            </Link>
+          </div>
+        </Reveler>
+      </Section>
+
+      <Section fond="doux">
+        <div className="grid gap-5 md:grid-cols-2">
+          <Reveler>
+            <Carte titre="Compris dans la licence" className="h-full">
+              <ul className="m-0 list-none space-y-2.5 p-0">
+                {INCLUS.map((element) => (
+                  <li key={element} className="flex gap-2.5">
+                    <span
+                      aria-hidden="true"
+                      className="mt-[9px] block size-1.5 shrink-0 rounded-full bg-[color:var(--color-accent)]"
+                    />
+                    {element}
+                  </li>
+                ))}
+              </ul>
+            </Carte>
+          </Reveler>
+
+          <Reveler delai={90}>
+            <Carte titre="Ce qu'il n'y a pas" className="h-full">
+              <ul className="m-0 list-none space-y-2.5 p-0">
+                {NON_INCLUS.map((element) => (
+                  <li key={element} className="flex gap-2.5">
+                    <span
+                      aria-hidden="true"
+                      className="mt-[13px] block h-px w-3 shrink-0 bg-[color:var(--color-bordure-forte)]"
+                    />
+                    {element}
+                  </li>
+                ))}
+              </ul>
+            </Carte>
+          </Reveler>
         </div>
-      </section>
+      </Section>
 
-      <section className="border-t border-[color:var(--color-bordure)] py-12">
-        <div className="grid gap-6 md:grid-cols-2">
-          <Carte titre="Compris dans la licence">
-            <ul className="list-none space-y-2 p-0 m-0 text-[color:var(--color-encre-faible)]">
-              {INCLUS.map((element) => (
-                <li key={element}>{element}</li>
-              ))}
-            </ul>
-          </Carte>
-          <Carte titre="Ce qu'il n'y a pas">
-            <ul className="list-none space-y-2 p-0 m-0 text-[color:var(--color-encre-faible)]">
-              {NON_INCLUS.map((element) => (
-                <li key={element}>{element}</li>
-              ))}
-            </ul>
-          </Carte>
-        </div>
-      </section>
+      <Section>
+        <Reveler>
+          <h2 className="text-[length:var(--text-h2)] leading-[var(--text-h2--line-height)] md:text-[length:var(--text-h2-large)] md:leading-[var(--text-h2-large--line-height)]">
+            Comment se passe le règlement
+          </h2>
+        </Reveler>
 
-      <section className="border-t border-[color:var(--color-bordure)] py-12">
-        <h2 className="text-[length:var(--text-h1-app)] leading-[var(--text-h1-app--line-height)]">
-          Comment se passe le règlement
-        </h2>
-
-        <div className="mt-8 overflow-x-auto">
-          <table className="w-full border-collapse text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)]">
+        <div className="mt-10 overflow-x-auto">
+          <table className="w-full min-w-[42rem] border-collapse text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)]">
             <caption className="sr-only">
               Circuit de règlement selon le type d&apos;acheteur
             </caption>
             <thead>
-              <tr className="bg-[color:var(--color-rose-selection)] text-left">
+              <tr className="border-b border-[color:var(--color-bordure-forte)] text-left">
                 <th scope="col" className="p-3 font-semibold">Acheteur</th>
                 <th scope="col" className="p-3 font-semibold">Circuit</th>
                 <th scope="col" className="p-3 font-semibold">Activation</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-[color:var(--color-bordure)]">
-                <th scope="row" className="p-3 text-left font-normal">Lycée public</th>
-                <td className="p-3 text-[color:var(--color-encre-faible)]">Devis, commande validée, facture déposée dans le circuit de facturation publique, virement</td>
-                <td className="p-3 text-[color:var(--color-encre-faible)]">Sur commande validée et date contractuelle</td>
-              </tr>
-              <tr className="border-b border-[color:var(--color-bordure)]">
-                <th scope="row" className="p-3 text-left font-normal">Établissement privé</th>
-                <td className="p-3 text-[color:var(--color-encre-faible)]">Devis accepté, facture réglée par virement</td>
-                <td className="p-3 text-[color:var(--color-encre-faible)]">Au paiement, ou sur crédit autorisé</td>
-              </tr>
-              <tr>
-                <th scope="row" className="p-3 text-left font-normal">Élève, enseignant</th>
-                <td className="p-3 text-[color:var(--color-encre-faible)]">Aucun paiement personnel</td>
-                <td className="p-3 text-[color:var(--color-encre-faible)]">Compte créé par l&apos;établissement</td>
-              </tr>
+              {CIRCUITS.map((ligne) => (
+                <tr key={ligne.acheteur} className="border-b border-[color:var(--color-bordure)]">
+                  <th scope="row" className="p-3 text-left font-normal">{ligne.acheteur}</th>
+                  <td className="p-3 text-[color:var(--color-encre-faible)]">{ligne.circuit}</td>
+                  <td className="p-3 text-[color:var(--color-encre-faible)]">{ligne.activation}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
-        <div className="mt-8 max-w-[62ch] space-y-4 text-[color:var(--color-encre-faible)]">
+        <div className="mt-10 max-w-[var(--spacing-lecture)] space-y-4 text-[color:var(--color-encre-faible)]">
           <p>
             Tout passe par un devis nominatif, puis par une facture réglée par
             virement. Il n&apos;y a <strong>aucun paiement par carte</strong>,
             aucun prélèvement automatique et aucun compte à ouvrir chez un
-            prestataire de paiement : study. n&apos;en utilise aucun.
+            prestataire de paiement : {MARQUE} n&apos;en utilise aucun.
           </p>
           <p>
             L&apos;effectif facturé est fixé au devis. Ajouter un élève en cours
@@ -146,7 +178,12 @@ export default function Offre() {
             périmètre et des conditions écrits.
           </p>
         </div>
-      </section>
+      </Section>
+
+      <AppelFinal
+        titre="Demander un devis"
+        chapeau="Dites-nous combien de classes et quelle échéance. Nous établissons un devis nominatif, sans relance automatique."
+      />
     </>
   );
 }

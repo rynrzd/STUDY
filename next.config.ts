@@ -38,6 +38,15 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Les images distantes ne sont pas autorisees : tout support vient du stockage prive via le BFF.
   images: { remotePatterns: [] },
+  async redirects() {
+    // Anciennes adresses publiques, conservees pour ne pas casser un lien
+    // deja envoye a un etablissement. /demo et /etablissements sont desormais
+    // un seul parcours (finition V1, 5.2).
+    return [
+      { source: "/fonctionnalites", destination: "/produit", permanent: true },
+      { source: "/demo", destination: "/etablissements", permanent: true },
+    ];
+  },
   async headers() {
     const headers =
       process.env.NODE_ENV === "production"

@@ -24,7 +24,7 @@ export async function register() {
     verifierAuDemarrage(process.env);
   } catch (erreur) {
     if (erreur instanceof ConfigurationInvalide && process.env.APP_ENV === "developpement") {
-      console.warn(`[study.] ${erreur.message}`);
+      console.warn(`[AvecStudy] ${erreur.message}`);
       return;
     }
     throw erreur;
@@ -35,13 +35,13 @@ export async function register() {
   const incomplets = etat.groupes.filter((groupe) => !groupe.complet);
 
   console.log(
-    `[study.] demarrage — environnement ${etat.environnement}, ` +
+    `[AvecStudy] demarrage — environnement ${etat.environnement}, ` +
       `${etat.groupes.length - incomplets.length}/${etat.groupes.length} groupes configures`,
   );
 
   if (incomplets.length > 0) {
     console.log(
-      `[study.] fonctions indisponibles faute de configuration : ` +
+      `[AvecStudy] fonctions indisponibles faute de configuration : ` +
         incomplets.map((groupe) => groupe.libelle).join(", "),
     );
   }

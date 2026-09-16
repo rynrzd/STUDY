@@ -136,7 +136,7 @@ async function principal() {
   const nom = `worker-${process.pid}`;
 
   titre(
-    `study. — worker\n` +
+    `AvecStudy — worker\n` +
     `identite : ${nom}\n` +
     `types    : ${types.join(", ")}\n` +
     `mode     : ${uneFois ? "file puis sortie" : "continu (Ctrl+C pour arreter)"}`,

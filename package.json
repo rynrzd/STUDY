@@ -1,5 +1,5 @@
 {
-  "name": "study-plateforme",
+  "name": "avecstudy",
   "version": "0.2.0",
   "private": true,
   "description": "study. — plateforme pedagogique d'etablissement, sans IA",
@@ -22,7 +22,12 @@
     "bootstrap:editeur": "node scripts/bootstrap-editeur.mjs",
     "worker": "node scripts/worker.mjs",
     "restauration:test": "node scripts/restauration-test.mjs",
-    "db:dictionnaire": "node tests/db/dictionnaire.mjs"
+    "db:dictionnaire": "node tests/db/dictionnaire.mjs",
+    "verifier:base": "node scripts/verifier-base.mjs",
+    "verifier:site": "node scripts/verifier-site.mjs",
+    "verifier:schema": "node scripts/comparer-schema.mjs",
+    "recette:reelle": "node --conditions=react-server scripts/recette-reelle.mjs",
+    "recette:deployee": "node scripts/recette-deployee.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.116.0",
@@ -30,6 +35,7 @@
     "pg": "^8.16.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "server-only": "0.0.1",
     "zod": "4.6.5"
   },
   "devDependencies": {

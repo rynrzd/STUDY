@@ -24,7 +24,7 @@ const environnement = z.enum(["developpement", "recette", "production"]);
  * l'absence de worker n'empêche pas de consulter un cours, elle empêche
  * d'importer une classe — et le produit doit le dire, pas le simuler.
  *
- * Le courrier électronique ne figure plus ici : study. n'envoie aucun message.
+ * Le courrier électronique ne figure plus ici : AvecStudy n'envoie aucun message.
  * Élèves comme adultes se connectent avec un identifiant remis par leur
  * établissement, et une réinitialisation se fait sur place. Voir ch. 37 et
  * docs/08-sans-courrier.md.

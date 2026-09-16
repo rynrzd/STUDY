@@ -30,7 +30,7 @@ const GROUPES = [
     "document_versions", "reports", "moderation_actions"]],
   ["Exploitation", ["files", "storage_buckets_attendus", "import_jobs", "import_rows",
     "notifications", "audit_events", "support_grants"]],
-  ["Commercial", ["leads", "buyers", "quotes", "contracts", "invoice_refs", "payment_events"]],
+  ["Commercial", ["commercial_requests", "buyers", "quotes", "contracts", "invoice_refs", "payment_events"]],
   // Schéma privé (ch. 36 §3) : ni anon ni authenticated n'y ont le moindre
   // droit. Ces tables n'ont donc aucune politique — c'est voulu, et c'est une
   // protection plus forte qu'une politique restrictive.

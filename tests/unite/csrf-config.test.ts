@@ -233,3 +233,70 @@ test("une cle de chiffrement de session mal formee est signalee comme invalide",
   assert.deepEqual(sessions.invalides, ["SESSION_ENCRYPTION_KEY"]);
   assert.deepEqual(sessions.manquantes, [], "presente mais invalide : la nuance compte");
 });
+
+test("un deploiement d apercu accepte sa propre origine, la production non", () => {
+  // Trouve en recette : l adresse d une Preview Vercel est tiree au hasard a
+  // chaque commit, donc absente d APP_ORIGIN. Sans exception, le garde-fou CSRF
+  // refusait TOUTE mutation sur une Preview — et la recette avant fusion, qui
+  // est tout l interet d une Preview, devenait impossible.
+  const preview = "https://study-6tamfjkpd-exemple.vercel.app";
+  const canonique = "https://avecstudy.test";
+
+  // Production : seule l origine canonique passe.
+  assert.deepEqual(
+    originesAutorisees(preview, { APP_ORIGIN: canonique, VERCEL_ENV: "production" }),
+    [canonique],
+    "en production, l origine du deploiement n est pas acceptee",
+  );
+
+  // Apercu : l origine canonique ET celle du deploiement.
+  assert.deepEqual(
+    originesAutorisees(preview, { APP_ORIGIN: canonique, VERCEL_ENV: "preview" }),
+    [canonique, preview],
+  );
+
+  // L exception ne vaut que pour l origine du deploiement lui-meme : une
+  // origine tierce n est jamais acceptee, meme en apercu.
+  const acceptees = originesAutorisees(preview, {
+    APP_ORIGIN: canonique,
+    VERCEL_ENV: "preview",
+  });
+  assert.equal(
+    acceptees.includes("https://site-malveillant.test"),
+    false,
+    "une origine tierce reste refusee en apercu",
+  );
+
+  // Hors Vercel, rien ne change.
+  assert.deepEqual(originesAutorisees(preview, { APP_ORIGIN: canonique }), [canonique]);
+
+  // Sans origine de requete, l exception ne s applique pas.
+  assert.deepEqual(
+    originesAutorisees(null, { APP_ORIGIN: canonique, VERCEL_ENV: "preview" }),
+    [canonique],
+  );
+});
+
+test("une mutation d apercu est acceptee par verifierMutation", () => {
+  const preview = "https://study-6tamfjkpd-exemple.vercel.app";
+  const acceptees = originesAutorisees(preview, {
+    APP_ORIGIN: "https://avecstudy.test",
+    VERCEL_ENV: "preview",
+  });
+
+  const requete: RequeteAVerifier = {
+    methode: "POST",
+    origine: preview,
+    referer: null,
+    fetchSite: "same-origin",
+    fetchMode: "cors",
+    jetonEnvoye: "jeton-identique",
+    jetonCookie: "jeton-identique",
+  };
+
+  assert.equal(verifierMutation(requete, acceptees).accepte, true);
+
+  // La meme requete venue d ailleurs reste refusee.
+  const etrangere: RequeteAVerifier = { ...requete, origine: "https://ailleurs.test" };
+  assert.equal(verifierMutation(etrangere, acceptees).accepte, false);
+});

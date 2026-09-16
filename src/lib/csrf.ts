@@ -122,20 +122,49 @@ function origineDepuisReferer(referer: string | null): string | null {
 /**
  * Origines acceptées pour une mutation.
  *
- * Une seule : l'origine canonique du service (APP_ORIGIN, ch. 40). Le BFF ne
- * sert que son propre navigateur ; il n'a aucune raison d'accepter une mutation
- * venue d'ailleurs. Une valeur générique `*` est ignorée, jamais appliquée —
- * le ch. 25 interdit `*` avec des credentials.
+ * En principe une seule : l'origine canonique du service (APP_ORIGIN, ch. 40).
+ * Le BFF ne sert que son propre navigateur ; il n'a aucune raison d'accepter
+ * une mutation venue d'ailleurs. Une valeur générique `*` est ignorée, jamais
+ * appliquée — le ch. 25 interdit `*` avec des credentials.
  *
  * COLLAB_ORIGIN n'entre pas ici : le service temps réel s'authentifie par
  * ticket signé, pas par cookie, et ne passe pas par cette vérification.
+ *
+ * @param origineDeLaRequete origine du déploiement qui reçoit la requête. Elle
+ *   n'est acceptée que sur un déploiement d'aperçu — voir ci-dessous.
  */
-export function originesAutorisees(): string[] {
-  const canonique = (process.env.APP_ORIGIN ?? "").trim();
-  if (canonique === "" || canonique === "*") return [];
-  try {
-    return [new URL(canonique).origin];
-  } catch {
-    return [];
+export function originesAutorisees(
+  origineDeLaRequete: string | null = null,
+  source: Record<string, string | undefined> = process.env,
+): string[] {
+  const acceptees: string[] = [];
+
+  const canonique = (source.APP_ORIGIN ?? "").trim();
+  if (canonique !== "" && canonique !== "*") {
+    try {
+      acceptees.push(new URL(canonique).origin);
+    } catch {
+      // APP_ORIGIN illisible : on ne l'accepte pas plutôt que de deviner.
+    }
   }
+
+  // Déploiement d'aperçu : son adresse est tirée au hasard à chaque commit et
+  // ne peut donc pas figurer dans APP_ORIGIN. Sans cette exception, aucun
+  // formulaire n'est utilisable sur une Preview — et la recette avant fusion,
+  // qui est tout l'intérêt d'une Preview, devient impossible.
+  //
+  // L'exception est étroite : elle n'accepte que l'origine du déploiement
+  // lui-même, jamais une origine tierce, et elle disparaît en production. Une
+  // Preview est de toute façon une origine distincte : ses cookies ne sont pas
+  // ceux du domaine de production.
+  if (source.VERCEL_ENV === "preview" && origineDeLaRequete !== null) {
+    try {
+      const propre = new URL(origineDeLaRequete).origin;
+      if (!acceptees.includes(propre)) acceptees.push(propre);
+    } catch {
+      // Origine illisible : rien à ajouter.
+    }
+  }
+
+  return acceptees;
 }

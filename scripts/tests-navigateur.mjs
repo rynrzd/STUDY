@@ -31,7 +31,7 @@ const PARCOURS_A_AUTOMATISER = [
   ["Accessibilite", "parcours principal au clavier et au lecteur d'ecran"],
 ];
 
-titre("study. — tests navigateur");
+titre("AvecStudy — tests navigateur");
 
 console.log("Etat : aucun test navigateur n'est automatise.\n");
 console.log("Ce qui bloque :");

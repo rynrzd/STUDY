@@ -340,7 +340,7 @@ test("au-dela du seuil, le fournisseur nest plus sollicite du tout", async () =>
   assert.equal((resultat as { motif: string }).motif, "trop_de_tentatives");
   assert.ok((resultat as { reprendreDansSecondes: number }).reprendreDansSecondes > 0);
   assert.equal(fournisseur.identitesVerifiees.length, 0,
-    "study. ne sert pas d oracle de mots de passe");
+    "AvecStudy ne sert pas d oracle de mots de passe");
 });
 
 /* -------------------------------------------------------------------------- */

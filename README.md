@@ -1,51 +1,51 @@
-# study.
+# AvecStudy
 
 Plateforme pédagogique d'établissement. **Sans IA.** Financée par le lycée,
 utilisable en classe et à la maison.
 
-Ce dépôt applique le cahier des charges **v2.0** du 14 septembre 2026, plus
-trois décisions prises par Rayan le 15 septembre :
+Ce dépôt applique le cahier des charges **v2.0** du 14 septembre 2026, puis le
+**cahier de finition V1** du 15 septembre 2026, qui fixe trois décisions :
 
 - **vente sur devis uniquement** — plus aucun prestataire de paiement, plus
   aucun paiement par carte ;
-- **aucun courrier électronique** — personne n'a d'adresse dans study., et
+- **aucun courrier électronique** — personne n'a d'adresse dans AvecStudy, et
   toute réinitialisation est un geste humain ;
 - **hébergement Vercel** pour l'application web ; le worker et le temps réel
   vivent ailleurs.
 
-Elles s'écartent du cahier des charges et sont consignées dans
+Elles sont consignées dans
 [`docs/01-decisions-architecture.md`](docs/01-decisions-architecture.md).
 Ailleurs, quand ce README et le cahier des charges divergent, **le cahier des
 charges fait foi**.
 
 ## État réel
 
-Ce projet n'est pas livrable et ne doit accueillir aucun élève réel.
-
-Le tableau de livraison complet, au format imposé par le chapitre 42, est dans
-[`docs/06-tableau-de-livraison.md`](docs/06-tableau-de-livraison.md). Résumé :
+L'état de livraison détaillé est dans
+[`docs/10-finition-v1.md`](docs/10-finition-v1.md). Résumé :
 
 | Lot | Périmètre | État |
 |---|---|---|
-| 0 — Cadrage | inventaire, décisions, modèle de menace, migrations, données fictives, tests | **fait** |
-| 1 — Fondations | design system, auth BFF, MFA, lycée/admin, classes, import, accès temporaires | **partiel** |
-| 2 — Parcours pédagogique | bibliothèque, séance, devoir, copie, correction, recherche | schéma seulement |
+| 0 — Cadrage | inventaire, décisions, modèle de menace, migrations, tests | **fait** |
+| 1 — Fondations | design system, connexion BFF, activation, administration, import | **fait**, vérifié sur la base réelle |
+| 2 — Parcours pédagogique | bibliothèque, séance, devoir, copie, correction | schéma + lecture élève |
 | 3 — Entraide et révisions | groupes, discussion, brouillon partagé, modération, quiz | schéma seulement |
-| 4 — Commercial | landing, démo, devis, contrats | landing **faite**, reste à faire |
+| 4 — Commercial | landing, demande de devis, administration commerciale | **fait** |
 | 5 — Pilote | revue indépendante, restauration, charge, accessibilité, DPA | non commencé |
 
-**Le chemin critique tient en une ligne : rien ne débloque tant que le premier
-projet Supabase n'existe pas.** Sans lui, pas de connexion ; sans connexion, pas
-de parcours de bout en bout ; sans parcours, aucun gate ne passe. Ce que Rayan
-doit faire, écran par écran, est dans
-[`docs/05-branchement-supabase.md`](docs/05-branchement-supabase.md).
+**Le projet Supabase est branché, migré et vérifié** (16 septembre 2026) :
+vingt migrations appliquées, structure identique à ce que produisent les
+migrations, buckets privés créés, compte propriétaire amorcé, et une recette de
+44 contrôles jouée sur la vraie base sans un seul défaut.
 
-## Déployer
+**Vercel** : le dépôt est relié au projet `study`, chaque commit de
+`finition-v1` produit une Preview, et `avecstudy.fr` est servi par Vercel.
+La Production suit `main` : le domaine sert donc encore l'ancien site tant que
+`finition-v1` n'est pas fusionnée. Les URL de Preview sont derrière
+l'authentification Vercel.
 
-L'application web va sur Vercel ; le worker et le service temps réel vivent
-ailleurs, parce que ce sont des processus longs. La marche à suivre, variable
-par variable, est dans
-[`docs/09-deploiement-vercel.md`](docs/09-deploiement-vercel.md).
+Deux pièges rencontrés, pour mémoire : l'hôte `db.<ref>.supabase.co` n'a plus
+d'enregistrement IPv4 — il faut le **Session pooler** — et PostgREST garde un
+cache du schéma que le lanceur de migrations recharge désormais tout seul.
 
 ## Démarrer
 
@@ -56,24 +56,31 @@ npm run diagnostic             # dit ce qui manque, sans afficher aucune valeur
 npm run dev                    # http://localhost:3100
 ```
 
-Le site public fonctionne. **Aucune connexion ne fonctionne** tant que le
-fournisseur d'identité n'est pas raccordé : c'est une absence assumée, dite à
-l'écran, pas une panne.
+Le site public fonctionne sans base. La connexion, les demandes de devis et
+l'administration demandent un projet Supabase migré : voir
+[`docs/05-branchement-supabase.md`](docs/05-branchement-supabase.md).
+
+L'exposition du schéma `study` à PostgREST est posée par la migration `0018` :
+il n'y a plus de case à cocher à ne pas oublier dans le tableau de bord, et
+`study_prive` ne peut pas être exposé — la migration échoue si on essaie.
 
 ## Vérifier
 
 ```bash
+npm run verifier:base    # projet joignable, schema expose, base accessible
+npm run verifier:schema  # structure reelle comparee aux migrations, axe par axe
+npm run verifier:site    # recette du site servi : routes, structure, securite
+npm run recette:reelle   # parcours complets sur le vrai projet Supabase
 npm run typecheck        # TypeScript strict
 npm run lint             # ESLint
 npm run build            # build de production
-npm run test:unite       # sessions, CSRF, chiffrement, connexion, configuration
-npm run test:rls         # isolation sur PostgreSQL réel
+npm run test:unite       # sessions, CSRF, connexion, devis, mots de passe, import
+npm run test:rls         # isolation et parcours complets sur PostgreSQL réel
 npm run test:navigateur  # sort en échec : aucun parcours automatisé (et le dit)
 npm run diagnostic       # état de la configuration, sans secrets
 npm run db:dictionnaire  # régénère docs/03-dictionnaire-de-donnees.md
 ```
 
-Dernière exécution : **45 tests unitaires**, **48 tests d'isolation**, 0 échec.
 Les tests de base tournent sur PostgreSQL 17 embarqué avec les migrations de
 production : ce qui est vérifié, ce sont les politiques RLS, les contraintes et
 les déclencheurs réels. Aucun Docker, aucune base distante, aucun lycée réel.
@@ -85,7 +92,7 @@ npm run migrations:verifier     # liste ce qui reste à appliquer, n'écrit rien
 npm run migrations:appliquer    # une transaction par fichier, refuse la prod sans confirmation
 npm run seed:test               # données fictives ; refuse une base non jetable
 npm run buckets:verifier        # liste les buckets attendus, tous privés
-npm run bootstrap:editeur       # compte exploitant, idempotent
+npm run bootstrap:editeur       # compte propriétaire, idempotent
 npm run worker                  # file de travaux
 npm run restauration:test       # contrôle une base restaurée, produit une preuve horodatée
 ```
@@ -97,22 +104,25 @@ succès.
 ## Organisation
 
 ```
-docs/                  décisions, menaces, dictionnaire, branchement, livraison,
-                       exploitation, sans-courrier, déploiement Vercel
-scripts/               migrations, seed, worker, bootstrap, diagnostic, restauration
-src/app/(public)/      landing et pages publiques
-src/app/connexion/     entrée privée
-src/components/        chrome public, landing (aperçus, séquences, FAQ)
-src/lib/               sessions, CSRF, chiffrement, identité, connexion, configuration, HTTP
-src/proxy.ts           CSP à nonce, refus des mutations d'origine étrangère
-src/instrumentation.ts vérification de la configuration au démarrage
-supabase/migrations/   13 migrations : schéma, contraintes, RLS, schéma privé
-supabase/seed/         jeu de recette, entièrement fictif
-tests/unite/           logique applicative, sans base
-tests/db/              isolation sur PostgreSQL réel
+docs/                      décisions, menaces, dictionnaire, branchement,
+                           exploitation, sans-courrier, Vercel, finition V1
+scripts/                   migrations, seed, worker, bootstrap, diagnostic
+src/app/(public)/          landing et pages publiques
+src/app/connexion/         entrée privée
+src/app/activation/        choix du mot de passe à la première connexion
+src/app/administration/    espace du compte propriétaire
+src/app/etablissement/     espace de l'administrateur du lycée, import de rentrée
+src/app/mes-cours/         espace élève et enseignant (lecture via RLS)
+src/components/site/       chrome public, landing, formulaires
+src/lib/                   sessions, CSRF, chiffrement, identité, connexion,
+                           devis, import, tableur, identité légale
+src/proxy.ts               CSP à nonce, refus des mutations d'origine étrangère
+supabase/migrations/       20 migrations : schéma, contraintes, RLS, schéma privé
+tests/unite/               logique applicative, sans base
+tests/db/                  isolation et parcours complets sur PostgreSQL réel
 ```
 
-## Le compte exploitant
+## Le compte propriétaire
 
 Un seul compte gère la plateforme. Il se crée par un script, jamais par une
 route web et jamais par une promotion automatique :
@@ -120,15 +130,18 @@ route web et jamais par une promotion automatique :
 ```bash
 STUDY_EDITEUR_IDENTIFIANT=rayan \
 STUDY_EDITEUR_MOT_DE_PASSE='une phrase de passe longue et unique' \
-npm run bootstrap:editeur -- --prenom Rayan --nom Nom
+npm run bootstrap:editeur -- --prenom Rayan --nom Tifouti
 ```
 
 Le secret passe par l'environnement, **jamais en argument** : un argument reste
 dans l'historique du shell et dans la liste des processus.
 
+Il se connecte ensuite sur `/connexion` avec le code réservé **`AVECSTUDY`**,
+qu'aucun établissement ne peut porter.
+
 **Ce compte contrôle** : établissements, années scolaires, personnes, rôles,
-classes, groupes, matières, affectations, inscriptions, prospects, devis,
-contrats, factures, règlements, journal d'audit — sur tous les établissements.
+classes, groupes, matières, affectations, inscriptions, demandes commerciales,
+devis, contrats, règlements, journal d'audit — sur tous les établissements.
 
 **Ce compte ne lit pas** : copies, corrections, annotations, notes personnelles,
 messages d'entraide, brouillons partagés. Pour cela, il demande un accès
@@ -139,9 +152,6 @@ Cette frontière vient du chapitre 09 du cahier des charges. Elle protège les
 élèves, et elle protège aussi l'exploitant le jour où un délégué à la protection
 des données demande qui peut lire une copie. Sept tests la vérifient, dont un
 qui échoue si quelqu'un ajoute une politique la contournant.
-
-**La MFA est obligatoire** : sans second facteur vérifié sur la session, ce
-compte ne peut rien administrer.
 
 ## Règles qui ne se négocient pas
 
@@ -158,21 +168,26 @@ compte ne peut rien administrer.
    en passant un bucket en public.
 6. **Ne jamais écrire « sécurisé », « conforme », « terminé » ou « fonctionne »**
    sur la seule foi d'un build.
-7. **Une fonctionnalité non livrée est absente ou clairement indisponible**,
-   jamais simulée comme réussie.
+7. **Une fonctionnalité non livrée est absente**, jamais simulée comme réussie
+   ni annoncée au public comme « en construction ».
 8. **L'absence de configuration produit une erreur contrôlée**, jamais un repli
    silencieux.
 9. **L'exploitant ne lit pas le travail des élèves** sans accès d'assistance
    approuvé par l'établissement.
+10. **Aucune mention légale n'est inventée.** Un SIRET absent s'affiche « en
+    cours de publication », jamais sous la forme d'un numéro plausible.
 
-## Décisions encore ouvertes
+## Trois informations encore attendues
 
-À trancher avant toute vente, sans bloquer le prototype : marque et domaine,
-identité contractuelle de l'éditeur, tarif et TVA, région effective et hébergeur
-du worker, durées de conservation contractuelles, interlocuteurs DPO et
-modération, conditions de pilote et d'assistance — et, sans courrier
-électronique, **par quel canal un établissement joint l'assistance**. Elles ne
-sont pas inventées ici.
+Elles ne peuvent pas être déduites du code, et ne seront pas devinées :
+
+1. SIREN et SIRET officiels ;
+2. adresse professionnelle à publier ;
+3. adresse de contact publique.
+
+À reporter dans [`src/lib/identite-legale.ts`](src/lib/identite-legale.ts),
+nulle part ailleurs : les pages légales, le pied de page et la politique de
+confidentialité les reprennent automatiquement.
 
 ## L'ancien prototype
 

@@ -161,7 +161,7 @@ identifié et une preuve.
 
 ### Aucun courrier électronique
 
-study. n'envoie aucun message. Détaillé dans `08-sans-courrier.md`, avec ce que
+AvecStudy n'envoie aucun message. Détaillé dans `08-sans-courrier.md`, avec ce que
 cela coûte — toute réinitialisation devient un geste humain, et l'exploitant
 devient le point de reprise pour les comptes d'administration.
 

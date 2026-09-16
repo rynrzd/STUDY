@@ -24,10 +24,10 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
  * production, et jamais servi à un vrai lycée.
  */
 export const NOM_COOKIE_SESSION =
-  process.env.NODE_ENV === "production" ? "__Host-study_session" : "study_session_dev";
+  process.env.NODE_ENV === "production" ? "__Host-avecstudy_session" : "avecstudy_session_dev";
 
 export const NOM_COOKIE_CSRF =
-  process.env.NODE_ENV === "production" ? "__Host-study_csrf" : "study_csrf_dev";
+  process.env.NODE_ENV === "production" ? "__Host-avecstudy_csrf" : "avecstudy_csrf_dev";
 
 /** Contexte d'usage d'une session. Le poste partagé expire beaucoup plus vite. */
 export type TypeAppareil = "personnel" | "partage";

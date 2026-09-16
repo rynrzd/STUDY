@@ -91,7 +91,7 @@ async function principal() {
 
   const debut = new Date();
   titre(
-    `study. — exercice de restauration (test T18)\n` +
+    `AvecStudy — exercice de restauration (test T18)\n` +
     `debut : ${debut.toISOString()}`,
   );
 
