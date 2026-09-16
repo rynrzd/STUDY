@@ -109,6 +109,72 @@ test("P01b — aucun etablissement ne peut porter le code reserve AVECSTUDY", as
   assert.match(erreur.message, /organizations_code_reserve/);
 });
 
+test("P01c — la session de l exploitant porte bien le role « editeur »", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  // Non-regression. Ce defaut a ete trouve en recette sur le projet reel, pas
+  // ici : `auth_lire_session` tirait les roles de `organization_memberships`,
+  // et l exploitant n a pas d adhesion. Sa session revenait donc SANS role.
+  // Symptome : connexion acceptee, puis renvoi immediat vers la page de
+  // connexion par l espace d administration, en boucle et sans message.
+  const proprietaire = randomUUID();
+  const jeton = empreinte("session-exploitant");
+
+  await enTantQueServeur(db, async () => {
+    await db.query("select study.amorcer_exploitant($1, 'Rayan', 'T', 'rayan', $2)", [
+      proprietaire,
+      `${"ab".repeat(8)}@comptes.exemple.invalid`,
+    ]);
+
+    await db.query(
+      "select study.auth_creer_session($1, null, $2, 'editeur', 'personnel', 'aal2', " +
+        "now() + interval '15 minutes', now() + interval '8 hours', null, null)",
+      [proprietaire, jeton],
+    );
+
+    const { rows } = await db.query("select * from study.auth_lire_session($1)", [jeton]);
+
+    assert.equal(rows.length, 1);
+    assert.deepEqual(rows[0].roles, ["editeur"], "sans ce role, l espace d administration se ferme");
+    assert.equal(rows[0].organization_id, null, "l exploitant n appartient a aucun etablissement");
+    assert.equal(
+      rows[0].must_change_password,
+      false,
+      "sans adhesion, aucune activation ne doit etre exigee",
+    );
+
+    // Habilitation retiree : la session suivante ne porte plus rien.
+    await db.query("update study_prive.editor_staff set state = 'suspendue' where profile_id = $1", [
+      proprietaire,
+    ]);
+
+    const { rows: apres } = await db.query("select * from study.auth_lire_session($1)", [jeton]);
+    assert.deepEqual(apres[0].roles, [], "une habilitation retiree ferme l espace a la requete suivante");
+  });
+});
+
+test("P01d — un membre d etablissement garde les roles de son adhesion", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  // L autre moitie du meme correctif : la branche « editor_staff » ne doit pas
+  // deborder sur les comptes scolaires.
+  const jeton = empreinte("session-prof");
+
+  await enTantQueServeur(db, async () => {
+    await db.query(
+      "select study.auth_creer_session($1, $2, $3, 'etablissement', 'personnel', 'aal1', " +
+        "now() + interval '2 hours', now() + interval '12 hours', null, null)",
+      [ACTEURS.profMartin, ACTEURS.lyceeA, jeton],
+    );
+
+    const { rows } = await db.query("select * from study.auth_lire_session($1)", [jeton]);
+    assert.ok(rows[0].roles.includes("professeur"), "les roles viennent de l adhesion");
+    assert.ok(!rows[0].roles.includes("editeur"), "un professeur ne devient pas exploitant");
+  });
+});
+
 /* ========================================================================== */
 /* P02 — L'exploitant crée un établissement et son administrateur              */
 /* ========================================================================== */

@@ -129,7 +129,16 @@ async function principal() {
       }
     }
 
+    // PostgREST garde en memoire un cache du schema. Sans ce signal, une
+    // fonction ou une table creee a l instant lui reste invisible, avec un
+    // message trompeur : « Could not find the function ... in the schema
+    // cache ». On le previent systematiquement, meme si une migration l a
+    // deja fait : le signal est idempotent.
+    await client.query("notify pgrst, 'reload schema'");
+    await client.query("notify pgrst, 'reload config'");
+
     console.log(`\n${aAppliquer.length} migration(s) appliquee(s).`);
+    console.log("PostgREST a ete prevenu de relire le schema.");
   } finally {
     await client.end();
   }

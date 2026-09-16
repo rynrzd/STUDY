@@ -16,3 +16,6 @@ Thumbs.db
 .vercel
 /tests/.tmp/
 tests/tmp/
+
+# Fiche d'acces generee localement, jamais versionnee
+ACCES-PROPRIETAIRE.txt

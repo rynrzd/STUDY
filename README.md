@@ -26,20 +26,23 @@ L'état de livraison détaillé est dans
 | Lot | Périmètre | État |
 |---|---|---|
 | 0 — Cadrage | inventaire, décisions, modèle de menace, migrations, tests | **fait** |
-| 1 — Fondations | design system, connexion BFF, activation, administration, import | **fait**, non appliqué en base |
+| 1 — Fondations | design system, connexion BFF, activation, administration, import | **fait**, vérifié sur la base réelle |
 | 2 — Parcours pédagogique | bibliothèque, séance, devoir, copie, correction | schéma + lecture élève |
 | 3 — Entraide et révisions | groupes, discussion, brouillon partagé, modération, quiz | schéma seulement |
 | 4 — Commercial | landing, demande de devis, administration commerciale | **fait** |
 | 5 — Pilote | revue indépendante, restauration, charge, accessibilité, DPA | non commencé |
 
-**Blocages restants, tous deux hors du code :**
+**Le projet Supabase est branché, migré et vérifié** (16 septembre 2026) :
+vingt migrations appliquées, structure identique à ce que produisent les
+migrations, buckets privés créés, compte propriétaire amorcé, et une recette de
+44 contrôles jouée sur la vraie base sans un seul défaut.
 
-1. Le mot de passe de la base est refusé. `npm run verifier:base` le confirme et
-   donne l'URL exacte à utiliser : le pooler IPv4, l'hôte direct
-   `db.<ref>.supabase.co` n'ayant plus d'enregistrement A. Tant que ce n'est pas
-   corrigé, aucune migration n'est appliquée — mais l'application démarre.
-2. `avecstudy.fr` pointe sur IONOS et répond 404 : le domaine n'est pas branché
-   sur Vercel.
+**Blocage restant, hors du code :** `avecstudy.fr` pointe sur IONOS et répond
+404. Le domaine n'est pas branché sur Vercel.
+
+Deux pièges rencontrés, pour mémoire : l'hôte `db.<ref>.supabase.co` n'a plus
+d'enregistrement IPv4 — il faut le **Session pooler** — et PostgREST garde un
+cache du schéma que le lanceur de migrations recharge désormais tout seul.
 
 ## Démarrer
 
@@ -62,7 +65,9 @@ il n'y a plus de case à cocher à ne pas oublier dans le tableau de bord, et
 
 ```bash
 npm run verifier:base    # projet joignable, schema expose, base accessible
+npm run verifier:schema  # structure reelle comparee aux migrations, axe par axe
 npm run verifier:site    # recette du site servi : routes, structure, securite
+npm run recette:reelle   # parcours complets sur le vrai projet Supabase
 npm run typecheck        # TypeScript strict
 npm run lint             # ESLint
 npm run build            # build de production
@@ -109,7 +114,7 @@ src/components/site/       chrome public, landing, formulaires
 src/lib/                   sessions, CSRF, chiffrement, identité, connexion,
                            devis, import, tableur, identité légale
 src/proxy.ts               CSP à nonce, refus des mutations d'origine étrangère
-supabase/migrations/       18 migrations : schéma, contraintes, RLS, schéma privé
+supabase/migrations/       20 migrations : schéma, contraintes, RLS, schéma privé
 tests/unite/               logique applicative, sans base
 tests/db/                  isolation et parcours complets sur PostgreSQL réel
 ```

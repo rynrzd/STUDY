@@ -8,55 +8,59 @@ Marque finale : **AvecStudy**. Domaine canonique : `https://avecstudy.fr`.
 
 ---
 
-## 1. Le blocage restant, et pourquoi il n'y en a plus qu'un
+## 1. Mise en service : faite
 
-### 1.1 Le mot de passe de la base est refusé
+Le projet Supabase est branché, migré et vérifié le 16 septembre 2026.
 
-`npm run verifier:base` le dit en une ligne. Trois constats, obtenus en
-interrogeant réellement le projet :
+### 1.1 Ce qui a été corrigé pour y arriver
 
-| Constat | Détail |
+**L'URL de connexion.** `db.<ref>.supabase.co` ne publie plus d'enregistrement
+IPv4 : depuis une connexion sans route IPv6, il expire sans message utile. La
+bonne adresse est le **Session pooler**, `aws-1-eu-west-1.pooler.supabase.com`,
+avec l'utilisateur `postgres.<ref>`. `npm run verifier:base` trouve désormais
+ce pooler tout seul et distingue « mauvaise région » de « mot de passe refusé ».
+
+**La table de suivi des migrations était vide** alors que le schéma portait déjà
+l'état d'après la migration 0011. Rejouer 0001 échouait sur « type role_type
+already exists ». La structure réelle a été comparée, axe par axe, à ce que
+produisent les migrations — 59 tables, 577 colonnes, 252 contraintes, 186 index,
+97 politiques, 32 fonctions, **identiques** — puis 0001–0011 ont été consignées
+comme appliquées, et 0012–0020 appliquées normalement.
+
+**Deux défauts trouvés par la recette réelle, invisibles en local :**
+
+1. `study.auth_lire_session` tirait les rôles de `organization_memberships`.
+   L'exploitant n'a pas d'adhésion : sa session revenait **sans aucun rôle**, et
+   l'espace d'administration le renvoyait aussitôt vers la page de connexion, en
+   boucle et sans message. Corrigé par les migrations 0019 puis 0020 — la
+   première utilisait `coalesce` sur un `array(select … from unnest(NULL))`,
+   qui vaut le tableau vide et non NULL. Deux tests de non-régression couvrent
+   maintenant le cas, dans les deux sens.
+2. PostgREST garde un cache du schéma : une fonction créée par une migration lui
+   reste invisible, avec le message trompeur « Could not find the function … in
+   the schema cache ». Le lanceur de migrations envoie désormais
+   `notify pgrst, 'reload schema'` à la fin de chaque exécution.
+
+### 1.2 État de la base
+
+| | |
 |---|---|
-| Le projet Supabase répond | API d'authentification et API d'administration acceptent la clé de service. |
-| Le mot de passe de la base est **faux** | Le pooler reconnaît le locataire `postgres.<ref>` puis répond `password authentication failed`. La forme de l'URL n'est donc pas en cause : seule la valeur l'est. |
-| L'hôte direct n'est pas joignable **depuis ce poste** | `db.<ref>.supabase.co` ne publie plus d'enregistrement A : il est en IPv6 seul. Une connexion sans route IPv6 expire sans message utile. |
+| Migrations appliquées | **20 / 20** |
+| Structure | identique à ce que produisent les migrations |
+| Schéma `study` exposé à PostgREST | oui, par la migration 0018 |
+| `study_prive` exposé | non, et une migration échoue si on l'ajoute |
+| Buckets | 4, tous privés |
+| Compte propriétaire | créé, connexion vérifiée |
+| Données | le compte propriétaire, et rien d'autre |
 
-**Ce qu'il faut faire, une fois :**
+Le bucket `generated-exports` est déclaré à 100 Mo par fichier ; le plan du
+projet plafonne plus bas, et la commande le dit à chaque exécution plutôt que de
+laisser croire que la valeur déclarée s'applique.
 
-1. Supabase → Settings → Database → *Reset database password*, et noter le
-   nouveau mot de passe.
-2. Dans `.env.local`, remplacer la ligne par la forme **pooler**, joignable en
-   IPv4 :
-
-   ```
-   WORKER_DATABASE_URL=postgresql://postgres.<ref>:<MOT_DE_PASSE>@aws-1-eu-west-1.pooler.supabase.com:5432/postgres
-   ```
-
-   Le `<ref>` est l'identifiant du projet, déjà présent dans `SUPABASE_URL`. La
-   région a été trouvée en interrogeant les poolers : c'est **eu-west-1**, avec
-   le préfixe `aws-1`.
-3. `npm run verifier:base` doit alors afficher trois `[OK]`.
-4. `npm run migrations:appliquer`.
-
-Aucun mot de passe ne doit être collé dans une conversation : il se saisit
-directement dans `.env.local`, et plus tard dans les variables Vercel.
-
-### 1.2 Ce qui n'est plus un blocage
-
-**L'exposition du schéma à PostgREST est désormais automatique.** Elle était la
-seconde case à cocher à la main, et son oubli produisait un message
-incompréhensible (`Invalid schema: study`). La migration
-`0018_exposition_postgrest.sql` la pose, et refuse d'exposer `study_prive`.
-
-**`WORKER_DATABASE_URL` ne bloque plus l'application.** Elle ne sert qu'aux
-migrations et au worker de fichiers : l'amorçage du compte propriétaire, la
-connexion, les devis et l'administration passent par la clé de service.
-
-### 1.3 Le domaine ne pointe pas sur Vercel
+### 1.3 Le domaine ne pointe toujours pas sur Vercel
 
 `avecstudy.fr` résout vers IONOS et répond 404. À faire : ajouter le domaine
-dans le projet Vercel, puis remplacer l'enregistrement A chez IONOS par celui
-que Vercel indique.
+dans le projet Vercel, puis remplacer l'enregistrement A chez IONOS.
 
 ---
 
@@ -66,6 +70,8 @@ que Vercel indique.
 |---|---|
 | `npm run verifier:base` | Projet joignable, schéma exposé, base accessible — trouve le bon pooler tout seul et distingue « mauvaise région » de « mot de passe refusé ». |
 | `npm run verifier:site` | Sur le site servi : codes de réponse, redirections, structure des pages, absence de termes de chantier, règles de mise en page, en-têtes de sécurité, cohérence du plan du site. |
+| `npm run verifier:schema` | Compare la structure de la base réelle à ce que produisent les migrations, axe par axe. Un argument permet de s'arrêter à une migration : `-- 0011`. |
+| `npm run recette:reelle` | Parcours complets **sur le projet Supabase**, avec les vrais modules et les vraies clés. Tout ce qu'elle crée est supprimé à la fin. |
 | `npm run diagnostic` | Variables présentes ou absentes, jamais leurs valeurs. |
 
 Aucune de ces commandes n'affiche une clé, un mot de passe ou une URL complète.
@@ -203,11 +209,14 @@ image Open Graph, `robots.txt`, `sitemap.xml` et canonical générés.
 | `0016` | Connexion de l'exploitant, amorçage sans URL Postgres, fonctions `study.admin_*` |
 | `0017` | Fonctions `study.etab_*`, import de rentrée |
 | `0018` | Exposition de `study` à PostgREST, refus d'exposer `study_prive` |
+| `0019` | Rôles de session sans adhésion, rechargement du cache PostgREST |
+| `0020` | Correction de 0019 : `coalesce` sur un tableau vide ne retient jamais la branche suivante |
 
 Toutes s'appliquent sur une base vide : la suite `tests/db` les rejoue
 intégralement sur PostgreSQL 17 (PGlite) à chaque exécution.
 
-**Appliquées sur le projet Supabase : aucune.** Voir §1.1.
+**Appliquées sur le projet Supabase : les vingt.** Structure vérifiée identique
+par `npm run verifier:schema`.
 
 ---
 
@@ -216,7 +225,8 @@ intégralement sur PostgreSQL 17 (PGlite) à chaque exécution.
 | Suite | Contenu | Résultat |
 |---|---|---|
 | `npm run test:unite` | 71 tests — session, CSRF, authentification, demande commerciale, mot de passe, import, lecture CSV/XLSX | 71 / 71 |
-| `npm run test:rls` | 73 tests — isolation, activation, fichiers, exploitant, **parcours complets**, absence de paiement et de courrier | 73 / 73 |
+| `npm run test:rls` | 75 tests — isolation, activation, fichiers, exploitant, **parcours complets**, absence de paiement et de courrier | 75 / 75 |
+| `npm run recette:reelle` | 44 contrôles **sur le projet Supabase réel** | aucun défaut |
 | `npx tsc --noEmit` | TypeScript strict, `noUncheckedIndexedAccess` | aucune erreur |
 | `npx eslint .` | — | aucune erreur |
 | `npm run build` | 28 routes | réussi |

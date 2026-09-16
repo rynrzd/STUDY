@@ -59,11 +59,36 @@ async function principal() {
   console.log("\n" + "-".repeat(72));
   if (etat.api && etat.schema && etat.base) {
     console.log("Tout est en place. `npm run migrations:appliquer` peut etre lance.");
-    process.exit(0);
+    process.exitCode = 0;
+  } else {
+    console.log("Il reste des points a regler, listes ci-dessus.");
+    process.exitCode = 1;
   }
 
-  console.log("Il reste des points a regler, listes ci-dessus.");
-  process.exit(1);
+  // On pose le code de sortie sans forcer `process.exit()` : arracher le
+  // processus pendant qu'une socket PostgreSQL se ferme fait afficher une
+  // assertion libuv sur Windows, juste sous le rapport, où elle passe pour un
+  // plantage. On laisse Node finir proprement.
+  fermerProprement();
+}
+
+/**
+ * Coupe ce qui pourrait retenir le processus.
+ *
+ * Une tentative de connexion refusée laisse parfois une socket en cours de
+ * fermeture : sans cela, la commande resterait ouverte quelques secondes.
+ */
+function fermerProprement() {
+  const handles = process._getActiveHandles?.() ?? [];
+  for (const handle of handles) {
+    if (typeof handle.destroy === "function" && handle !== process.stdout && handle !== process.stderr) {
+      try {
+        handle.destroy();
+      } catch {
+        // Une poignée déjà fermée : rien à faire.
+      }
+    }
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -144,9 +169,38 @@ async function verifierBase(ref) {
 
   const [, utilisateur, motDePasse, hote, port, base] = forme;
 
-  if (/^\[.*\]$/.test(motDePasse) || motDePasse.includes("[")) {
-    return ligne(false, "Le mot de passe contient encore des crochets",
-      "Le gabarit [YOUR-PASSWORD] n'a pas ete entierement remplace.");
+  // Les deux erreurs de copie les plus frequentes, dites ensemble : les
+  // corriger l'une apres l'autre ferait perdre un aller-retour.
+  const crochets = motDePasse.includes("[") || motDePasse.includes("]");
+  const hoteDirect = /^db\..*\.supabase\.co$/.test(hote);
+
+  if (crochets || hoteDirect) {
+    const causes = [];
+    if (hoteDirect) {
+      causes.push(
+        "L'URL est celle de « Direct connection ». Cet hote n'a plus\n" +
+        "         d'enregistrement IPv4 : il est injoignable depuis la plupart des\n" +
+        "         connexions. Copier plutot le bloc « Session pooler ».",
+      );
+    }
+    if (crochets) {
+      causes.push(
+        "Le mot de passe est encore entre crochets : Supabase ecrit\n" +
+        "         [YOUR-PASSWORD] dans l'URL qu'il propose, c'est un gabarit a\n" +
+        "         remplacer par le vrai secret, crochets compris.",
+      );
+    }
+
+    ligne(false, "WORKER_DATABASE_URL a corriger", causes.join("\n\n         "));
+
+    // On donne la forme exacte attendue, region comprise, sans le secret.
+    console.log(
+      `\n         Forme attendue :\n` +
+      `         WORKER_DATABASE_URL=postgresql://postgres.${ref}:` +
+      `LE_MOT_DE_PASSE@aws-1-eu-west-1.pooler.supabase.com:5432/postgres\n` +
+      `\n         (region trouvee en interrogeant les poolers : eu-west-1, prefixe aws-1)`,
+    );
+    return;
   }
 
   // --- L'hôte direct est-il joignable depuis cette machine ? ---------------
@@ -240,7 +294,10 @@ async function tenter({ hote, port, utilisateur, motDePasse, base }) {
     await client.end();
     return { connecte: true, utilisateur: rows[0].current_user };
   } catch (erreur) {
-    await client.end().catch(() => undefined);
+    // Pas de `client.end()` ici : fermer une connexion qui n'a jamais abouti
+    // fait remonter une assertion libuv sur Windows, affichée après le
+    // rapport et prise pour un plantage. Le processus se termine de toute
+    // façon, et la socket avec lui.
     const message = erreur.message ?? "erreur inconnue";
     return {
       connecte: false,
