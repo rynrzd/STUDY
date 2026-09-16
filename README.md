@@ -37,8 +37,11 @@ vingt migrations appliquées, structure identique à ce que produisent les
 migrations, buckets privés créés, compte propriétaire amorcé, et une recette de
 44 contrôles jouée sur la vraie base sans un seul défaut.
 
-**Blocage restant, hors du code :** `avecstudy.fr` pointe sur IONOS et répond
-404. Le domaine n'est pas branché sur Vercel.
+**Vercel** : le dépôt est relié au projet `study`, chaque commit de
+`finition-v1` produit une Preview, et `avecstudy.fr` est servi par Vercel.
+La Production suit `main` : le domaine sert donc encore l'ancien site tant que
+`finition-v1` n'est pas fusionnée. Les URL de Preview sont derrière
+l'authentification Vercel.
 
 Deux pièges rencontrés, pour mémoire : l'hôte `db.<ref>.supabase.co` n'a plus
 d'enregistrement IPv4 — il faut le **Session pooler** — et PostgREST garde un

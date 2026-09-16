@@ -17,6 +17,32 @@
 
 const BASE = process.env.SITE_BASE ?? "http://localhost:3100";
 
+/**
+ * Déploiement Vercel protégé : les URL de Preview passent par l'authentification
+ * Vercel et répondent 302 vers `vercel.com/sso-api`. Un script ne peut donc pas
+ * les recetter tel quel.
+ *
+ * Vercel prévoit pour cela un contournement dédié à l'automatisation :
+ * Project Settings → Deployment Protection → Protection Bypass for Automation,
+ * qui donne un secret à présenter en en-tête. On le lit ici, jamais on ne
+ * l'affiche.
+ *
+ *   SITE_BASE=https://…vercel.app VERCEL_AUTOMATION_BYPASS_SECRET=… npm run verifier:site
+ */
+const BYPASS = process.env.VERCEL_AUTOMATION_BYPASS_SECRET ?? "";
+
+const ENTETES = BYPASS === ""
+  ? {}
+  : { "x-vercel-protection-bypass": BYPASS, "x-vercel-set-bypass-cookie": "true" };
+
+/** Toutes les requêtes du script passent par ici, pour porter l'en-tête. */
+async function demander(chemin, options = {}) {
+  return fetch(BASE + chemin, {
+    ...options,
+    headers: { ...ENTETES, ...(options.headers ?? {}) },
+  });
+}
+
 const PUBLIQUES = [
   "/", "/produit", "/etablissements", "/securite", "/offre",
   "/aide", "/contact", "/accessibilite",
@@ -79,12 +105,12 @@ async function verifierRoutes() {
   console.log("Routes");
 
   for (const route of [...PUBLIQUES, ...RESSOURCES]) {
-    const reponse = await fetch(BASE + route, { redirect: "manual" });
+    const reponse = await demander(route, { redirect: "manual" });
     verifier(reponse.status === 200, `${route} repond 200`, `HTTP ${reponse.status}`);
   }
 
   for (const [ancienne, nouvelle] of REDIRECTIONS) {
-    const reponse = await fetch(BASE + ancienne, { redirect: "manual" });
+    const reponse = await demander(ancienne, { redirect: "manual" });
     const cible = reponse.headers.get("location") ?? "";
     verifier(
       reponse.status === 308 && cible.endsWith(nouvelle),
@@ -94,7 +120,7 @@ async function verifierRoutes() {
   }
 
   for (const route of PRIVEES) {
-    const reponse = await fetch(BASE + route, { redirect: "manual" });
+    const reponse = await demander(route, { redirect: "manual" });
     const cible = reponse.headers.get("location") ?? "";
     verifier(
       reponse.status === 307 && cible.includes("/connexion"),
@@ -103,7 +129,7 @@ async function verifierRoutes() {
     );
   }
 
-  const introuvable = await fetch(`${BASE}/cette-page-n-existe-pas`, { redirect: "manual" });
+  const introuvable = await demander("/cette-page-n-existe-pas", { redirect: "manual" });
   verifier(introuvable.status === 404, "une adresse inconnue repond 404", `HTTP ${introuvable.status}`);
 
   const corps404 = await introuvable.text();
@@ -117,7 +143,7 @@ async function verifierStructure() {
   console.log("\nStructure des pages publiques");
 
   for (const route of PUBLIQUES) {
-    const html = await (await fetch(BASE + route)).text();
+    const html = await (await demander(route)).text();
     const etiquette = route === "/" ? "/ (accueil)" : route;
 
     const titres = html.match(/<h1[^>]*>/g) ?? [];
@@ -154,7 +180,7 @@ async function verifierMiseEnPage() {
   console.log("\nMise en page (regles verifiables dans le balisage)");
 
   for (const route of PUBLIQUES) {
-    const html = await (await fetch(BASE + route)).text();
+    const html = await (await demander(route)).text();
     const etiquette = route === "/" ? "/ (accueil)" : route;
 
     // Une largeur minimale superieure a l ecran d un telephone ne doit exister
@@ -203,7 +229,7 @@ async function verifierMiseEnPage() {
 async function verifierSecurite() {
   console.log("\nEn-tetes de securite");
 
-  const reponse = await fetch(BASE + "/");
+  const reponse = await demander("/");
   const attendus = {
     "x-content-type-options": "nosniff",
     "x-frame-options": "DENY",
@@ -223,26 +249,26 @@ async function verifierSecurite() {
   verifier(reponse.headers.get("x-powered-by") === null, "aucune signature de serveur");
 
   // robots.txt ne doit pas indexer l entree privee.
-  const robots = await (await fetch(BASE + "/robots.txt")).text();
+  const robots = await (await demander("/robots.txt")).text();
   verifier(robots.includes("/connexion"), "robots.txt ecarte l entree privee");
 
   // Le plan du site ne doit lister que des pages qui repondent 200.
-  const sitemap = await (await fetch(BASE + "/sitemap.xml")).text();
+  const sitemap = await (await demander("/sitemap.xml")).text();
   const adresses = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
   verifier(adresses.length >= 10, `le plan du site liste ${adresses.length} pages`);
 
   for (const adresse of adresses) {
     const chemin = new URL(adresse).pathname;
-    const reponsePage = await fetch(BASE + chemin, { redirect: "manual" });
+    const reponsePage = await demander(chemin, { redirect: "manual" });
     verifier(reponsePage.status === 200, `plan du site : ${chemin} repond 200`, `HTTP ${reponsePage.status}`);
   }
 }
 
 async function trouverFeuilleDeStyle() {
-  const html = await (await fetch(BASE + "/")).text();
+  const html = await (await demander("/")).text();
   const lien = /<link rel="stylesheet" href="([^"]+)"/.exec(html)?.[1];
   if (lien === undefined) return "";
-  return (await fetch(new URL(lien, BASE))).text();
+  return (await fetch(new URL(lien, BASE), { headers: ENTETES })).text();
 }
 
 principal().catch((erreur) => {

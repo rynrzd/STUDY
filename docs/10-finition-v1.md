@@ -57,10 +57,41 @@ Le bucket `generated-exports` est déclaré à 100 Mo par fichier ; le plan du
 projet plafonne plus bas, et la commande le dit à chaque exécution plutôt que de
 laisser croire que la valeur déclarée s'applique.
 
-### 1.3 Le domaine ne pointe toujours pas sur Vercel
+### 1.3 Vercel : dépôt relié, Previews produites
 
-`avecstudy.fr` résout vers IONOS et répond 404. À faire : ajouter le domaine
-dans le projet Vercel, puis remplacer l'enregistrement A chez IONOS.
+Le dépôt `rynrzd/STUDY` est relié au projet Vercel `study`
+(`rayanben91233-1629s-projects`). Chaque commit de `finition-v1` a produit une
+Preview, et le domaine `avecstudy.fr` est désormais servi par Vercel — il ne
+pointe plus sur IONOS.
+
+| Branche | Commit | Environnement | État |
+|---|---|---|---|
+| finition-v1 | `7029020` | Preview | réussi |
+| finition-v1 | `1df291f` | Preview | réussi |
+| finition-v1 | `18feb38` | Preview | réussi |
+| main | `673e551` | Production | réussi |
+
+**`avecstudy.fr` sert encore l'ancien site** — titre « study. — le cours, les
+devoirs et l'entraide ». C'est normal et voulu : la Production suit `main`, et
+`finition-v1` n'y est pas fusionnée. Le nouveau site vit sur les Previews.
+
+**Les URL de Preview sont protégées par l'authentification Vercel** : elles
+répondent 302 vers `vercel.com/sso-api`. Ouvertes depuis un navigateur connecté
+au compte Vercel, elles fonctionnent ; pour un tiers ou pour un script, non.
+
+Pour recetter une Preview automatiquement, activer *Project Settings →
+Deployment Protection → Protection Bypass for Automation*, puis :
+
+```
+SITE_BASE=https://…vercel.app VERCEL_AUTOMATION_BYPASS_SECRET=… npm run verifier:site
+```
+
+### 1.4 À vérifier avant de fusionner dans `main`
+
+Les variables d'environnement du projet Vercel. `APP_ORIGIN` et `APP_ENV` y
+sont forcément présentes — sans elles, la Production ne démarrerait pas. Les
+autres ne sont exigées qu'à l'usage : sans elles, le site s'affiche mais la
+connexion et le dépôt de devis échouent. La liste est au §3.
 
 ---
 
