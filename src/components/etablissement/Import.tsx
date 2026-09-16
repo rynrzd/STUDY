@@ -2,12 +2,8 @@
 
 import { useActionState, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import {
-  analyserFichier,
-  confirmerImport,
-  ETAT_IMPORT_INITIAL,
-  type EtatImport,
-} from "@/app/etablissement/actions";
+import { analyserFichier, confirmerImport } from "@/app/etablissement/actions";
+import { ETAT_IMPORT_INITIAL, type EtatImport } from "@/app/etablissement/etats";
 
 /**
  * Import de rentrée : déposer, vérifier, corriger, confirmer.

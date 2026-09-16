@@ -2,11 +2,8 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
-import {
-  activerCompte,
-  ETAT_INITIAL,
-  type EtatActivation,
-} from "@/app/activation/actions";
+import { activerCompte } from "@/app/activation/actions";
+import { ETAT_INITIAL, type EtatActivation } from "@/app/activation/etats";
 import { LONGUEUR_MINIMALE } from "@/lib/mot-de-passe";
 
 /** Choix du mot de passe personnel, à la première connexion. */

@@ -2,7 +2,8 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
-import { ETAT_INITIAL, seConnecter, type EtatConnexion } from "@/app/connexion/actions";
+import { seConnecter } from "@/app/connexion/actions";
+import { ETAT_INITIAL, type EtatConnexion } from "@/app/connexion/etats";
 
 /**
  * Formulaire de connexion.

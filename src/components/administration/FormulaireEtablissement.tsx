@@ -2,11 +2,8 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import {
-  ajouterEtablissement,
-  ETAT_ACTION_INITIAL,
-  type EtatAction,
-} from "@/app/administration/actions";
+import { ajouterEtablissement } from "@/app/administration/actions";
+import { ETAT_ACTION_INITIAL, type EtatAction } from "@/app/administration/etats";
 
 /**
  * Création d'un établissement.

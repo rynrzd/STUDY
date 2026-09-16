@@ -8,7 +8,6 @@ import {
   creerAdministrateur,
   creerEtablissement,
   suspendreCompte,
-  type AccesCree,
 } from "@/lib/administration";
 import { ETATS } from "@/lib/demande-commerciale";
 import { estExploitant, sessionCourante } from "@/lib/session-serveur";
@@ -32,14 +31,7 @@ async function exigerExploitant(): Promise<string> {
 
 /* ------------------------------------------------------- Demandes -------- */
 
-export interface EtatAction {
-  readonly etat: "vierge" | "ok" | "erreur";
-  readonly message?: string;
-  /** Accès créés, affichés une seule fois. */
-  readonly acces?: AccesCree;
-}
-
-export const ETAT_ACTION_INITIAL: EtatAction = { etat: "vierge" };
+import type { EtatAction } from "./etats";
 
 const etatsConnus = ETATS.map((element) => element.valeur) as [string, ...string[]];
 

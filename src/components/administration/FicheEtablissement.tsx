@@ -5,10 +5,9 @@ import { useFormStatus } from "react-dom";
 import {
   ajouterAdministrateur,
   desactiverCompte,
-  ETAT_ACTION_INITIAL,
   majEtatEtablissement,
-  type EtatAction,
 } from "@/app/administration/actions";
+import { ETAT_ACTION_INITIAL, type EtatAction } from "@/app/administration/etats";
 import type { Etablissement, MembreEtablissement } from "@/lib/administration";
 
 /**

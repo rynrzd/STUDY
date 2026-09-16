@@ -22,16 +22,7 @@ import { baseConfiguree, clientExploitation } from "@/lib/supabase-serveur";
  * par champ. Aucun identifiant interne ne remonte au navigateur.
  */
 
-export interface EtatFormulaire {
-  readonly etat: "vierge" | "erreur" | "envoye" | "indisponible";
-  readonly reference?: string;
-  readonly message?: string;
-  readonly champs?: Record<string, string>;
-  /** Vrai quand la demande existait déjà : on réaffiche sa référence. */
-  readonly dejaRecue?: boolean;
-}
-
-export const ETAT_INITIAL: EtatFormulaire = { etat: "vierge" };
+import type { EtatFormulaire } from "./etats";
 
 export async function deposerDemande(
   _precedent: EtatFormulaire,

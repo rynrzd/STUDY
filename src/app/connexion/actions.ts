@@ -40,13 +40,7 @@ const schemaConnexion = z.object({
   postePartage: z.boolean(),
 });
 
-export interface EtatConnexion {
-  readonly etat: "vierge" | "refus";
-  readonly message?: string;
-  readonly reprendreDansSecondes?: number;
-}
-
-export const ETAT_INITIAL: EtatConnexion = { etat: "vierge" };
+import type { EtatConnexion } from "./etats";
 
 const REFUS_SAISIE: EtatConnexion = {
   etat: "refus",

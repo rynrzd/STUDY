@@ -21,12 +21,7 @@ import { depotAuthentification, jetonAccesDe, sessionCourante } from "@/lib/sess
  * imprimée.
  */
 
-export interface EtatActivation {
-  readonly etat: "vierge" | "erreur";
-  readonly message?: string;
-}
-
-export const ETAT_INITIAL: EtatActivation = { etat: "vierge" };
+import type { EtatActivation } from "./etats";
 
 export async function activerCompte(
   _precedent: EtatActivation,

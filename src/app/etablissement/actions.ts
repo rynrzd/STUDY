@@ -7,15 +7,12 @@ import {
   contexte,
   empreinteApercu,
   membres as listerMembres,
-  type AccesEleve,
 } from "@/lib/etablissement";
 import {
   analyser,
   colonnesManquantes,
   LIGNES_PAR_IMPORT,
   reconnaitreColonnes,
-  type LigneImport,
-  type Resume,
 } from "@/lib/import-rentree";
 import { sessionCourante } from "@/lib/session-serveur";
 import { FichierIllisible, lireTableur, TAILLE_MAXIMALE } from "@/lib/tableur";
@@ -33,18 +30,7 @@ import { FichierIllisible, lireTableur, TAILLE_MAXIMALE } from "@/lib/tableur";
  * confirmation est refusée.
  */
 
-export interface EtatImport {
-  readonly etape: "depot" | "apercu" | "termine" | "erreur";
-  readonly message?: string;
-  readonly resume?: Resume;
-  readonly lignes?: LigneImport[];
-  readonly classes?: string[];
-  readonly empreinte?: string;
-  readonly acces?: AccesEleve[];
-  readonly echecs?: { ligne: number; raison: string }[];
-}
-
-export const ETAT_IMPORT_INITIAL: EtatImport = { etape: "depot" };
+import type { EtatImport } from "./etats";
 
 async function exigerAdministrateur(): Promise<string> {
   const personne = await sessionCourante();

@@ -91,9 +91,38 @@ async function jetonAccesDe(jetonSession) {
 async function connexionProprietaire() {
   console.log("\n1. Connexion reelle du compte proprietaire");
 
-  const texte = readFileSync("ACCES-PROPRIETAIRE.txt", "utf8");
-  const identifiant = /Identifiant\s*:\s*(\S+)/.exec(texte)[1];
-  const motDePasse = /Mot de passe\s*:\s*(\S+)/.exec(texte)[1];
+  // Les identifiants du propriétaire peuvent venir de l'environnement — le
+  // plus propre — ou de la fiche produite par l'amorçage, si elle n'a pas
+  // encore été rangée puis supprimée.
+  let identifiant = process.env.STUDY_EDITEUR_IDENTIFIANT ?? null;
+  let motDePasse = process.env.STUDY_EDITEUR_MOT_DE_PASSE ?? null;
+
+  if (identifiant === null || motDePasse === null) {
+    let texte;
+    try {
+      texte = readFileSync("ACCES-PROPRIETAIRE.txt", "utf8");
+    } catch {
+      console.log(
+        "  Identifiants du proprietaire introuvables.\n" +
+          "  Cette recette se connecte reellement : elle a besoin du compte\n" +
+          "  proprietaire. Deux facons de les fournir, au choix :\n\n" +
+          "    STUDY_EDITEUR_IDENTIFIANT=... STUDY_EDITEUR_MOT_DE_PASSE=... npm run recette:reelle\n\n" +
+          "  ou les laisser dans ACCES-PROPRIETAIRE.txt, produit par\n" +
+          "  « npm run bootstrap:editeur », le temps de la recette.",
+      );
+      echecs += 1;
+      return null;
+    }
+
+    identifiant = identifiant ?? /Identifiant\s*:\s*(\S+)/.exec(texte)?.[1] ?? null;
+    motDePasse = motDePasse ?? /Mot de passe\s*:\s*(\S+)/.exec(texte)?.[1] ?? null;
+  }
+
+  if (identifiant === null || motDePasse === null) {
+    console.log("  Identifiants du proprietaire illisibles.");
+    echecs += 1;
+    return null;
+  }
 
   const resultat = await seConnecter("AVECSTUDY", identifiant, motDePasse);
   if (!verifier(resultat.reussi, "connexion acceptee", resultat.reussi ? "" : messageDeRefus(resultat))) {

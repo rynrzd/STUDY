@@ -2,7 +2,8 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { ETAT_ACTION_INITIAL, majDemande, type EtatAction } from "@/app/administration/actions";
+import { majDemande } from "@/app/administration/actions";
+import { ETAT_ACTION_INITIAL, type EtatAction } from "@/app/administration/etats";
 import type { DemandeCommerciale } from "@/lib/administration";
 import { ETATS, libelleEtat } from "@/lib/demande-commerciale";
 
