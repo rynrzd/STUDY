@@ -64,6 +64,7 @@ export type MotifPrivilegie =
   | "demande_commerciale_publique"
   | "amorcage_proprietaire"
   | "administration_des_comptes"
+  | "stockage_des_supports"
   | "tache_planifiee";
 
 /**

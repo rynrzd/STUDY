@@ -61,7 +61,7 @@ export default function PageEtablissements() {
               </ol>
             </div>
 
-            <div className="carte bg-[color:var(--color-accent-doux)] p-6">
+            <div className="carte bg-[color:var(--color-rose-clair)] p-6">
               <h2 className="text-[length:var(--text-h3)] leading-[var(--text-h3--line-height)]">
                 Sans engagement
               </h2>

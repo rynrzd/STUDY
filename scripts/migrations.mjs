@@ -28,8 +28,40 @@ async function assurerTableSuivi(client) {
   `);
 }
 
+/**
+ * Empreinte d'une migration.
+ *
+ * Les fins de ligne sont normalisees avant le calcul. Sans cela, l'empreinte
+ * n'est pas celle du SQL mais celle de la copie de travail : un `git checkout`
+ * sur une machine ou `core.autocrlf` est actif reecrit les fichiers en CRLF, et
+ * toutes les migrations deja appliquees passent d'un coup pour « modifiees ».
+ * C'est arrive, et le diagnostic couteux valait cette ligne.
+ */
 function empreinte(sql) {
+  return createHash("sha256")
+    .update(sql.replaceAll("\r\n", "\n"), "utf8")
+    .digest("hex")
+    .slice(0, 16);
+}
+
+/** L'ancienne empreinte, sensible aux fins de ligne. Sert au re-scellement. */
+function empreinteHeritee(sql) {
   return createHash("sha256").update(sql, "utf8").digest("hex").slice(0, 16);
+}
+
+/**
+ * Le fichier porte-t-il le meme SQL que ce qui a ete applique, aux fins de
+ * ligne pres ? On compare l'empreinte stockee a l'ancienne formule, appliquee
+ * aux deux formes possibles du fichier. Si l'une correspond, le SQL est
+ * identique et seule la forme a bouge.
+ */
+function estLaMemeAuxFinsDeLignePres(sql, empreinteStockee) {
+  const enLf = sql.replaceAll("\r\n", "\n");
+  const enCrlf = enLf.replaceAll("\n", "\r\n");
+  return (
+    empreinteStockee === empreinteHeritee(enLf) ||
+    empreinteStockee === empreinteHeritee(enCrlf)
+  );
 }
 
 async function principal() {
@@ -69,6 +101,7 @@ async function principal() {
 
     const fichiers = listerMigrations();
     const aAppliquer = [];
+    const aResceller = [];
     let modifiees = 0;
 
     for (const fichier of fichiers) {
@@ -79,11 +112,35 @@ async function principal() {
       if (connue === undefined) {
         aAppliquer.push({ ...fichier, sql, signature });
         console.log(`  [ a appliquer ] ${fichier.nom}`);
-      } else if (connue !== signature) {
+      } else if (connue === signature) {
+        console.log(`  [ deja        ] ${fichier.nom}`);
+      } else if (estLaMemeAuxFinsDeLignePres(sql, connue)) {
+        // Le SQL est le meme, seule la forme du fichier a change. On re-scelle
+        // au lieu d'exiger une migration corrective qui ne corrigerait rien.
+        aResceller.push({ nom: fichier.nom, signature });
+        console.log(`  [ re-scellee  ] ${fichier.nom} — meme SQL, fins de ligne differentes`);
+      } else {
         modifiees += 1;
         console.log(`  [ MODIFIEE    ] ${fichier.nom} — deja appliquee sous une autre forme`);
+      }
+    }
+
+    if (aResceller.length > 0) {
+      if (!appliquer) {
+        console.log(
+          `
+${aResceller.length} migration(s) a re-sceller (meme SQL, autre forme de fichier). ` +
+            "Relancer avec --appliquer pour mettre le suivi a jour.",
+        );
       } else {
-        console.log(`  [ deja        ] ${fichier.nom}`);
+        for (const ligne of aResceller) {
+          await client.query(
+            `update public.${TABLE_SUIVI} set empreinte = $2 where nom = $1`,
+            [ligne.nom, ligne.signature],
+          );
+        }
+        console.log(`
+${aResceller.length} empreinte(s) mise(s) a jour dans le suivi.`);
       }
     }
 

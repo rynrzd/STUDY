@@ -45,6 +45,11 @@ const nextConfig: NextConfig = {
     return [
       { source: "/fonctionnalites", destination: "/produit", permanent: true },
       { source: "/demo", destination: "/etablissements", permanent: true },
+      // Refonte V2 (ch. 21) : les espaces connectes changent d adresse.
+      { source: "/mes-cours", destination: "/eleve", permanent: true },
+      { source: "/etablissement", destination: "/admin", permanent: true },
+      { source: "/etablissement/:chemin*", destination: "/admin/:chemin*", permanent: true },
+      { source: "/apres-connexion", destination: "/app", permanent: true },
     ];
   },
   async headers() {

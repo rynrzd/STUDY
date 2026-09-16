@@ -65,5 +65,5 @@ export async function activerCompte(
     personne.empreinte,
   );
 
-  redirect("/apres-connexion");
+  redirect("/app");
 }

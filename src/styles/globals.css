@@ -2,36 +2,45 @@
 
 /* ===========================================================================
    AvecStudy — jetons de design
-   Source : cahier des charges de finition V1, section 4.
+   Source : cahier des charges complet V2, section 3.
 
-   Identité claire, scolaire et premium : fond blanc cassé, texte bleu nuit,
-   un seul accent, beaucoup d'espace, grille rigoureuse. Une seule police
-   sans-serif pour toute l'interface.
+   Identité rose et blanche, lumineuse et très simple. Le rose est un accent,
+   jamais un remplissage : il souligne l'action en cours, il ne peint pas les
+   fonds. Le reste est du blanc, de l'encre presque noire, et de l'espace.
 
-   Aucune valeur de couleur ne doit être écrite en dur ailleurs que dans ce
-   bloc.
+   Ce qui est proscrit et ne doit réapparaître nulle part : gradients violets
+   ou bleus, glassmorphism, halos, ombres épaisses, décorations abstraites.
+   Une interface scolaire se juge à sa lisibilité, pas à ses effets.
+
+   Aucune couleur n'est écrite en dur ailleurs que dans ce bloc.
    =========================================================================== */
 
 @theme {
   /* -- Couleurs ---------------------------------------------------------- */
-  --color-fond: #fafbfd;          /* blanc cassé, légèrement bleuté */
+  --color-fond: #faf9f9;          /* blanc légèrement cassé */
   --color-surface: #ffffff;
-  --color-surface-douce: #f4f6fb; /* aplats de section */
-  --color-encre: #0e1a33;         /* bleu nuit : texte et boutons pleins */
-  --color-encre-faible: #55607a;  /* texte secondaire */
+  --color-surface-douce: #f6f4f5; /* aplats de section, très discrets */
 
-  /* Un seul accent dans tout le produit. */
-  --color-accent: #2b4fff;
-  --color-accent-fonce: #1e3ad4;  /* survol et focus */
-  --color-accent-doux: #eef1ff;   /* fond d'accent, jamais du texte */
+  --color-encre: #19191d;         /* texte principal, boutons pleins */
+  --color-encre-faible: #60606a;  /* texte secondaire */
+  --color-encre-tres-faible: #8b8b95;
 
-  --color-bordure: #e2e7f0;
-  --color-bordure-forte: #cdd5e4;
-  --color-succes: #15803d;
+  /* Le rose, en trois intensités et pas une de plus. */
+  --color-accent: #9f315c;        /* texte, liens, boutons — contraste 7:1 */
+  --color-accent-fonce: #7d2448;  /* survol et focus */
+  --color-rose-clair: #f6dce7;    /* surlignage, fond d'état */
+  --color-rose-decor: #e9b6c8;    /* filets et repères, jamais du texte */
+
+  --color-bordure: #e5e3e7;
+  --color-bordure-forte: #cfcbd2;
+  --color-survol: #f2f0f2;
+
+  --color-succes: #216847;
+  --color-succes-fond: #eef5f1;
   --color-erreur: #b42335;
-  --color-succes-fond: #edf7f0;
-  --color-erreur-fond: #fdf0f1;
-  --color-survol: #f1f4fa;
+  --color-erreur-fond: #fbeef0;
+  --color-attention: #8a5a00;
+  --color-attention-fond: #fdf4e3;
 
   /* -- Typographie : une seule famille ----------------------------------- */
   --font-texte: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -41,7 +50,7 @@
   --text-aide--line-height: 1.25rem;
   --text-tableau: 0.875rem;                        /* 14 px */
   --text-tableau--line-height: 1.375rem;
-  --text-corps: 1.0625rem;                         /* 17 px — mobile 16 à 18 */
+  --text-corps: 1.0625rem;                         /* 17 px */
   --text-corps--line-height: 1.65rem;
   --text-grand: 1.1875rem;                         /* 19 px, chapeaux */
   --text-grand--line-height: 1.85rem;
@@ -52,36 +61,34 @@
   --text-h2--line-height: 2.125rem;
   --text-h2-large: 2.375rem;                       /* 38 px, desktop */
   --text-h2-large--line-height: 2.75rem;
-  --text-h1-mobile: 2.75rem;                       /* 44 px — plafond mobile */
-  --text-h1-mobile--line-height: 2.875rem;         /* 1.045 */
-  --text-h1: 4.5rem;                               /* 72 px — 68 à 76 */
-  --text-h1--line-height: 4.625rem;                /* 1.02 */
+  --text-h1-mobile: 2.5rem;                        /* 40 px */
+  --text-h1-mobile--line-height: 2.625rem;
+  --text-h1: 4rem;                                 /* 64 px */
+  --text-h1--line-height: 4.25rem;
 
-  /* -- Échelle de l'application connectée --------------------------------- */
-  /* L'application interne est dense : ses titres sont plus petits que ceux du
-     site public, où l'on cherche l'impact. Même famille, même accent. */
+  /* Échelle de l'application connectée : plus dense que le site public. */
   --text-h1-app: 1.5rem;                           /* 24 px */
   --text-h1-app--line-height: 2rem;
   --text-h2-app: 1.1875rem;                        /* 19 px */
   --text-h2-app--line-height: 1.6rem;
 
-  /* -- Géométrie --------------------------------------------------------- */
-  --radius-champ: 10px;
-  --radius-carte: 16px;
+  /* -- Géométrie : arrondis modérés -------------------------------------- */
+  --radius-champ: 8px;
+  --radius-carte: 12px;
 
-  --shadow-carte: 0 1px 2px rgba(14, 26, 51, 0.04), 0 8px 24px rgba(14, 26, 51, 0.05);
+  /* Une seule ombre, discrète, réservée à ce qui flotte réellement. */
+  --shadow-flottant: 0 2px 4px rgba(25, 25, 29, 0.04), 0 8px 24px rgba(25, 25, 29, 0.08);
 
   /* -- Composition ------------------------------------------------------- */
-  --spacing-contenu: 1220px;   /* 1180 à 1240 */
-  --spacing-cible: 44px;       /* hauteur minimale des boutons */
-  --spacing-app: 1320px;       /* largeur maximale de l'application connectée */
-  --spacing-lecture: 68ch;     /* largeur de lecture des textes longs */
+  --spacing-contenu: 1180px;   /* site public */
+  --spacing-app: 1320px;       /* application connectée */
+  --spacing-lecture: 68ch;     /* textes longs */
+  --spacing-cible: 44px;       /* hauteur minimale des cibles tactiles */
 }
 
 /* ===========================================================================
    Police auto-hébergée (SIL Open Font License, notice dans public/fonts/).
-   Tant que le fichier n'est pas déposé, la pile de repli s'applique : la mise
-   en page reste correcte, seul le rendu des lettres diffère.
+   Tant que le fichier n'est pas déposé, la pile de repli s'applique.
    =========================================================================== */
 
 @font-face {
@@ -119,19 +126,19 @@
 
   h1, h2, h3, h4 {
     font-weight: 700;
-    letter-spacing: -0.022em;
+    letter-spacing: -0.02em;
     margin: 0;
     text-wrap: balance;
   }
 
   h1 {
     font-weight: 800;
-    letter-spacing: -0.035em;
+    letter-spacing: -0.033em;
   }
 
   p { text-wrap: pretty; }
 
-  /* Focus visible obligatoire. */
+  /* Focus visible obligatoire, en rose : il signale l'élément actif. */
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
@@ -152,7 +159,7 @@
 }
 
 @layer components {
-  /* --- Conteneur : 1220 px, gouttières 20 px puis 24 px ------------------ */
+  /* --- Conteneurs -------------------------------------------------------- */
   .contenu {
     margin-inline: auto;
     width: 100%;
@@ -160,22 +167,29 @@
     padding-inline: 20px;
   }
 
+  .contenu-app {
+    margin-inline: auto;
+    width: 100%;
+    max-width: var(--spacing-app);
+    padding-inline: 20px;
+  }
+
   @media (min-width: 640px) {
-    .contenu { padding-inline: 24px; }
+    .contenu, .contenu-app { padding-inline: 24px; }
   }
 
   @media (min-width: 1024px) {
-    .contenu { padding-inline: 32px; }
+    .contenu, .contenu-app { padding-inline: 32px; }
   }
 
-  /* --- Boutons ---------------------------------------------------------- */
+  /* --- Boutons ----------------------------------------------------------- */
   .bouton {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     min-height: var(--spacing-cible);
-    padding-inline: 22px;
+    padding-inline: 20px;
     border-radius: var(--radius-champ);
     border: 1px solid transparent;
     font-size: var(--text-corps);
@@ -184,32 +198,31 @@
     text-decoration: none;
     cursor: pointer;
     transition: background-color 180ms ease, border-color 180ms ease,
-                color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+                color 180ms ease, transform 180ms ease;
   }
 
-  .bouton:disabled { cursor: not-allowed; }
+  .bouton:disabled { cursor: not-allowed; opacity: 0.55; }
 
+  /* Action principale : encre pleine. Le rose reste l'accent, pas le fond
+     de tous les boutons — sans quoi il cesse de signaler quoi que ce soit. */
   .bouton-primaire {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    color: #fff;
-  }
-
-  .bouton-primaire:hover {
-    background: var(--color-accent-fonce);
-    border-color: var(--color-accent-fonce);
-    box-shadow: 0 6px 18px rgba(43, 79, 255, 0.24);
-  }
-
-  .bouton-sombre {
     background: var(--color-encre);
     border-color: var(--color-encre);
-    color: #fff;
+    color: var(--color-surface);
   }
 
-  .bouton-sombre:hover {
-    background: #08101f;
-    box-shadow: var(--shadow-carte);
+  .bouton-primaire:hover:not(:disabled) { background: #000; }
+
+  /* Action rose : réservée à l'action décisive d'un écran. */
+  .bouton-rose {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-surface);
+  }
+
+  .bouton-rose:hover:not(:disabled) {
+    background: var(--color-accent-fonce);
+    border-color: var(--color-accent-fonce);
   }
 
   .bouton-secondaire {
@@ -218,7 +231,7 @@
     color: var(--color-encre);
   }
 
-  .bouton-secondaire:hover {
+  .bouton-secondaire:hover:not(:disabled) {
     background: var(--color-survol);
     border-color: var(--color-encre-faible);
   }
@@ -228,13 +241,28 @@
     color: var(--color-encre);
   }
 
-  .bouton-discret:hover { background: var(--color-survol); }
+  .bouton-discret:hover:not(:disabled) { background: var(--color-survol); }
 
-  /* La flèche avance au survol : 4 px, jamais plus. */
+  .bouton-danger {
+    background: var(--color-surface);
+    border-color: var(--color-erreur);
+    color: var(--color-erreur);
+  }
+
+  .bouton-danger:hover:not(:disabled) { background: var(--color-erreur-fond); }
+
+  /* Bouton compact, pour les barres d'outils denses. */
+  .bouton-compact {
+    min-height: 36px;
+    padding-inline: 12px;
+    font-size: var(--text-tableau);
+  }
+
+  /* La flèche avance au survol : 3 px, jamais plus. */
   .fleche { transition: transform 180ms ease; }
   .bouton:hover .fleche,
   .bouton:focus-visible .fleche,
-  .lien-fleche:hover .fleche { transform: translateX(4px); }
+  .lien-fleche:hover .fleche { transform: translateX(3px); }
 
   .lien-fleche {
     display: inline-flex;
@@ -247,19 +275,21 @@
 
   .lien-fleche:hover { color: var(--color-accent-fonce); }
 
-  /* --- Cartes ----------------------------------------------------------- */
+  /* --- Cartes : peu de bordures, jamais d'ombre au repos ----------------- */
   .carte {
     background: var(--color-surface);
     border: 1px solid var(--color-bordure);
     border-radius: var(--radius-carte);
-    transition: border-color 200ms ease, box-shadow 200ms ease,
-                transform 200ms ease;
+    transition: border-color 200ms ease;
   }
 
-  .carte-survol:hover {
-    border-color: var(--color-bordure-forte);
-    box-shadow: var(--shadow-carte);
-    transform: translateY(-2px);
+  .carte-survol:hover { border-color: var(--color-bordure-forte); }
+
+  /* Bloc sans bordure : la règle par défaut du cahier V2. Un simple aplat
+     blanc sur le fond cassé suffit à séparer, sans dessiner de grille. */
+  .bloc {
+    background: var(--color-surface);
+    border-radius: var(--radius-carte);
   }
 
   /* --- Étiquette de section --------------------------------------------- */
@@ -267,41 +297,56 @@
     display: inline-block;
     font-size: var(--text-tableau);
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--color-accent);
   }
 
-  /* --- Apparition au défilement : 250 à 450 ms, léger décalage ----------- */
-  /* L'état masqué n'est posé que par le composant client, après montage :
-     sans JavaScript, le contenu reste visible. */
+  /* --- Surlignage rose : le geste signature de la marque ----------------- */
+  /* Le trait s'étend de gauche à droite derrière le mot, comme un feutre. */
+  .surligne {
+    position: relative;
+    display: inline;
+    background-image: linear-gradient(var(--color-rose-clair), var(--color-rose-clair));
+    background-repeat: no-repeat;
+    background-position: 0 88%;
+    background-size: 100% 0.38em;
+  }
+
+  .surligne-anime {
+    background-size: 0% 0.38em;
+    transition: background-size 500ms cubic-bezier(0.16, 0.84, 0.44, 1);
+  }
+
+  [data-revele="visible"] .surligne-anime { background-size: 100% 0.38em; }
+
+  /* --- Apparition au défilement : 150 à 300 ms -------------------------- */
   [data-revele="prete"] {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(12px);
   }
 
   [data-revele="visible"] {
     opacity: 1;
     transform: none;
-    transition: opacity 380ms ease-out,
-                transform 380ms cubic-bezier(0.16, 0.84, 0.44, 1);
+    transition: opacity 280ms ease-out,
+                transform 280ms cubic-bezier(0.16, 0.84, 0.44, 1);
     transition-delay: var(--delai, 0ms);
   }
 
-  /* --- En-tête : changement doux au défilement --------------------------- */
+  /* --- En-tête : blanc au défilement ------------------------------------ */
   .entete {
     position: sticky;
     top: 0;
     z-index: 40;
-    background: color-mix(in srgb, var(--color-fond) 88%, transparent);
-    backdrop-filter: blur(10px);
+    background: color-mix(in srgb, var(--color-fond) 85%, transparent);
+    backdrop-filter: blur(8px);
     border-bottom: 1px solid transparent;
-    transition: border-color 220ms ease, background-color 220ms ease,
-                box-shadow 220ms ease;
+    transition: border-color 220ms ease, background-color 220ms ease;
   }
 
   .entete[data-defile="true"] {
-    background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+    background: var(--color-surface);
     border-bottom-color: var(--color-bordure);
   }
 
@@ -310,7 +355,7 @@
     display: block;
     width: 100%;
     min-height: var(--spacing-cible);
-    padding: 10px 14px;
+    padding: 10px 12px;
     background: var(--color-surface);
     border: 1px solid var(--color-bordure-forte);
     border-radius: var(--radius-champ);
@@ -325,13 +370,19 @@
   .champ:focus {
     outline: none;
     border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(43, 79, 255, 0.14);
+    box-shadow: 0 0 0 3px var(--color-rose-clair);
   }
 
   .champ[aria-invalid="true"] { border-color: var(--color-erreur); }
 
   .champ[aria-invalid="true"]:focus {
-    box-shadow: 0 0 0 3px rgba(180, 35, 53, 0.14);
+    box-shadow: 0 0 0 3px var(--color-erreur-fond);
+  }
+
+  .champ:disabled {
+    background: var(--color-survol);
+    color: var(--color-encre-faible);
+    cursor: not-allowed;
   }
 
   .etiquette {
@@ -358,12 +409,12 @@
     font-weight: 500;
   }
 
-  /* --- Onglets ---------------------------------------------------------- */
+  /* --- Onglets ----------------------------------------------------------- */
   .onglet {
     position: relative;
     min-height: var(--spacing-cible);
     padding-inline: 4px;
-    padding-bottom: 12px;
+    padding-bottom: 10px;
     font-weight: 500;
     color: var(--color-encre-faible);
     background: none;
@@ -390,6 +441,80 @@
   }
 
   .onglet[aria-selected="true"]::after { transform: scaleX(1); }
+
+  /* --- Pastilles d'état -------------------------------------------------- */
+  .pastille {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: var(--text-aide);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* L'état ne passe jamais par la seule couleur : chaque pastille porte un
+     libellé lisible (accessibilité, ch. 19). */
+  .pastille-brouillon {
+    background: var(--color-survol);
+    color: var(--color-encre-faible);
+  }
+
+  .pastille-publie {
+    background: var(--color-rose-clair);
+    color: var(--color-accent);
+  }
+
+  .pastille-succes {
+    background: var(--color-succes-fond);
+    color: var(--color-succes);
+  }
+
+  .pastille-attention {
+    background: var(--color-attention-fond);
+    color: var(--color-attention);
+  }
+
+  .pastille-erreur {
+    background: var(--color-erreur-fond);
+    color: var(--color-erreur);
+  }
+
+  /* --- Navigation latérale de l'application ------------------------------ */
+  .lien-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: var(--spacing-cible);
+    padding-inline: 12px;
+    border-radius: var(--radius-champ);
+    font-size: var(--text-tableau);
+    font-weight: 500;
+    color: var(--color-encre-faible);
+    text-decoration: none;
+    transition: background-color 160ms ease, color 160ms ease;
+  }
+
+  .lien-nav:hover { background: var(--color-survol); color: var(--color-encre); }
+
+  .lien-nav[aria-current="page"] {
+    background: var(--color-rose-clair);
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+
+  /* --- Squelette de chargement ------------------------------------------- */
+  .squelette {
+    background: var(--color-survol);
+    border-radius: var(--radius-champ);
+    animation: respiration 1400ms ease-in-out infinite;
+  }
+
+  @keyframes respiration {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
 }
 
 @layer utilities {
