@@ -13,13 +13,14 @@ import { IDENTITE, MARQUE } from "@/lib/identite-legale";
  * Rien n'est inventé ici. Ce qui n'est pas encore déposé n'apparaît pas.
  */
 
+/**
+ * Trois liens, comme la reference. Les conditions et l'accessibilite restent
+ * atteignables depuis les mentions legales : la vitrine ne les etale pas.
+ */
 const LIENS: readonly (readonly [string, string])[] = [
-  ["/connexion", "Connexion"],
-  ["/contact", "Contact"],
   ["/confidentialite", "Confidentialité"],
+  ["/contact", "Contact"],
   ["/mentions-legales", "Mentions légales"],
-  ["/conditions", "Conditions"],
-  ["/accessibilite", "Accessibilité"],
 ];
 
 export function PiedDePage() {

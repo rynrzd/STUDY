@@ -320,8 +320,10 @@
     display: inline;
     background-image: linear-gradient(var(--color-surlignage), var(--color-surlignage));
     background-repeat: no-repeat;
-    background-position: 0 88%;
-    background-size: 100% 0.38em;
+    /* Le rose couvre la moitié basse des lettres, comme un surligneur passé à
+       la main sur la reference — un filet fin sous la ligne ne se voit pas. */
+    background-position: 0 82%;
+    background-size: 100% 0.62em;
   }
 
   /* Le trait rose se trace une seule fois, de gauche a droite, en 450 ms
@@ -332,12 +334,12 @@
   }
 
   @keyframes tracer-surlignage {
-    from { background-size: 0% 0.38em; }
-    to { background-size: 100% 0.38em; }
+    from { background-size: 0% 0.62em; }
+    to { background-size: 100% 0.62em; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .surligne-anime { animation: none; background-size: 100% 0.38em; }
+    .surligne-anime { animation: none; background-size: 100% 0.62em; }
   }
 
   /* --- Mot-symbole -------------------------------------------------------

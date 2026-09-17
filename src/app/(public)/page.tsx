@@ -36,8 +36,8 @@ export default function PageAccueil() {
   return (
     <>
       {/* -- L02 — Hero ---------------------------------------------------- */}
-      <section className="pt-14 pb-0 sm:pt-20">
-        <div className="contenu-site grid items-center gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <section className="relative z-10 pt-14 pb-0 sm:pt-20">
+        <div className="contenu-site grid items-center gap-12 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-14">
           <div>
             <h1 className="m-0 text-[length:var(--text-h1-etroit)] leading-[var(--text-h1-etroit--line-height)] tracking-[-0.03em] min-[390px]:text-[length:var(--text-h1-mobile)] min-[390px]:leading-[var(--text-h1-mobile--line-height)] lg:text-[length:var(--text-h1)] lg:leading-[var(--text-h1--line-height)]">
               La classe.
@@ -63,15 +63,21 @@ export default function PageAccueil() {
             </div>
           </div>
 
-          <div>
+          {/* L'aperçu descend sur la bande rose : c'est la composition de la
+              référence, et elle donne au produit la place qu'il mérite. */}
+          <div className="lg:-mb-24">
             <ApercuEleve />
           </div>
         </div>
       </section>
 
-      <div className="bande bande-rose mt-14 sm:mt-20">
-        <div className="contenu-site py-8">
-          <p className="m-0 max-w-[36ch] text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)] text-[color:var(--color-encre-faible)]">
+      <div className="bande bande-rose mt-12 sm:mt-16">
+        <div className="contenu-site py-9 lg:pb-28">
+          <span
+            aria-hidden="true"
+            className="block h-px w-6 bg-[color:var(--color-accent)]"
+          />
+          <p className="m-0 mt-3 max-w-[36ch] text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)] text-[color:var(--color-encre-faible)]">
             Des lycées plus unis,
             <br />
             pour des élèves plus sereins.
@@ -210,7 +216,7 @@ export default function PageAccueil() {
       <section className="py-14 sm:py-20">
         <div className="contenu-site max-w-[760px]">
           <p className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-accent)]">
-            Questions fréquentes
+            FAQ
           </p>
           <div className="mt-6">
             <Faq
@@ -249,7 +255,7 @@ export default function PageAccueil() {
               <span aria-hidden="true" className="fleche">→</span>
             </Link>
             <p className="m-0 mt-3 text-[length:var(--text-aide)] text-white/70">
-              Nous vous recontactons pour organiser un échange.
+              Un membre de notre équipe vous recontacte rapidement.
             </p>
           </div>
         </section>

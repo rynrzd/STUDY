@@ -40,7 +40,7 @@ export function Onglets({ onglets }: { onglets: readonly Onglet[] }) {
 
   return (
     <div>
-      <div role="tablist" aria-label="Situations d'usage" className="flex flex-wrap justify-center gap-1">
+      <div role="tablist" aria-label="Situations d'usage" className="flex flex-wrap justify-center">
         {onglets.map((onglet, index) => {
           const selectionne = onglet.cle === actif;
           return (
@@ -57,10 +57,10 @@ export function Onglets({ onglets }: { onglets: readonly Onglet[] }) {
               tabIndex={selectionne ? 0 : -1}
               onClick={() => setActif(onglet.cle)}
               onKeyDown={(evenement) => auClavier(evenement, index)}
-              className={`min-h-[var(--spacing-cible)] rounded-[var(--radius-champ)] px-4 text-[length:var(--text-tableau)] transition-colors duration-[160ms] ${
+              className={`min-h-[var(--spacing-cible)] border-b-2 px-5 text-[length:var(--text-tableau)] transition-colors duration-[160ms] ${
                 selectionne
-                  ? "bg-[color:var(--color-rose-clair)] font-semibold text-[color:var(--color-accent)]"
-                  : "text-[color:var(--color-encre-faible)] hover:bg-[color:var(--color-survol)]"
+                  ? "border-[color:var(--color-encre)] font-semibold text-[color:var(--color-encre)]"
+                  : "border-transparent text-[color:var(--color-encre-faible)] hover:text-[color:var(--color-encre)]"
               }`}
             >
               {onglet.libelle}

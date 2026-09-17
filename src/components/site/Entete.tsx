@@ -35,21 +35,26 @@ export function Entete() {
   return (
     <header className="sticky top-0 z-30 border-b border-[color:var(--color-bordure)] bg-[color:var(--color-surface)]">
       <div className="contenu-site flex h-[72px] items-center justify-between gap-6">
-        <Link href="/" className="marque text-[1.375rem] no-underline">
-          {MARQUE}.
-        </Link>
+        {/* Le mot-symbole et les deux liens forment un seul groupe à gauche :
+            c'est la composition de la référence, et elle se lit mieux qu'une
+            navigation centrée qui flotte entre deux blocs. */}
+        <div className="flex items-center gap-9">
+          <Link href="/" className="marque text-[1.375rem] no-underline">
+            {MARQUE}.
+          </Link>
 
-        <nav aria-label="Navigation principale" className="hidden items-center gap-7 md:flex">
-          {LIENS.map((lien) => (
-            <Link
-              key={lien.href}
-              href={lien.href}
-              className="text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)] no-underline transition-colors duration-[120ms] hover:text-[color:var(--color-encre)]"
-            >
-              {lien.libelle}
-            </Link>
-          ))}
-        </nav>
+          <nav aria-label="Navigation principale" className="hidden items-center gap-7 md:flex">
+            {LIENS.map((lien) => (
+              <Link
+                key={lien.href}
+                href={lien.href}
+                className="text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)] no-underline transition-colors duration-[120ms] hover:text-[color:var(--color-encre)]"
+              >
+                {lien.libelle}
+              </Link>
+            ))}
+          </nav>
+        </div>
 
         <div className="hidden items-center gap-4 md:flex">
           <Link
