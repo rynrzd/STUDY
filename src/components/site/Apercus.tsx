@@ -27,7 +27,7 @@ function Fenetre({
   return (
     <div
       aria-hidden="true"
-      className={`apercu-releve overflow-hidden rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] shadow-[var(--shadow-flottant)] ${className}`}
+      className={`apercu-releve w-full max-w-full min-w-0 overflow-hidden rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] shadow-[var(--shadow-flottant)] ${className}`}
     >
       {children}
     </div>
@@ -97,7 +97,7 @@ function Carte({
   accent?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-[color:var(--color-bordure)] p-2.5">
+    <div className="min-w-0 rounded-lg border border-[color:var(--color-bordure)] p-2.5">
       <p className="m-0 text-[0.5625rem] uppercase tracking-[0.08em] text-[color:var(--color-encre-tres-faible)]">
         {titre}
       </p>
@@ -152,7 +152,7 @@ export function ApercuEleve() {
             </p>
           </div>
 
-          <ul className="m-0 flex list-none flex-col justify-between gap-2 p-0">
+          <ul className="m-0 flex min-w-0 list-none flex-col justify-between gap-2 p-0">
             {[
               "Les efforts d'aujourd'hui font les réussites de demain.",
               "Une question vaut mieux qu'un blanc.",
@@ -439,7 +439,11 @@ export function ApercuExcel() {
         </span>
       </div>
 
-      <table className="mt-3 w-full border-collapse text-[0.6875rem]">
+      {/* Un tableau ne retrecit pas en dessous de son contenu : sans ce cadre
+          a defilement, c'est lui qui pousse toute la page au-dela de l'ecran
+          d'un telephone. Le seul element de la landing autorise a defiler. */}
+      <div className="sans-barre mt-3 overflow-x-auto">
+      <table className="w-full min-w-[15rem] border-collapse text-[0.6875rem]">
         <thead>
           <tr className="border-b border-[color:var(--color-bordure-forte)] text-left">
             <th className="py-1.5 font-semibold">Prénom</th>
@@ -457,6 +461,7 @@ export function ApercuExcel() {
           ))}
         </tbody>
       </table>
+      </div>
 
       <div className="mt-3 flex justify-end">
         <span className="inline-flex items-center rounded-md bg-[color:var(--color-encre)] px-3 py-1.5 text-[0.625rem] font-semibold text-white">

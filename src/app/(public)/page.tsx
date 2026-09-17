@@ -37,7 +37,7 @@ export default function PageAccueil() {
     <>
       {/* -- L02 — Hero ---------------------------------------------------- */}
       <section className="relative z-10 pt-14 pb-0 sm:pt-20">
-        <div className="contenu-site grid items-center gap-8 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-14">
+        <div className="contenu-site grid min-w-0 items-center gap-8 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-14">
           <div>
             <h1 className="m-0 text-[length:var(--text-h1-etroit)] leading-[var(--text-h1-etroit--line-height)] tracking-[-0.03em] min-[390px]:text-[length:var(--text-h1-mobile)] min-[390px]:leading-[var(--text-h1-mobile--line-height)] lg:text-[length:var(--text-h1)] lg:leading-[var(--text-h1--line-height)]">
               La classe.
@@ -124,7 +124,7 @@ export default function PageAccueil() {
 
       {/* -- L04 — Côté professeur ----------------------------------------- */}
       <section className="apparition py-12 sm:py-20">
-        <div className="contenu-site grid items-center gap-8 sm:gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+        <div className="contenu-site grid min-w-0 items-center gap-8 sm:gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
           <div>
             <p className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-accent)]">
               Pour les professeurs
@@ -152,7 +152,7 @@ export default function PageAccueil() {
 
       {/* -- L05 — Studio --------------------------------------------------- */}
       <section id="studio" className="apparition scroll-mt-24 border-y border-[color:var(--color-bordure)] py-12 sm:py-20">
-        <div className="contenu-site grid items-start gap-8 sm:gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+        <div className="contenu-site grid min-w-0 items-start gap-8 sm:gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
           <div>
             <p className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-accent)]">
               Le Studio
@@ -180,7 +180,7 @@ export default function PageAccueil() {
 
       {/* -- L06 — Entraide ------------------------------------------------- */}
       <div className="bande bande-rose">
-        <section className="contenu-site grid items-center gap-8 py-12 sm:gap-12 sm:py-20 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <section className="contenu-site grid min-w-0 items-center gap-8 py-12 sm:gap-12 sm:py-20 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
           <ApercuEntraide />
 
           <div>
@@ -197,7 +197,7 @@ export default function PageAccueil() {
 
       {/* -- L07 — Rentrée -------------------------------------------------- */}
       <section className="apparition py-12 sm:py-20">
-        <div className="contenu-site grid items-center gap-8 sm:gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+        <div className="contenu-site grid min-w-0 items-center gap-8 sm:gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
           <div>
             <h2 className="m-0 text-[length:var(--text-h2-mobile)] leading-[var(--text-h2-mobile--line-height)] tracking-[-0.02em] sm:text-[length:var(--text-h2-large)] sm:leading-[var(--text-h2-large--line-height)]">
               La rentrée commence avec votre liste de classe.

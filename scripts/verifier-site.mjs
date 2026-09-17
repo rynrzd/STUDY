@@ -280,7 +280,51 @@ async function verifierMiseEnPage() {
   verifier(jeton("color-accent", "#a43760"), "rose AvecStudy comme couleur d accent");
   verifier(jeton("color-surlignage", "#f7dfeb"), "rose de surlignage du hero");
   verifier(css.includes("prefers-reduced-motion"), "mouvement reduit respecte");
-  verifier(/overflow-x:\s*clip/.test(css), "aucun debordement horizontal");
+  verifier(/overflow-x:\s*clip/.test(css), "la regle anti-debordement est posee");
+
+  // La regle ci-dessus dit que le debordement est coupe, pas qu il n y en a
+  // pas. Un element plus large que l ecran deborde quand meme sur un telephone
+  // — c est arrive, et le controle precedent ne l a pas vu, puisqu il ne
+  // regardait que la feuille de style.
+  //
+  // Ce qui se mesure sans navigateur : les largeurs minimales declarees. Un
+  // element qui exige plus que la largeur utile du plus petit ecran vise
+  // (320 px moins 40 px de marges) pousse forcement la page.
+  const UTILE_320 = 280;
+  const coupables = new Set();
+
+  for (const page of PUBLIQUES) {
+    const html = await (await demander(page)).text();
+
+    // Une largeur minimale n'est pas fautive en soi : dans un cadre a
+    // defilement, c'est meme la bonne facon de presenter un tableau large.
+    // Elle ne l'est que sans ce cadre — la page entiere se met alors a defiler.
+    const dansUnCadre = (position) =>
+      /overflow-x-auto|overflow-auto|overflow-x:\s*auto/.test(
+        html.slice(Math.max(0, position - 400), position),
+      );
+
+    for (const trouve of html.matchAll(/min-w-\[([\d.]+)(rem|px)\]/g)) {
+      const pixels = trouve[2] === "rem" ? Number(trouve[1]) * 16 : Number(trouve[1]);
+      if (pixels > UTILE_320 && !dansUnCadre(trouve.index)) {
+        coupables.add(`${page} : ${trouve[0]} hors cadre a defilement`);
+      }
+    }
+
+    // Un tableau ne retrecit pas sous son contenu. Chacun doit vivre dans un
+    // cadre a defilement, sans quoi c est lui qui fixe la largeur de la page.
+    for (const tableau of html.matchAll(/<table/g)) {
+      if (!dansUnCadre(tableau.index)) {
+        coupables.add(`${page} : un tableau sans cadre a defilement`);
+      }
+    }
+  }
+
+  verifier(
+    coupables.size === 0,
+    "aucun element ne force la page au-dela d un ecran de 320 px",
+    [...coupables].slice(0, 3).join(" | "),
+  );
 }
 
 async function verifierSecurite() {
