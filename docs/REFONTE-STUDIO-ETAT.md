@@ -23,10 +23,20 @@ Deux façons de la traiter, la même file :
 Les trois peuvent tourner ensemble : `prendre_job` fait un `FOR UPDATE SKIP
 LOCKED`, deux preneurs n'obtiennent jamais le même travail.
 
-**Réglage requis chez l'hébergeur** : `CRON_SECRET` en Production. Sans lui, la
-route répond 401 et le réveil ne part pas. Le plan Hobby n'exécute les tâches
-planifiées qu'une fois par jour : le réveil après dépôt reste le chemin normal,
-la tâche planifiée ne sert qu'aux réessais.
+**Vérifié en production** : `POST /api/v1/travaux` répond 401 sans secret et
+rend son bilan avec, en POST comme en GET. `CRON_SECRET` est bien réglé chez
+l'hébergeur.
+
+**Deux pièges de déploiement, rencontrés et corrigés.** Le build local passait
+et la route restait en 404 pendant vingt minutes :
+
+- `export const maxDuration = 60` dépasse ce qu'autorise le plan, et Vercel
+  refuse le déploiement **entier**, pas seulement la fonction concernée ;
+- une clé `comment` dans l'entrée cron de `vercel.json` : le schéma la refuse.
+
+D'où : aucun `maxDuration` déclaré, budget de drain de 8 s avec 2 s de marge,
+et une tâche planifiée quotidienne — la seule fréquence acceptée sur tous les
+plans. Le chemin normal reste le réveil immédiat après dépôt.
 
 ## Défaut trouvé et corrigé
 
