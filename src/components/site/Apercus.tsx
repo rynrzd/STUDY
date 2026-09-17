@@ -122,8 +122,8 @@ export function ApercuEleve() {
     <Fenetre className="flex">
       <Laterale
         actif="Accueil"
-        entrees={["Accueil", "Cours", "Devoirs", "Entraide"]}
-        pied={{ nom: "Rayan B.", role: "Seconde 1" }}
+        entrees={["Accueil", "Cours", "Devoirs", "Entraide", "Messagerie"]}
+        pied={{ nom: "Mon profil", role: "Seconde 1" }}
       />
 
       <div className="min-w-0 flex-1 p-4">
@@ -131,19 +131,41 @@ export function ApercuEleve() {
           <div>
             <p className="m-0 text-[0.9375rem] font-bold">Bonjour Rayan</p>
             <p className="m-0 mt-0.5 text-[0.6875rem] text-[color:var(--color-encre-faible)]">
-              Seconde 1
+              Seconde 1 ▾
             </p>
           </div>
-          <span className="h-6 w-6 rounded-full bg-[color:var(--color-rose-clair)]" />
+          <span className="flex items-center gap-2">
+            <span className="text-[0.75rem] text-[color:var(--color-encre-tres-faible)]">⌁</span>
+            <span className="h-6 w-6 rounded-full bg-[color:var(--color-rose-decor)]" />
+          </span>
         </div>
 
-        <div className="mt-3 rounded-lg bg-[color:var(--color-rose-clair)] px-3 py-4">
-          <p className="m-0 max-w-[16ch] text-[0.8125rem] font-semibold leading-snug">
-            Une nouvelle semaine pour aller plus loin.
-          </p>
+        {/* Le bandeau du haut, et à sa droite la colonne de notes : c'est la
+            composition de la référence, et elle a une raison — l'élève voit
+            d'abord où il en est, puis ce qu'on lui dit. */}
+        <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          <div className="flex min-h-[86px] items-end rounded-lg bg-gradient-to-br from-[color:var(--color-rose-clair)] to-[color:var(--color-rose-decor)] p-3">
+            <p className="m-0 max-w-[16ch] text-[0.8125rem] font-semibold leading-snug">
+              Une nouvelle semaine pour aller plus loin.
+            </p>
+          </div>
+
+          <ul className="m-0 flex list-none flex-col justify-between gap-2 p-0">
+            {[
+              "Les efforts d'aujourd'hui font les réussites de demain.",
+              "Une question vaut mieux qu'un blanc.",
+            ].map((note) => (
+              <li
+                key={note}
+                className="flex-1 rounded-lg border border-[color:var(--color-bordure)] p-2 text-[0.5625rem] leading-snug text-[color:var(--color-encre-faible)]"
+              >
+                « {note} »
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
           <Carte titre="Cours du jour" detail="Fonctions affines" marque="Mathématiques" />
           <Carte titre="Devoir à rendre" detail="Exercices n° 3 à 5" marque="Pour demain" accent />
         </div>
@@ -307,14 +329,19 @@ export function ApercuEntraide() {
       </div>
 
       <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        {/* La référence montre ici une conversation. Le cahier l'interdit
+            explicitement (L06) tant que la messagerie n'existe pas : on
+            illustre donc ce que le produit sait faire — des groupes rattachés
+            à un cours, et le devoir qui va avec. La composition est la même ;
+            ce qui est montré est vrai. */}
         <ul className="m-0 list-none space-y-2 p-0">
           {[
-            { nom: "Révisions chapitre 4", places: "3 / 4" },
-            { nom: "Exercices du week-end", places: "2 / 4" },
+            { nom: "Révisions chapitre 4", places: "3 / 4", membres: "Lina, Samir, Emma" },
+            { nom: "Exercices du week-end", places: "2 / 4", membres: "Rayan, Inès" },
           ].map((groupe) => (
             <li
               key={groupe.nom}
-              className="rounded-lg border border-[color:var(--color-bordure)] p-2.5"
+              className="rounded-lg border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-2.5"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-[0.75rem] font-semibold">{groupe.nom}</span>
@@ -322,9 +349,19 @@ export function ApercuEntraide() {
                   {groupe.places}
                 </span>
               </div>
-              <p className="m-0 mt-1 text-[0.625rem] text-[color:var(--color-encre-faible)]">
-                Lina, Samir, Emma
-              </p>
+              <span className="mt-1.5 flex items-center gap-1.5">
+                <span aria-hidden="true" className="flex -space-x-1">
+                  {[0, 1, 2].map((rang) => (
+                    <span
+                      key={rang}
+                      className="h-4 w-4 rounded-full border border-white bg-[color:var(--color-rose-decor)]"
+                    />
+                  ))}
+                </span>
+                <span className="truncate text-[0.625rem] text-[color:var(--color-encre-faible)]">
+                  {groupe.membres}
+                </span>
+              </span>
             </li>
           ))}
         </ul>
