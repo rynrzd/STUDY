@@ -352,6 +352,76 @@
     display: none;
   }
 
+  /* --- Apparition des sections au défilement ------------------------------
+     Entièrement en CSS, par animation liée au défilement. Le point qui compte :
+     l'état de départ vit **dans** `@supports`. Là où la fonctionnalité manque,
+     la règle n'existe pas du tout, et le contenu est simplement visible — on ne
+     peut donc pas se retrouver avec une page blanche parce qu'un script n'a pas
+     tourné, ce que le chapitre 10 interdit.
+
+     12 px de translation et 250 ms de fondu : le mouvement se remarque à peine,
+     et c'est voulu. Une entrée spectaculaire se remarque deux fois, puis agace. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .apparition {
+        animation: apparaitre 250ms ease-out both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 55%;
+      }
+    }
+  }
+
+  @keyframes apparaitre {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  /* --- Accordéon : la hauteur s'ouvre, la page ne saute pas ----------------
+     `grid-template-rows` de 0fr à 1fr est la seule façon d'animer une hauteur
+     inconnue sans la mesurer en JavaScript. Fermé, le contenu n'est ni lisible
+     ni atteignable au clavier. */
+  .repli {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 180ms ease;
+  }
+
+  .repli > * {
+    overflow: hidden;
+  }
+
+  .repli[data-ouvert="oui"],
+  [open] > .repli {
+    grid-template-rows: 1fr;
+  }
+
+  /* Le marqueur natif disparaît : le « + » tient ce rôle, et il pivote. */
+  .groupe-repli > summary::-webkit-details-marker { display: none; }
+  .groupe-repli > summary::marker { content: ""; }
+  .groupe-repli[open] > summary .marqueur-repli { transform: rotate(45deg); }
+
+  /* --- Panneau d'onglet : 160 ms, comme le bouton qui l'a ouvert ---------- */
+  .panneau-onglet {
+    animation: apparaitre-doux 160ms ease-out both;
+  }
+
+  @keyframes apparaitre-doux {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* --- Aperçus : un relief très léger au survol --------------------------- */
+  .apercu-releve {
+    transition: transform 180ms cubic-bezier(0.16, 0.84, 0.44, 1),
+                box-shadow 180ms ease;
+  }
+
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .apercu-releve:hover {
+      transform: translateY(-3px);
+    }
+  }
+
   /* --- Mot-symbole -------------------------------------------------------
      La seule entorse à la famille unique : « AvecStudy. » retrouve
      l'empattement de la référence, et rien d'autre ne l'emploie. */

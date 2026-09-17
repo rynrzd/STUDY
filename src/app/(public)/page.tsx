@@ -86,7 +86,7 @@ export default function PageAccueil() {
       </div>
 
       {/* -- L03 — Trois situations ---------------------------------------- */}
-      <section id="fonctionnement" className="scroll-mt-24 py-12 sm:py-20">
+      <section id="fonctionnement" className="apparition scroll-mt-24 py-12 sm:py-20">
         <div className="contenu-site">
           <h2 className="m-0 text-[length:var(--text-h2-mobile)] sm:text-center leading-[var(--text-h2-mobile--line-height)] tracking-[-0.02em] sm:text-[length:var(--text-h2-large)] sm:leading-[var(--text-h2-large--line-height)]">
             En cours. À la maison. Toujours la même classe.
@@ -123,7 +123,7 @@ export default function PageAccueil() {
       </section>
 
       {/* -- L04 — Côté professeur ----------------------------------------- */}
-      <section className="py-12 sm:py-20">
+      <section className="apparition py-12 sm:py-20">
         <div className="contenu-site grid items-center gap-8 sm:gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
           <div>
             <p className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-accent)]">
@@ -151,7 +151,7 @@ export default function PageAccueil() {
       </section>
 
       {/* -- L05 — Studio --------------------------------------------------- */}
-      <section id="studio" className="scroll-mt-24 border-y border-[color:var(--color-bordure)] py-12 sm:py-20">
+      <section id="studio" className="apparition scroll-mt-24 border-y border-[color:var(--color-bordure)] py-12 sm:py-20">
         <div className="contenu-site grid items-start gap-8 sm:gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
           <div>
             <p className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-accent)]">
@@ -196,7 +196,7 @@ export default function PageAccueil() {
       </div>
 
       {/* -- L07 — Rentrée -------------------------------------------------- */}
-      <section className="py-12 sm:py-20">
+      <section className="apparition py-12 sm:py-20">
         <div className="contenu-site grid items-center gap-8 sm:gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
           <div>
             <h2 className="m-0 text-[length:var(--text-h2-mobile)] leading-[var(--text-h2-mobile--line-height)] tracking-[-0.02em] sm:text-[length:var(--text-h2-large)] sm:leading-[var(--text-h2-large--line-height)]">
@@ -213,7 +213,7 @@ export default function PageAccueil() {
       </section>
 
       {/* -- L08 — Questions ------------------------------------------------ */}
-      <section className="py-12 sm:py-20">
+      <section className="apparition py-12 sm:py-20">
         <div className="contenu-site max-w-[760px]">
           <p className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-accent)]">
             FAQ

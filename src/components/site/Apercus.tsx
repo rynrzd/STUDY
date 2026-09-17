@@ -27,7 +27,7 @@ function Fenetre({
   return (
     <div
       aria-hidden="true"
-      className={`overflow-hidden rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] shadow-[var(--shadow-flottant)] ${className}`}
+      className={`apercu-releve overflow-hidden rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] shadow-[var(--shadow-flottant)] ${className}`}
     >
       {children}
     </div>
