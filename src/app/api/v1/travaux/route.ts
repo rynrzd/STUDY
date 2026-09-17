@@ -24,9 +24,11 @@ import { drainer } from "@/lib/travaux";
  */
 export const dynamic = "force-dynamic";
 
-// Confortablement au-dessus du budget du drain : la fonction doit pouvoir
-// rendre sa réponse après avoir rendu la main proprement.
-export const maxDuration = 60;
+// Pas de `maxDuration` déclaré : la valeur autorisée dépend du plan de
+// l'hébergeur, et une valeur trop haute fait échouer le déploiement entier —
+// c'est arrivé. Le drain s'aligne donc sur la borne la plus basse (10 s) et
+// rend la main bien avant. Sur un plan plus large, augmenter le budget ici
+// suffit ; rien d'autre ne change.
 
 function secretValide(entete: string | null): boolean {
   const attendu = (process.env.CRON_SECRET ?? "").trim();
@@ -48,7 +50,7 @@ export async function POST(requete: Request) {
     return NextResponse.json({ erreur: "refuse" }, { status: 401 });
   }
 
-  const bilan = await drainer({ budgetMs: 40_000, nom: "bff" });
+  const bilan = await drainer({ budgetMs: 8_000, nom: "bff" });
 
   return NextResponse.json(bilan, {
     headers: { "cache-control": "private, no-store" },

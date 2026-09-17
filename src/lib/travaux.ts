@@ -88,7 +88,7 @@ const BAIL_SECONDES = 120;
  * que d'être coupé au milieu et de laisser un bail à expirer.
  */
 export async function drainer(options: { budgetMs?: number; nom?: string } = {}): Promise<Bilan> {
-  const budget = options.budgetMs ?? 20_000;
+  const budget = options.budgetMs ?? 8_000;
   const nom = options.nom ?? `bff-${process.pid}`;
   const echeance = Date.now() + budget;
 
@@ -100,9 +100,13 @@ export async function drainer(options: { budgetMs?: number; nom?: string } = {})
   let echoues = 0;
   let reste = false;
 
-  // On ne démarre un travail que s'il reste de quoi en faire un : la durée
-  // observée d'une conversion est de l'ordre de la seconde, on garde cinq.
-  while (Date.now() + 5_000 < echeance) {
+  // On ne démarre un travail que s'il reste de quoi en faire un. La durée
+  // mesurée d'une conversion est de l'ordre de 300 ms ; deux secondes de marge
+  // couvrent largement, et évitent d'être coupé au milieu — ce qui laisserait
+  // un bail à expirer avant que le travail reparte.
+  const MARGE_MS = 2_000;
+
+  while (Date.now() + MARGE_MS < echeance) {
     const { data, error } = await client.rpc("travaux_prendre", {
       p_types: [...TYPES_TRAITES],
       p_worker: nom,
@@ -168,7 +172,7 @@ export async function drainer(options: { budgetMs?: number; nom?: string } = {})
 
   // S'il restait quelque chose quand le budget s'est épuisé, on le dit : la
   // tâche planifiée suivante le prendra, et la supervision voit la file monter.
-  if (Date.now() + 5_000 >= echeance) reste = true;
+  if (Date.now() + MARGE_MS >= echeance) reste = true;
 
   return { pris, termines, refuses, echoues, reste };
 }
