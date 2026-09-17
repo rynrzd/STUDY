@@ -2,14 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ApercuEleve,
-  ApercuEntraide,
   ApercuExcel,
   ApercuMaison,
   ApercuOrdinateur,
   ApercuPapier,
-  ApercuProfesseur,
 } from "@/components/site/Apercus";
-import { AvantApres } from "@/components/site/AvantApres";
+import { ApercuEntraide, ApercuProfesseur } from "@/components/site/ApercusVivants";
 import { Faq, Onglets } from "@/components/site/Onglets";
 import { MARQUE } from "@/lib/identite-legale";
 
@@ -147,34 +145,6 @@ export default function PageAccueil() {
           </div>
 
           <ApercuProfesseur />
-        </div>
-      </section>
-
-      {/* -- L05 — Studio --------------------------------------------------- */}
-      <section id="studio" className="apparition scroll-mt-24 border-y border-[color:var(--color-bordure)] py-12 sm:py-20">
-        <div className="contenu-site grid min-w-0 items-start gap-8 sm:gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-          <div>
-            <p className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-accent)]">
-              Le Studio
-            </p>
-            <h2 className="m-0 mt-4 text-[length:var(--text-h2-mobile)] leading-[var(--text-h2-mobile--line-height)] tracking-[-0.02em] sm:text-[length:var(--text-h2-large)] sm:leading-[var(--text-h2-large--line-height)]">
-              Votre cours.
-              <br />
-              En mieux présenté.
-            </h2>
-            <p className="m-0 mt-5 max-w-[42ch] text-[length:var(--text-corps)] leading-[var(--text-corps--line-height)] text-[color:var(--color-encre-faible)]">
-              Importez votre PDF ou Word, choisissez la présentation et vérifiez
-              avant de publier.
-            </p>
-            <p className="m-0 mt-6">
-              <Link href="/produit#studio" className="lien-fleche">
-                Découvrir le Studio
-                <span aria-hidden="true" className="fleche">→</span>
-              </Link>
-            </p>
-          </div>
-
-          <AvantApres />
         </div>
       </section>
 
