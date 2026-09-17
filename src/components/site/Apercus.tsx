@@ -312,10 +312,40 @@ export function ApercuProfesseur() {
 /* -------------------------------------------------------------------------- */
 /* L06 — l'entraide                                                           */
 /*                                                                            */
-/* Ce que montre cet aperçu est ce que le produit sait faire : des groupes     */
-/* rattachés à un cours et le devoir qui va avec. Aucune conversation n'est    */
-/* simulée : la messagerie n'existe pas, et la vitrine ne la promet pas.       */
+/* Cet aperçu reproduit la référence validée, conversation comprise. Décision  */
+/* explicite du propriétaire du produit, prise après lui avoir signalé que le  */
+/* chapitre 03 demande de n'illustrer que les capacités effectives et que la   */
+/* messagerie entre élèves n'est pas encore livrée — seuls les groupes le      */
+/* sont.                                                                      */
+/*                                                                            */
+/* Les prénoms et l'échange sont fictifs et le restent : aucune donnée réelle, */
+/* aucun nom de lycée. Ce qui est montré est une maquette d'interface, comme   */
+/* les autres aperçus de cette page.                                          */
 /* -------------------------------------------------------------------------- */
+
+const MESSAGES: readonly {
+  readonly auteur: string;
+  readonly heure: string;
+  readonly texte: string;
+  readonly calcul?: readonly string[];
+}[] = [
+  {
+    auteur: "Lina",
+    heure: "il y a 2 h",
+    texte: "Je ne comprends pas la question 3… Quelqu'un peut m'expliquer ?",
+  },
+  {
+    auteur: "Samir",
+    heure: "il y a 1 h",
+    texte: "Oui, regarde cet exemple ! On remplace x par 2 dans la fonction.",
+    calcul: ["f(x) = 3x − 4", "f(2) = 3 × 2 − 4 = 2"],
+  },
+  {
+    auteur: "Lina",
+    heure: "il y a 1 h",
+    texte: "Merci beaucoup ! C'est plus clair maintenant 🙏",
+  },
+];
 
 export function ApercuEntraide() {
   return (
@@ -328,39 +358,33 @@ export function ApercuEntraide() {
         </span>
       </div>
 
-      <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        {/* La référence montre ici une conversation. Le cahier l'interdit
-            explicitement (L06) tant que la messagerie n'existe pas : on
-            illustre donc ce que le produit sait faire — des groupes rattachés
-            à un cours, et le devoir qui va avec. La composition est la même ;
-            ce qui est montré est vrai. */}
-        <ul className="m-0 list-none space-y-2 p-0">
-          {[
-            { nom: "Révisions chapitre 4", places: "3 / 4", membres: "Lina, Samir, Emma" },
-            { nom: "Exercices du week-end", places: "2 / 4", membres: "Rayan, Inès" },
-          ].map((groupe) => (
-            <li
-              key={groupe.nom}
-              className="rounded-lg border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-2.5"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-[0.75rem] font-semibold">{groupe.nom}</span>
-                <span className="rounded-full bg-[color:var(--color-rose-clair)] px-1.5 py-0.5 text-[0.5625rem] font-semibold text-[color:var(--color-accent)]">
-                  {groupe.places}
+      <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+        <ul className="m-0 list-none space-y-2.5 p-0">
+          {MESSAGES.map((message) => (
+            <li key={message.auteur + message.heure} className="flex gap-2">
+              <span
+                aria-hidden="true"
+                className="mt-0.5 h-5 w-5 shrink-0 rounded-full bg-[color:var(--color-rose-decor)]"
+              />
+              <span className="min-w-0">
+                <span className="flex items-baseline gap-1.5">
+                  <span className="text-[0.6875rem] font-semibold">{message.auteur}</span>
+                  <span className="text-[0.5rem] text-[color:var(--color-encre-tres-faible)]">
+                    {message.heure}
+                  </span>
                 </span>
-              </div>
-              <span className="mt-1.5 flex items-center gap-1.5">
-                <span aria-hidden="true" className="flex -space-x-1">
-                  {[0, 1, 2].map((rang) => (
-                    <span
-                      key={rang}
-                      className="h-4 w-4 rounded-full border border-white bg-[color:var(--color-rose-decor)]"
-                    />
-                  ))}
+                <span className="mt-0.5 block whitespace-pre-line text-[0.625rem] leading-snug text-[color:var(--color-encre-faible)]">
+                  {message.texte}
                 </span>
-                <span className="truncate text-[0.625rem] text-[color:var(--color-encre-faible)]">
-                  {groupe.membres}
-                </span>
+                {message.calcul === undefined ? null : (
+                  <span className="mt-1.5 block rounded border border-[color:var(--color-bordure)] px-2 py-1.5 font-[family-name:var(--font-marque)] text-[0.5625rem] italic leading-relaxed">
+                    {message.calcul.map((ligne) => (
+                      <span key={ligne} className="block">
+                        {ligne}
+                      </span>
+                    ))}
+                  </span>
+                )}
               </span>
             </li>
           ))}
