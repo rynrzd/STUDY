@@ -44,14 +44,16 @@ function Laterale({
   pied?: { nom: string; role: string };
 }) {
   return (
-    <div className="hidden w-[132px] shrink-0 flex-col justify-between border-r border-[color:var(--color-bordure)] p-3 sm:flex">
+    <div className="flex w-[84px] shrink-0 flex-col justify-between border-r border-[color:var(--color-bordure)] p-2 sm:w-[132px] sm:p-3">
       <div>
-        <p className="marque m-0 mb-4 px-1.5 text-[0.9375rem]">AvecStudy.</p>
+        <p className="marque m-0 mb-3 px-1 text-[0.75rem] sm:mb-4 sm:px-1.5 sm:text-[0.9375rem]">
+          AvecStudy.
+        </p>
         <ul className="m-0 list-none space-y-0.5 p-0">
           {entrees.map((entree) => (
             <li
               key={entree}
-              className={`rounded-md px-1.5 py-1.5 text-[0.6875rem] ${
+              className={`truncate rounded-md px-1 py-1 text-[0.5625rem] sm:px-1.5 sm:py-1.5 sm:text-[0.6875rem] ${
                 entree === actif
                   ? "bg-[color:var(--color-rose-clair)] font-semibold text-[color:var(--color-accent)]"
                   : "text-[color:var(--color-encre-faible)]"
@@ -63,8 +65,8 @@ function Laterale({
         </ul>
       </div>
       {pied ? (
-        <div className="flex items-center gap-1.5 px-1 pt-3">
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[color:var(--color-rose-clair)] text-[0.5rem] font-bold text-[color:var(--color-accent)]">
+        <div className="flex items-center gap-1.5 px-0.5 pt-3 sm:px-1">
+          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-rose-clair)] text-[0.4375rem] font-bold text-[color:var(--color-accent)] sm:h-5 sm:w-5 sm:text-[0.5rem]">
             {pied.nom
               .split(" ")
               .map((mot) => mot[0])
@@ -72,8 +74,8 @@ function Laterale({
               .slice(0, 2)}
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-[0.625rem] font-semibold">{pied.nom}</span>
-            <span className="block truncate text-[0.5rem] text-[color:var(--color-encre-tres-faible)]">
+            <span className="block truncate text-[0.5rem] font-semibold sm:text-[0.625rem]">{pied.nom}</span>
+            <span className="hidden truncate text-[0.5rem] text-[color:var(--color-encre-tres-faible)] sm:block">
               {pied.role}
             </span>
           </span>
@@ -126,7 +128,7 @@ export function ApercuEleve() {
         pied={{ nom: "Mon profil", role: "Seconde 1" }}
       />
 
-      <div className="min-w-0 flex-1 p-4">
+      <div className="min-w-0 flex-1 p-3 sm:p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="m-0 text-[0.9375rem] font-bold">Bonjour Rayan</p>
@@ -257,7 +259,7 @@ export function ApercuProfesseur() {
         pied={{ nom: "Mme Bernard", role: "Mathématiques" }}
       />
 
-      <div className="min-w-0 flex-1 p-4">
+      <div className="min-w-0 flex-1 p-3 sm:p-4">
         <div className="flex items-center gap-4 border-b border-[color:var(--color-bordure)] pb-2">
           <span className="border-b-2 border-[color:var(--color-accent)] pb-2 text-[0.75rem] font-semibold text-[color:var(--color-accent)]">
             Seconde 1
