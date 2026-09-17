@@ -2,8 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
+      "comment": "Filet de securite de la file de travaux. Le chemin normal est le reveil declenche par le depot d un document ; cette tache ne sert qu aux reessais. La frequence est quotidienne parce que c est la seule acceptee sur tous les plans Vercel : au-dela, le deploiement est refuse. Sur un plan qui l autorise, passer a toutes les minutes ameliore la reprise apres incident.",
       "path": "/api/v1/travaux",
-      "schedule": "* * * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }
