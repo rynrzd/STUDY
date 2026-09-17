@@ -19,10 +19,14 @@ export function AvantApres() {
 
   return (
     <div>
+      {/* Le même motif que les onglets de la section précédente : un trait sous
+          le choix actif. Un sélecteur noir à pastille n'existe nulle part
+          ailleurs sur cette page, et c'est ce qui donne l'impression d'un bloc
+          rapporté d'ailleurs. */}
       <div
         role="group"
         aria-label="Comparer avant et après la mise en page"
-        className="inline-flex rounded-[var(--radius-champ)] border border-[color:var(--color-bordure)] p-0.5"
+        className="flex gap-1 border-b border-[color:var(--color-bordure)]"
       >
         {[
           { cle: false, libelle: "Le document importé" },
@@ -33,10 +37,10 @@ export function AvantApres() {
             type="button"
             aria-pressed={apres === choix.cle}
             onClick={() => setApres(choix.cle)}
-            className={`min-h-9 rounded-[6px] px-3.5 text-[length:var(--text-tableau)] transition-colors duration-[160ms] ${
+            className={`-mb-px min-h-[var(--spacing-cible)] shrink-0 whitespace-nowrap border-b-2 px-4 text-[length:var(--text-tableau)] transition-colors duration-[160ms] ${
               apres === choix.cle
-                ? "bg-[color:var(--color-encre)] font-semibold text-white"
-                : "text-[color:var(--color-encre-faible)]"
+                ? "border-[color:var(--color-encre)] font-semibold text-[color:var(--color-encre)]"
+                : "border-transparent text-[color:var(--color-encre-faible)]"
             }`}
           >
             {choix.libelle}

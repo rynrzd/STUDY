@@ -342,6 +342,16 @@
     .surligne-anime { animation: none; background-size: 100% 0.62em; }
   }
 
+  /* Rangée qui défile horizontalement, sans barre apparente : la barre
+     grise sous trois onglets fait sale, et le geste reste naturel. */
+  .sans-barre {
+    scrollbar-width: none;
+  }
+
+  .sans-barre::-webkit-scrollbar {
+    display: none;
+  }
+
   /* --- Mot-symbole -------------------------------------------------------
      La seule entorse à la famille unique : « AvecStudy. » retrouve
      l'empattement de la référence, et rien d'autre ne l'emploie. */

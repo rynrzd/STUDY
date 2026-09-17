@@ -40,7 +40,14 @@ export function Onglets({ onglets }: { onglets: readonly Onglet[] }) {
 
   return (
     <div>
-      <div role="tablist" aria-label="Situations d'usage" className="flex flex-wrap justify-center">
+      {/* Une seule rangée, jamais deux : trois onglets qui se coupent en
+          « Sur ordinateur / Sur papier » puis « À la maison » au centre ne
+          ressemblent plus à des onglets. Sur un écran étroit, la rangée défile. */}
+      <div
+        role="tablist"
+        aria-label="Situations d'usage"
+        className="sans-barre -mx-5 flex justify-start gap-1 overflow-x-auto px-5 sm:mx-0 sm:justify-center sm:px-0"
+      >
         {onglets.map((onglet, index) => {
           const selectionne = onglet.cle === actif;
           return (
@@ -57,7 +64,7 @@ export function Onglets({ onglets }: { onglets: readonly Onglet[] }) {
               tabIndex={selectionne ? 0 : -1}
               onClick={() => setActif(onglet.cle)}
               onKeyDown={(evenement) => auClavier(evenement, index)}
-              className={`min-h-[var(--spacing-cible)] border-b-2 px-5 text-[length:var(--text-tableau)] transition-colors duration-[160ms] ${
+              className={`min-h-[var(--spacing-cible)] shrink-0 whitespace-nowrap border-b-2 px-4 text-[length:var(--text-tableau)] transition-colors duration-[160ms] sm:px-5 ${
                 selectionne
                   ? "border-[color:var(--color-encre)] font-semibold text-[color:var(--color-encre)]"
                   : "border-transparent text-[color:var(--color-encre-faible)] hover:text-[color:var(--color-encre)]"

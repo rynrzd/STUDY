@@ -86,13 +86,13 @@ export default function PageAccueil() {
       </div>
 
       {/* -- L03 — Trois situations ---------------------------------------- */}
-      <section id="fonctionnement" className="scroll-mt-24 py-14 sm:py-20">
+      <section id="fonctionnement" className="scroll-mt-24 py-12 sm:py-20">
         <div className="contenu-site">
           <h2 className="m-0 text-center text-[length:var(--text-h2-mobile)] leading-[var(--text-h2-mobile--line-height)] tracking-[-0.02em] sm:text-[length:var(--text-h2-large)] sm:leading-[var(--text-h2-large--line-height)]">
             En cours. À la maison. Toujours la même classe.
           </h2>
 
-          <div className="mt-10">
+          <div className="mt-8">
             <Onglets
               onglets={[
                 {
@@ -123,7 +123,7 @@ export default function PageAccueil() {
       </section>
 
       {/* -- L04 — Côté professeur ----------------------------------------- */}
-      <section className="py-14 sm:py-20">
+      <section className="py-12 sm:py-20">
         <div className="contenu-site grid items-center gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
           <div>
             <p className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-accent)]">
@@ -151,7 +151,7 @@ export default function PageAccueil() {
       </section>
 
       {/* -- L05 — Studio --------------------------------------------------- */}
-      <section id="studio" className="scroll-mt-24 border-y border-[color:var(--color-bordure)] py-14 sm:py-20">
+      <section id="studio" className="scroll-mt-24 border-y border-[color:var(--color-bordure)] py-12 sm:py-20">
         <div className="contenu-site grid items-start gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
           <div>
             <p className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-accent)]">
@@ -180,7 +180,7 @@ export default function PageAccueil() {
 
       {/* -- L06 — Entraide ------------------------------------------------- */}
       <div className="bande bande-rose">
-        <section className="contenu-site grid items-center gap-12 py-14 sm:py-20 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <section className="contenu-site grid items-center gap-12 py-12 sm:py-20 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
           <ApercuEntraide />
 
           <div>
@@ -196,7 +196,7 @@ export default function PageAccueil() {
       </div>
 
       {/* -- L07 — Rentrée -------------------------------------------------- */}
-      <section className="py-14 sm:py-20">
+      <section className="py-12 sm:py-20">
         <div className="contenu-site grid items-center gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
           <div>
             <h2 className="m-0 text-[length:var(--text-h2-mobile)] leading-[var(--text-h2-mobile--line-height)] tracking-[-0.02em] sm:text-[length:var(--text-h2-large)] sm:leading-[var(--text-h2-large--line-height)]">
@@ -213,7 +213,7 @@ export default function PageAccueil() {
       </section>
 
       {/* -- L08 — Questions ------------------------------------------------ */}
-      <section className="py-14 sm:py-20">
+      <section className="py-12 sm:py-20">
         <div className="contenu-site max-w-[760px]">
           <p className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-accent)]">
             FAQ
@@ -244,7 +244,7 @@ export default function PageAccueil() {
 
       {/* -- L09 — Appel final ---------------------------------------------- */}
       <div className="bande bande-noire">
-        <section className="contenu-site flex flex-wrap items-center justify-between gap-8 py-14 sm:py-16">
+        <section className="contenu-site flex flex-wrap items-center justify-between gap-8 py-12 sm:py-16">
           <h2 className="m-0 max-w-[16ch] text-[length:var(--text-h2-mobile)] leading-[var(--text-h2-mobile--line-height)] tracking-[-0.02em] text-white sm:text-[length:var(--text-h2-large)] sm:leading-[var(--text-h2-large--line-height)]">
             Et si on commençait par votre lycée ?
           </h2>
