@@ -9,6 +9,7 @@ import {
   creerUneMatiere,
 } from "@/app/admin/actions";
 import { ETAT_ADMIN_INITIAL, type EtatAdmin } from "@/app/admin/etats";
+import { FicheImprimable } from "./FicheImprimable";
 
 /**
  * Formulaires d'administration — cahier V2, §14.2 à §14.4.
@@ -273,17 +274,30 @@ function FicheAcces({
     motDePasseTemporaire: string;
   };
 }) {
+  const role = acces.role === "eleve" ? "Élève" : "Professeur";
+
   return (
-    <section className="carte mt-6 p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3 print:hidden">
+    <>
+      {/* Le document A4, invisible à l'écran et seul visible à l'impression. */}
+      <FicheImprimable
+        prenom={acces.prenom}
+        nom={acces.nom}
+        role={role}
+        classe={acces.classe}
+        login={acces.login}
+        motDePasse={acces.motDePasseTemporaire}
+      />
+
+      <section className="carte mt-6 p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
             Fiche d&apos;accès
           </h3>
           <p className="m-0 mt-1.5 max-w-[var(--spacing-lecture)] text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-faible)]">
-            À imprimer maintenant et à remettre en main propre. Ce mot de passe ne
-            sera plus affiché : il est temporaire, et la personne en choisira un
-            autre à sa première connexion.
+            À imprimer maintenant et à remettre en main propre. L&apos;impression
+            ne sort qu&apos;une feuille : cette fiche, et rien de la page
+            d&apos;administration. Ce mot de passe ne sera plus affiché.
           </p>
         </div>
         <button
@@ -297,12 +311,13 @@ function FicheAcces({
 
       <dl className="m-0 mt-5 grid gap-x-8 gap-y-3 sm:grid-cols-2">
         <Champ terme="Nom" valeur={`${acces.prenom} ${acces.nom}`} />
-        <Champ terme="Rôle" valeur={acces.role === "eleve" ? "Élève" : "Professeur"} />
+        <Champ terme="Rôle" valeur={role} />
         {acces.classe === null ? null : <Champ terme="Classe" valeur={acces.classe} />}
         <Champ terme="Identifiant" valeur={acces.login} mono />
         <Champ terme="Mot de passe temporaire" valeur={acces.motDePasseTemporaire} mono />
       </dl>
-    </section>
+      </section>
+    </>
   );
 }
 

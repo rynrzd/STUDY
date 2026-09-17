@@ -4,6 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { analyserFichier, confirmerImport } from "@/app/admin/actions";
 import { ETAT_IMPORT_INITIAL, type EtatImport } from "@/app/admin/etats";
+import { FicheImprimable } from "./FicheImprimable";
 
 /**
  * Import de rentrée : déposer, vérifier, corriger, confirmer.
@@ -221,6 +222,22 @@ function Resultat({
       </div>
 
       {etat.acces && etat.acces.length > 0 ? (
+        <>
+          {/* Une feuille A4 par élève, invisible à l'écran. Ce qui s'imprimait
+              jusqu'ici, c'était la page d'administration entière — avec la
+              liste des comptes au dos du mot de passe de chacun. */}
+          {etat.acces.map((eleve) => (
+            <FicheImprimable
+              key={`impression-${eleve.login}`}
+              prenom={eleve.prenom}
+              nom={eleve.nom}
+              role="Élève"
+              classe={eleve.classe}
+              login={eleve.login}
+              motDePasse={eleve.motDePasseTemporaire}
+            />
+          ))}
+
         <div className="carte p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -228,15 +245,16 @@ function Resultat({
                 Fiches d&apos;accès à distribuer
               </h2>
               <p className="m-0 mt-2 max-w-[60ch] text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
-                Imprimez cette page maintenant. Ces mots de passe sont
-                temporaires, ils ne seront plus jamais affichés, et personne ne
-                pourra les retrouver — pas même nous.
+                Imprimez-les maintenant : une feuille par élève, et rien
+                d&apos;autre. Ces mots de passe sont temporaires, ils ne seront
+                plus jamais affichés, et personne ne pourra les retrouver — pas
+                même nous.
               </p>
             </div>
             <button
               type="button"
               onClick={() => window.print()}
-              className="bouton bouton-secondaire print:hidden"
+              className="bouton bouton-secondaire"
             >
               Imprimer
             </button>
@@ -272,6 +290,7 @@ function Resultat({
             ))}
           </div>
         </div>
+        </>
       ) : null}
     </div>
   );

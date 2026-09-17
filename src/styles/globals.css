@@ -658,3 +658,82 @@
   /* Aucun débordement horizontal, à aucune largeur. */
   .sans-debordement { overflow-x: clip; }
 }
+
+/* ===========================================================================
+   Impression des fiches d'accès
+
+   Une fiche d'accès s'imprime, se plie et se remet en main propre. Ce qui
+   sortait de l'imprimante jusqu'ici, c'était la page d'administration entière
+   sur deux feuilles : navigation, filtres, tableau des comptes, boutons.
+   Inutilisable, et indiscret — on ne distribue pas la liste des comptes d'un
+   lycée en même temps qu'un mot de passe.
+
+   La règle employée est `visibility`, pas `display`. Masquer par `display` les
+   ancêtres de la fiche masquerait la fiche avec eux ; `visibility: hidden` se
+   propage aux descendants mais se laisse redéfinir sur l'un d'eux. C'est la
+   seule formulation qui fonctionne aussi dans Safari, y compris sur iPhone.
+   =========================================================================== */
+
+@media screen {
+  .fiche-impression {
+    display: none;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    /* Marges généreuses : le document respire, et les en-têtes que le
+       navigateur ajoute lui-même ne mordent pas sur le texte. */
+    margin: 18mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #000;
+  }
+
+  /* Les fiches sont des enfants directs de `body` — voir le portail de
+     `FicheImprimable`. Tout le reste du corps disparaît d'un seul trait :
+     navigation, filtres, tableau des comptes, boutons. */
+  body > *:not(.fiche-impression) {
+    display: none !important;
+  }
+
+  .fiche-impression {
+    display: block !important;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: #fff;
+    box-shadow: none !important;
+    /* Une fiche ne se coupe jamais en deux : elle tient sur une page. */
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .fiche-impression * {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Plusieurs fiches — un import de rentrée — : une par page, dans l'ordre.
+     La dernière ne pousse pas une feuille blanche derrière elle. */
+  .fiche-impression {
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .fiche-impression:last-of-type {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  /* Les liens ne se font pas suivre de leur adresse : la seule qui compte est
+     écrite en toutes lettres dans la fiche. */
+  .fiche-impression a::after {
+    content: "" !important;
+  }
+}
