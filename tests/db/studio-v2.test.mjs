@@ -1186,3 +1186,94 @@ test("ST04 — publier dans une seconde classe n affecte pas la premiere", async
   assert.equal(apres.rows.length, 2, "une publication par classe");
   assert.notEqual(apres.rows[0].teaching_space_id, apres.rows[1].teaching_space_id);
 });
+
+/* ========================================================================== */
+/* W — File de travaux drainee depuis le BFF (T03, T04, T08)                  */
+/* ========================================================================== */
+
+test("W01 — un travail se prend une fois, et deux preneurs n ont pas le meme", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  await enTantQueServeur(db, async () => {
+    await db.query(
+      "insert into study_prive.jobs (kind, payload, idempotency_key) values " +
+        "('import_cours', '{\"document\":\"a\"}'::jsonb, 'a'), " +
+        "('import_cours', '{\"document\":\"b\"}'::jsonb, 'b')",
+    );
+
+    const premier = await db.query("select * from study.travaux_prendre($1, 'w1', 120)", [
+      ["import_cours"],
+    ]);
+    const second = await db.query("select * from study.travaux_prendre($1, 'w2', 120)", [
+      ["import_cours"],
+    ]);
+
+    assert.equal(premier.rows.length, 1);
+    assert.equal(second.rows.length, 1);
+    assert.notEqual(premier.rows[0].id, second.rows[0].id, "deux preneurs, deux travaux");
+
+    // La file est vide : le troisieme appel ne rend rien, il n attend pas.
+    const troisieme = await db.query("select * from study.travaux_prendre($1, 'w3', 120)", [
+      ["import_cours"],
+    ]);
+    assert.equal(troisieme.rows.length, 0);
+  });
+});
+
+test("W02 — un echec est reprogramme, puis abandonne au bout des essais", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  const job = await enTantQueServeur(db, async () => {
+    const { rows } = await db.query(
+      "insert into study_prive.jobs (kind, payload, max_attempts) " +
+        "values ('import_cours', '{}'::jsonb, 2) returning id",
+    );
+    return rows[0].id;
+  });
+
+  await enTantQueServeur(db, async () => {
+    // Premier essai : echoue, donc reprogramme pour plus tard.
+    await db.query("select * from study.travaux_prendre($1, 'w', 120)", [["import_cours"]]);
+    await db.query("select study.travaux_echouer($1, 'fichier illisible')", [job]);
+
+    let etat = await db.query("select state::text as e, last_error, scheduled_at > now() as plus_tard from study_prive.jobs where id = $1", [job]);
+    // « en_attente » et non « echoue » : `prendre_job` ne reprend que les
+    // travaux en attente ou dont le bail a expire. Un job laisse en « echoue »
+    // n etait jamais rejoue, et toute la logique de reessai ne servait a rien.
+    assert.equal(etat.rows[0].e, "en_attente", "un reessai doit retourner dans la file");
+    assert.match(etat.rows[0].last_error, /illisible/, "la raison de l echec est conservee");
+    assert.equal(etat.rows[0].plus_tard, true, "le reessai est differe, pas immediat");
+
+    // Second essai : le plafond est atteint, le travail est abandonne.
+    await db.query("update study_prive.jobs set scheduled_at = now() where id = $1", [job]);
+    await db.query("select * from study.travaux_prendre($1, 'w', 120)", [["import_cours"]]);
+    await db.query("select study.travaux_echouer($1, 'encore illisible')", [job]);
+
+    etat = await db.query("select state::text as e from study_prive.jobs where id = $1", [job]);
+    assert.equal(etat.rows[0].e, "abandonne", "un travail ne se rejoue pas indefiniment");
+
+    // Et une file abandonnee ne ressort plus : pas de boucle de cout.
+    const apres = await db.query("select * from study.travaux_prendre($1, 'w', 120)", [
+      ["import_cours"],
+    ]);
+    assert.equal(apres.rows.length, 0);
+  });
+});
+
+test("W03 — la file de travaux reste fermee aux sessions navigateur", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  // `study_prive` n est pas expose, et les fonctions de drain ne sont accordees
+  // qu au role de service. Un compte connecte ne doit atteindre ni l un ni les
+  // autres.
+  await enTantQue(db, ACTEURS.profMartin, async () => {
+    await doitEchouer(() => db.query("select count(*) from study_prive.jobs"));
+    await doitEchouer(() =>
+      db.query("select * from study.travaux_prendre($1, 'pirate', 120)", [["import_cours"]]),
+    );
+    await doitEchouer(() => db.query("select study.travaux_resume()"));
+  });
+});

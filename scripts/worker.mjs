@@ -138,6 +138,11 @@ async function traiter(client, job) {
 async function echouer(client, job, motif) {
   // Essais plafonnés : au-delà, le job est abandonné et devient visible dans
   // l'administration. Les erreurs n'entraînent pas une boucle de coût illimitée.
+  //
+  // Un réessai repasse « en_attente » et non « echoue » : `prendre_job` ne
+  // reprend que les travaux en attente ou dont le bail a expiré. Marqué
+  // « echoue », un job n'était jamais rejoué — la logique de réessai existait
+  // sans fonctionner.
   const definitif = job.attempts >= job.max_attempts;
   await client.query(
     `update study_prive.jobs
@@ -145,12 +150,12 @@ async function echouer(client, job, motif) {
             last_error = $3,
             finished_at = case when $2 = 'abandonne' then now() else null end,
             scheduled_at = case
-              when $2 = 'echoue' then now() + make_interval(secs => least(300, power(2, attempts)::int * 10))
+              when $2 = 'en_attente' then now() + make_interval(secs => least(300, power(2, attempts)::int * 10))
               else scheduled_at end,
             locked_until = null,
             locked_by = null
       where id = $1`,
-    [job.id, definitif ? "abandonne" : "echoue", motif.slice(0, 500)],
+    [job.id, definitif ? "abandonne" : "en_attente", motif.slice(0, 500)],
   );
   console.log(`  [${definitif ? "abandon" : "echec"}] ${job.kind} ${job.id} — ${motif}`);
 }

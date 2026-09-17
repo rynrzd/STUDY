@@ -80,7 +80,17 @@ export default function proxy(requete: NextRequest) {
   // ne s'y applique pas (ch. 25).
   const estWebhook = requete.nextUrl.pathname.startsWith("/api/v1/webhooks/");
 
-  if (!estWebhook && !METHODES_SANS_EFFET.has(requete.method) && !origineAcceptable(requete)) {
+  // La file de travaux s'authentifie par CRON_SECRET, pas par cookie : elle
+  // n'est jamais appelee depuis une page, et la verification d'origine n'a rien
+  // a y verifier. Le controle du secret, lui, reste dans la route.
+  const estFileDeTravaux = requete.nextUrl.pathname === "/api/v1/travaux";
+
+  if (
+    !estWebhook &&
+    !estFileDeTravaux &&
+    !METHODES_SANS_EFFET.has(requete.method) &&
+    !origineAcceptable(requete)
+  ) {
     // Réponse volontairement muette : pas de détail sur ce qui a échoué.
     return new NextResponse(
       JSON.stringify({ erreur: "requete_refusee" }),

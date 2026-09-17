@@ -11,6 +11,7 @@ import {
 } from "./document-cours.ts";
 import { extraire, ImportRefuse, TAILLE_MAXIMALE_IMPORT } from "./extraction.ts";
 import { clientExploitation, clientUtilisateur } from "./supabase-serveur.ts";
+import { reveiller } from "./travaux.ts";
 
 /**
  * Documents du Studio — cahier « Refonte fidèle », S02 à S17.
@@ -234,6 +235,10 @@ export async function importer(options: {
     p_document: documentId,
     p_fichier: fileId,
   });
+
+  // Le traitement peut commencer tout de suite. Si le reveil n'aboutit pas, la
+  // tache planifiee prendra le travail : la file est durable, rien n'est perdu.
+  reveiller();
 
   return { etat: "ok", document: documentId };
 }
