@@ -1,5 +1,4 @@
-import type { AccesCree, AccesEleve } from "@/lib/etablissement";
-import type { LigneImport, Resume } from "@/lib/import-rentree";
+import type { AccesCree } from "@/lib/etablissement";
 
 /**
  * États des formulaires d'administration — hors du fichier d'action.
@@ -8,19 +7,6 @@ import type { LigneImport, Resume } from "@/lib/import-rentree";
  * y laisser une constante casse toutes les actions du fichier, à l'exécution
  * seulement. La règle est vérifiée par `tests/unite/actions-serveur.test.ts`.
  */
-
-export interface EtatImport {
-  readonly etape: "depot" | "apercu" | "termine" | "erreur";
-  readonly message?: string;
-  readonly resume?: Resume;
-  readonly lignes?: LigneImport[];
-  readonly classes?: string[];
-  readonly empreinte?: string;
-  readonly acces?: AccesEleve[];
-  readonly echecs?: { ligne: number; raison: string }[];
-}
-
-export const ETAT_IMPORT_INITIAL: EtatImport = { etape: "depot" };
 
 /**
  * État des gestes unitaires : créer une classe, un compte, une affectation.

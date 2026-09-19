@@ -13,7 +13,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
-import { baseDeTest, doitEchouer, enTantQue, lirePour } from "./harness.mjs";
+import { baseDeTest, doitEchouer, enTantQue, lirePour, lirePourAdmin } from "./harness.mjs";
 
 async function enTantQueServeur(db, travail) {
   await db.exec("set role service_role;");
@@ -524,4 +524,156 @@ test("E03 — on ne pose pas de question sur un brouillon", async (t) => {
       ),
     ),
   );
+});
+
+/* ========================================================================== */
+/* §5.1 à §5.5 — la mise en attente, et son étanchéité                        */
+/*                                                                            */
+/* L'écran de vérification ne garde rien en mémoire : il relit les fichiers   */
+/* et les lignes déposés dans `import_jobs` / `import_rows`. Ces deux tables  */
+/* contiennent donc, le temps de la relecture, des noms d'élèves qui          */
+/* n'existent pas encore comme comptes. Ce qui suit vérifie qu'elles se       */
+/* comportent comme le reste : rien ne sort de l'établissement.               */
+/* ========================================================================== */
+
+/** Dépose un lot en attente, comme le fait `analyserLot` côté serveur. */
+async function deposer(db, etab, fichier, lignes) {
+  return enTantQueServeur(db, async () => {
+    const { rows: lots } = await db.query("select study.lot_ouvrir($1, $2, 'eleves') as id", [
+      etab.administrateur,
+      etab.annee,
+    ]);
+    const lot = lots[0].id;
+
+    const { rows: jobs } = await db.query(
+      `insert into study.import_jobs
+         (organization_id, academic_year_id, kind, state, created_by,
+          batch_id, file_name, classe_detectee, classe_source, mapping, rows_total)
+       values ($1, $2, 'eleves', 'apercu_pret', $3, $4, $5, $6, 'fichier', $7::jsonb, $8)
+       returning id`,
+      [etab.organisation, etab.annee, etab.administrateur, lot, fichier,
+       lignes[0]?.classe ?? null, JSON.stringify({ correspondance: { nom: 0, prenom: 1 } }),
+       lignes.length],
+    );
+    const job = jobs[0].id;
+
+    for (const [index, ligne] of lignes.entries()) {
+      await db.query(
+        `insert into study.import_rows
+           (organization_id, import_job_id, row_number, payload, state, issue_detail)
+         values ($1, $2, $3, $4::jsonb, $5, $6)`,
+        [etab.organisation, job, index + 2, JSON.stringify(ligne),
+         ligne.nom === "" ? "rejete" : "valide",
+         ligne.nom === "" ? "Le nom manque." : null],
+      );
+    }
+
+    return { lot, job };
+  });
+}
+
+test("S01 — une ligne mise en attente se corrige, et ne cree rien avant validation", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  const etab = await lycee(db, "SA");
+
+  const { lot, job } = await deposer(db, etab, "2nde4.xlsx", [
+    { nom: "Dupont", prenom: "Martin", classe: "2nde 4", fichier: "2nde4.xlsx" },
+    { nom: "", prenom: "Ines", classe: "2nde 4", fichier: "2nde4.xlsx" },
+  ]);
+
+  // Rien n'existe encore : c'est la promesse du §5.1.
+  const avant = await enTantQueServeur(db, () =>
+    db.query(
+      "select (select count(*) from study.classes where organization_id = $1)::int as classes," +
+      " (select count(*) from study.organization_memberships" +
+      "   where organization_id = $1 and roles && array['eleve']::study.role_type[])::int as eleves",
+      [etab.organisation],
+    ),
+  );
+  assert.equal(avant.rows[0].classes, 0, "aucune classe creee par l analyse");
+  assert.equal(avant.rows[0].eleves, 0, "aucun compte cree par l analyse");
+
+  // Une ligne bloquante, et le lot n'est pas applicable en l'etat.
+  const bloquantes = await enTantQueServeur(db, () =>
+    db.query(
+      "select count(*)::int as n from study.import_rows where import_job_id = $1 and state = 'rejete'",
+      [job],
+    ),
+  );
+  assert.equal(bloquantes.rows[0].n, 1);
+
+  // Correction : le nom manquant est saisi, la ligne redevient valide.
+  await enTantQueServeur(db, () =>
+    db.query(
+      `update study.import_rows
+          set payload = payload || '{"nom":"Moreau"}'::jsonb,
+              state = 'valide', issue_detail = null, corrige = true
+        where import_job_id = $1 and state = 'rejete'`,
+      [job],
+    ),
+  );
+
+  const apres = await enTantQueServeur(db, () =>
+    db.query(
+      "select count(*)::int as n from study.import_rows where import_job_id = $1 and state = 'valide'",
+      [job],
+    ),
+  );
+  assert.equal(apres.rows[0].n, 2, "les deux lignes sont pretes");
+
+  // Et le lot est toujours en attente : c'est la validation qui l'applique.
+  const etat = await enTantQueServeur(db, () =>
+    db.query("select state::text as state from study.import_batches where id = $1", [lot]),
+  );
+  assert.equal(etat.rows[0].state, "analyse");
+});
+
+test("S02 — les fichiers et les lignes en attente de A restent invisibles a B", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  const a = await lycee(db, "SB");
+  const b = await lycee(db, "SC");
+
+  const { lot, job } = await deposer(db, a, "terminale-s2.csv", [
+    { nom: "Dupont", prenom: "Martin", classe: "Terminale S2", fichier: "terminale-s2.csv" },
+  ]);
+
+  // L'administrateur de A voit son propre depot.
+  const vuParA = await lirePourAdmin(
+    db, a.administrateur,
+    "select file_name from study.import_jobs where batch_id = $1", [lot],
+  );
+  assert.equal(vuParA.length, 1);
+  assert.equal(vuParA[0].file_name, "terminale-s2.csv");
+
+  // L'administrateur de B connait l'identifiant — c'est le scenario IDOR du
+  // §10 : il le pose directement dans la requete. La base ne rend rien.
+  const vuParB = await lirePourAdmin(
+    db, b.administrateur,
+    "select file_name from study.import_jobs where batch_id = $1", [lot],
+  );
+  assert.equal(vuParB.length, 0, "B ne lit pas le depot de A");
+
+  const lignesVuesParB = await lirePourAdmin(
+    db, b.administrateur,
+    "select payload from study.import_rows where import_job_id = $1", [job],
+  );
+  assert.equal(lignesVuesParB.length, 0, "B ne lit aucun nom d eleve de A");
+
+  const lotVuParB = await lirePourAdmin(
+    db, b.administrateur,
+    "select id from study.import_batches where id = $1", [lot],
+  );
+  assert.equal(lotVuParB.length, 0, "B ne lit pas le lot de A");
+
+  // Et il ne peut pas non plus le corriger a distance.
+  await enTantQue(db, b.administrateur, async () => {
+    const { rowCount } = await db.query(
+      "update study.import_rows set payload = '{}'::jsonb where import_job_id = $1", [job],
+    );
+    assert.equal(rowCount, 0, "aucune ligne de A n est modifiable par B");
+  });
 });
