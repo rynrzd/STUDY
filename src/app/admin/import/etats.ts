@@ -42,3 +42,22 @@ export interface EtatCreation {
 }
 
 export const ETAT_CREATION_INITIAL: EtatCreation = { etat: "vierge" };
+
+/** Le compte rendu de creation des professeurs (§6).
+ *
+ * `affectations` compte les triplets professeur–matière–classe réellement
+ * posés. Il est distinct du nombre de comptes : c'est précisément la
+ * distinction que le §6.2 demande de rendre visible.
+ */
+export interface EtatCreationProfesseurs {
+  readonly etat: "vierge" | "termine" | "erreur";
+  readonly message?: string;
+  readonly cree?: number;
+  readonly existant?: number;
+  readonly affectations?: number;
+  readonly erreurs?: number;
+  readonly acces?: readonly AccesCree[];
+  readonly echecs?: readonly { ligne: number; raison: string }[];
+}
+
+export const ETAT_CREATION_PROFS_INITIAL: EtatCreationProfesseurs = { etat: "vierge" };

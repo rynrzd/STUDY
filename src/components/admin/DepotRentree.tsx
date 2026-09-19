@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { deposerFichiers } from "@/app/admin/import/actions";
+import { deposerFichiers, deposerProfesseurs } from "@/app/admin/import/actions";
 import { ETAT_DEPOT_INITIAL, type EtatDepot } from "@/app/admin/import/etats";
 
 /**
@@ -17,9 +17,11 @@ import { ETAT_DEPOT_INITIAL, type EtatDepot } from "@/app/admin/import/etats";
  * d'en retirer un. Sans cela, se tromper d'un fichier oblige à tout
  * resélectionner.
  */
-export function DepotRentree() {
+export function DepotRentree({ cible }: { cible: "eleves" | "professeurs" }) {
+  const eleves = cible === "eleves";
+
   const [etat, deposer] = useActionState<EtatDepot, FormData>(
-    deposerFichiers,
+    eleves ? deposerFichiers : deposerProfesseurs,
     ETAT_DEPOT_INITIAL,
   );
 
@@ -72,17 +74,19 @@ export function DepotRentree() {
         }`}
       >
         <p className="m-0 text-[length:var(--text-tableau)] font-semibold">
-          Déposez vos fichiers de classes
+          {eleves ? "Déposez vos fichiers de classes" : "Déposez votre fichier de professeurs"}
         </p>
         <p className="m-0 mt-2 text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-faible)]">
-          Un fichier par classe, ou un seul fichier pour tout le lycée. Format
-          .xlsx ou .csv. Rien n&apos;est créé maintenant : vous verrez
-          d&apos;abord ce qui a été compris.
+          {eleves
+            ? "Un fichier par classe, ou un seul fichier pour tout le lycée. Format .xlsx ou .csv."
+            : "Nom, prénom, matière(s) et classe(s) par ligne. Format .xlsx ou .csv."}{" "}
+          Rien n&apos;est créé maintenant : vous verrez d&apos;abord ce qui a été
+          compris.
         </p>
 
         <input
           ref={champ}
-          id="fichiers"
+          id={`fichiers-${cible}`}
           name="fichiers"
           type="file"
           multiple

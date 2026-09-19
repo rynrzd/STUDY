@@ -677,3 +677,202 @@ test("S02 — les fichiers et les lignes en attente de A restent invisibles a B"
     assert.equal(rowCount, 0, "aucune ligne de A n est modifiable par B");
   });
 });
+
+/* ========================================================================== */
+/* §6 — professeurs et affectations                                           */
+/*                                                                            */
+/* Le piège que le cahier nomme explicitement : « professeur de maths » n'est */
+/* pas « accès à toutes les classes de maths ». Une affectation vaut pour un  */
+/* triplet, et pour lui seul.                                                 */
+/* ========================================================================== */
+
+/** Crée un professeur et pose ses affectations, comme le fait le BFF. */
+async function affecter(db, etab, prof, couples) {
+  return enTantQueServeur(db, async () => {
+    const profileId = randomUUID();
+    const { rows } = await db.query(
+      "select study.etab_creer_membre($1, $2, $3, $4, $5, $6, 'professeur', null, $7) as r",
+      [etab.administrateur, profileId, prof.prenom, prof.nom, prof.login, alias(), prof.email ?? null],
+    );
+
+    const identifiant =
+      rows[0].r === "cree"
+        ? profileId
+        : (
+            await db.query("select study.etab_profil_par_login($1, $2) as id", [
+              etab.administrateur,
+              prof.login,
+            ])
+          ).rows[0].id;
+
+    // Un compte cree par l import est « a activer » : tant que la personne ne
+    // s est pas connectee une premiere fois, elle ne voit rien. On refait donc
+    // ici ce que fait la premiere connexion, sans quoi le test mesurerait
+    // l activation et non le perimetre.
+    if (rows[0].r === "cree") {
+      await db.query("select study.auth_activer_compte($1, $2, $3)", [
+        identifiant, etab.organisation, empreinte(prof.login.slice(0, 20)),
+      ]);
+    }
+
+    const espaces = [];
+    for (const couple of couples) {
+      const { rows: espace } = await db.query(
+        "select study.lot_affecter_professeur($1, $2, $3, $4, $5) as id",
+        [etab.administrateur, etab.annee, identifiant, couple.matiere, couple.classe],
+      );
+      espaces.push(espace[0].id);
+    }
+
+    return { profileId: identifiant, resultat: rows[0].r, espaces };
+  });
+}
+
+test("P01 — un professeur affecte a 2DE1 et 2DE2 ne voit pas 2DE3", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  const etab = await lycee(db, "PA");
+
+  const claire = await affecter(db, etab, { prenom: "Claire", nom: "Dupont", login: "c.dupont" }, [
+    { matiere: "Mathematiques", classe: "2DE1" },
+    { matiere: "Mathematiques", classe: "2DE2" },
+  ]);
+
+  // Une autre professeure tient la meme matiere en 2DE3 : la matiere existe
+  // donc bien, et elle n ouvre rien a Claire.
+  await affecter(db, etab, { prenom: "Ines", nom: "Moreau", login: "i.moreau" }, [
+    { matiere: "Mathematiques", classe: "2DE3" },
+  ]);
+
+  const vus = await lirePour(
+    db,
+    claire.profileId,
+    `select c.label
+       from study.teaching_spaces e
+       join study.classes c on c.id = e.class_id
+      order by c.label`,
+  );
+
+  assert.deepEqual(
+    vus.map((l) => l.label).sort(),
+    ["2DE1", "2DE2"],
+    "2DE3 existe, et reste fermee",
+  );
+
+  // Et le cours de 2DE3 existe bien, vu du serveur.
+  const total = await enTantQueServeur(db, () =>
+    db.query("select count(*)::int as n from study.teaching_spaces where organization_id = $1", [
+      etab.organisation,
+    ]),
+  );
+  assert.equal(total.rows[0].n, 3, "les trois cours existent");
+});
+
+test("P02 — un professeur sur plusieurs matieres a un compte et N affectations", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  const etab = await lycee(db, "PB");
+
+  const premier = await affecter(db, etab, { prenom: "Claire", nom: "Dupont", login: "c.dupont" }, [
+    { matiere: "Mathematiques", classe: "2DE1" },
+    { matiere: "Mathematiques", classe: "2DE2" },
+  ]);
+
+  // Deuxieme passage du meme fichier, corrige : la physique s ajoute.
+  const second = await affecter(db, etab, { prenom: "Claire", nom: "Dupont", login: "c.dupont" }, [
+    { matiere: "Mathematiques", classe: "2DE1" },
+    { matiere: "Physique", classe: "1ERE S1" },
+  ]);
+
+  assert.equal(second.resultat, "existant", "le compte n est pas recree");
+  assert.equal(premier.profileId, second.profileId, "c est le meme profil");
+
+  const comptes = await enTantQueServeur(db, () =>
+    db.query(
+      "select count(*)::int as n from study.organization_memberships" +
+      " where organization_id = $1 and roles && array['professeur']::study.role_type[]",
+      [etab.organisation],
+    ),
+  );
+  assert.equal(comptes.rows[0].n, 1, "un seul compte professeur");
+
+  const affectations = await enTantQueServeur(db, () =>
+    db.query(
+      "select count(*)::int as n from study.teacher_assignments" +
+      " where organization_id = $1 and profile_id = $2 and ends_on is null",
+      [etab.organisation, premier.profileId],
+    ),
+  );
+  assert.equal(affectations.rows[0].n, 3, "trois affectations, sans doublon sur 2DE1");
+});
+
+test("P03 — professeurs et eleves se rejoignent sur une seule classe", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  const etab = await lycee(db, "PC");
+
+  // Les eleves arrivent avec une ecriture, les professeurs avec une autre.
+  // C est le cas reel : deux exports, deux logiciels.
+  await importer(db, etab, [
+    { prenom: "Martin", nom: "Dupont", login: "martin.dupont", classe: "2nde 1" },
+  ]);
+  const prof = await affecter(db, etab, { prenom: "Claire", nom: "Martin", login: "c.martinp" }, [
+    { matiere: "Mathematiques", classe: "Seconde 1" },
+  ]);
+
+  const classes = await enTantQueServeur(db, () =>
+    db.query("select label from study.classes where organization_id = $1", [etab.organisation]),
+  );
+  assert.equal(classes.rows.length, 1, "une seule classe, pas deux ecritures");
+
+  // Et l eleve est bien dans le cours de la professeure.
+  const eleves = await enTantQueServeur(db, () =>
+    db.query(
+      `select count(*)::int as n
+         from study.teacher_assignments a
+         join study.teaching_spaces e on e.id = a.teaching_space_id
+         join study.class_enrollments i on i.class_id = e.class_id and i.ends_on is null
+        where a.profile_id = $1`,
+      [prof.profileId],
+    ),
+  );
+  assert.equal(eleves.rows[0].n, 1, "la professeure a bien l eleve importe dans son cours");
+});
+
+test("P04 — l affectation ne traverse pas la frontiere entre deux lycees", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  const a = await lycee(db, "PD");
+  const b = await lycee(db, "PE");
+
+  const chezB = await affecter(db, b, { prenom: "Ines", nom: "Moreau", login: "i.moreau" }, [
+    { matiere: "Histoire", classe: "1ERE B" },
+  ]);
+
+  // L administrateur de A connait l identifiant du professeur de B et tente de
+  // l affecter chez lui : scenario IDOR du §10.
+  await enTantQueServeur(db, async () => {
+    const erreur = await doitEchouer(() =>
+      db.query("select study.lot_affecter_professeur($1, $2, $3, 'Histoire', '2DE1')", [
+        a.administrateur,
+        a.annee,
+        chezB.profileId,
+      ]),
+    );
+    assert.match(erreur.message, /profil non enseignant dans cet etablissement/i);
+  });
+
+  // Et rien n a ete laisse derriere : la classe creee au passage n a pas
+  // d affectation fantome.
+  const restes = await enTantQueServeur(db, () =>
+    db.query(
+      "select count(*)::int as n from study.teacher_assignments where organization_id = $1",
+      [a.organisation],
+    ),
+  );
+  assert.equal(restes.rows[0].n, 0);
+});

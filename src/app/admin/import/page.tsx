@@ -31,14 +31,40 @@ export default async function PageImport() {
         Import de rentrée
       </h1>
       <p className="m-0 mt-2 max-w-[70ch] text-[color:var(--color-encre-faible)]">
-        Déposez vos fichiers de classes. Vous verrez d&apos;abord ce qui a été
-        compris — classes détectées, colonnes reconnues, lignes à corriger — et
-        rien ne sera créé tant que vous n&apos;aurez pas validé.
+        Déposez vos fichiers d&apos;élèves, puis ceux de vos professeurs. Vous
+        verrez d&apos;abord ce qui a été compris — classes détectées, colonnes
+        reconnues, lignes à corriger — et rien ne sera créé tant que vous
+        n&apos;aurez pas validé.
       </p>
 
-      <div className="mt-8">
-        <DepotRentree />
-      </div>
+      <section aria-labelledby="titre-eleves" className="mt-10">
+        <h2
+          id="titre-eleves"
+          className="text-[length:var(--text-h3)] leading-[var(--text-h3--line-height)]"
+        >
+          Élèves
+        </h2>
+        <div className="mt-4">
+          <DepotRentree cible="eleves" />
+        </div>
+      </section>
+
+      <section aria-labelledby="titre-profs" className="mt-12">
+        <h2
+          id="titre-profs"
+          className="text-[length:var(--text-h3)] leading-[var(--text-h3--line-height)]"
+        >
+          Professeurs
+        </h2>
+        <p className="m-0 mt-2 max-w-[70ch] text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-faible)]">
+          Nom, prénom, matière et classes. Un professeur qui enseigne dans
+          plusieurs classes n&apos;aura qu&apos;un compte, avec une affectation
+          par classe.
+        </p>
+        <div className="mt-4">
+          <DepotRentree cible="professeurs" />
+        </div>
+      </section>
 
       {enCours.length > 0 ? (
         <section aria-labelledby="titre-en-cours" className="mt-12">
@@ -52,10 +78,13 @@ export default async function PageImport() {
             {enCours.map((lot) => (
               <li key={lot.id}>
                 <Link
-                  href={`/admin/import/${lot.id}`}
+                  href={adresseDuLot(lot)}
                   className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-champ)] border border-[color:var(--color-bordure)] px-4 py-3 text-[length:var(--text-tableau)] hover:border-[color:var(--color-accent)]"
                 >
-                  <span>Déposé le {dateLisible(lot.created_at)}</span>
+                  <span>
+                    {lot.kind === "enseignants" ? "Professeurs" : "Élèves"} · déposé le{" "}
+                    {dateLisible(lot.created_at)}
+                  </span>
                   <span className="text-[color:var(--color-encre-faible)]">
                     Reprendre la vérification
                   </span>
@@ -80,6 +109,7 @@ export default async function PageImport() {
               <thead className="bg-[color:var(--color-surface-douce)]">
                 <tr className="text-left">
                   <th scope="col" className="p-2.5 font-semibold">Date</th>
+                  <th scope="col" className="p-2.5 font-semibold">Type</th>
                   <th scope="col" className="p-2.5 font-semibold">Créés</th>
                   <th scope="col" className="p-2.5 font-semibold">Déjà présents</th>
                   <th scope="col" className="p-2.5 font-semibold">En erreur</th>
@@ -89,6 +119,9 @@ export default async function PageImport() {
                 {passes.map((lot) => (
                   <tr key={lot.id} className="border-t border-[color:var(--color-bordure)]">
                     <td className="p-2.5">{dateLisible(lot.applied_at ?? lot.created_at)}</td>
+                    <td className="p-2.5 text-[color:var(--color-encre-faible)]">
+                      {lot.kind === "enseignants" ? "Professeurs" : "Élèves"}
+                    </td>
                     <td className="p-2.5">{lot.rapport?.cree ?? 0}</td>
                     <td className="p-2.5 text-[color:var(--color-encre-faible)]">
                       {lot.rapport?.existant ?? 0}
@@ -105,6 +138,13 @@ export default async function PageImport() {
       ) : null}
     </div>
   );
+}
+
+/** Le lot d’élèves et celui de professeurs ne se relisent pas au même endroit. */
+function adresseDuLot(lot: { id: string; kind: string }): string {
+  return lot.kind === "enseignants"
+    ? `/admin/import/profs/${lot.id}`
+    : `/admin/import/${lot.id}`;
 }
 
 function dateLisible(valeur: string): string {

@@ -248,7 +248,10 @@ export interface Anomalie {
     | "email_invalide"
     | "doublon_fichier"
     | "homonyme"
-    | "mot_de_passe_dans_le_fichier";
+    | "mot_de_passe_dans_le_fichier"
+    | "matiere_manquante"
+    | "classes_manquantes"
+    | "affectation_ambigue";
   readonly gravite: GraviteAnomalie;
   readonly message: string;
 }
@@ -565,4 +568,322 @@ export function attribuerIdentifiants(
       occupes.add(login);
       return { ligne, login };
     });
+}
+
+/* -------------------------------------------------------------------------- */
+/* Professeurs et affectations — cahier V5, §6                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Une affectation : ce professeur, cette matière, cette classe.
+ *
+ * Le triplet est la seule forme exploitable. « Professeur de mathématiques »
+ * n'en est pas une : c'est une phrase, et elle ouvrirait toutes les classes de
+ * mathématiques du lycée à quelqu'un qui n'en enseigne que deux (§6.1).
+ */
+export interface Affectation {
+  readonly matiere: string;
+  readonly classe: string;
+}
+
+export interface LigneProfesseur {
+  readonly fichier: string;
+  readonly numero: number;
+  readonly nom: string;
+  readonly prenom: string;
+  readonly email: string | null;
+  readonly affectations: readonly Affectation[];
+  readonly anomalies: readonly Anomalie[];
+}
+
+export interface FichierProfesseurs {
+  readonly nom: string;
+  readonly octets: number;
+  readonly colonnes: readonly ColonneReconnue[];
+  readonly correspondance: Correspondance;
+  readonly lignes: readonly LigneProfesseur[];
+  readonly erreur: string | null;
+}
+
+/** Un professeur du plan : un compte, et toutes ses affectations réunies. */
+export interface ProfesseurPrevu {
+  readonly cle: string;
+  readonly nom: string;
+  readonly prenom: string;
+  readonly email: string | null;
+  readonly affectations: readonly Affectation[];
+  readonly lignes: readonly number[];
+  readonly anomalies: readonly Anomalie[];
+}
+
+export interface PlanProfesseurs {
+  readonly fichiers: readonly FichierProfesseurs[];
+  readonly professeurs: readonly ProfesseurPrevu[];
+  readonly compte: {
+    readonly fichiersLus: number;
+    readonly fichiersRejetes: number;
+    readonly lignesLues: number;
+    readonly professeurs: number;
+    readonly affectations: number;
+    readonly avertissements: number;
+    readonly bloquantes: number;
+  };
+  readonly blocages: readonly string[];
+}
+
+/**
+ * Découpe une cellule qui contient plusieurs valeurs.
+ *
+ * Les exports d'emploi du temps écrivent « 2DE1, 2DE2 », « 2DE1;2DE2 » ou
+ * « 2DE1 / 2DE2 » selon le logiciel. Les trois veulent dire la même chose.
+ */
+export function decouperCellule(valeur: string): string[] {
+  return valeur
+    .split(/[,;/|]|\s{2,}/)
+    .map((morceau) => morceau.trim())
+    .filter((morceau) => morceau !== "");
+}
+
+/**
+ * Analyse un fichier de professeurs.
+ *
+ * Une ligne peut valoir plusieurs affectations : deux matières et trois
+ * classes en font six. Quand les deux cellules sont multiples, le croisement
+ * est **proposé et signalé**, jamais appliqué en silence — « Maths, Physique »
+ * sur « 2DE1, 2DE2 » peut vouloir dire quatre affectations, ou deux. Seul
+ * l'établissement le sait.
+ */
+export function analyserFichierProfesseurs(options: {
+  nom: string;
+  octets: number;
+  tableau: Tableau;
+  correspondance?: Correspondance;
+}): FichierProfesseurs {
+  const colonnes = reconnaitreColonnes(options.tableau, [
+    "nom",
+    "prenom",
+    "email",
+    "matieres",
+    "classes",
+  ]);
+  const correspondance = options.correspondance ?? correspondanceDepuis(colonnes);
+
+  const interdite = colonnes.find((colonne) =>
+    INTERDITS.some((mot) => aplatir(colonne.entete).includes(mot)),
+  );
+
+  const lignes: LigneProfesseur[] = [];
+
+  options.tableau.lignes.forEach((brute, index) => {
+    const numero = index + 2;
+    const cellule = (champ: Champ) => {
+      const colonne = correspondance[champ];
+      return colonne === undefined ? "" : (brute[colonne] ?? "").trim();
+    };
+
+    const nom = cellule("nom");
+    const prenom = cellule("prenom");
+    const email = cellule("email");
+    const brutMatieres = cellule("matieres");
+    const brutClasses = cellule("classes");
+
+    if (nom === "" && prenom === "" && email === "" && brutMatieres === "" && brutClasses === "") {
+      return;
+    }
+
+    const matieres = decouperCellule(brutMatieres);
+    const classes = decouperCellule(brutClasses);
+    const anomalies: Anomalie[] = [];
+
+    if (interdite !== undefined) {
+      anomalies.push({
+        code: "mot_de_passe_dans_le_fichier",
+        gravite: "bloquante",
+        message: `La colonne « ${interdite.entete} » ressemble à un mot de passe. AvecStudy n'en accepte aucun dans un fichier.`,
+      });
+    }
+    if (nom === "") {
+      anomalies.push({ code: "nom_manquant", gravite: "bloquante", message: "Nom absent." });
+    }
+    if (prenom === "") {
+      anomalies.push({ code: "prenom_manquant", gravite: "bloquante", message: "Prénom absent." });
+    }
+    if (matieres.length === 0) {
+      anomalies.push({
+        code: "matiere_manquante",
+        gravite: "bloquante",
+        message: "Aucune matière pour cette ligne.",
+      });
+    }
+    if (classes.length === 0) {
+      anomalies.push({
+        code: "classes_manquantes",
+        gravite: "bloquante",
+        message: "Aucune classe pour cette ligne.",
+      });
+    }
+    if (matieres.length > 1 && classes.length > 1) {
+      anomalies.push({
+        code: "affectation_ambigue",
+        gravite: "avertissement",
+        message:
+          `${matieres.length} matières et ${classes.length} classes sur la même ligne : ` +
+          `${matieres.length * classes.length} affectations sont proposées. ` +
+          "Retirez celles qui n'ont pas lieu d'être.",
+      });
+    }
+    if (email !== "" && !EMAIL.test(email)) {
+      anomalies.push({
+        code: "email_invalide",
+        gravite: "avertissement",
+        message: `« ${email} » n'est pas une adresse valide : elle sera ignorée.`,
+      });
+    }
+
+    const affectations: Affectation[] = [];
+    for (const matiere of matieres) {
+      for (const classe of classes) {
+        affectations.push({ matiere, classe });
+      }
+    }
+
+    lignes.push({
+      fichier: options.nom,
+      numero,
+      nom,
+      prenom,
+      email: email !== "" && EMAIL.test(email) ? email : null,
+      affectations,
+      anomalies,
+    });
+  });
+
+  return { nom: options.nom, octets: options.octets, colonnes, correspondance, lignes, erreur: null };
+}
+
+/** Un fichier de professeurs illisible : rejeté seul (§5.1). */
+export function fichierProfesseursRejete(
+  nom: string,
+  octets: number,
+  erreur: string,
+): FichierProfesseurs {
+  return { nom, octets, colonnes: [], correspondance: {}, lignes: [], erreur };
+}
+
+/**
+ * Assemble le plan des professeurs.
+ *
+ * Le rapprochement se fait sur l'adresse professionnelle quand elle existe,
+ * sinon sur le nom et le prénom. C'est ce qui réalise le §6.2 : un professeur
+ * réparti sur cinq lignes du fichier donne **un** compte et cinq jeux
+ * d'affectations, pas cinq comptes.
+ *
+ * Deux affectations identiques ne comptent qu'une fois : réimporter un fichier
+ * corrigé ne doit pas gonfler les chiffres.
+ */
+export function construirePlanProfesseurs(
+  fichiers: readonly FichierProfesseurs[],
+): PlanProfesseurs {
+  const lignes = fichiers.flatMap((fichier) => fichier.lignes);
+
+  const parPersonne = new Map<
+    string,
+    {
+      nom: string;
+      prenom: string;
+      email: string | null;
+      affectations: Map<string, Affectation>;
+      lignes: number[];
+      anomalies: Anomalie[];
+    }
+  >();
+
+  for (const ligne of lignes) {
+    const cle =
+      ligne.email !== null
+        ? `email:${ligne.email.toLowerCase()}`
+        : `nom:${aplatir(ligne.nom)}|${aplatir(ligne.prenom)}`;
+
+    let entree = parPersonne.get(cle);
+    if (entree === undefined) {
+      entree = {
+        nom: ligne.nom,
+        prenom: ligne.prenom,
+        email: ligne.email,
+        affectations: new Map(),
+        lignes: [],
+        anomalies: [],
+      };
+      parPersonne.set(cle, entree);
+    }
+
+    entree.lignes.push(ligne.numero);
+    entree.anomalies.push(...ligne.anomalies);
+    for (const affectation of ligne.affectations) {
+      entree.affectations.set(
+        `${aplatir(affectation.matiere)}|${classeNormalisee(affectation.classe)}`,
+        affectation,
+      );
+    }
+  }
+
+  const professeurs: ProfesseurPrevu[] = [...parPersonne.entries()].map(([cle, entree]) => ({
+    cle,
+    nom: entree.nom,
+    prenom: entree.prenom,
+    email: entree.email,
+    affectations: [...entree.affectations.values()],
+    lignes: entree.lignes,
+    anomalies: entree.anomalies,
+  }));
+
+  const bloquantes = lignes.filter((ligne) =>
+    ligne.anomalies.some((anomalie) => anomalie.gravite === "bloquante"),
+  ).length;
+  const avertissements = lignes.filter(
+    (ligne) =>
+      !ligne.anomalies.some((anomalie) => anomalie.gravite === "bloquante") &&
+      ligne.anomalies.length > 0,
+  ).length;
+
+  const retenus = professeurs.filter(
+    (professeur) => !professeur.anomalies.some((anomalie) => anomalie.gravite === "bloquante"),
+  );
+
+  const blocages: string[] = [];
+  for (const fichier of fichiers) {
+    if (fichier.erreur !== null) continue;
+    if (fichier.correspondance.nom === undefined || fichier.correspondance.prenom === undefined) {
+      blocages.push(`${fichier.nom} : le nom ou le prénom n'a pas été reconnu.`);
+    }
+    if (fichier.correspondance.matieres === undefined) {
+      blocages.push(`${fichier.nom} : la colonne des matières n'a pas été reconnue.`);
+    }
+    if (fichier.correspondance.classes === undefined) {
+      blocages.push(`${fichier.nom} : la colonne des classes n'a pas été reconnue.`);
+    }
+  }
+  if (bloquantes > 0) {
+    blocages.push(
+      `${bloquantes} ligne${bloquantes > 1 ? "s" : ""} à corriger avant de créer les comptes.`,
+    );
+  }
+  if (lignes.length === 0) {
+    blocages.push("Aucun professeur n'a été lu.");
+  }
+
+  return {
+    fichiers,
+    professeurs,
+    compte: {
+      fichiersLus: fichiers.filter((fichier) => fichier.erreur === null).length,
+      fichiersRejetes: fichiers.filter((fichier) => fichier.erreur !== null).length,
+      lignesLues: lignes.length,
+      professeurs: retenus.length,
+      affectations: retenus.reduce((total, prof) => total + prof.affectations.length, 0),
+      avertissements,
+      bloquantes,
+    },
+    blocages,
+  };
 }

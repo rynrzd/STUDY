@@ -2,12 +2,16 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   analyserFichier,
+  analyserFichierProfesseurs,
   attribuerIdentifiants,
   classeDepuisNomDeFichier,
   classeNormalisee,
   construirePlan,
+  construirePlanProfesseurs,
   correspondanceDepuis,
+  decouperCellule,
   detecterClasse,
+  fichierProfesseursRejete,
   fichierRejete,
   reconnaitreColonnes,
 } from "../../src/lib/assistant-rentree.ts";
@@ -345,4 +349,182 @@ test("§5.8 — reimporter le meme fichier ne produit aucun identifiant nouveau"
     [...dejaEnBase].sort(),
     "les memes personnes doivent retomber sur les memes identifiants",
   );
+});
+
+/* ----------------------------------- §6 Professeurs et affectations ------ */
+
+test("§6.1 — une ligne se lit en affectations, pas en phrase", () => {
+  const t = tableau(
+    ["Nom", "Prénom", "Email", "Matière", "Classes"],
+    [["Dupont", "Claire", "c.dupont@lycee.fr", "Mathématiques", "2DE1, 2DE2"]],
+  );
+
+  const fichier = analyserFichierProfesseurs({ nom: "profs.xlsx", octets: 900, tableau: t });
+  const ligne = fichier.lignes[0];
+
+  assert.equal(fichier.lignes.length, 1);
+  assert.deepEqual(ligne?.affectations, [
+    { matiere: "Mathématiques", classe: "2DE1" },
+    { matiere: "Mathématiques", classe: "2DE2" },
+  ]);
+  assert.equal(
+    ligne?.anomalies.length,
+    0,
+    "une matiere et deux classes ne sont pas ambigus",
+  );
+});
+
+test("§6.1 — les trois separateurs des exports d emploi du temps se valent", () => {
+  assert.deepEqual(decouperCellule("2DE1, 2DE2"), ["2DE1", "2DE2"]);
+  assert.deepEqual(decouperCellule("2DE1;2DE2"), ["2DE1", "2DE2"]);
+  assert.deepEqual(decouperCellule("2DE1 / 2DE2"), ["2DE1", "2DE2"]);
+  assert.deepEqual(decouperCellule("  2DE1  "), ["2DE1"]);
+  assert.deepEqual(decouperCellule(""), []);
+});
+
+test("§6.2 — un professeur sur plusieurs lignes donne un compte et N affectations", () => {
+  const t = tableau(
+    ["Nom", "Prénom", "Email", "Matière", "Classes"],
+    [
+      ["Dupont", "Claire", "c.dupont@lycee.fr", "Mathématiques", "2DE1"],
+      ["Dupont", "Claire", "c.dupont@lycee.fr", "Mathématiques", "2DE2"],
+      ["Dupont", "Claire", "c.dupont@lycee.fr", "Physique", "1ERE S1"],
+      ["Moreau", "Ines", "i.moreau@lycee.fr", "Histoire", "2DE1"],
+    ],
+  );
+
+  const plan = construirePlanProfesseurs([
+    analyserFichierProfesseurs({ nom: "profs.xlsx", octets: 900, tableau: t }),
+  ]);
+
+  assert.equal(plan.compte.professeurs, 2, "deux personnes, pas quatre comptes");
+  assert.equal(plan.compte.affectations, 4);
+
+  const claire = plan.professeurs.find((p) => p.nom === "Dupont");
+  assert.equal(claire?.affectations.length, 3);
+  assert.deepEqual(claire?.lignes, [2, 3, 4]);
+});
+
+test("§6.2 — la meme affectation ecrite deux fois ne compte qu une", () => {
+  const t = tableau(
+    ["Nom", "Prénom", "Matière", "Classes"],
+    [
+      ["Dupont", "Claire", "Mathématiques", "2nde 1"],
+      ["Dupont", "Claire", "Mathématiques", "2DE1"],
+    ],
+  );
+
+  const plan = construirePlanProfesseurs([
+    analyserFichierProfesseurs({ nom: "profs.csv", octets: 300, tableau: t }),
+  ]);
+
+  // « 2nde 1 » et « 2DE1 » designent la meme classe : une seule affectation.
+  assert.equal(plan.compte.professeurs, 1);
+  assert.equal(plan.compte.affectations, 1);
+});
+
+test("§6.2 — deux matieres sur deux classes sont proposees, et signalees", () => {
+  const t = tableau(
+    ["Nom", "Prénom", "Matière", "Classes"],
+    [["Dupont", "Claire", "Maths, Physique", "2DE1, 2DE2"]],
+  );
+
+  const fichier = analyserFichierProfesseurs({ nom: "profs.csv", octets: 300, tableau: t });
+  const ligne = fichier.lignes[0];
+
+  assert.equal(ligne?.affectations.length, 4, "le croisement est propose");
+  const signal = ligne?.anomalies.find((a) => a.code === "affectation_ambigue");
+  assert.ok(signal, "le croisement est signale");
+  assert.equal(signal?.gravite, "avertissement", "propose, donc pas bloquant");
+});
+
+test("§6.1 — une ligne sans matiere ou sans classe bloque", () => {
+  const t = tableau(
+    ["Nom", "Prénom", "Matière", "Classes"],
+    [
+      ["Dupont", "Claire", "", "2DE1"],
+      ["Moreau", "Ines", "Histoire", ""],
+      ["", "Sans", "Histoire", "2DE1"],
+    ],
+  );
+
+  const plan = construirePlanProfesseurs([
+    analyserFichierProfesseurs({ nom: "profs.csv", octets: 300, tableau: t }),
+  ]);
+
+  assert.equal(plan.compte.lignesLues, 3);
+  assert.equal(plan.compte.bloquantes, 3);
+  assert.equal(plan.compte.professeurs, 0, "aucun compte n est propose");
+  assert.ok(plan.blocages.some((b) => b.includes("3 lignes")));
+});
+
+test("§6.1 — une colonne obligatoire non reconnue bloque le fichier entier", () => {
+  const t = tableau(
+    ["Nom", "Prénom", "Truc"],
+    [["Dupont", "Claire", "Maths 2DE1"]],
+  );
+
+  const plan = construirePlanProfesseurs([
+    analyserFichierProfesseurs({ nom: "profs.csv", octets: 300, tableau: t }),
+  ]);
+
+  assert.ok(
+    plan.blocages.some((b) => b.includes("matières")),
+    "la colonne des matieres manquante est dite",
+  );
+  assert.ok(
+    plan.blocages.some((b) => b.includes("classes")),
+    "la colonne des classes manquante est dite",
+  );
+});
+
+test("§11 — un mot de passe dans un fichier de professeurs bloque aussi", () => {
+  const t = tableau(
+    ["Nom", "Prénom", "Matière", "Classes", "Mot de passe"],
+    [["Dupont", "Claire", "Maths", "2DE1", "azerty"]],
+  );
+
+  const fichier = analyserFichierProfesseurs({ nom: "profs.csv", octets: 300, tableau: t });
+  const signal = fichier.lignes[0]?.anomalies.find(
+    (a) => a.code === "mot_de_passe_dans_le_fichier",
+  );
+
+  assert.ok(signal);
+  assert.equal(signal?.gravite, "bloquante");
+});
+
+test("§6.2 — sans email, le rapprochement se fait sur le nom et le prenom", () => {
+  const t = tableau(
+    ["Nom", "Prénom", "Matière", "Classes"],
+    [
+      ["DUPONT", "Claire", "Maths", "2DE1"],
+      ["Dupont", "claire", "Physique", "2DE2"],
+      ["Dupont", "Claude", "Maths", "2DE3"],
+    ],
+  );
+
+  const plan = construirePlanProfesseurs([
+    analyserFichierProfesseurs({ nom: "profs.csv", octets: 300, tableau: t }),
+  ]);
+
+  // Claire ecrite de deux facons est une seule personne ; Claude en est une
+  // autre. La casse ne cree pas un second compte, le prenom si.
+  assert.equal(plan.compte.professeurs, 2);
+  assert.equal(plan.compte.affectations, 3);
+});
+
+test("§6.1 — un fichier illisible est rejete seul", () => {
+  const t = tableau(
+    ["Nom", "Prénom", "Matière", "Classes"],
+    [["Dupont", "Claire", "Maths", "2DE1"]],
+  );
+
+  const plan = construirePlanProfesseurs([
+    fichierProfesseursRejete("vieux.doc", 12, "Format non pris en charge."),
+    analyserFichierProfesseurs({ nom: "profs.csv", octets: 300, tableau: t }),
+  ]);
+
+  assert.equal(plan.compte.fichiersRejetes, 1);
+  assert.equal(plan.compte.fichiersLus, 1);
+  assert.equal(plan.compte.professeurs, 1, "le fichier lisible a ete traite");
 });
