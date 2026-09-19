@@ -4,6 +4,8 @@ import { TitreEspace, Vide } from "@/components/app/Cadre";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { echeanceLisible, seancesDuJour, trierDevoirs } from "@/lib/echeances";
 import { coursDeLEleve, devoirsDeLEleve, seancesPubliees } from "@/lib/espace-eleve";
+import { CaseFaite } from "@/components/app/CaseFaite";
+import { classeActive, nouveautes, travauxFaits } from "@/lib/parcours-eleve";
 
 /**
  * Accueil de l'élève — cahier V2, §7.1.
@@ -22,10 +24,13 @@ export default async function PageEleve() {
   const jeton = await jetonAccesDe(personne);
   if (jeton === null) redirect("/connexion");
 
-  const [cours, seances, devoirs] = await Promise.all([
+  const [cours, seances, devoirs, classe, faits, depuis] = await Promise.all([
     coursDeLEleve(jeton),
     seancesPubliees(jeton, { limite: 40 }),
     devoirsDeLEleve(jeton),
+    classeActive(jeton),
+    travauxFaits(jeton),
+    nouveautes(jeton),
   ]);
 
   const libelles = new Map(cours.map((c) => [c.id, c.libelle] as const));
@@ -49,7 +54,10 @@ export default async function PageEleve() {
 
   return (
     <>
-      <TitreEspace titre={`Bonjour ${personne.prenom}`} sousTitre={personne.organisation} />
+      <TitreEspace
+        titre={`Bonjour ${personne.prenom}`}
+        sousTitre={classe === null ? personne.organisation : `${classe} · ${personne.organisation}`}
+      />
 
       <section className="mt-9">
         <h2 className="text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
@@ -58,8 +66,8 @@ export default async function PageEleve() {
 
         {duJour.length === 0 ? (
           <p className="m-0 mt-3 max-w-[var(--spacing-lecture)] text-[color:var(--color-encre-faible)]">
-            Aucune séance n&apos;est datée d&apos;aujourd&apos;hui. Vos cours
-            récents restent accessibles dans « Mes cours ».
+            Rien de nouveau aujourd&apos;hui. Vos cours récents restent
+            accessibles dans « Mes cours ».
           </p>
         ) : (
           <ul className="m-0 mt-4 grid list-none gap-3 p-0 sm:grid-cols-2">
@@ -84,6 +92,40 @@ export default async function PageEleve() {
         )}
       </section>
 
+      {depuis.length > 0 ? (
+        <section aria-labelledby="titre-depuis" className="mt-11">
+          <h2
+            id="titre-depuis"
+            className="text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]"
+          >
+            Depuis ta dernière visite
+          </h2>
+          <ul className="m-0 mt-3 list-none p-0">
+            {depuis.map((nouveaute) => (
+              <li key={`${nouveaute.genre}-${nouveaute.seance}-${nouveaute.survenuLe}`}>
+                <Link
+                  href={
+                    nouveaute.seance === null
+                      ? "/eleve/cours"
+                      : `/eleve/cours/${nouveaute.seance}`
+                  }
+                  className="flex min-h-[var(--spacing-cible)] flex-wrap items-center justify-between gap-3 border-b border-[color:var(--color-bordure)] px-1 py-3 no-underline transition-colors hover:bg-[color:var(--color-survol)]"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium text-[color:var(--color-encre)]">
+                      {nouveaute.titre}
+                    </span>
+                    <span className="mt-0.5 block text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
+                      {GENRE[nouveaute.genre]} · {nouveaute.contexte}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <div className="mt-11 grid gap-11 lg:grid-cols-2 lg:items-start">
         <section>
           <div className="flex items-baseline justify-between gap-3">
@@ -107,27 +149,38 @@ export default async function PageEleve() {
           ) : (
             <ul className="m-0 mt-3 list-none p-0">
               {aVenir.slice(0, 6).map((devoir) => (
-                <li key={devoir.id}>
+                <li
+                  key={devoir.id}
+                  className="flex min-h-[var(--spacing-cible)] items-center gap-3 border-b border-[color:var(--color-bordure)] py-3"
+                >
+                  {/* Le lien et la case sont voisins, pas imbriques : une case a
+                      cocher dans un lien se declenche au mauvais endroit, et
+                      ouvre le devoir quand on voulait juste le barrer. */}
                   <Link
                     href={
                       devoir.lesson_id === null
                         ? "/eleve/devoirs"
                         : `/eleve/cours/${devoir.lesson_id}`
                     }
-                    className="flex min-h-[var(--spacing-cible)] flex-wrap items-center justify-between gap-3 border-b border-[color:var(--color-bordure)] px-1 py-3 no-underline transition-colors hover:bg-[color:var(--color-survol)]"
+                    className="min-w-0 flex-1 px-1 no-underline"
                   >
-                    <span className="min-w-0">
-                      <span className="block truncate font-medium text-[color:var(--color-encre)]">
-                        {devoir.title}
-                      </span>
-                      <span className="mt-0.5 block text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
-                        {libelles.get(devoir.teaching_space_id) ?? "Cours"}
-                      </span>
+                    <span
+                      className={`block truncate font-medium text-[color:var(--color-encre)] ${
+                        faits.has(devoir.id) ? "line-through opacity-60" : ""
+                      }`}
+                    >
+                      {devoir.title}
                     </span>
-                    <span className="text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
+                    <span className="mt-0.5 block text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
+                      {libelles.get(devoir.teaching_space_id) ?? "Cours"} ·{" "}
                       {echeanceLisible(devoir.due_at)}
                     </span>
                   </Link>
+                  <CaseFaite
+                    devoir={devoir.id}
+                    fait={faits.has(devoir.id)}
+                    libelle={devoir.title}
+                  />
                 </li>
               ))}
             </ul>
@@ -177,3 +230,18 @@ export default async function PageEleve() {
     </>
   );
 }
+
+/**
+ * Ce que chaque nouveauté est, dit en clair.
+ *
+ * Le §3.4 limite le résumé à ce qui est réellement arrivé : une séance
+ * publiée, un corrigé ouvert, un devoir donné, une réponse à sa question.
+ * Aucune autre catégorie n existe, et surtout pas « activité » — un mot qui
+ * ne dit rien et qui laisserait passer n importe quoi.
+ */
+const GENRE: Record<string, string> = {
+  seance: "Nouveau cours",
+  correction: "Corrigé disponible",
+  devoir: "Nouveau devoir",
+  reponse: "Réponse à votre question",
+};

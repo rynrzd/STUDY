@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { Entraide } from "@/components/app/Entraide";
 import { VueSeance } from "@/components/seance/VueSeance";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
+import { filsDeLaSeance } from "@/lib/parcours-eleve";
 import { seanceComplete } from "@/lib/studio";
 
 export const metadata: Metadata = { title: "Séance" };
@@ -38,6 +40,8 @@ export default async function PageSeanceEleve({
   // passer : la vérification est ici en plus, pas à la place.
   if (complet === null || complet.seance.state !== "publiee") notFound();
 
+  const fils = await filsDeLaSeance(jeton, id);
+
   return (
     <>
       <p className="m-0">
@@ -60,6 +64,8 @@ export default async function PageSeanceEleve({
           libelleCours={complet.cours?.libelle ?? "Cours"}
           chapitre={complet.chapitre?.label ?? null}
         />
+
+        <Entraide seance={id} fils={fils} moi={personne.profileId} />
       </div>
     </>
   );

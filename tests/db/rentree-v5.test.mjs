@@ -876,3 +876,194 @@ test("P04 — l affectation ne traverse pas la frontiere entre deux lycees", asy
   );
   assert.equal(restes.rows[0].n, 0);
 });
+
+/* ========================================================================== */
+/* §3.4 — « Depuis ta dernière visite »                                       */
+/*                                                                            */
+/* Le critère du cahier : trois événements dont un hors classe, et seuls les  */
+/* deux autorisés apparaissent. Le refus vient de RLS, pas d'un filtre écrit  */
+/* dans la requête — `eleve_nouveautes` est `security invoker` précisément    */
+/* pour cela.                                                                 */
+/* ========================================================================== */
+
+test("V01 — la borne ne bouge pas quand on recharge la page", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { ACTEURS } = await import("./harness.mjs");
+
+  // Premiere venue : il n y a pas de « depuis ».
+  const premiere = await enTantQue(db, ACTEURS.eleveA1Rayan, async () => {
+    const { rows } = await db.query("select study.eleve_visite() as borne");
+    return rows[0].borne;
+  });
+  assert.equal(premiere, null, "la premiere visite ne resume rien");
+
+  // On fait comme si la visite datait d hier.
+  await enTantQueServeur(db, () =>
+    db.query(
+      "update study.visites set derniere = now() - interval '1 day' where profile_id = $1",
+      [ACTEURS.eleveA1Rayan],
+    ),
+  );
+
+  const retour = await enTantQue(db, ACTEURS.eleveA1Rayan, async () => {
+    const { rows } = await db.query("select study.eleve_visite() as borne");
+    return rows[0].borne;
+  });
+  assert.ok(retour instanceof Date, "au retour, la borne est celle d hier");
+
+  // Rechargement immediat : la borne ne doit pas devenir « maintenant », sinon
+  // le bloc se viderait sous les yeux de l eleve.
+  const rechargement = await enTantQue(db, ACTEURS.eleveA1Rayan, async () => {
+    const { rows } = await db.query("select study.eleve_visite() as borne");
+    return rows[0].borne;
+  });
+  assert.equal(
+    rechargement.getTime(),
+    retour.getTime(),
+    "recharger ne consomme pas les nouveautes",
+  );
+});
+
+test("V02 — trois evenements, un hors classe : deux apparaissent", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { ACTEURS, OBJETS } = await import("./harness.mjs");
+
+  const borne = "2000-01-01T00:00:00Z";
+
+  // 1. Une seance publiee dans sa classe. 2. Un devoir publie dans sa classe.
+  // 3. Une seance publiee au lycee B. Les deux premieres sont deja dans le jeu
+  // de recette ; on s assure que la troisieme existe bien cote serveur.
+  const chezB = await enTantQueServeur(db, () =>
+    db.query(
+      "select count(*)::int as n from study.lessons where id = $1 and state = 'publiee'",
+      [OBJETS.seanceB1],
+    ),
+  );
+  assert.equal(chezB.rows[0].n, 1, "la seance du lycee B existe et est publiee");
+
+  const vues = await lirePour(
+    db,
+    ACTEURS.eleveA1Rayan,
+    "select genre, titre, seance from study.eleve_nouveautes($1::timestamptz, 50)",
+    [borne],
+  );
+
+  assert.ok(vues.length > 0, "l eleve a bien des nouveautes");
+  assert.equal(
+    vues.some((v) => v.seance === OBJETS.seanceB1),
+    false,
+    "la seance du lycee B n apparait pas",
+  );
+  assert.ok(
+    vues.some((v) => v.genre === "seance" && v.seance === OBJETS.seanceA1),
+    "la seance de sa classe apparait",
+  );
+
+  // L eleve du lycee B, lui, voit la sienne et pas celle de A.
+  const cotesB = await lirePour(
+    db,
+    ACTEURS.eleveB,
+    "select seance from study.eleve_nouveautes($1::timestamptz, 50)",
+    [borne],
+  );
+  assert.equal(
+    cotesB.some((v) => v.seance === OBJETS.seanceA1),
+    false,
+    "l eleve de B ne voit pas la seance de A",
+  );
+});
+
+test("V03 — un brouillon ne fait pas de bruit", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { ACTEURS, OBJETS } = await import("./harness.mjs");
+
+  const vues = await lirePour(
+    db,
+    ACTEURS.eleveA1Rayan,
+    "select seance from study.eleve_nouveautes('2000-01-01T00:00:00Z'::timestamptz, 50)",
+  );
+
+  assert.equal(
+    vues.some((v) => v.seance === OBJETS.seanceA1Brouillon),
+    false,
+    "le brouillon de sa propre classe n apparait pas",
+  );
+});
+
+test("V04 — une reponse a sa question remonte, celle d un autre non", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { ACTEURS, OBJETS } = await import("./harness.mjs");
+
+  // Rayan pose une question, Lina y repond.
+  const fil = await enTantQue(db, ACTEURS.eleveA1Rayan, async () => {
+    const { rows } = await db.query(
+      "insert into study.fils_entraide (organization_id, teaching_space_id, lesson_id, auteur_id, question)" +
+        " values ($1, $2, $3, $4, 'Je ne comprends pas la question 3.') returning id",
+      [ACTEURS.lyceeA, OBJETS.espaceMathsA1, OBJETS.seanceA1, ACTEURS.eleveA1Rayan],
+    );
+    return rows[0].id;
+  });
+
+  await enTantQue(db, ACTEURS.eleveA1Lina, () =>
+    db.query(
+      "insert into study.reponses_entraide (organization_id, fil_id, auteur_id, texte)" +
+        " values ($1, $2, $3, 'Il faut appliquer la formule du cours.')",
+      [ACTEURS.lyceeA, fil, ACTEURS.eleveA1Lina],
+    ),
+  );
+
+  const pourRayan = await lirePour(
+    db,
+    ACTEURS.eleveA1Rayan,
+    "select genre from study.eleve_nouveautes('2000-01-01T00:00:00Z'::timestamptz, 50)",
+  );
+  assert.ok(
+    pourRayan.some((v) => v.genre === "reponse"),
+    "l auteur de la question est prevenu",
+  );
+
+  const pourLina = await lirePour(
+    db,
+    ACTEURS.eleveA1Lina,
+    "select genre from study.eleve_nouveautes('2000-01-01T00:00:00Z'::timestamptz, 50)",
+  );
+  assert.equal(
+    pourLina.some((v) => v.genre === "reponse"),
+    false,
+    "sa propre reponse n est pas une nouveaute pour elle",
+  );
+});
+
+test("V05 — la borne d un eleve ne se lit ni ne s ecrit depuis un autre compte", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { ACTEURS } = await import("./harness.mjs");
+
+  await enTantQue(db, ACTEURS.eleveA1Rayan, () => db.query("select study.eleve_visite()"));
+
+  const parLina = await lirePour(
+    db,
+    ACTEURS.eleveA1Lina,
+    "select profile_id from study.visites where profile_id = $1",
+    [ACTEURS.eleveA1Rayan],
+  );
+  assert.equal(parLina.length, 0, "la date de passage de Rayan ne se lit pas");
+
+  // La fonction ne prend aucun identifiant : meme en la rappelant, Lina
+  // n ecrit que sa propre ligne.
+  await enTantQue(db, ACTEURS.eleveA1Lina, () => db.query("select study.eleve_visite()"));
+
+  const lignes = await enTantQueServeur(db, () =>
+    db.query("select profile_id from study.visites order by profile_id"),
+  );
+  assert.equal(lignes.rows.length, 2, "deux lignes distinctes, une par personne");
+});
