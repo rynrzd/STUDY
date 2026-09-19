@@ -1,0 +1,330 @@
+
+===== PAGE 1 =====
+AvecStudy V5 - Cahier des charges ultra détaillé
+AVECSTUDY · SPÉCIFICATION PRODUIT ET RECETTE
+AvecStudy V5 - Cahier des charges ultra
+détaillé
+Document d’exécution destiné à Claude : écrans, clics, états, règles, interdictions, sécurité,
+tests et preuves attendues.
+Règle n°1 - ne pas mentir sur l’état du produit
+Claude ne doit jamais écrire « tout fonctionne », « aucun bug », « sécurisé » ou « terminé » sans avoir exécuté les vérifications
+correspondantes. Un point non testé doit être marqué NON VÉRIFIÉ avec la raison. Un build réussi ne prouve pas que les
+parcours fonctionnent.
+Règle n°2 - conserver ce qui fonctionne
+Avant modification : inventaire des routes, composants, tables, policies, rôles et parcours existants. Ne pas supprimer/recréer
+une fonction saine juste pour simplifier le développement. Toute migration destructive doit être explicitée et réversible.
+
+===== PAGE 2 =====
+AvecStudy V5 - Cahier des charges ultra détaillé
+0. Référence visuelle globale
+
+===== PAGE 3 =====
+AvecStudy V5 - Cahier des charges ultra détaillé
+
+===== PAGE 4 =====
+AvecStudy V5 - Cahier des charges ultra détaillé
+Figure 1 - Direction générale attendue. Cette planche sert de référence de composition, pas de preuve que les fonctions représentées existent
+déjà.
+1. Avant de coder : audit obligatoire
+ Lister toutes les routes publiques, élève, professeur, admin lycée et super-admin.
+ Lister tables/relations Supabase, buckets Storage, fonctions serveur, middleware, policies RLS et rôles.
+ Identifier ce qui existe déjà : conserver / corriger / remplacer / créer. Le rapport initial doit utiliser ces quatre statuts.
+ Exécuter typecheck, lint, tests existants et build AVANT la refonte et conserver les résultats comme baseline.
+ Créer deux établissements de test séparés pour les tests d’isolation. Ne jamais utiliser des données réelles d’élèves pour la
+recette.
+ Ne pas commencer par la landing : d’abord P0 auth, données, imports et permissions.
+2. Landing page - écran par écran
+2.1 Header
+À CONSTRUIRE / MODIFIER : Logo « AvecStudy. » à gauche. Navigation courte. Connexion. CTA établissement/démo. Mobile :
+menu compact accessible.
+INTERDIT : Pas de barre énorme, badges IA, effets glass, gradients violets, 8 liens, animation décorative lourde.
+CRITÈRE DE VALIDATION : 390 px et 1440 px : aucun overflow, tous les liens sont accessibles, focus clavier visible.
+2.2 Hero
+À CONSTRUIRE / MODIFIER : H1 « La classe. Tout simplement. ». Sous-titre : cours, devoirs et entraide au même endroit. CTA
+principal noir et CTA secondaire texte. À côté/au-dessous : fragments compacts « Aujourd’hui » et « À faire ».
+INTERDIT : Pas de dashboard complet dans une grosse carte ; pas de statistiques inventées ; pas de fausse adoption par des
+lycées ; pas de faux témoignages.
+CRITÈRE DE VALIDATION : Sur mobile, H1, sous-titre et CTA sont lisibles sans zoom ; les fragments sont une composition
+mobile dédiée.
+2.3 Sections
+À CONSTRUIRE / MODIFIER : Ordre imposé : Hero > Aujourd’hui élève > séance/cours > professeur > entraide > import
+établissement > confiance/sécurité > FAQ > CTA final. Chaque section doit montrer une fonction concrète.
+INTERDIT : Pas de répétition de grandes cards identiques, pas de texte marketing vague, pas d’illustrations générées sans rapport
+avec le produit.
+CRITÈRE DE VALIDATION : Chaque section répond à une question utilisateur différente et reste compréhensible sans animation.
+2.4 Captures actuelles : problèmes à corriger
+Capture Constat Correction obligatoire
+
+===== PAGE 5 =====
+AvecStudy V5 - Cahier des charges ultra détaillé
+Hero mobile correct dans l’esprit, mais
+l’aperçu produit devient trop grand et
+ressemble à un écran desktop recadré.
+Conserver la force du hero ; remplacer
+l’aperçu par des fragments mobiles
+compacts sans sidebar.
+L’interface élève occupe une très grande
+hauteur ; sidebar desktop visible et
+proportions peu naturelles sur
+téléphone.
+Sur mobile : navigation dédiée, cartes
+essentielles, aucun panneau desktop
+compressé.
+La carte professeur conserve une
+sidebar et des éléments tronqués.
+Créer une vraie variante mobile du
+fragment professeur ; masquer
+navigation secondaire non essentielle.
+3. Espace élève - comportement précis
+3.1 Connexion et arrivée
+ACTION UTILISATEUR : L’élève se connecte avec son accès.
+CE QUI DOIT SE PASSER : Redirection vers /eleve. En-tête : prénom + classe active. Blocs : Aujourd’hui, À faire, Depuis ta
+dernière visite.
+ERREURS / CAS LIMITES : Compte désactivé : message clair. Classe manquante : écran d’erreur administrable, pas de crash.
+TEST DE RECETTE : Créer élève A en Seconde 1 et élève B en Seconde 2 ; vérifier que chacun voit uniquement son périmètre.
+
+===== PAGE 6 =====
+AvecStudy V5 - Cahier des charges ultra détaillé
+3.2 Aujourd’hui
+ACTION UTILISATEUR : L’élève ouvre l’accueil.
+CE QUI DOIT SE PASSER : Afficher uniquement les séances/contenus publiés pertinents pour sa classe et la date. Si aucun
+contenu : état vide sobre « Rien de nouveau aujourd’hui ».
+ERREURS / CAS LIMITES : Ne pas fabriquer un emploi du temps. Une séance sans heure ne doit pas recevoir une fausse heure.
+TEST DE RECETTE : Publier une séance Seconde 1 ; elle apparaît pour A, jamais pour B.
+3.3 À faire
+ACTION UTILISATEUR : L’élève ouvre un devoir ou coche un travail terminé.
+CE QUI DOIT SE PASSER : Titre, matière, échéance, consigne et document éventuel. État persistant terminé/non terminé.
+ERREURS / CAS LIMITES : Pas de durée inventée ; pas de classement, points, flammes.
+TEST DE RECETTE : Cocher, recharger, se reconnecter : état conservé.
+3.4 Depuis ta dernière visite
+ACTION UTILISATEUR : L’élève revient après des changements.
+CE QUI DOIT SE PASSER : Résumé des nouveautés autorisées : correction publiée, nouveau document, réponse d’entraide.
+ERREURS / CAS LIMITES : Pas de notification pour des données d’une autre classe ; pas de bruit sur chaque micro-édition de
+brouillon.
+TEST DE RECETTE : Créer 3 événements dont 1 hors classe ; seuls les 2 autorisés apparaissent.
+3.5 Je n’ai pas compris
+ACTION UTILISATEUR : Depuis un bloc/exercice, cliquer « Je n’ai pas compris ».
+CE QUI DOIT SE PASSER : Créer un fil lié à block_id/seance_id/classe_id. Les camarades autorisés peuvent répondre ;
+professeur peut modérer/indiquer réponse utile.
+ERREURS / CAS LIMITES : Pas de chat général public, pas de DM incontrôlé, pas de réponse IA automatique présentée comme
+vérité.
+TEST DE RECETTE : Tester URL/API du fil depuis une autre classe : refus.
+4. Espace professeur - Studio
+4.1 Mes classes
+ACTION UTILISATEUR : Prof se connecte.
+CE QUI DOIT SE PASSER : Afficher uniquement les classes issues des affectations serveur. Matière associée visible.
+ERREURS / CAS LIMITES : Ne pas utiliser un simple filtre front ; ne pas permettre au prof de s’ajouter une classe.
+TEST DE RECETTE : Accès direct à l’URL d’une classe non affectée = 403/404 sans donnée.
+4.2 Créer une séance
+ACTION UTILISATEUR : Cliquer Nouvelle séance, choisir classe, matière, date, titre.
+CE QUI DOIT SE PASSER : Création en brouillon. Ajouter blocs texte/document/lien/exercice. Réordonner. Enregistrer
+automatiquement ou explicitement avec état visible.
+ERREURS / CAS LIMITES : Ne pas publier automatiquement ; ne pas perdre le brouillon sur refresh raisonnable.
+TEST DE RECETTE : Créer brouillon, recharger, vérifier persistance.
+4.3 Prévisualiser
+ACTION UTILISATEUR : Cliquer Prévisualiser.
+CE QUI DOIT SE PASSER : Utiliser le même composant de rendu que l’élève, avec données de preview contrôlées.
+ERREURS / CAS LIMITES : Pas une maquette différente qui pourrait cacher un bug réel.
+
+===== PAGE 7 =====
+AvecStudy V5 - Cahier des charges ultra détaillé
+TEST DE RECETTE : Comparer preview et rendu élève après publication.
+4.4 Publier
+ACTION UTILISATEUR : Cliquer Publier puis confirmer.
+CE QUI DOIT SE PASSER : La séance devient accessible aux élèves de la classe ciblée et alimente Aujourd’hui/les cours selon
+règles.
+ERREURS / CAS LIMITES : Jamais aux autres classes ; pas de double publication au double clic.
+TEST DE RECETTE : E2E professeur publie > élève ciblé voit > autre élève ne voit pas.
+4.5 Dupliquer
+ACTION UTILISATEUR : Dupliquer vers une autre classe autorisée.
+CE QUI DOIT SE PASSER : Copier uniquement le contenu pédagogique ; créer nouveaux IDs contextuels.
+ERREURS / CAS LIMITES : Ne jamais copier réponses, états de devoirs, questions d’élèves ou données personnelles.
+TEST DE RECETTE : Comparer source/copie et vérifier absence de données élève.
+5. Assistant de rentrée - import établissement
+Objectif concret
+Un lycée possédant 10 fichiers de classes doit pouvoir les déposer, voir 10 classes proposées avec leurs élèves, corriger les
+anomalies, valider une seule fois, puis obtenir les comptes et affectations. Aucune création définitive pendant l’analyse.
+5.1 Dépôt
+ACTION UTILISATEUR : Admin ouvre /admin/import et dépose plusieurs XLSX/CSV.
+CE QUI DOIT SE PASSER : Liste des fichiers, taille, état de lecture, nombre de lignes détectées. Bouton Continuer désactivé tant
+que parsing en cours.
+ERREURS / CAS LIMITES : Fichier corrompu/trop gros/type interdit : erreur sur ce fichier sans crash global.
+TEST DE RECETTE : Tester 10 fichiers valides + 1 invalide.
+5.2 Détection des classes
+ACTION UTILISATEUR : Le système analyse noms de fichiers et colonnes.
+CE QUI DOIT SE PASSER : Proposer une classe par fichier si cohérent, ou regrouper via colonne Classe/Division/Groupe.
+Afficher source de la détection et permettre correction.
+ERREURS / CAS LIMITES : Ne jamais décider silencieusement en cas d’ambiguïté.
+TEST DE RECETTE : Fichier « liste.xlsx » sans colonne classe : demander mapping/nom de classe.
+5.3 Mapping des colonnes
+ACTION UTILISATEUR : Admin vérifie Nom, Prénom, Classe, Email, identifiant éventuel.
+CE QUI DOIT SE PASSER : Afficher colonne source > champ AvecStudy, exemple de valeur et statut sûr/à confirmer/non
+reconnu.
+ERREURS / CAS LIMITES : Ne pas créer une personne si Nom/Prénom requis manquent ; ne pas transformer une colonne
+arbitraire en email.
+TEST DE RECETTE : Tester « Nom élève », « NOM », « surname », cellule vide et colonnes inconnues.
+5.4 Normalisation
+ACTION UTILISATEUR : Continuer.
+CE QUI DOIT SE PASSER : Nettoyer espaces/casse pour comparaison, normaliser noms de classes sans perdre la valeur
+affichée, valider emails, détecter homonymes/doublons.
+ERREURS / CAS LIMITES : Ne pas fusionner deux élèves uniquement parce que nom/prénom identiques.
+
+===== PAGE 8 =====
+AvecStudy V5 - Cahier des charges ultra détaillé
+TEST DE RECETTE : Deux homonymes dans la même classe restent deux personnes si autres clés diffèrent.
+5.5 Écran Vérification
+ACTION UTILISATEUR : Voir résumé.
+CE QUI DOIT SE PASSER : Afficher classes détectées, élèves valides, avertissements, erreurs bloquantes. Tableau filtrable ;
+correction directe des lignes si possible. Bouton Créer bloqué tant qu’erreur critique.
+ERREURS / CAS LIMITES : Pas de compteur approximatif ; pas de création en arrière-plan.
+TEST DE RECETTE : Modifier une ligne erronée ; compteurs se recalculent correctement.
+5.6 Validation et création
+ACTION UTILISATEUR : Admin clique Créer l’établissement/Appliquer import et confirme.
+CE QUI DOIT SE PASSER : Créer/màj classes, élèves, comptes et relations selon le plan affiché. Job idempotent/transactionnel.
+Barre d’état réelle.
+ERREURS / CAS LIMITES : Pas de moitié d’import silencieuse ; pas de double-submit.
+TEST DE RECETTE : Forcer une erreur au milieu ; vérifier rollback ou état reprenable documenté.
+5.7 Résultat
+ACTION UTILISATEUR : Import terminé.
+CE QUI DOIT SE PASSER : Rapport exact : créés, mis à jour, ignorés, erreurs. Liens vers établissement, export accès, historique
+import.
+ERREURS / CAS LIMITES : Ne pas afficher « 302 créés » si certains ont échoué.
+TEST DE RECETTE : Comparer rapport aux enregistrements réels.
+5.8 Réimport
+ACTION UTILISATEUR : Même fichier est importé de nouveau.
+CE QUI DOIT SE PASSER : Détecter existants et afficher diff. Par défaut ne pas recréer les comptes.
+ERREURS / CAS LIMITES : Aucun doublon inattendu ; aucune suppression implicite parce qu’une ligne manque.
+TEST DE RECETTE : Réimport identique = 0 nouveau compte inattendu.
+6. Import professeurs et affectations
+6.1 Fichier professeurs
+ACTION UTILISATEUR : Admin importe nom, prénom, email/identifiant, matière(s), classe(s).
+CE QUI DOIT SE PASSER : Prévisualiser professeurs et affectations Professeur <-> Matière <-> Classe. Autoriser correction
+avant validation.
+ERREURS / CAS LIMITES : Ne pas confondre « professeur de maths » avec accès à toutes les classes de maths.
+TEST DE RECETTE : Prof affecté à 2DE1/2DE2 ne voit pas 2DE3.
+6.2 Cas complexes
+ACTION UTILISATEUR : Un professeur a plusieurs matières/classes.
+CE QUI DOIT SE PASSER : Créer plusieurs affectations propres, pas une chaîne de texte non exploitable.
+ERREURS / CAS LIMITES : Pas de duplication du compte pour chaque classe.
+TEST DE RECETTE : Un compte unique, N affectations.
+7. Comptes et accès
+7.1 Identifiants
+ACTION UTILISATEUR : Après validation, générer les comptes.
+
+===== PAGE 9 =====
+AvecStudy V5 - Cahier des charges ultra détaillé
+CE QUI DOIT SE PASSER : Identifiant unique selon règle stable ; collision résolue. Mot de passe provisoire aléatoire si ce mode
+est conservé.
+ERREURS / CAS LIMITES : Pas de mot de passe basé sur date de naissance ; pas de stockage en clair durable.
+TEST DE RECETTE : Tester accents, noms composés, homonymes et collisions.
+7.2 Export
+ACTION UTILISATEUR : Admin clique Exporter les accès.
+CE QUI DOIT SE PASSER : XLSX/CSV et PDF imprimable par classe. Chaque élève a une fiche/coupon séparé.
+ERREURS / CAS LIMITES : Ne pas laisser l’export accessible sans rôle admin ; ne pas exposer tous les accès dans une URL
+publique.
+TEST DE RECETTE : Tester téléchargement et contrôle d’autorisation.
+7.3 Réinitialiser
+ACTION UTILISATEUR : Admin ouvre un élève > Réinitialiser accès.
+CE QUI DOIT SE PASSER : Créer un nouveau provisoire et invalider l’ancien selon auth. Journaliser l’action sans secret.
+ERREURS / CAS LIMITES : Ne jamais afficher « mot de passe actuel ».
+TEST DE RECETTE : Ancien secret ne fonctionne plus après reset.
+8. Documents - stockage et compréhension
+8.1 Organisation
+À CONSTRUIRE / MODIFIER : Tout document doit être rattaché à établissement + contexte
+(classe/matière/chapitre/séance/devoir). Afficher nom lisible, type, taille, auteur, date et emplacement.
+INTERDIT : Pas de dossier fourre-tout ni bucket public par facilité.
+CRITÈRE DE VALIDATION : Un élève retrouve un document depuis la séance correspondante et ne peut ouvrir celui d’une autre
+classe.
+8.2 Import de documents
+À CONSTRUIRE / MODIFIER : Accepter fichiers autorisés, valider côté serveur, uploader avec état de progression/erreur.
+Prévisualisation quand possible.
+INTERDIT : Ne pas prétendre « comprendre » automatiquement le contenu d’un PDF/Word si aucun parseur fiable n’est
+réellement implémenté. Ne pas classer automatiquement avec certitude en cas d’ambiguïté.
+CRITÈRE DE VALIDATION : Si une fonction de lecture/classement existe, afficher ce qui a été détecté et demander confirmation
+lorsque la confiance est insuffisante.
+8.3 Sécurité fichiers
+À CONSTRUIRE / MODIFIER : Stockage privé, contrôle d’accès serveur/RLS, URL signée temporaire si nécessaire.
+INTERDIT : Pas de lien permanent public vers documents scolaires privés.
+CRITÈRE DE VALIDATION : Copier l’URL et l’ouvrir déconnecté/autre classe : accès refusé.
+9. Admin lycée - écrans de gestion
+ Dashboard : uniquement informations utiles (classes, élèves, professeurs, imports récents, erreurs à traiter). Pas de faux KPI.
+ Classes : recherche, effectif, professeurs/matières affectés, ouvrir une classe, archiver selon droits.
+ Élèves : recherche nom/prénom/identifiant, classe, état du compte, changer classe, reset accès, désactiver. Toute action
+destructive confirmée.
+ Professeurs : recherche, matières, classes, affectations, état compte.
+ Imports : historique avec statut, auteur, date, fichiers, résumé et erreurs.
+ Année scolaire : classe active rattachée à une année ; archivage logique pour éviter le mélange entre rentrées.
+
+===== PAGE 10 =====
+AvecStudy V5 - Cahier des charges ultra détaillé
+10. Sécurité - tests offensifs obligatoires
+□ IDOR : changer chaque ID dans URL/API pour classe, séance, devoir, document, élève, prof, import, fil entraide.
+□ Isolation établissement A/B : admin A, prof A, élève A ne doivent obtenir aucune donnée B.
+□ RLS : tests positifs et négatifs exécutés avec vrais rôles de test.
+□ Auth : session expirée, déconnexion, reset, compte désactivé, accès admin sans rôle.
+□ Uploads : extension trompeuse, nom étrange, taille excessive, URL après déconnexion.
+□ Secrets : rechercher service role/tokens/secrets dans bundle client, dépôt, logs et réponses.
+□ Headers : CSP/permissions/referrer/HSTS selon déploiement ; cookies HttpOnly/Secure/SameSite adaptés.
+□ Rate limit : login/reset/import/endpoints coûteux si exposés.
+□ Logs : aucune donnée sensible ou mot de passe provisoire dans les logs.
+11. Responsive et accessibilité
+□ Tester 375, 390, 430, 768, 1024, 1280, 1440 px.
+□ 0 overflow horizontal critique ; 0 texte tronqué non volontaire ; boutons touch >= zone confortable.
+□ Navigation mobile dédiée pour l’élève ; admin/prof restent utilisables mais optimisés ordinateur.
+□ Focus visible, navigation clavier, labels de formulaires, messages d’erreur reliés aux champs.
+□ Contrastes lisibles ; le rose n’est jamais le seul indicateur d’état.
+□ prefers-reduced-motion respecté ; aucune animation indispensable à la compréhension.
+12. Performance et robustesse
+□ Mesurer les routes principales avant/après. Ne pas inventer un gain.
+□ Landing : JS minimal ; fragments marketing légers ; lazy-load hors écran.
+□ Listes de centaines/milliers : pagination/recherche serveur, pas de rendu massif inutile.
+□ Imports : progression, reprise/idempotence, protection double-submit, messages exploitables.
+□ Vérifier requêtes N+1 et index des clés établissement/classe/utilisateur/affectation.
+□ Loading/empty/error/retry cohérents sur tous les parcours critiques.
+□ Aucune dépendance lourde ajoutée sans justification.
+13. Suite de recette Claude - ordre exact
+Bloc À exécuter Preuve attendue
+Baseline typecheck + lint + tests existants + build Résultats conservés
+Unit import parse, mapping, normalisation,
+doublons, erreurs
+Pass
+Intégration auth/RLS/relations avec 2 lycées 0 accès croisé
+E2E admin 10 fichiers -> vérification -> création ->
+export
+Pass
+E2E prof login -> classe -> brouillon -> preview ->
+publication
+Pass
+E2E élève login -> Aujourd’hui -> séance -> devoir
+-> entraide
+Pass
+Réimport même source deux fois 0 doublon inattendu
+Échec import erreur forcée milieu de traitement état cohérent/reprenable
+Storage upload -> lecture -> accès croisé -> Pass
+
+===== PAGE 11 =====
+AvecStudy V5 - Cahier des charges ultra détaillé
+suppression
+Responsive toutes largeurs définies 0 bloquant
+A11y clavier/focus/labels/contraste 0 bloquant critique
+Production smoke test domaine final routes critiques OK
+14. Rapport final obligatoire - format à respecter
+Claude doit rendre exactement un rapport factuel
+A. fichiers modifiés ; B. migrations ; C. fonctions créées/modifiées/conservées ; D. commandes réellement exécutées + résultat ;
+E. scénarios E2E réellement exécutés ; F. failles/bugs trouvés et correction ; G. points NON VÉRIFIÉS ; H. état du déploiement ;
+I. risques restants. Aucun « tout est parfait » sans périmètre et preuve.
+15. Definition of Done - blocage de livraison
+□ Import multi-classes réel passe et le résultat correspond à la prévisualisation.
+□ Réimport ne crée pas de doublons inattendus.
+□ Professeurs voient uniquement leurs affectations.
+□ Élèves voient uniquement leur classe et les contenus publiés.
+□ Documents privés résistent aux accès croisés.
+□ Publication professeur -> apparition élève ciblé vérifiée E2E.
+□ Landing desktop/mobile respecte la direction sans gros dashboard compressé.
+□ Typecheck/lint/build/tests critiques passent.
+□ Smoke test production exécuté si l’environnement est accessible.
+□ Tout point non testé est explicitement déclaré ; aucun résultat n’est inventé.
+Important
+On ne peut pas garantir mathématiquement « zéro bug ». L’objectif de livraison est : aucun bug bloquant connu dans les
+parcours testés, aucun échec de sécurité connu dans les tests définis, et transparence complète sur ce qui n’a pas pu être
+vérifié.
