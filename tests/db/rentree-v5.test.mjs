@@ -1067,3 +1067,190 @@ test("V05 — la borne d un eleve ne se lit ni ne s ecrit depuis un autre compte
   );
   assert.equal(lignes.rows.length, 2, "deux lignes distinctes, une par personne");
 });
+
+/* ========================================================================== */
+/* §7.2 et §7.3 — réinitialiser un accès, exporter la liste                   */
+/*                                                                            */
+/* Le critère du cahier : « l'ancien secret ne fonctionne plus après reset ». */
+/* Côté base, cela veut dire deux choses — le compte redemande un mot de      */
+/* passe, et les sessions ouvertes tombent. Le secret lui-même est chez le    */
+/* fournisseur d'identité, hors de portée de ces tests.                       */
+/* ========================================================================== */
+
+/** Ouvre une session serveur pour quelqu'un, comme le fait la connexion. */
+async function ouvrirSession(db, profil, organisation, graine) {
+  return enTantQueServeur(db, async () => {
+    const { rows } = await db.query(
+      "select study.auth_creer_session($1, $2, $3, 'etablissement', 'personnel', 'aal1'," +
+        " now() + interval '1 hour', now() + interval '8 hours', null, null) as id",
+      [profil, organisation, empreinte(graine)],
+    );
+    return rows[0].id;
+  });
+}
+
+test("A05 — reinitialiser un acces coupe les sessions et redemande un mot de passe", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { ACTEURS } = await import("./harness.mjs");
+
+  await ouvrirSession(db, ACTEURS.eleveA1Rayan, ACTEURS.lyceeA, "sess-rayan");
+
+  const vivantes = await enTantQueServeur(db, () =>
+    db.query(
+      "select count(*)::int as n from study_prive.sessions where profile_id = $1 and revoked_at is null",
+      [ACTEURS.eleveA1Rayan],
+    ),
+  );
+  assert.equal(vivantes.rows[0].n, 1, "la session de depart existe");
+
+  const retour = await enTantQueServeur(db, () =>
+    db.query("select * from study.etab_reinitialiser_acces($1, $2)", [
+      ACTEURS.adminA,
+      ACTEURS.eleveA1Rayan,
+    ]),
+  );
+  assert.equal(retour.rows.length, 1);
+  assert.ok(retour.rows[0].local_login, "l identifiant est rendu pour la fiche");
+
+  const apres = await enTantQueServeur(db, () =>
+    db.query(
+      "select m.must_change_password, m.account_state::text as etat," +
+        " (select count(*)::int from study_prive.sessions s" +
+        "   where s.profile_id = m.profile_id and s.revoked_at is null) as ouvertes" +
+        " from study.organization_memberships m where m.profile_id = $1",
+      [ACTEURS.eleveA1Rayan],
+    ),
+  );
+
+  assert.equal(apres.rows[0].must_change_password, true, "le compte redemande un mot de passe");
+  assert.equal(apres.rows[0].etat, "a_activer");
+  assert.equal(apres.rows[0].ouvertes, 0, "aucune session ne survit a la reinitialisation");
+
+  // Et la trace ne porte aucun secret.
+  const trace = await enTantQueServeur(db, () =>
+    db.query(
+      "select metadata::text as m from study.audit_events" +
+        " where action = 'reinitialisation_acces' and object_id = $1",
+      [ACTEURS.eleveA1Rayan],
+    ),
+  );
+  assert.equal(trace.rows.length, 1);
+  assert.equal(
+    /mot_de_passe|password|secret/i.test(trace.rows[0].m),
+    false,
+    "la trace ne contient pas de secret",
+  );
+});
+
+test("A06 — l administrateur de B ne reinitialise pas un eleve de A", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { ACTEURS } = await import("./harness.mjs");
+
+  await enTantQueServeur(db, async () => {
+    const erreur = await doitEchouer(() =>
+      db.query("select * from study.etab_reinitialiser_acces($1, $2)", [
+        ACTEURS.adminB,
+        ACTEURS.eleveA1Rayan,
+      ]),
+    );
+    assert.match(erreur.message, /compte introuvable dans cet etablissement/i);
+  });
+
+  const intact = await enTantQueServeur(db, () =>
+    db.query(
+      "select must_change_password from study.organization_memberships where profile_id = $1",
+      [ACTEURS.eleveA1Rayan],
+    ),
+  );
+  assert.equal(intact.rows[0].must_change_password, false, "rien n a bouge chez A");
+});
+
+test("A07 — un administrateur ne reinitialise pas son propre acces par ce chemin", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { ACTEURS } = await import("./harness.mjs");
+
+  await enTantQueServeur(db, async () => {
+    const erreur = await doitEchouer(() =>
+      db.query("select * from study.etab_reinitialiser_acces($1, $1)", [ACTEURS.adminA]),
+    );
+    assert.match(erreur.message, /changement de mot de passe de votre compte/i);
+  });
+});
+
+test("A08 — desactiver ferme la connexion sans rien effacer", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { ACTEURS, OBJETS } = await import("./harness.mjs");
+
+  await ouvrirSession(db, ACTEURS.eleveA1Rayan, ACTEURS.lyceeA, "sess-desact");
+
+  await enTantQueServeur(db, () =>
+    db.query("select study.etab_changer_etat_compte($1, $2, false, $3)", [
+      ACTEURS.adminA,
+      ACTEURS.eleveA1Rayan,
+      "Depart en cours d annee",
+    ]),
+  );
+
+  const apres = await enTantQueServeur(db, () =>
+    db.query(
+      "select m.state::text as etat," +
+        " (select count(*)::int from study_prive.sessions s" +
+        "   where s.profile_id = m.profile_id and s.revoked_at is null) as ouvertes," +
+        " (select count(*)::int from study.class_enrollments e" +
+        "   where e.profile_id = m.profile_id) as inscriptions" +
+        " from study.organization_memberships m where m.profile_id = $1",
+      [ACTEURS.eleveA1Rayan],
+    ),
+  );
+
+  assert.equal(apres.rows[0].etat, "suspendue");
+  assert.equal(apres.rows[0].ouvertes, 0, "les sessions tombent");
+  assert.ok(apres.rows[0].inscriptions > 0, "l inscription reste : rien n est efface");
+
+  // Le seance de sa classe existe toujours, elle aussi.
+  const seance = await enTantQueServeur(db, () =>
+    db.query("select count(*)::int as n from study.lessons where id = $1", [OBJETS.seanceA1]),
+  );
+  assert.equal(seance.rows[0].n, 1);
+});
+
+test("A09 — l export des acces ne franchit pas la frontiere et ne porte aucun secret", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { ACTEURS } = await import("./harness.mjs");
+
+  const chezA = await enTantQueServeur(db, () =>
+    db.query("select * from study.etab_acces($1, null)", [ACTEURS.adminA]),
+  );
+  const chezB = await enTantQueServeur(db, () =>
+    db.query("select * from study.etab_acces($1, null)", [ACTEURS.adminB]),
+  );
+
+  const loginsA = chezA.rows.map((l) => l.local_login);
+  const loginsB = chezB.rows.map((l) => l.local_login);
+
+  assert.ok(loginsA.length > 0, "A voit ses propres comptes");
+  assert.ok(loginsB.length > 0, "B voit les siens");
+  assert.equal(
+    loginsA.some((login) => loginsB.includes(login)),
+    false,
+    "aucun recoupement entre les deux etablissements",
+  );
+
+  // Aucune colonne ne peut contenir un secret : la fonction n en expose pas.
+  const colonnes = Object.keys(chezA.rows[0]);
+  assert.deepEqual(
+    colonnes.filter((c) => /pass|secret|mdp|token/i.test(c)),
+    [],
+    "l export n a pas de colonne de secret",
+  );
+});

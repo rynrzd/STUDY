@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { changerEtatCompte, reinitialiserAcces } from "@/lib/acces";
 import {
   affecterProfesseur,
   assurerAnnee,
@@ -254,4 +255,84 @@ export async function inscrireUnEleve(
   revalidatePath("/admin/utilisateurs");
   revalidatePath("/admin/classes");
   return { etat: "ok", message: "Élève inscrit dans la classe." };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Accès — cahier V5, §7.3 et §9                                               */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Donne un nouveau mot de passe provisoire à quelqu'un.
+ *
+ * Le mot de passe rendu ne sera affiché qu'une fois, et n'est conservé nulle
+ * part. Il n'existe pas de « voir le mot de passe actuel » : le §7.3
+ * l'interdit, et le produit ne le pourrait pas.
+ */
+export async function reinitialiserUnAcces(
+  _precedent: EtatAdmin,
+  donnees: FormData,
+): Promise<EtatAdmin> {
+  const acteur = await exigerAdministrateur();
+
+  const profil = identifiant(donnees, "profil");
+  if (profil === null) {
+    return { etat: "erreur", message: "Compte introuvable." };
+  }
+
+  const resultat = await reinitialiserAcces(acteur, profil);
+  if ("erreur" in resultat) {
+    return { etat: "erreur", message: resultat.erreur };
+  }
+
+  revalidatePath("/admin/utilisateurs");
+
+  return {
+    etat: "ok",
+    message: "Nouvel accès créé. Imprimez la fiche : ce mot de passe ne sera plus affiché.",
+    acces: {
+      prenom: resultat.prenom,
+      nom: resultat.nom,
+      role: "eleve",
+      classe: resultat.classe,
+      login: resultat.login,
+      motDePasseTemporaire: resultat.motDePasseTemporaire,
+    },
+  };
+}
+
+/**
+ * Désactive ou réactive un compte (§9).
+ *
+ * Rien n'est effacé : les séances, les devoirs et les questions restent. Seule
+ * la connexion ferme, et les sessions en cours tombent aussitôt.
+ */
+export async function changerLEtatDUnCompte(
+  _precedent: EtatAdmin,
+  donnees: FormData,
+): Promise<EtatAdmin> {
+  const acteur = await exigerAdministrateur();
+
+  const profil = identifiant(donnees, "profil");
+  if (profil === null) {
+    return { etat: "erreur", message: "Compte introuvable." };
+  }
+
+  const actif = donnees.get("actif") === "oui";
+
+  const resultat = await changerEtatCompte({
+    acteur,
+    profil,
+    actif,
+    motif: texte(donnees, "motif", 200),
+  });
+
+  if (!resultat.ok) {
+    return { etat: "erreur", message: resultat.message };
+  }
+
+  revalidatePath("/admin/utilisateurs");
+  return {
+    etat: "ok",
+    message: actif ? "Compte réactivé." : "Compte désactivé, sessions fermées.",
+  };
 }

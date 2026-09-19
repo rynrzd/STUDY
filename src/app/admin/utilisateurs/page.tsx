@@ -3,20 +3,24 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { TitreEspace, Vide } from "@/components/app/Cadre";
 import { FormulaireCompte } from "@/components/admin/Formulaires";
+import { GestesCompte } from "@/components/admin/GestesCompte";
+import { RechercheComptes } from "@/components/admin/RechercheComptes";
 import { classes, contexte, membres } from "@/lib/etablissement";
 import { sessionCourante } from "@/lib/session-serveur";
 
 export const metadata: Metadata = { title: "Utilisateurs" };
 
 /**
- * Utilisateurs de l'établissement — cahier V2, §14.3.
+ * Utilisateurs de l'établissement — cahier V2 §14.3, cahier V5 §7.3 et §9.
  *
- * Le filtre passe par l'adresse plutôt que par un champ de recherche en
- * JavaScript : « les comptes à activer » est un lien qu'on envoie à un collègue,
- * et la page fonctionne sans JS.
+ * Tout l'état de l'écran est dans l'adresse : le filtre, la classe, la
+ * recherche. « Les comptes à activer en Seconde 4 » est donc un lien qu'on
+ * envoie à un collègue, et la page fonctionne sans JavaScript.
  *
- * Aucun mot de passe n'apparaît ici, même masqué : ils n'existent que le temps
- * d'une création, sur la fiche imprimable.
+ * Aucun mot de passe n'apparaît ici, même masqué. Ils n'existent que le temps
+ * d'une création ou d'une réinitialisation, sur la fiche imprimable — et le
+ * §7.3 interdit explicitement d'afficher « le mot de passe actuel », que le
+ * produit serait de toute façon incapable de retrouver.
  */
 export const dynamic = "force-dynamic";
 
@@ -30,7 +34,7 @@ const FILTRES = [
 export default async function PageUtilisateurs({
   searchParams,
 }: {
-  searchParams: Promise<{ etat?: string; classe?: string }>;
+  searchParams: Promise<{ etat?: string; classe?: string; q?: string }>;
 }) {
   const personne = await sessionCourante();
   if (personne === null) redirect("/connexion");
@@ -45,15 +49,29 @@ export default async function PageUtilisateurs({
 
   const parametres = await searchParams;
   const filtre = parametres.etat ?? "";
+  const classeChoisie = parametres.classe ?? "";
+  const cherche = parametres.q ?? "";
+  const recherche = cherche.trim().toLowerCase();
 
   const visibles = listeMembres.filter((membre) => {
-    if (filtre === "eleve") return membre.roles.includes("eleve");
-    if (filtre === "professeur") return membre.roles.includes("professeur");
-    if (filtre === "a_activer") return membre.account_state === "a_activer";
-    return true;
+    if (filtre === "eleve" && !membre.roles.includes("eleve")) return false;
+    if (filtre === "professeur" && !membre.roles.includes("professeur")) return false;
+    if (filtre === "a_activer" && membre.account_state !== "a_activer") return false;
+    if (classeChoisie !== "" && membre.classe !== classeChoisie) return false;
+
+    // La recherche porte sur ce qu'un secrétariat a sous les yeux : un nom
+    // entendu au téléphone, ou un identifiant lu sur une fiche (§9).
+    if (recherche === "") return true;
+    return [membre.nom, membre.prenom, membre.local_login]
+      .join(" ")
+      .toLowerCase()
+      .includes(recherche);
   });
 
   const optionsClasses = listeClasses.map((classe) => ({ id: classe.id, label: classe.label }));
+  const classeExportee = listeClasses.find((classe) => classe.label === classeChoisie)?.id ?? null;
+  const adresseExport =
+    classeExportee === null ? "/admin/acces" : `/admin/acces?classe=${classeExportee}`;
 
   return (
     <>
@@ -73,12 +91,32 @@ export default async function PageUtilisateurs({
           <h2 className="text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
             Comptes
           </h2>
-          <Link
-            href="/admin/import"
-            className="text-[length:var(--text-aide)] text-[color:var(--color-accent)]"
-          >
-            Import de rentrée
-          </Link>
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              href="/admin/import"
+              className="text-[length:var(--text-aide)] text-[color:var(--color-accent)]"
+            >
+              Import de rentrée
+            </Link>
+            {/* Un lien de téléchargement, dont l'adresse reste refusée à qui
+                n'est pas administrateur de ce lycée. Le fichier ne contient
+                aucun mot de passe : ils ne sont conservés nulle part. */}
+            <a
+              href={adresseExport}
+              className="text-[length:var(--text-aide)] text-[color:var(--color-accent)]"
+            >
+              Exporter les accès (CSV)
+            </a>
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <RechercheComptes
+            valeur={cherche}
+            etat={filtre}
+            classe={classeChoisie}
+            classes={listeClasses.map((classe) => classe.label)}
+          />
         </div>
 
         <nav aria-label="Filtrer les comptes" className="mt-4">
@@ -88,9 +126,7 @@ export default async function PageUtilisateurs({
               return (
                 <li key={option.cle || "tous"}>
                   <Link
-                    href={
-                      option.cle === "" ? "/admin/utilisateurs" : `/admin/utilisateurs?etat=${option.cle}`
-                    }
+                    href={adresse(option.cle, classeChoisie, cherche)}
                     aria-current={active ? "page" : undefined}
                     className={`inline-flex min-h-9 items-center rounded-full border px-3.5 text-[length:var(--text-tableau)] no-underline ${
                       active
@@ -110,15 +146,13 @@ export default async function PageUtilisateurs({
           <div className="mt-6">
             <Vide
               titre="Aucun compte ne correspond."
-              texte="Changez de filtre, ou créez un compte avec le formulaire ci-dessus. L'import de rentrée reste le chemin le plus rapide pour une classe entière."
+              texte="Changez de filtre ou de recherche, ou créez un compte avec le formulaire ci-dessus. L'import de rentrée reste le chemin le plus rapide pour une classe entière."
             />
           </div>
         ) : (
           <div className="carte mt-5 overflow-x-auto">
-            <table className="w-full min-w-[40rem] border-collapse text-[length:var(--text-tableau)]">
-              <caption className="sr-only">
-                Comptes de {situation.organisation}
-              </caption>
+            <table className="w-full min-w-[52rem] border-collapse text-[length:var(--text-tableau)]">
+              <caption className="sr-only">Comptes de {situation.organisation}</caption>
               <thead>
                 <tr className="border-b border-[color:var(--color-bordure-forte)] text-left">
                   <th scope="col" className="p-3 font-semibold">
@@ -136,13 +170,16 @@ export default async function PageUtilisateurs({
                   <th scope="col" className="p-3 font-semibold">
                     État
                   </th>
+                  <th scope="col" className="p-3 font-semibold">
+                    Accès
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {visibles.slice(0, 500).map((membre) => (
                   <tr
                     key={membre.profile_id}
-                    className="border-b border-[color:var(--color-bordure)] last:border-b-0"
+                    className="border-b border-[color:var(--color-bordure)] align-top last:border-b-0"
                   >
                     <td className="p-3">
                       <span className="font-medium">{membre.nom.toUpperCase()}</span>{" "}
@@ -178,6 +215,23 @@ export default async function PageUtilisateurs({
                             : membre.account_state}
                       </span>
                     </td>
+                    <td className="p-3">
+                      {membre.profile_id === personne.profileId ? (
+                        <span className="text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)]">
+                          Votre compte
+                        </span>
+                      ) : (
+                        <GestesCompte
+                          profil={membre.profile_id}
+                          nom={membre.nom}
+                          prenom={membre.prenom}
+                          classe={membre.classe}
+                          professeur={membre.roles.includes("professeur")}
+                          actif={membre.account_state !== "suspendu"}
+                          codeEtablissement={situation.publicCode}
+                        />
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -187,11 +241,22 @@ export default async function PageUtilisateurs({
 
         {visibles.length > 500 ? (
           <p className="m-0 mt-3 text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)]">
-            Les 500 premiers comptes sont affichés. Affinez avec un filtre pour
-            voir les suivants.
+            Les 500 premiers comptes sont affichés. Affinez avec la recherche ou
+            un filtre pour voir les suivants.
           </p>
         ) : null}
       </section>
     </>
   );
+}
+
+/** L'adresse d'un filtre, en gardant la recherche et la classe en cours. */
+function adresse(etat: string, classe: string, recherche: string): string {
+  const parametres = new URLSearchParams();
+  if (etat !== "") parametres.set("etat", etat);
+  if (classe !== "") parametres.set("classe", classe);
+  if (recherche !== "") parametres.set("q", recherche);
+
+  const suite = parametres.toString();
+  return suite === "" ? "/admin/utilisateurs" : `/admin/utilisateurs?${suite}`;
 }
