@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { deposerSupport } from "@/lib/documents";
+import { dupliquerSeance } from "@/lib/duplication";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 import type { EtatStudio } from "./etats";
 
@@ -712,4 +713,71 @@ async function organisationDuCours(jeton: string, cours: string): Promise<string
     .maybeSingle();
 
   return (data as { organization_id: string } | null)?.organization_id ?? null;
+}
+
+/* ========================================================================== */
+/* Dupliquer vers une autre classe — cahier V5, §4.5                          */
+/* ========================================================================== */
+
+/**
+ * Recopie une séance dans une autre classe du professeur.
+ *
+ * Seule action du Studio qui n'agit pas avec le jeton : elle doit écrire dans
+ * deux cours à la fois. La contrepartie est en base — `studio_dupliquer_seance`
+ * revérifie les deux affectations à partir des lignes réelles, et l'identité
+ * vient de la session, jamais du formulaire.
+ *
+ * La copie naît en brouillon, sans devoir. Ce qui appartient aux élèves — les
+ * cases « fait », les questions, les remises — reste dans le cours d'origine.
+ */
+export async function dupliquerVersUneClasse(
+  _precedent: EtatStudio,
+  donnees: FormData,
+): Promise<EtatStudio> {
+  const personne = await sessionCourante();
+  if (personne === null || personne.activationRequise) return REFUS;
+  if (!personne.roles.includes("professeur")) return REFUS;
+
+  const analyse = z
+    .object({
+      seance: z.string().uuid(),
+      cours: z.string().uuid(),
+      titre: z.string().trim().max(160).optional(),
+    })
+    .safeParse({
+      seance: donnees.get("seance"),
+      cours: donnees.get("cours"),
+      titre: donnees.get("titre") ?? undefined,
+    });
+
+  if (!analyse.success) {
+    return { etat: "erreur", message: "Choisissez la classe de destination." };
+  }
+
+  const resultat = await dupliquerSeance({
+    acteur: personne.profileId,
+    seance: analyse.data.seance,
+    coursCible: analyse.data.cours,
+    titre: analyse.data.titre ?? null,
+  });
+
+  if ("erreur" in resultat) {
+    return { etat: "erreur", message: resultat.erreur };
+  }
+
+  revalidatePath("/studio");
+
+  const devoirs =
+    resultat.devoirsIgnores === 0
+      ? ""
+      : ` ${resultat.devoirsIgnores} bloc${resultat.devoirsIgnores > 1 ? "s" : ""} de devoir non ` +
+        `recopié${resultat.devoirsIgnores > 1 ? "s" : ""} : un devoir a ses propres dates.`;
+
+  return {
+    etat: "ok",
+    message:
+      `Copie créée en brouillon, ${resultat.blocsCopies} bloc` +
+      `${resultat.blocsCopies > 1 ? "s" : ""} repris.${devoirs}`,
+    cree: resultat.seance,
+  };
 }

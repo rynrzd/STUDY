@@ -65,6 +65,7 @@ export type MotifPrivilegie =
   | "amorcage_proprietaire"
   | "administration_des_comptes"
   | "stockage_des_supports"
+  | "duplication_de_seance"
   | "tache_planifiee";
 
 /**

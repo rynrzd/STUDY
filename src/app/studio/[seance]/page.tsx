@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { Dupliquer } from "@/components/studio/Dupliquer";
 import { Editeur } from "@/components/studio/Editeur";
-import { chapitresDuCours, seanceComplete } from "@/lib/studio";
+import { chapitresDuCours, coursDuProfesseur, seanceComplete } from "@/lib/studio";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 
 /**
@@ -28,7 +29,10 @@ export default async function PageSeance({
   const ensemble = await seanceComplete(jeton, id);
   if (ensemble === null) notFound();
 
-  const chapitres = await chapitresDuCours(jeton, ensemble.seance.teaching_space_id);
+  const [chapitres, cours] = await Promise.all([
+    chapitresDuCours(jeton, ensemble.seance.teaching_space_id),
+    coursDuProfesseur(jeton),
+  ]);
 
   return (
     <>
@@ -44,6 +48,15 @@ export default async function PageSeance({
         chapitres={chapitres}
         libelleCours={ensemble.cours?.libelle ?? "Cours"}
       />
+
+      <div className="mt-10">
+        <Dupliquer
+          seance={ensemble.seance.id}
+          titre={ensemble.seance.title}
+          cours={cours.map((unCours) => ({ id: unCours.id, libelle: unCours.libelle }))}
+          coursActuel={ensemble.seance.teaching_space_id}
+        />
+      </div>
     </>
   );
 }

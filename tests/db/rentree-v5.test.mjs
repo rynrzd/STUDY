@@ -1254,3 +1254,204 @@ test("A09 — l export des acces ne franchit pas la frontiere et ne porte aucun 
     "l export n a pas de colonne de secret",
   );
 });
+
+/* ========================================================================== */
+/* §4.5 — dupliquer une séance vers une autre classe                          */
+/*                                                                            */
+/* Le critère du cahier : comparer source et copie, et vérifier l'absence de  */
+/* données élève. C'est la seule fonction du produit qui recopie du contenu   */
+/* d'un cours vers un autre ; tout ce qui appartient à des élèves doit rester */
+/* de ce côté-ci.                                                             */
+/* ========================================================================== */
+
+test("D04 — la copie emporte le contenu, jamais le devoir ni son calendrier", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { ACTEURS, OBJETS } = await import("./harness.mjs");
+
+  // La seance de recette porte des blocs. On y ajoute un bloc de devoir, qui
+  // est precisement ce qui ne doit pas traverser.
+  await enTantQueServeur(db, () =>
+    db.query(
+      "insert into study.lesson_blocks (organization_id, lesson_id, kind, position, contenu," +
+        " assignment_id, created_by) values ($1, $2, 'devoir', 99, '{}'::jsonb, $3, $4)",
+      [ACTEURS.lyceeA, OBJETS.seanceA1, OBJETS.devoirA1, ACTEURS.profMartin],
+    ),
+  );
+
+  // Un eleve coche le devoir et pose une question : deux donnees personnelles.
+  await enTantQue(db, ACTEURS.eleveA1Rayan, () =>
+    db.query(
+      "insert into study.travaux_faits (organization_id, assignment_id, profile_id)" +
+        " values ($1, $2, $3)",
+      [ACTEURS.lyceeA, OBJETS.devoirA1, ACTEURS.eleveA1Rayan],
+    ),
+  );
+  await enTantQue(db, ACTEURS.eleveA1Rayan, () =>
+    db.query(
+      "insert into study.fils_entraide (organization_id, teaching_space_id, lesson_id, auteur_id, question)" +
+        " values ($1, $2, $3, $4, 'Je ne comprends pas la question 3.')",
+      [ACTEURS.lyceeA, OBJETS.espaceMathsA1, OBJETS.seanceA1, ACTEURS.eleveA1Rayan],
+    ),
+  );
+
+  const avant = await enTantQueServeur(db, () =>
+    db.query(
+      "select count(*)::int as n from study.lesson_blocks where lesson_id = $1",
+      [OBJETS.seanceA1],
+    ),
+  );
+
+  const resultat = await enTantQueServeur(db, () =>
+    db.query("select * from study.studio_dupliquer_seance($1, $2, $3, $4)", [
+      ACTEURS.profMartin,
+      OBJETS.seanceA1,
+      OBJETS.espaceMathsA2,
+      "Fonctions affines (2DE2)",
+    ]),
+  );
+
+  const copie = resultat.rows[0].seance;
+  assert.equal(resultat.rows[0].devoirs_ignores, 1, "le devoir est laisse de cote, et on le dit");
+  assert.equal(
+    resultat.rows[0].blocs_copies,
+    avant.rows[0].n - 1,
+    "tous les autres blocs sont copies",
+  );
+
+  const etat = await enTantQueServeur(db, () =>
+    db.query(
+      "select state::text as state, published_at, teaching_space_id, title," +
+        " origin_studio_document, correction_released_at" +
+        " from study.lessons where id = $1",
+      [copie],
+    ),
+  );
+
+  assert.equal(etat.rows[0].state, "brouillon", "la copie ne se publie pas toute seule");
+  assert.equal(etat.rows[0].published_at, null);
+  assert.equal(etat.rows[0].correction_released_at, null, "le corrige ne s ouvre pas tout seul");
+  assert.equal(etat.rows[0].teaching_space_id, OBJETS.espaceMathsA2);
+  assert.equal(etat.rows[0].title, "Fonctions affines (2DE2)");
+  assert.equal(etat.rows[0].origin_studio_document, null, "la copie a sa vie propre");
+
+  // Aucun bloc de la copie ne pointe vers un devoir.
+  const blocs = await enTantQueServeur(db, () =>
+    db.query(
+      "select count(*)::int as n from study.lesson_blocks" +
+        " where lesson_id = $1 and (kind = 'devoir' or assignment_id is not null)",
+      [copie],
+    ),
+  );
+  assert.equal(blocs.rows[0].n, 0, "aucun devoir n a traverse");
+
+  // Aucune question, aucune case « fait » ne s attache a la copie.
+  const personnelles = await enTantQueServeur(db, () =>
+    db.query(
+      "select (select count(*)::int from study.fils_entraide where lesson_id = $1) as questions," +
+        " (select count(*)::int from study.travaux_faits f" +
+        "    join study.assignments a on a.id = f.assignment_id" +
+        "   where a.teaching_space_id = $2) as coches",
+      [copie, OBJETS.espaceMathsA2],
+    ),
+  );
+  assert.equal(personnelles.rows[0].questions, 0, "les questions restent dans leur cours");
+  assert.equal(personnelles.rows[0].coches, 0, "aucune case cochee n a traverse");
+
+  // Et l original n a pas bouge.
+  const original = await enTantQueServeur(db, () =>
+    db.query("select state::text as state from study.lessons where id = $1", [OBJETS.seanceA1]),
+  );
+  assert.equal(original.rows[0].state, "publiee", "la source reste publiee");
+});
+
+test("D05 — on ne duplique pas vers un cours qu on n enseigne pas", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { ACTEURS, OBJETS } = await import("./harness.mjs");
+
+  // `profAutre` n enseigne pas les maths en 2DE1 : il ne peut pas recopier ce
+  // cours, meme vers un cours a lui.
+  await enTantQueServeur(db, async () => {
+    const erreur = await doitEchouer(() =>
+      db.query("select * from study.studio_dupliquer_seance($1, $2, $3, null)", [
+        ACTEURS.profAutre,
+        OBJETS.seanceA1,
+        OBJETS.espaceSpecialite,
+      ]),
+    );
+    assert.match(erreur.message, /cours d origine/i);
+  });
+
+  // Et l inverse : on ne depose pas dans le cours d un collegue. Le jeu de
+  // recette n en contient pas - profMartin enseigne tout chez A - alors on en
+  // monte un, tenu par profAutre seul.
+  const coursDuCollegue = await enTantQueServeur(db, async () => {
+    // Un cours est unique par (classe, matiere) : il faut donc une matiere
+    // nouvelle, pas une copie de celle des maths.
+    const { rows: matiere } = await db.query(
+      "insert into study.subjects (organization_id, label, subject_code)" +
+        " values ($1, 'Philosophie', 'philosophie') returning id",
+      [ACTEURS.lyceeA],
+    );
+    const { rows } = await db.query(
+      "insert into study.teaching_spaces (organization_id, academic_year_id, subject_id, class_id)" +
+        " select organization_id, academic_year_id, $2, class_id" +
+        "   from study.teaching_spaces where id = $1 returning id",
+      [OBJETS.espaceMathsA2, matiere[0].id],
+    );
+    const espace = rows[0].id;
+    await db.query(
+      "insert into study.teacher_assignments (organization_id, teaching_space_id, profile_id," +
+        " role_in_space, created_by) values ($1, $2, $3, 'titulaire', $3)",
+      [ACTEURS.lyceeA, espace, ACTEURS.profAutre],
+    );
+    return espace;
+  });
+
+  await enTantQueServeur(db, async () => {
+    const erreur = await doitEchouer(() =>
+      db.query("select * from study.studio_dupliquer_seance($1, $2, $3, null)", [
+        ACTEURS.profMartin,
+        OBJETS.seanceA1,
+        coursDuCollegue,
+      ]),
+    );
+    assert.match(erreur.message, /cours de destination/i);
+  });
+
+  const cree = await enTantQueServeur(db, () =>
+    db.query("select count(*)::int as n from study.lessons where teaching_space_id = $1", [
+      coursDuCollegue,
+    ]),
+  );
+  assert.equal(cree.rows[0].n, 0, "aucune seance n a ete deposee chez le collegue");
+});
+
+test("D06 — la duplication ne franchit pas la frontiere entre deux lycees", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+
+  const { ACTEURS, OBJETS } = await import("./harness.mjs");
+
+  await enTantQueServeur(db, async () => {
+    const erreur = await doitEchouer(() =>
+      db.query("select * from study.studio_dupliquer_seance($1, $2, $3, null)", [
+        ACTEURS.profMartin,
+        OBJETS.seanceA1,
+        OBJETS.espaceMathsB1,
+      ]),
+    );
+    assert.match(erreur.message, /destination introuvable/i);
+  });
+
+  const chezB = await enTantQueServeur(db, () =>
+    db.query(
+      "select count(*)::int as n from study.lessons where teaching_space_id = $1",
+      [OBJETS.espaceMathsB1],
+    ),
+  );
+  assert.equal(chezB.rows[0].n, 1, "le lycee B garde sa seule seance");
+});
