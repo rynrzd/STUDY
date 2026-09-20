@@ -1,6 +1,18 @@
 import "server-only";
 
 import { clientUtilisateur } from "./supabase-serveur.ts";
+
+/**
+ * Note une panne, et seulement une panne.
+ *
+ * Un refus RLS est normal. Une requête que PostgREST ne sait pas résoudre ne
+ * l'est pas : sans cette trace, une liste vide ressemble à « pas d'élèves »
+ * alors qu'elle veut dire « la requête n'a jamais abouti ».
+ */
+function journaliser(contexte: string, code: string | undefined): void {
+  if (code === "42501" || code === "PGRST116") return;
+  console.error(JSON.stringify({ niveau: "erreur", contexte, code: code ?? "inconnu" }));
+}
 import type { Cours } from "./studio.ts";
 
 /**
@@ -66,20 +78,39 @@ export interface EleveDeClasse {
  * étrangère renvoie une liste vide, et l'écran affiche « classe introuvable ».
  */
 export async function elevesDeLaClasse(jeton: string, classe: string): Promise<EleveDeClasse[]> {
-  const { data, error } = await clientUtilisateur(jeton)
+  const client = clientUtilisateur(jeton);
+
+  // Les noms sont relus séparément, et ce n'est pas un choix de style.
+  //
+  // `class_enrollments.profile_id` référence `organization_memberships`, pas
+  // `profiles` : PostgREST ne sait pas faire le rapprochement et refusait la
+  // requête (PGRST200). L'erreur était avalée, la fonction rendait un tableau
+  // vide — et un professeur ne voyait **jamais** les élèves de sa classe.
+  const { data, error } = await client
     .from("class_enrollments")
-    .select("profiles(id, first_name, last_name)")
+    .select("profile_id")
     .eq("class_id", classe)
     .limit(400);
 
-  if (error !== null) return [];
+  if (error !== null) {
+    journaliser("professeur.eleves", error.code);
+    return [];
+  }
 
-  const lignes = (data ?? []) as unknown as {
-    profiles: { id: string; first_name: string; last_name: string } | null;
-  }[];
+  const identifiants = ((data ?? []) as { profile_id: string }[]).map((ligne) => ligne.profile_id);
+  if (identifiants.length === 0) return [];
 
-  return lignes
-    .flatMap((ligne) => (ligne.profiles === null ? [] : [ligne.profiles]))
+  const { data: profils, error: erreurProfils } = await client
+    .from("profiles")
+    .select("id, first_name, last_name")
+    .in("id", identifiants);
+
+  if (erreurProfils !== null) {
+    journaliser("professeur.eleves.noms", erreurProfils.code);
+    return [];
+  }
+
+  return ((profils ?? []) as { id: string; first_name: string; last_name: string }[])
     .map((profil) => ({ id: profil.id, prenom: profil.first_name, nom: profil.last_name }))
     .sort((a, b) => a.nom.localeCompare(b.nom, "fr") || a.prenom.localeCompare(b.prenom, "fr"));
 }

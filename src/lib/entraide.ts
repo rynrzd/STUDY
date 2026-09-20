@@ -42,7 +42,6 @@ interface LigneGroupe {
 interface LigneMembre {
   workgroup_id: string;
   profile_id: string;
-  profiles: { first_name: string; last_name: string } | null;
 }
 
 /**
@@ -71,9 +70,13 @@ export async function groupesDuCours(
   const groupes = (data ?? []) as unknown as LigneGroupe[];
   if (groupes.length === 0) return [];
 
+  // Même écueil qu'ailleurs : `workgroup_members.profile_id` référence
+  // `organization_memberships`, pas `profiles`. PostgREST refuse le
+  // rapprochement, et les noms des membres ne s'affichaient jamais. On relit
+  // donc les profils à part.
   const { data: lignesMembres } = await client
     .from("workgroup_members")
-    .select("workgroup_id, profile_id, profiles(first_name, last_name)")
+    .select("workgroup_id, profile_id")
     .in(
       "workgroup_id",
       groupes.map((groupe) => groupe.id),
@@ -81,13 +84,29 @@ export async function groupesDuCours(
     .is("left_at", null)
     .limit(400);
 
+  const membresBruts = (lignesMembres ?? []) as unknown as LigneMembre[];
+
+  // Un seul aller-retour pour tous les noms de la page.
+  const { data: profils } = await client
+    .from("profiles")
+    .select("id, first_name, last_name")
+    .in("id", [...new Set(membresBruts.map((ligne) => ligne.profile_id))]);
+
+  const noms = new Map(
+    ((profils ?? []) as { id: string; first_name: string; last_name: string }[]).map((profil) => [
+      profil.id,
+      profil,
+    ]),
+  );
+
   const parGroupe = new Map<string, Groupe["membres"]>();
-  for (const ligne of (lignesMembres ?? []) as unknown as LigneMembre[]) {
+  for (const ligne of membresBruts) {
     const liste = parGroupe.get(ligne.workgroup_id) ?? [];
+    const profil = noms.get(ligne.profile_id);
     liste.push({
       id: ligne.profile_id,
-      prenom: ligne.profiles?.first_name ?? "",
-      nom: ligne.profiles?.last_name ?? "",
+      prenom: profil?.first_name ?? "",
+      nom: profil?.last_name ?? "",
     });
     parGroupe.set(ligne.workgroup_id, liste);
   }

@@ -306,7 +306,7 @@ export async function scenarioClasse({ navigateur, base, terrain, sql, verifier 
             .innerText()
             .catch(() => "(section absente)");
           console.log(
-            `       diagnostic entraide A : « ${section.replace(/s+/g, " ").slice(0, 200)} »`,
+            `       diagnostic entraide A : « ${section.replace(/[\s]+/g, " ").slice(0, 200)} »`,
           );
         }
         verifier(texteVisible.includes("🙂"), "les emoji et accents survivent");
@@ -320,7 +320,7 @@ export async function scenarioClasse({ navigateur, base, terrain, sql, verifier 
             .innerText()
             .catch(() => "(section absente)");
           console.log(
-            `       diagnostic entraide B : ${new URL(eleveB.page.url()).pathname} — « ${vue.replace(/s+/g, " ").slice(0, 200)} »`,
+            `       diagnostic entraide B : ${new URL(eleveB.page.url()).pathname} — « ${vue.replace(/[\s]+/g, " ").slice(0, 200)} »`,
           );
         }
         if (verifier((await reponse.count()) > 0, "B voit la question de A et peut repondre")) {

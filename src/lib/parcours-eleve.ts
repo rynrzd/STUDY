@@ -3,6 +3,19 @@ import "server-only";
 import { clientUtilisateur } from "./supabase-serveur.ts";
 
 /**
+ * Note une panne, et seulement une panne.
+ *
+ * Un refus RLS est un cas normal — c'est le produit qui fonctionne — et il n'a
+ * rien à faire au journal technique. Le reste, en revanche, doit se voir : une
+ * requête refusée par PostgREST rendait ici un tableau vide, et une
+ * fonctionnalité entière devenait invisible sans que rien ne le signale.
+ */
+function journaliser(contexte: string, code: string | undefined): void {
+  if (code === "42501" || code === "PGRST116") return;
+  console.error(JSON.stringify({ niveau: "erreur", contexte, code: code ?? "inconnu" }));
+}
+
+/**
  * Le parcours de l'élève — cahier V5, §3.
  *
  * Tout passe par le jeton de la personne : c'est RLS qui décide, et aucune de
@@ -183,14 +196,13 @@ interface LigneFil {
   auteur_id: string;
   resolu_le: string | null;
   created_at: string;
-  profiles: { first_name: string; last_name: string } | null;
   reponses_entraide: {
     id: string;
     texte: string;
     utile: boolean;
     created_at: string;
     masque_le: string | null;
-    profiles: { first_name: string; last_name: string } | null;
+    auteur_id: string;
   }[];
 }
 
@@ -203,23 +215,57 @@ interface LigneFil {
  * ce qui sépare l'entraide scolaire d'un salon de discussion (§3.5).
  */
 export async function filsDeLaSeance(jeton: string, seance: string): Promise<FilEntraide[]> {
-  const { data, error } = await clientUtilisateur(jeton)
+  const client = clientUtilisateur(jeton);
+
+  // Les noms ne sont **pas** demandés par jointure imbriquée.
+  //
+  // `fils_entraide.auteur_id` référence `organization_memberships`, pas
+  // `profiles` : il n'existe aucune clé étrangère entre les deux, et PostgREST
+  // refusait donc la requête. L'erreur était avalée et la fonction rendait un
+  // tableau vide — les questions posées n'étaient affichées à personne, pas
+  // même à leur auteur, qui voyait pourtant « votre question est posée ».
+  const { data, error } = await client
     .from("fils_entraide")
     .select(
-      "id, question, auteur_id, resolu_le, created_at, profiles(first_name, last_name), " +
-        "reponses_entraide(id, texte, utile, created_at, masque_le, profiles(first_name, last_name))",
+      "id, question, auteur_id, resolu_le, created_at, " +
+        "reponses_entraide(id, texte, utile, created_at, masque_le, auteur_id)",
     )
     .eq("lesson_id", seance)
     .is("masque_le", null)
     .order("created_at", { ascending: false })
     .limit(40);
 
-  if (error !== null) return [];
+  if (error !== null) {
+    journaliser("entraide.fils", error.code);
+    return [];
+  }
 
-  return ((data ?? []) as unknown as LigneFil[]).map((fil) => ({
+  const lignes = (data ?? []) as unknown as LigneFil[];
+  if (lignes.length === 0) return [];
+
+  // Un seul aller-retour pour tous les noms de la page.
+  const auteurs = new Set<string>();
+  for (const fil of lignes) {
+    auteurs.add(fil.auteur_id);
+    for (const reponse of fil.reponses_entraide ?? []) auteurs.add(reponse.auteur_id);
+  }
+
+  const { data: profils } = await client
+    .from("profiles")
+    .select("id, first_name, last_name")
+    .in("id", [...auteurs]);
+
+  const noms = new Map(
+    ((profils ?? []) as { id: string; first_name: string; last_name: string }[]).map((profil) => [
+      profil.id,
+      nomCourt(profil),
+    ]),
+  );
+
+  return lignes.map((fil) => ({
     id: fil.id,
     question: fil.question,
-    auteur: nomCourt(fil.profiles),
+    auteur: noms.get(fil.auteur_id) ?? "Un camarade",
     auteurId: fil.auteur_id,
     resolu: fil.resolu_le !== null,
     createdAt: fil.created_at,
@@ -229,7 +275,7 @@ export async function filsDeLaSeance(jeton: string, seance: string): Promise<Fil
       .map((reponse) => ({
         id: reponse.id,
         texte: reponse.texte,
-        auteur: nomCourt(reponse.profiles),
+        auteur: noms.get(reponse.auteur_id) ?? "Un camarade",
         utile: reponse.utile,
         createdAt: reponse.created_at,
       })),

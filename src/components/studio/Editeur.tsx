@@ -3,7 +3,7 @@
 import { instantLisible, jourLisible } from "@/lib/horodatage";
 
 import Link from "next/link";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
   ajouterBloc,
@@ -583,12 +583,18 @@ function AjoutBloc({ seance }: { seance: string }) {
   const [etat, action] = useActionState<EtatStudio, FormData>(ajouterBloc, ETAT_STUDIO_INITIAL);
 
   // Le bloc ajouté, le formulaire se referme et rend la main à la barre de
-  // choix. Sans cela il restait ouvert sur le type précédent, avec ses champs
-  // vidés : pour ajouter un second bloc d'un autre type, il fallait deviner
-  // qu'il faut d'abord annuler. On revient à l'état d'où l'on était parti.
-  useEffect(() => {
-    if (etat.etat === "ok") setType(null);
-  }, [etat]);
+  // choix. Sans cela il restait ouvert sur le type précédent, champs vidés :
+  // pour ajouter un bloc d'un autre type, il fallait deviner qu'il faut
+  // d'abord annuler.
+  //
+  // L'ajustement se fait pendant le rendu, pas dans un effet : React réexécute
+  // alors le composant avant de peindre, et l'écran ne montre jamais l'état
+  // intermédiaire. Un effet, lui, provoquerait un aller-retour visible.
+  const [dernierEtat, setDernierEtat] = useState(etat);
+  if (etat !== dernierEtat) {
+    setDernierEtat(etat);
+    if (etat.etat === "ok" && type !== null) setType(null);
+  }
 
   if (type === null) {
     return (
