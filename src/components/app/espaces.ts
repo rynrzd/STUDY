@@ -31,6 +31,7 @@ export const LIENS_ELEVE: readonly LienEspace[] = [
 export const LIENS_ADMIN: readonly LienEspace[] = [
   { href: "/admin", libelle: "Tableau de bord" },
   { href: "/admin/classes", libelle: "Classes" },
+  { href: "/admin/professeurs", libelle: "Professeurs" },
   { href: "/admin/utilisateurs", libelle: "Utilisateurs" },
   { href: "/admin/import", libelle: "Import" },
   { href: "/parametres", libelle: "Paramètres" },

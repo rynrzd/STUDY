@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { TitreEspace, Vide } from "@/components/app/Cadre";
 import { affectations, classes, contexte, membres } from "@/lib/etablissement";
+import { historiqueImports } from "@/lib/lot-rentree";
 import { sessionCourante } from "@/lib/session-serveur";
 
 /**
@@ -33,10 +34,11 @@ export default async function PageAdmin() {
     );
   }
 
-  const [listeClasses, listeMembres, listeAffectations] = await Promise.all([
+  const [listeClasses, listeMembres, listeAffectations, imports] = await Promise.all([
     classes(personne.profileId),
     membres(personne.profileId),
     affectations(personne.profileId),
+    historiqueImports(personne.profileId),
   ]);
 
   const eleves = listeMembres.filter((membre) => membre.roles.includes("eleve"));
@@ -53,8 +55,8 @@ export default async function PageAdmin() {
         }${situation.etat === "actif" ? "" : ` · ${situation.etat}`}`}
         action={
           <>
-            <Link href="/admin/classes" className="bouton bouton-secondaire">
-              Classes
+            <Link href="/admin/professeurs" className="bouton bouton-secondaire">
+              Professeurs
             </Link>
             <Link href="/admin/import" className="bouton bouton-rose">
               Import de rentrée
@@ -111,6 +113,64 @@ export default async function PageAdmin() {
                     detail="Un cours sans professeur affecté n'apparaît dans aucun Studio : personne ne peut y publier de séance."
                   />
                 ) : null}
+              </ul>
+            </section>
+          ) : null}
+
+          {imports.length > 0 ? (
+            <section className="mt-10">
+              <div className="flex flex-wrap items-baseline justify-between gap-3">
+                <h2 className="text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
+                  Imports récents
+                </h2>
+                <Link
+                  href="/admin/import"
+                  className="text-[length:var(--text-aide)] text-[color:var(--color-accent)]"
+                >
+                  Tous les imports
+                </Link>
+              </div>
+
+              <ul className="m-0 mt-4 list-none p-0">
+                {imports.slice(0, 5).map((lot) => {
+                  const enAttente = lot.state !== "applique" && lot.state !== "abandonne";
+                  const rate = (lot.rapport?.erreur ?? 0) > 0;
+
+                  return (
+                    <li key={lot.id}>
+                      <Link
+                        href={
+                          lot.kind === "enseignants"
+                            ? `/admin/import/profs/${lot.id}`
+                            : `/admin/import/${lot.id}`
+                        }
+                        className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--color-bordure)] px-1 py-3 no-underline transition-colors hover:bg-[color:var(--color-survol)]"
+                      >
+                        <span className="min-w-0">
+                          <span className="block font-medium text-[color:var(--color-encre)]">
+                            {lot.kind === "enseignants" ? "Professeurs" : "Élèves"} ·{" "}
+                            {new Date(lot.applied_at ?? lot.created_at).toLocaleDateString("fr-FR", {
+                              day: "numeric",
+                              month: "long",
+                            })}
+                          </span>
+                          <span className="mt-0.5 block text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
+                            {enAttente
+                              ? "Analysé, pas encore validé"
+                              : `${lot.rapport?.cree ?? 0} créé${(lot.rapport?.cree ?? 0) > 1 ? "s" : ""}, ${lot.rapport?.existant ?? 0} déjà présent${(lot.rapport?.existant ?? 0) > 1 ? "s" : ""}`}
+                          </span>
+                        </span>
+                        {enAttente || rate ? (
+                          <span
+                            className={`pastille ${rate ? "pastille-brouillon" : "pastille-attention"}`}
+                          >
+                            {rate ? `${lot.rapport?.erreur} en erreur` : "à terminer"}
+                          </span>
+                        ) : null}
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           ) : null}
