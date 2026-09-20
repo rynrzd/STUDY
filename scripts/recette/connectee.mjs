@@ -22,6 +22,7 @@ import { connecter, contexteDe, ouvrirNavigateur } from "./navigateur.mjs";
 import { balayer, residuDeRecette } from "./nettoyage.mjs";
 import { marqueurUnique, preparerTerrain } from "./terrain.mjs";
 import { scenarioStudio } from "./scenario-studio.mjs";
+import { scenarioClasse } from "./scenario-classe.mjs";
 
 chargerEnv();
 
@@ -139,6 +140,7 @@ try {
   verifier(true, `etablissement ${terrain.code}, 2 classes, 1 professeur, 3 eleves`);
 
   await scenarioStudio({ navigateur, base: BASE, terrain, sql, verifier, service: service() });
+  await scenarioClasse({ navigateur, base: BASE, terrain, sql, verifier });
 } catch (erreur) {
   echecs += 1;
   console.log(`\n  ERREUR : ${erreur.message}`);

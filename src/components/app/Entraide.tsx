@@ -43,6 +43,7 @@ export function Entraide({
         {!ouvert ? (
           <button
             type="button"
+            data-testid="entraide-ouvrir"
             onClick={() => setOuvert(true)}
             className="bouton bouton-secondaire"
           >
@@ -52,12 +53,13 @@ export function Entraide({
       </div>
 
       {ouvert ? (
-        <form action={poser} className="carte mt-4 p-5">
+        <form action={poser} data-testid="entraide-question" className="carte mt-4 p-5">
           <input type="hidden" name="seance" value={seance} />
           <label className="etiquette" htmlFor="question">
             Qu&apos;est-ce qui coince ?
           </label>
           <textarea
+            data-testid="entraide-texte-question"
             id="question"
             name="question"
             rows={3}
@@ -85,7 +87,7 @@ export function Entraide({
           ) : null}
 
           <div className="mt-4 flex flex-wrap gap-3">
-            <Bouton libelle="Poser la question" variante="primaire" />
+            <Bouton libelle="Poser la question" variante="primaire" marque="entraide-poser" />
             <button
               type="button"
               onClick={() => setOuvert(false)}
@@ -153,7 +155,7 @@ function Fil({ fil, seance, moi }: { fil: FilEntraide; seance: string; moi: stri
         </ul>
       ) : null}
 
-      <form action={envoyer} className="mt-4">
+      <form action={envoyer} data-testid="entraide-reponse" data-fil={fil.id} className="mt-4">
         <input type="hidden" name="fil" value={fil.id} />
         <input type="hidden" name="seance" value={seance} />
         <label className="sr-only" htmlFor={`reponse-${fil.id}`}>
@@ -163,6 +165,7 @@ function Fil({ fil, seance, moi }: { fil: FilEntraide; seance: string; moi: stri
           <div className="min-w-0 flex-1">
             <input
               id={`reponse-${fil.id}`}
+              data-testid="entraide-texte-reponse"
               name="texte"
               type="text"
               required
@@ -171,7 +174,7 @@ function Fil({ fil, seance, moi }: { fil: FilEntraide; seance: string; moi: stri
               className="champ"
             />
           </div>
-          <Bouton libelle="Répondre" variante="secondaire" />
+          <Bouton libelle="Répondre" variante="secondaire" marque="entraide-repondre" />
         </div>
 
         {etat.etat === "erreur" ? (
@@ -187,10 +190,24 @@ function Fil({ fil, seance, moi }: { fil: FilEntraide; seance: string; moi: stri
   );
 }
 
-function Bouton({ libelle, variante }: { libelle: string; variante: "primaire" | "secondaire" }) {
+function Bouton({
+  libelle,
+  variante,
+  marque,
+}: {
+  libelle: string;
+  variante: "primaire" | "secondaire";
+  /** Identifiant stable : deux boutons d envoi coexistent sur un fil. */
+  marque?: string;
+}) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} className={`bouton bouton-${variante}`}>
+    <button
+      type="submit"
+      data-testid={marque}
+      disabled={pending}
+      className={`bouton bouton-${variante}`}
+    >
       {pending ? "Envoi…" : libelle}
     </button>
   );

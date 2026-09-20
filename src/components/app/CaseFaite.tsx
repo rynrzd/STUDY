@@ -40,6 +40,9 @@ export function CaseFaite({
 
       <button
         type="submit"
+        data-testid="case-fait"
+        data-devoir={devoir}
+        data-fait={coche ? "oui" : "non"}
         aria-pressed={coche}
         className={`flex min-h-[var(--spacing-cible)] items-center gap-2 rounded-[var(--radius-champ)] border px-3 py-2 text-[length:var(--text-aide)] transition-colors ${
           coche
