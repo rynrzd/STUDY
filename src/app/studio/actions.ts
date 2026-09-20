@@ -253,6 +253,14 @@ export async function publierSeance(
 
     if (error !== null) return REFUS;
 
+    // Les devoirs de la séance repartent avec elle. Les laisser publiés
+    // donnerait à l'élève un travail à rendre rattaché à un cours qu'il ne
+    // peut plus ouvrir — et l'échéance continuerait de courir.
+    await client
+      .from("assignments")
+      .update({ state: "brouillon", published_at: null })
+      .eq("lesson_id", analyse.data.id);
+
     revalidatePath(`/studio/${analyse.data.id}`);
     revalidatePath("/eleve");
     return { etat: "ok", message: "Séance dépubliée : elle redevient un brouillon." };
@@ -303,6 +311,15 @@ export async function publierSeance(
     .eq("id", analyse.data.id);
 
   if (error !== null) return REFUS;
+
+  // Les devoirs de la séance paraissent avec elle. C'est le moment où le
+  // professeur décide que le cours est prêt : c'est donc le moment où le
+  // travail à rendre devient réel pour l'élève, et pas avant.
+  await client
+    .from("assignments")
+    .update({ state: "publiee", published_at: maintenant })
+    .eq("lesson_id", analyse.data.id)
+    .eq("state", "brouillon");
 
   // Trace de la publication. Elle ne conditionne pas le succès : la séance est
   // publiée, et perdre la trace ne doit pas faire croire le contraire au
@@ -420,6 +437,19 @@ export async function ajouterBloc(
     // Le devoir est un objet à part entière : il apparaît chez l'élève dans
     // « À faire », pas seulement au milieu de la séance. Le bloc ne fait que
     // le rattacher au cours où il a été donné.
+    //
+    // Il naît dans l'état de sa séance, et non systématiquement publié. Un
+    // professeur qui prépare la semaine prochaine dans un brouillon voyait
+    // sinon son devoir apparaître aussitôt dans « À faire » de ses élèves,
+    // échéance comprise — une consigne pas encore écrite, donnée par erreur.
+    const { data: etatSeance } = await client
+      .from("lessons")
+      .select("state")
+      .eq("id", seanceId)
+      .maybeSingle();
+
+    const seancePubliee = (etatSeance as { state: string } | null)?.state === "publiee";
+
     const { data: devoir, error: erreurDevoir } = await client
       .from("assignments")
       .insert({
@@ -429,8 +459,8 @@ export async function ajouterBloc(
         title: titre,
         instructions: { blocs: consigne === "" ? [] : [{ type: "texte", texte: consigne }] },
         due_at: echeance === "" ? null : new Date(`${echeance}T23:59:00`).toISOString(),
-        state: "publiee",
-        published_at: new Date().toISOString(),
+        state: seancePubliee ? "publiee" : "brouillon",
+        published_at: seancePubliee ? new Date().toISOString() : null,
         created_by: personne.profileId,
       })
       .select("id")
@@ -611,7 +641,10 @@ export async function modifierBloc(
       .update({
         title: String(contenu.titre ?? ""),
         instructions: { consigne: String(contenu.consigne ?? "") },
-        due_at: echeance === "" ? null : `${echeance}T23:59:00+02:00`,
+        // Même conversion qu'à la création : deux calculs d'échéance
+        // différents sur le même objet donneraient deux heures limites selon
+        // qu'on a créé ou modifié le devoir.
+        due_at: echeance === "" ? null : new Date(`${echeance}T23:59:00`).toISOString(),
       })
       .eq("id", actuel.assignment_id);
   }

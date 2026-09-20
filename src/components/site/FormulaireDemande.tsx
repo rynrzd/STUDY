@@ -63,7 +63,13 @@ export function FormulaireDemande({ ouverture }: { ouverture: string }) {
   }
 
   return (
-    <form action={action} noValidate className="space-y-8" aria-describedby={`${base}-information`}>
+    <form
+      action={action}
+      noValidate
+      data-testid="demande-formulaire"
+      className="space-y-8"
+      aria-describedby={`${base}-information`}
+    >
       <input type="hidden" name="ouverture" value={ouverture} />
 
       {/* Champ leurre : masqué à l'œil et au lecteur d'écran, laissé vide. */}
@@ -240,7 +246,12 @@ function BoutonEnvoi() {
   const { pending } = useFormStatus();
   return (
     <div>
-      <button type="submit" disabled={pending} className="bouton bouton-primaire">
+      <button
+      type="submit"
+      data-testid="demande-envoyer"
+      disabled={pending}
+      className="bouton bouton-primaire"
+    >
         {pending ? "Envoi en cours…" : "Envoyer la demande"}
         {pending ? null : (
           <span aria-hidden="true" className="fleche">

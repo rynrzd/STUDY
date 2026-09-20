@@ -102,9 +102,9 @@ export async function scenarioClasse({ navigateur, base, terrain, sql, verifier 
 
     verifier(devoir.due_at !== null, "l echeance saisie est enregistree");
     verifier(
-      String(devoir.due_at).slice(0, 10) === demain,
+      new Date(devoir.due_at).toISOString().slice(0, 10) === demain,
       "l echeance est bien celle qui a ete saisie",
-      String(devoir.due_at).slice(0, 10),
+      new Date(devoir.due_at).toISOString().slice(0, 10),
     );
     verifier(
       devoir.teaching_space_id === terrain.cours.cible,
@@ -185,7 +185,9 @@ export async function scenarioClasse({ navigateur, base, terrain, sql, verifier 
       return rows.length > 0;
     };
 
-    await exigerPage(eleveA.page, base, "/eleve/devoirs", { attendu: "/eleve/devoirs" });
+    // La case « fait » vit sur l accueil de l eleve, la ou sont les travaux du
+    // jour — pas sur la liste complete.
+    await exigerPage(eleveA.page, base, "/eleve", { attendu: "/eleve" });
     const caseA = eleveA.page.locator(`[data-testid="case-fait"][data-devoir="${devoir.id}"]`);
 
     if ((await caseA.count()) === 0) {
@@ -209,7 +211,7 @@ export async function scenarioClasse({ navigateur, base, terrain, sql, verifier 
       verifier(apres.length === 1, "cocher « fait » est enregistre en base");
 
       // Persistance : c'est l'état en base qui décide, pas l'écran.
-      await exigerPage(eleveA.page, base, "/eleve/devoirs", { attendu: "/eleve/devoirs" });
+      await exigerPage(eleveA.page, base, "/eleve", { attendu: "/eleve" });
       const caseApres = eleveA.page.locator(`[data-testid="case-fait"][data-devoir="${devoir.id}"]`);
       verifier(
         (await caseApres.getAttribute("data-fait")) === "oui",
@@ -222,7 +224,7 @@ export async function scenarioClasse({ navigateur, base, terrain, sql, verifier 
         "l etat de A ne deteint pas sur B",
       );
 
-      await exigerPage(eleveB.page, base, "/eleve/devoirs", { attendu: "/eleve/devoirs" });
+      await exigerPage(eleveB.page, base, "/eleve", { attendu: "/eleve" });
       const caseB = eleveB.page.locator(`[data-testid="case-fait"][data-devoir="${devoir.id}"]`);
       if ((await caseB.count()) > 0) {
         verifier(
@@ -298,11 +300,29 @@ export async function scenarioClasse({ navigateur, base, terrain, sql, verifier 
           texteVisible.includes("<b>gras</b>") || gras === 0,
           "le HTML ecrit par un eleve reste du texte",
         );
+        if (!texteVisible.includes("🙂")) {
+          const section = await eleveA.page
+            .locator("section[aria-labelledby='titre-entraide']")
+            .innerText()
+            .catch(() => "(section absente)");
+          console.log(
+            `       diagnostic entraide A : « ${section.replace(/s+/g, " ").slice(0, 200)} »`,
+          );
+        }
         verifier(texteVisible.includes("🙂"), "les emoji et accents survivent");
 
         // B répond : le fil est celui de la classe, pas celui d'une personne.
         await exigerPage(eleveB.page, base, `/eleve/cours/${seance.id}`, {});
         const reponse = eleveB.page.locator(`[data-testid="entraide-reponse"][data-fil="${fil.id}"]`);
+        if ((await reponse.count()) === 0) {
+          const vue = await eleveB.page
+            .locator("section[aria-labelledby='titre-entraide']")
+            .innerText()
+            .catch(() => "(section absente)");
+          console.log(
+            `       diagnostic entraide B : ${new URL(eleveB.page.url()).pathname} — « ${vue.replace(/s+/g, " ").slice(0, 200)} »`,
+          );
+        }
         if (verifier((await reponse.count()) > 0, "B voit la question de A et peut repondre")) {
           await reponse.locator('[data-testid="entraide-texte-reponse"]').fill(`Réponse ${marque}`);
           await soumettre(eleveB.page, `[data-fil="${fil.id}"] [data-testid="entraide-repondre"]`);
