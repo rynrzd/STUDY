@@ -120,12 +120,40 @@ try {
     for (const [nom, script] of [
       ["balisage, SEO et CSP", "verifier:site"],
       ["landing conforme a la reference", "verifier:landing"],
-      ["responsive, clavier et cibles tactiles", "verifier:responsive"],
-      ["parcours navigateur permanents", "test:navigateur"],
+      ["responsive public, clavier et cibles tactiles", "verifier:responsive"],
+      ["parcours navigateur publics", "test:navigateur"],
     ]) {
       const resultat = await lancer(nom, [script]);
       noter(nom, resultat.code === 0 ? "ok" : "echec", resultat.code === 0 ? "" : resume(resultat.sortie));
     }
+
+    // Les parcours connectés : le Studio, les devoirs, l'entraide, la case
+    // « fait », les imports, les fichiers, le formulaire, le responsive des
+    // espaces fermés. Ils bâtissent et démontent leur propre terrain.
+    const connectee = await lancer("parcours connectes", ["recette:connectee"]);
+    noter(
+      "parcours connectes (§1 a §8)",
+      connectee.code === 0 ? "ok" : "echec",
+      resume(connectee.sortie),
+    );
+    if (/CRITIQUE/.test(connectee.sortie)) critique = true;
+
+    // Les formes de requête : elles ne se voient pas sous PGlite, qui n'a pas
+    // PostgREST. Trois fonctionnalités ont rendu une liste vide sans rien dire
+    // avant que ce contrôle existe.
+    const requetes = await lancer("formes de requete", ["verifier:requetes"]);
+    noter(
+      "les requetes du produit restent resolvables",
+      requetes.code === 0 ? "ok" : "echec",
+      resume(requetes.sortie),
+    );
+
+    const journal = await lancer("journal d audit", ["verifier:journal"]);
+    noter(
+      "le journal d audit ne porte aucun secret et reste immuable",
+      journal.code === 0 ? "ok" : "echec",
+      resume(journal.sortie),
+    );
   }
 } finally {
   // Le balai passe quoi qu'il arrive : interruption, erreur, ou succes.
@@ -169,6 +197,19 @@ try {
       critique = true;
       console.log("  CRITIQUE : il reste des traces de recette en production :");
       for (const reste of restes) console.log(`    - ${reste}`);
+    }
+
+    // Le compte exact du §12, vérifié par le script dédié : il connaît les
+    // douze compteurs attendus, et il est le seul endroit où ils sont écrits.
+    const final = await lancer("etat final", ["verifier:etat-final"]);
+    if (final.code !== 0) {
+      critique = true;
+      console.log("  CRITIQUE : l etat final ne correspond pas a ce qui est attendu.");
+      for (const ligne of final.sortie.split(/\r?\n/).filter((l) => l.includes("NON "))) {
+        console.log(`    ${ligne.trim()}`);
+      }
+    } else {
+      console.log("  etat final conforme : un seul compte, et rien d autre.");
     }
   } catch (erreur) {
     critique = true;

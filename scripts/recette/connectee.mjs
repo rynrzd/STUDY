@@ -26,6 +26,7 @@ import { scenarioClasse } from "./scenario-classe.mjs";
 import { scenarioImport } from "./scenario-import.mjs";
 import { scenarioFichiers } from "./scenario-fichiers.mjs";
 import { scenarioDemande } from "./scenario-demande.mjs";
+import { scenarioResponsive } from "./scenario-responsive.mjs";
 
 chargerEnv();
 
@@ -154,6 +155,7 @@ try {
     ["§5 imports .xlsx", scenarioImport, commun],
     ["§6 fichiers et stockage", scenarioFichiers, commun],
     ["§7 formulaire de demonstration", scenarioDemande, { navigateur, base: BASE, sql, verifier }],
+    ["§8 responsive connecte et accessibilite", scenarioResponsive, commun],
   ]) {
     try {
       await scenario(arguments_);
