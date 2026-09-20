@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
+import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
 import { AppelFinal, Carte, Section, TitrePage } from "@/components/site/Ui";
 import { Reveler } from "@/components/site/Reveler";
 import { MARQUE } from "@/lib/identite-legale";
 
-export const metadata: Metadata = {
-  title: "Produit",
+export const metadata: Metadata = pagePublique({
+  chemin: "/produit",
+  titre: "Produit",
   description:
-    "Séances, devoirs, copies, corrections, entraide et révisions. Ce que fait AvecStudy, " +
-    "et ce qu'il ne fait pas.",
-  alternates: { canonical: "/produit" },
-};
+    "Séances, devoirs, copies, corrections, entraide et révisions. Ce que fait AvecStudy, et ce qu'il ne fait pas.",
+});
 
 const FAMILLES = [
   {

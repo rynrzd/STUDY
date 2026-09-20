@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
+import { pagePrivee } from "@/lib/metadonnees";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { FormulaireConnexion } from "@/components/site/FormulaireConnexion";
 import { MARQUE } from "@/lib/identite-legale";
 import { destinationApresConnexion, sessionCourante } from "@/lib/session-serveur";
 
-export const metadata: Metadata = {
-  title: "Connexion",
-  description: "Entrée réservée aux membres d'un établissement équipé.",
-  robots: { index: false, follow: false },
-};
+export const metadata: Metadata = pagePrivee({
+  titre: "Connexion",
+  description:
+    "Entrée réservée aux membres d'un établissement équipé.",
+});
 
 /**
  * /connexion — C01.

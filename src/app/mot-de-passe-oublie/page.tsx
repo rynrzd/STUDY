@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import { pagePrivee } from "@/lib/metadonnees";
 import Link from "next/link";
 import { MARQUE } from "@/lib/identite-legale";
 
-export const metadata: Metadata = {
-  title: "Mot de passe oublié",
-  robots: { index: false, follow: false },
-};
+export const metadata: Metadata = pagePrivee({
+  titre: "Mot de passe oublié",
+  description:
+    "Comment retrouver un accès perdu.",
+});
 
 /**
  * /mot-de-passe-oublie — cahier V2, §21.

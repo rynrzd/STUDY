@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
 import { Prose, Section, TitrePage } from "@/components/site/Ui";
 import { DOMAINE, IDENTITE, MARQUE } from "@/lib/identite-legale";
 
-export const metadata: Metadata = {
-  title: "Conditions",
-  description: "Conditions d'utilisation du service et cadre contractuel avec les établissements.",
-  alternates: { canonical: "/conditions" },
-};
+export const metadata: Metadata = pagePublique({
+  chemin: "/conditions",
+  titre: "Conditions",
+  description:
+    "Conditions d'utilisation du service et cadre contractuel avec les établissements.",
+});
 
 /**
  * Conditions d'utilisation.

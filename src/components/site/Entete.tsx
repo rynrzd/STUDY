@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { MARQUE } from "@/lib/identite-legale";
 
 /**
@@ -23,13 +23,61 @@ const LIENS = [
 export function Entete() {
   const [ouvert, setOuvert] = useState(false);
 
+  const bouton = useRef<HTMLButtonElement>(null);
+  const panneau = useRef<HTMLDivElement>(null);
+  const identifiantMenu = useId();
+
+  /**
+   * Fermer, et rendre le focus au bouton.
+   *
+   * La restitution n'est pas un détail : quand on ferme depuis un lien du
+   * menu, l'élément qui avait le focus vient de disparaître. Sans cette
+   * ligne, le focus retombe sur `<body>` et la tabulation suivante repart du
+   * haut de la page — on perd sa place.
+   */
+  function fermer(rendreLeFocus = true) {
+    setOuvert(false);
+    if (rendreLeFocus) bouton.current?.focus();
+  }
+
   useEffect(() => {
     if (!ouvert) return;
-    const fermer = (evenement: KeyboardEvent) => {
-      if (evenement.key === "Escape") setOuvert(false);
+
+    const auClavier = (evenement: KeyboardEvent) => {
+      if (evenement.key === "Escape") fermer();
     };
-    document.addEventListener("keydown", fermer);
-    return () => document.removeEventListener("keydown", fermer);
+
+    /**
+     * Un clic en dehors ferme le menu.
+     *
+     * On écoute sur `pointerdown` plutôt que `click` : un `click` part après
+     * le relâchement, donc après qu'un lien situé sous le menu a déjà pu
+     * recevoir le sien. On regarde si le point touché est dans le panneau ou
+     * sur le bouton — pour le bouton, c'est sa propre bascule qui joue, sinon
+     * il fermerait puis rouvrirait aussitôt.
+     */
+    const auPointeur = (evenement: PointerEvent) => {
+      const cible = evenement.target as Node | null;
+      if (cible === null) return;
+      if (panneau.current?.contains(cible) === true) return;
+      if (bouton.current?.contains(cible) === true) return;
+      fermer(false);
+    };
+
+    document.addEventListener("keydown", auClavier);
+    document.addEventListener("pointerdown", auPointeur);
+
+    // Le fond ne défile plus sous le menu ouvert. On restitue la valeur
+    // précédente plutôt que d'écrire « visible » en dur : une autre partie de
+    // l'application pourrait l'avoir posée, et on n'a pas à en décider ici.
+    const defilementPrecedent = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", auClavier);
+      document.removeEventListener("pointerdown", auPointeur);
+      document.body.style.overflow = defilementPrecedent;
+    };
   }, [ouvert]);
 
   return (
@@ -74,10 +122,11 @@ export function Entete() {
         </div>
 
         <button
+          ref={bouton}
           type="button"
           onClick={() => setOuvert((valeur) => !valeur)}
           aria-expanded={ouvert}
-          aria-controls="menu-mobile"
+          aria-controls={identifiantMenu}
           className="flex h-11 w-11 items-center justify-center rounded-[var(--radius-champ)] border border-[color:var(--color-bordure)] md:hidden"
         >
           <span className="sr-only">{ouvert ? "Fermer le menu" : "Ouvrir le menu"}</span>
@@ -88,7 +137,8 @@ export function Entete() {
       </div>
 
       <div
-        id="menu-mobile"
+        ref={panneau}
+        id={identifiantMenu}
         hidden={!ouvert}
         className="border-t border-[color:var(--color-bordure)] md:hidden"
       >
@@ -97,7 +147,7 @@ export function Entete() {
             <Link
               key={lien.href}
               href={lien.href}
-              onClick={() => setOuvert(false)}
+              onClick={() => fermer()}
               className="flex min-h-[var(--spacing-cible)] items-center text-[length:var(--text-corps)] no-underline"
             >
               {lien.libelle}
@@ -105,14 +155,14 @@ export function Entete() {
           ))}
           <Link
             href="/connexion"
-            onClick={() => setOuvert(false)}
+            onClick={() => fermer()}
             className="flex min-h-[var(--spacing-cible)] items-center text-[length:var(--text-corps)] no-underline"
           >
             Se connecter
           </Link>
           <Link
             href="/etablissements"
-            onClick={() => setOuvert(false)}
+            onClick={() => fermer()}
             className="bouton bouton-primaire mt-2"
           >
             Demander une démo

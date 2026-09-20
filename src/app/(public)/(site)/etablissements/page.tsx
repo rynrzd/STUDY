@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
+import { pagePublique } from "@/lib/metadonnees";
 import { FormulaireDemande } from "@/components/site/FormulaireDemande";
 import { Section, TitrePage } from "@/components/site/Ui";
 import { jetonOuverture } from "@/lib/demande-commerciale";
 
-export const metadata: Metadata = {
-  title: "Pour les établissements",
+export const metadata: Metadata = pagePublique({
+  chemin: "/etablissements",
+  titre: "Pour les établissements",
   description:
-    "Demander une démonstration ou un devis pour équiper votre lycée. Aucun fichier " +
-    "d'élèves n'est demandé à cette étape.",
-  alternates: { canonical: "/etablissements" },
-};
+    "Demander une démonstration ou un devis pour équiper votre lycée. Aucun fichier d'élèves n'est demandé à cette étape.",
+});
 
 /**
  * /etablissements — parcours unique de demande (finition V1, §5.2).

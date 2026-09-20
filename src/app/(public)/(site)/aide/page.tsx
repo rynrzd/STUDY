@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
+import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
 import { Prose, Section, TitrePage } from "@/components/site/Ui";
 
-export const metadata: Metadata = {
-  title: "Aide",
-  description: "Les questions les plus fréquentes, et à qui s'adresser.",
-  alternates: { canonical: "/aide" },
-};
+export const metadata: Metadata = pagePublique({
+  chemin: "/aide",
+  titre: "Aide",
+  description:
+    "Les questions les plus fréquentes, et à qui s'adresser.",
+});
 
 const QUESTIONS = [
   {

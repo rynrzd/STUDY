@@ -9,8 +9,10 @@
  * Aucun de ces composants n'est client : ils ne portent aucun état, donc aucun
  * JavaScript ne part dans le paquet public pour les afficher (P01).
  *
- * Les contenus sont fictifs et le disent : « Mme Bernard », « Seconde 1 ». Il
- * n'y a ici ni donnée réelle, ni nom de lycée, ni chiffre de clientèle.
+ * Les contenus sont fictifs et l'écran le dit : une mention « Aperçu fictif »
+ * accompagne le premier d'entre eux. Les noms retenus — Camille Martin, Mme
+ * Bernard, Lina, Samir, Inès — ne désignent personne ; aucun nom de lycée,
+ * aucun identifiant et aucun chiffre de clientèle n'apparaissent nulle part.
  */
 
 /* -------------------------------------------------------------------------- */
@@ -131,7 +133,7 @@ export function ApercuEleve() {
       <div className="min-w-0 flex-1 p-3 sm:p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="m-0 text-[0.9375rem] font-bold">Bonjour Rayan</p>
+            <p className="m-0 text-[0.9375rem] font-bold">Bonjour Camille</p>
             <p className="m-0 mt-0.5 text-[0.6875rem] text-[color:var(--color-encre-faible)]">
               Seconde 1 ▾
             </p>
@@ -252,9 +254,9 @@ export function ApercuMaison() {
 
 export function ApercuExcel() {
   const lignes = [
-    ["Emma", "Laurent", "Seconde 1"],
-    ["Rayan", "Benali", "Seconde 1"],
-    ["Inès", "Moreau", "Seconde 2"],
+    ["Lina", "Dubois", "Seconde 1"],
+    ["Camille", "Martin", "Seconde 1"],
+    ["Samir", "Nadir", "Seconde 2"],
   ];
 
   return (

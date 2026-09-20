@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
 import { Prose, Section, TitrePage } from "@/components/site/Ui";
 import { MARQUE } from "@/lib/identite-legale";
 
-export const metadata: Metadata = {
-  title: "Accessibilité",
-  description: "Objectif d'accessibilité, état réel et moyens de nous signaler un obstacle.",
-  alternates: { canonical: "/accessibilite" },
-};
+export const metadata: Metadata = pagePublique({
+  chemin: "/accessibilite",
+  titre: "Accessibilité",
+  description:
+    "Objectif d'accessibilité, état réel et moyens de nous signaler un obstacle.",
+});
 
 /**
  * Accessibilité — ch. 19.

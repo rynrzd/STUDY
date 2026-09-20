@@ -24,12 +24,60 @@ function nonce(): string {
   return btoa(String.fromCharCode(...octets));
 }
 
-function politiqueCsp(valeurNonce: string, developpement: boolean): string {
+/**
+ * Les pages de vitrine rendues à l'avance.
+ *
+ * Une page prérendue est écrite une fois, au build : elle ne peut pas porter un
+ * nonce régénéré à chaque requête, et Next l'a documenté — les nonces ne
+ * s'appliquent qu'aux pages rendues à la demande. Pour ces pages-là, la
+ * politique à nonce ne protège rien : elle empêche seulement le site de
+ * fonctionner.
+ *
+ * D'où cette liste, et le raisonnement qui la justifie. Ce que la CSP arrête,
+ * c'est l'exécution d'un script injecté. Pour qu'un script soit injecté, il
+ * faut une entrée par laquelle l'injecter. Ces pages n'en ont aucune : elles
+ * n'affichent que du texte écrit dans le dépôt, jamais une donnée venue d'un
+ * élève, d'un professeur ou d'un fichier déposé. Tout ce qui rend du contenu
+ * saisi par quelqu'un — le Studio, les séances, les questions d'entraide, les
+ * noms importés, les noms de fichiers — vit dans l'application connectée, qui
+ * est rendue à la demande et garde la politique stricte.
+ *
+ * La liste est **exacte**, jamais par préfixe : une future page privée sous un
+ * chemin voisin ne doit pas hériter de la politique relâchée. Et une nouvelle
+ * page de vitrine oubliée ici reçoit la politique stricte, donc casse
+ * visiblement à la recette — c'est le bon sens de l'échec.
+ */
+const VITRINES_PRERENDUES = new Set([
+  "/",
+  "/accessibilite",
+  "/aide",
+  "/conditions",
+  "/confidentialite",
+  "/contact",
+  "/maintenance",
+  "/mentions-legales",
+  "/mot-de-passe-oublie",
+  "/offre",
+  "/produit",
+  "/securite",
+]);
+
+function politiqueCsp(valeurNonce: string | null, developpement: boolean): string {
   const directives: string[] = [
     "default-src 'self'",
-    // 'strict-dynamic' laisse les scripts chargés par un script à nonce
-    // fonctionner, sans ouvrir une liste d'hôtes.
-    `script-src 'self' 'nonce-${valeurNonce}' 'strict-dynamic'`,
+    // Deux politiques, selon que la page peut porter un nonce ou non.
+    //
+    // Avec nonce : 'strict-dynamic' laisse les scripts chargés par un script à
+    // nonce fonctionner, sans ouvrir une liste d'hôtes. C'est la politique
+    // forte, et c'est celle de toute l'application connectée.
+    //
+    // Sans nonce : 'self' autorise les fichiers de l'application, et
+    // 'unsafe-inline' l'amorce que Next écrit dans le HTML prérendu. Attention
+    // au piège : dès qu'un nonce est présent, le navigateur **ignore**
+    // 'unsafe-inline'. Les deux ne se combinent donc pas, il faut choisir.
+    valeurNonce === null
+      ? "script-src 'self' 'unsafe-inline'"
+      : `script-src 'self' 'nonce-${valeurNonce}' 'strict-dynamic'`,
     // Next injecte des styles en ligne ; 'unsafe-inline' reste nécessaire ici.
     // C'est une limite connue, à réévaluer, pas un choix de confort : elle est
     // notée dans docs/02-modele-de-menace.md.
@@ -50,7 +98,10 @@ function politiqueCsp(valeurNonce: string, developpement: boolean): string {
     directives.push("upgrade-insecure-requests");
   } else {
     // Le rechargement à chaud a besoin d'eval et d'un websocket local.
-    directives[1] = `script-src 'self' 'nonce-${valeurNonce}' 'strict-dynamic' 'unsafe-eval'`;
+    directives[1] =
+      valeurNonce === null
+        ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+        : `script-src 'self' 'nonce-${valeurNonce}' 'strict-dynamic' 'unsafe-eval'`;
     directives[directives.indexOf("connect-src 'self'")] = "connect-src 'self' ws: wss:";
   }
 
@@ -98,13 +149,33 @@ export default function proxy(requete: NextRequest) {
     );
   }
 
-  const valeurNonce = nonce();
+  // Une page prérendue ne peut pas porter de nonce : lui en promettre un dans
+  // l'en-tête revient à bloquer tous ses scripts.
+  const prerendue = VITRINES_PRERENDUES.has(requete.nextUrl.pathname);
+  const valeurNonce = prerendue ? null : nonce();
+  const politique = politiqueCsp(valeurNonce, developpement);
+
   const entetes = new Headers(requete.headers);
-  entetes.set("x-study-nonce", valeurNonce);
+  if (valeurNonce !== null) entetes.set("x-study-nonce", valeurNonce);
+
+  // C'est **cette ligne** qui fait que le site fonctionne.
+  //
+  // Next ne lit pas d'en-tête maison pour connaître le nonce : il relit la
+  // directive `script-src` de l'en-tête `Content-Security-Policy` **de la
+  // requête**, et y cherche `'nonce-…'`. C'est ce nonce qu'il recopie ensuite
+  // sur chacune de ses balises `<script>`.
+  //
+  // Sans elle, aucun script ne portait de nonce. Avec `'strict-dynamic'`, le
+  // mot-clé `'self'` est ignoré par le navigateur : plus un seul script de
+  // l'application ne se chargeait en production. React ne s'hydratait jamais,
+  // et tout ce qui demande du JavaScript — les onglets, le menu du téléphone,
+  // la validation du formulaire de connexion, les boutons d'impression —
+  // restait inerte, sans la moindre erreur visible côté serveur.
+  entetes.set("Content-Security-Policy", politique);
 
   const reponse = NextResponse.next({ request: { headers: entetes } });
-  reponse.headers.set("Content-Security-Policy", politiqueCsp(valeurNonce, developpement));
-  reponse.headers.set("x-study-nonce", valeurNonce);
+  reponse.headers.set("Content-Security-Policy", politique);
+  if (valeurNonce !== null) reponse.headers.set("x-study-nonce", valeurNonce);
   return reponse;
 }
 

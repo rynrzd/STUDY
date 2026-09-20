@@ -12,7 +12,7 @@
     "test": "npm run test:unite && npm run test:rls",
     "test:unite": "node --no-warnings --conditions=react-server --test \"tests/unite/*.test.ts\"",
     "test:rls": "node --test \"tests/db/*.test.mjs\"",
-    "test:navigateur": "node scripts/tests-navigateur.mjs",
+    "test:navigateur": "node --test \"tests/navigateur/*.test.mjs\"",
     "diagnostic": "node --no-warnings scripts/diagnostic.mjs",
     "migrations:verifier": "node scripts/migrations.mjs --verifier",
     "migrations:appliquer": "node scripts/migrations.mjs --appliquer",

@@ -15,7 +15,25 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/connexion", "/api/", "/app/", "/administration/"],
+        // Tous les espaces fermés, pas seulement trois. La liste précédente
+        // oubliait /admin/, /eleve/, /professeur/, /studio/, /parametres et
+        // /documents/ : rien de grave — ces routes redirigent vers la
+        // connexion — mais un moteur y passait pour rien, et une adresse de
+        // document signé n'a aucune raison d'être visitée par un robot.
+        disallow: [
+          "/activation",
+          "/admin/",
+          "/administration/",
+          "/api/",
+          "/app/",
+          "/connexion",
+          "/documents/",
+          "/eleve/",
+          "/mot-de-passe-oublie",
+          "/parametres",
+          "/professeur/",
+          "/studio/",
+        ],
       },
     ],
     sitemap: `${DOMAINE}/sitemap.xml`,

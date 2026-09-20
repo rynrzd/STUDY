@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
 import {
   ApercuEleve,
@@ -12,11 +13,12 @@ import { ApercuEntraide, ApercuProfesseur } from "@/components/site/ApercusVivan
 import { Faq, Onglets } from "@/components/site/Onglets";
 import { MARQUE } from "@/lib/identite-legale";
 
-export const metadata: Metadata = {
-  title: "La classe, tout simplement",
+export const metadata: Metadata = pagePublique({
+  chemin: "/",
+  titre: "La classe, tout simplement",
   description:
     "Le cours, les devoirs et l'entraide au même endroit. Une plateforme pédagogique pour les lycées, financée par l'établissement.",
-};
+});
 
 /**
  * Landing — cahier « Refonte fidèle », L01 à L09.
@@ -67,11 +69,21 @@ export default function PageAccueil() {
               qu'il lui reste à faire — sans barre latérale ni cadre de fenêtre.
               Au-dessus, la fenêtre reprend sa place et descend sur la bande
               rose, comme dans la référence. */}
-          <div className="lg:hidden">
-            <FragmentsEleve />
-          </div>
-          <div className="hidden lg:-mb-24 lg:block">
-            <ApercuEleve />
+          <div>
+            {/* La mention est discrète, mais elle est au-dessus de l'aperçu et
+                non en dessous : quelqu'un qui découvre le produit doit savoir
+                avant de lire que ces noms et ces devoirs ne sont l'espace de
+                personne. */}
+            <p className="m-0 mb-2 text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)]">
+              Aperçu fictif de l&apos;espace élève
+            </p>
+
+            <div className="lg:hidden">
+              <FragmentsEleve />
+            </div>
+            <div className="hidden lg:-mb-24 lg:block">
+              <ApercuEleve />
+            </div>
           </div>
         </div>
       </section>

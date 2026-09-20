@@ -13,12 +13,15 @@ export const metadata: Metadata = {
     "Cours, séances, devoirs et entraide, organisés par classe et contrôlés par " +
     "l'établissement. Licence annuelle pour les lycées, établie sur devis.",
   applicationName: MARQUE,
-  alternates: { canonical: "/" },
+  // Aucune canonique ni adresse Open Graph ici, volontairement : posées à la
+  // racine, elles étaient héritées par toutes les pages qui ne les
+  // redéfinissaient pas — et ces pages se déclaraient donc être l'accueil.
+  // C'est ce qui faisait que /connexion pointait vers « / ». Chaque page pose
+  // désormais la sienne, par `pagePublique` ou `pagePrivee`.
   openGraph: {
     type: "website",
     siteName: MARQUE,
     locale: "fr_FR",
-    url: DOMAINE,
     title: `${MARQUE} — Le travail de la classe, au même endroit`,
     description:
       "Cours, séances, devoirs et entraide, organisés par classe et contrôlés par l'établissement.",

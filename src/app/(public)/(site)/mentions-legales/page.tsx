@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
 import { Prose, Section, TitrePage } from "@/components/site/Ui";
 import {
@@ -9,11 +10,12 @@ import {
   mentionsManquantes,
 } from "@/lib/identite-legale";
 
-export const metadata: Metadata = {
-  title: "Mentions légales",
-  description: "Éditeur, directeur de la publication, hébergeur et informations de publication.",
-  alternates: { canonical: "/mentions-legales" },
-};
+export const metadata: Metadata = pagePublique({
+  chemin: "/mentions-legales",
+  titre: "Mentions légales",
+  description:
+    "Éditeur, directeur de la publication, hébergeur et informations de publication.",
+});
 
 /**
  * Mentions légales.

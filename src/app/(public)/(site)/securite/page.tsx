@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
+import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
 import { Reveler } from "@/components/site/Reveler";
 import { AppelFinal, Carte, Prose, Section, TitrePage } from "@/components/site/Ui";
 import { CONSERVATION, IDENTITE, MARQUE } from "@/lib/identite-legale";
 
-export const metadata: Metadata = {
-  title: "Sécurité et données",
+export const metadata: Metadata = pagePublique({
+  chemin: "/securite",
+  titre: "Sécurité et données",
   description:
-    "Isolation par établissement et par classe, comptes gérés par le lycée, journalisation " +
-    "des actions sensibles, hébergement et sous-traitants identifiés.",
-  alternates: { canonical: "/securite" },
-};
+    "Isolation par établissement et par classe, comptes gérés par le lycée, journalisation des actions sensibles, hébergement et sous-traitants identifiés.",
+});
 
 /**
  * /securite.

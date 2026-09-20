@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
+import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
 import { Prose, Section, TitrePage } from "@/components/site/Ui";
 import { CONSERVATION, IDENTITE, MARQUE, mention } from "@/lib/identite-legale";
 
-export const metadata: Metadata = {
-  title: "Confidentialité",
+export const metadata: Metadata = pagePublique({
+  chemin: "/confidentialite",
+  titre: "Confidentialité",
   description:
-    "Quelles données AvecStudy traite, lesquelles il ne collecte pas, combien de temps " +
-    "il les conserve et comment exercer vos droits.",
-  alternates: { canonical: "/confidentialite" },
-};
+    "Quelles données AvecStudy traite, lesquelles il ne collecte pas, combien de temps il les conserve et comment exercer vos droits.",
+});
 
 /**
  * Confidentialité.

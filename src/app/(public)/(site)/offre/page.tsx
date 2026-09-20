@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
+import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
 import { Reveler } from "@/components/site/Reveler";
 import { AppelFinal, Carte, Section, TitrePage } from "@/components/site/Ui";
 import { MARQUE } from "@/lib/identite-legale";
 
-export const metadata: Metadata = {
-  title: "Offre",
+export const metadata: Metadata = pagePublique({
+  chemin: "/offre",
+  titre: "Offre",
   description:
-    "Une licence annuelle par établissement, comptes enseignants inclus. " +
-    "Aucun abonnement élève ou professeur, aucun paiement en ligne.",
-  alternates: { canonical: "/offre" },
-};
+    "Une licence annuelle par établissement, comptes enseignants inclus. Aucun abonnement élève ou professeur, aucun paiement en ligne.",
+});
 
 /**
  * /offre.

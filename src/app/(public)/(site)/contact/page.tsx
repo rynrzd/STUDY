@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
+import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
 import { Reveler } from "@/components/site/Reveler";
 import { Carte, Section, TitrePage } from "@/components/site/Ui";
 import { IDENTITE, MARQUE } from "@/lib/identite-legale";
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description: "À qui s'adresser selon votre situation.",
-  alternates: { canonical: "/contact" },
-};
+export const metadata: Metadata = pagePublique({
+  chemin: "/contact",
+  titre: "Contact",
+  description:
+    "À qui s'adresser selon votre situation.",
+});
 
 const CAS = [
   {
