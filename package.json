@@ -28,6 +28,7 @@
     "verifier:schema": "node scripts/comparer-schema.mjs",
     "recette:reelle": "node --conditions=react-server scripts/recette-reelle.mjs",
     "recette:deployee": "node scripts/recette-deployee.mjs",
+    "recette:complete": "node scripts/recette/complete.mjs",
     "recette:balai": "node scripts/recette/balai.mjs",
     "verifier:landing": "node scripts/verifier-landing.mjs",
     "verifier:responsive": "node scripts/verifier-responsive.mjs"

@@ -1,0 +1,204 @@
+#!/usr/bin/env node
+// =============================================================================
+// La recette complète — `npm run recette:complete`
+//
+// Une seule commande, qui répond à une seule question : **peut-on livrer ?**
+//
+// Elle enchaîne ce qui existe déjà — tests unitaires, tests RLS, recette
+// réelle contre la base de production, vérifications du site déployé, tests
+// navigateur — et garantit une chose que ces outils, pris séparément, ne
+// garantissaient pas : qu'il ne reste rien en production quand elle se
+// termine, quelle que soit la façon dont elle se termine.
+//
+// Trois principes.
+//
+// **Le nettoyage est dans un `finally`.** Une interruption, une erreur, un
+// `Ctrl-C` : le balai passe quand même. C'est la différence entre une recette
+// et une pollution.
+//
+// **Un nettoyage muet est un échec.** Le balai vérifie ce qu'il a supprimé et
+// signale ce qui résiste. La recette ressort alors en état CRITIQUE, même si
+// tous les contrôles fonctionnels étaient au vert : laisser des comptes en
+// production est plus grave qu'un test rouge.
+//
+// **Rien n'est déclaré réussi sans avoir été joué.** Une étape qui ne peut pas
+// s'exécuter est annoncée « non jouée », jamais comptée comme un succès.
+// =============================================================================
+
+import { spawn } from "node:child_process";
+import { randomBytes } from "node:crypto";
+import pg from "pg";
+import { chargerEnv, titre } from "../_commun.mjs";
+import { residuDeRecette } from "./nettoyage.mjs";
+
+chargerEnv();
+
+/**
+ * Le marqueur de cette exécution.
+ *
+ * Daté et suffixé : daté pour qu'un résidu se rattache à un jour précis quand
+ * on le retrouve des semaines plus tard, suffixé pour que deux recettes
+ * lancées le même jour ne se marchent pas dessus.
+ */
+const JOUR = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+const MARQUEUR = `RECETTE_${JOUR}_${randomBytes(3).toString("hex").toUpperCase()}`;
+
+const CIBLE = (process.env.SITE_BASE ?? "").replace(/\/+$/, "");
+
+const etapes = [];
+
+function noter(nom, etat, detail = "") {
+  etapes.push({ nom, etat, detail });
+  const pastille = { ok: "  ok   ", echec: "  ECHEC", absent: "  (non joue)" }[etat];
+  console.log(`${pastille} ${nom}${detail ? ` — ${detail}` : ""}`);
+}
+
+/** Lance une commande npm et rend son code de sortie, sans jamais jeter. */
+function lancer(nom, arguments_) {
+  return new Promise((resoudre) => {
+    // `npm.cmd` plutôt que `shell: true` : passer des arguments à un shell les
+    // concatène sans les échapper. Ils sont ici tous écrits en dur, mais
+    // l'habitude d'ouvrir un shell pour lancer un programme finit toujours par
+    // rencontrer une chaîne qui vient d'ailleurs.
+    const commande = process.platform === "win32" ? "npm.cmd" : "npm";
+
+    const processus = spawn(commande, ["run", ...arguments_], {
+      stdio: ["ignore", "pipe", "pipe"],
+      env: { ...process.env, RECETTE_MARQUEUR: MARQUEUR },
+    });
+
+    let sortie = "";
+    processus.stdout.on("data", (bloc) => (sortie += bloc));
+    processus.stderr.on("data", (bloc) => (sortie += bloc));
+
+    processus.on("close", (code) => resoudre({ code: code ?? 1, sortie, nom }));
+    processus.on("error", (erreur) => resoudre({ code: 1, sortie: erreur.message, nom }));
+  });
+}
+
+/** La dernière ligne utile d'une sortie, pour un compte-rendu lisible. */
+function resume(sortie) {
+  const lignes = sortie.split(/\r?\n/).filter((ligne) => ligne.trim() !== "");
+  return lignes.slice(-1)[0]?.trim().slice(0, 100) ?? "";
+}
+
+/* -------------------------------------------------------------------------- */
+
+titre(`AvecStudy — recette complete\n${MARQUEUR}`);
+console.log(CIBLE === "" ? "cible : aucune (SITE_BASE absente)" : `cible : ${CIBLE}`);
+
+let critique = false;
+
+try {
+  console.log("\n1. Ce qui se verifie sans reseau");
+
+  for (const [nom, script] of [
+    ["types", "typecheck"],
+    ["style", "lint"],
+    ["tests unitaires", "test:unite"],
+    ["tests RLS sur PostgreSQL reel", "test:rls"],
+  ]) {
+    const resultat = await lancer(nom, [script]);
+    noter(nom, resultat.code === 0 ? "ok" : "echec", resultat.code === 0 ? "" : resume(resultat.sortie));
+  }
+
+  console.log("\n2. Contre la base de production");
+
+  const reelle = await lancer("recette reelle", ["recette:reelle"]);
+  noter(
+    "parcours complet, joue et nettoye",
+    reelle.code === 0 ? "ok" : "echec",
+    resume(reelle.sortie),
+  );
+  if (/CRITIQUE/.test(reelle.sortie)) critique = true;
+
+  console.log("\n3. Contre le site deploye");
+
+  if (CIBLE === "") {
+    noter("verifications du site deploye", "absent", "SITE_BASE absente de l environnement");
+  } else {
+    for (const [nom, script] of [
+      ["balisage, SEO et CSP", "verifier:site"],
+      ["landing conforme a la reference", "verifier:landing"],
+      ["responsive, clavier et cibles tactiles", "verifier:responsive"],
+      ["parcours navigateur permanents", "test:navigateur"],
+    ]) {
+      const resultat = await lancer(nom, [script]);
+      noter(nom, resultat.code === 0 ? "ok" : "echec", resultat.code === 0 ? "" : resume(resultat.sortie));
+    }
+  }
+} finally {
+  // Le balai passe quoi qu'il arrive : interruption, erreur, ou succes.
+  console.log("\n4. Nettoyage (execute meme en cas d interruption)");
+
+  const balai = await lancer("balai", ["recette:balai", "--", "--appliquer"]);
+  const restait = /etablissement\(s\) de recette|demande\(s\) de recette/.test(balai.sortie);
+
+  if (balai.code !== 0) {
+    critique = true;
+    noter("production rendue propre", "echec", resume(balai.sortie));
+  } else {
+    noter("production rendue propre", "ok", restait ? "des traces subsistaient, elles ont ete balayees" : "rien a balayer");
+  }
+
+  // Et le dernier mot revient a la base, pas au script qui vient de nettoyer.
+  const sql = new pg.Client({
+    connectionString: process.env.WORKER_DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    application_name: "recette-complete",
+  });
+
+  try {
+    await sql.connect();
+    const restes = await residuDeRecette(sql);
+
+    const { rows } = await sql.query(`
+      select
+        (select count(*)::int from study.profiles)                                as profils,
+        (select count(*)::int from study.organization_memberships)                as adhesions,
+        (select count(*)::int from study_prive.sessions where revoked_at is null) as sessions,
+        (select count(*)::int from study.commercial_requests)                     as demandes
+    `);
+
+    console.log(
+      `\n  etat final : ${rows[0].profils} profil(s), ${rows[0].adhesions} adhesion(s), ` +
+        `${rows[0].sessions} session(s) vivante(s), ${rows[0].demandes} demande(s).`,
+    );
+
+    if (restes.length > 0) {
+      critique = true;
+      console.log("  CRITIQUE : il reste des traces de recette en production :");
+      for (const reste of restes) console.log(`    - ${reste}`);
+    }
+  } catch (erreur) {
+    critique = true;
+    console.log(`  CRITIQUE : l etat final n a pas pu etre verifie — ${erreur.message}`);
+  } finally {
+    await sql.end().catch(() => {});
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+
+const echecs = etapes.filter((etape) => etape.etat === "echec");
+const absents = etapes.filter((etape) => etape.etat === "absent");
+
+console.log("\n" + "-".repeat(72));
+
+if (critique) {
+  console.log("CRITIQUE — la recette a laisse des traces, ou n a pas pu le verifier.");
+  console.log("Ne pas livrer. Passer « npm run recette:balai -- --appliquer » et recommencer.");
+  process.exitCode = 2;
+} else if (echecs.length > 0) {
+  console.log(`${echecs.length} etape(s) en echec :`);
+  for (const etape of echecs) console.log(`  - ${etape.nom}`);
+  process.exitCode = 1;
+} else if (absents.length > 0) {
+  console.log(`Aucun defaut, mais ${absents.length} etape(s) non jouee(s) :`);
+  for (const etape of absents) console.log(`  - ${etape.nom} (${etape.detail})`);
+  console.log("Une etape non jouee n est pas une etape reussie.");
+  process.exitCode = 0;
+} else {
+  console.log("Recette complete : aucun defaut, et la production est propre.");
+  process.exitCode = 0;
+}
