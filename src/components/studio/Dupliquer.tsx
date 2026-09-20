@@ -59,6 +59,7 @@ export function Dupliquer({
     return (
       <button
         type="button"
+        data-testid="ouvrir-duplication"
         onClick={() => setOuvert(true)}
         className="bouton bouton-secondaire"
       >

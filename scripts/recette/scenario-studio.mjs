@@ -226,13 +226,18 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
     }
 
     enBase = await lireBlocs();
-    let modifies = 0;
+    const recalcitrants = [];
     for (const [type, champs] of modifications) {
       const valeurs = Object.values(champs);
       const ligne = enBase.find((b) => b.kind === type);
-      if (ligne && valeurs.every((v) => JSON.stringify(ligne.contenu).includes(v))) modifies += 1;
+      const ok = ligne && valeurs.every((v) => JSON.stringify(ligne.contenu).includes(v));
+      if (!ok) recalcitrants.push(type);
     }
-    verifier(modifies === 5, "les cinq types se modifient reellement en base", `${modifies}/5`);
+    verifier(
+      recalcitrants.length === 0,
+      "les cinq types se modifient reellement en base",
+      recalcitrants.length === 0 ? "" : `resiste(nt) : ${recalcitrants.join(", ")}`,
+    );
 
     // Le devoir lié suit le bloc : sans cela, « À faire » contredirait le cours.
     const { rows: devoirLie } = await sql.query("select title from study.assignments where id = $1", [
@@ -326,13 +331,18 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
         await lien.click();
         await vueEleve.page.waitForLoadState("networkidle").catch(() => {});
         const rendu = await vueEleve.page.evaluate(() => document.body.innerText);
-        const presents = blocsAttendus(marque)
-          .map((b) => b.type)
-          .filter(() => true);
-        void presents;
+        const attendus = [
+          `Plan revise ${marque}`,
+          `Exercice 13 ${marque}`,
+          `Devoir revise ${marque}`,
+          `Ressource bis ${marque}`,
+          `Fiche revisee ${marque}`,
+        ];
+        const manquants = attendus.filter((texte) => !rendu.includes(texte));
         verifier(
-          rendu.includes(`Plan revise ${marque}`) && rendu.includes(`Devoir revise ${marque}`),
-          "le rendu eleve correspond a ce que l apercu annoncait",
+          manquants.length === 0,
+          "le rendu eleve porte les cinq blocs, dans leur version modifiee",
+          manquants.length === 0 ? "" : `absent(s) : ${manquants.join(" | ")}`,
         );
       }
     } finally {
@@ -360,6 +370,15 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
     /* --- Duplication vers l'autre classe ------------------------------------ */
 
     await exigerPage(page, base, `/studio/${seance.id}`, { marqueur: '[data-testid="seance-entete"]' });
+
+    // La duplication est derrière un bouton : elle n'encombre pas l'écran tant
+    // qu'on ne la demande pas.
+    const ouvrirCopie = page.locator('[data-testid="ouvrir-duplication"]');
+    if ((await ouvrirCopie.count()) > 0) {
+      await ouvrirCopie.click();
+      await page.waitForSelector('[data-testid="dupliquer"]', { timeout: 10_000 }).catch(() => {});
+    }
+
     const formulaireCopie = page.locator('[data-testid="dupliquer"]');
 
     if ((await formulaireCopie.count()) === 0) {

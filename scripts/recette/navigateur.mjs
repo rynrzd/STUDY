@@ -188,8 +188,17 @@ export async function connecter(page, base, identite) {
   let secretTotp = identite.secretTotp ?? null;
   let motDePasseCourant = motDePasse;
 
+  // Les écrans se reconnaissent à **ce qu'ils affichent**, pas à l'adresse.
+  //
+  // Le produit enchaîne `/app` → `/admin` → `/second-facteur`, et lorsque cette
+  // chaîne est déclenchée par la redirection d'une action serveur, le routeur
+  // rend l'écran final en gardant l'adresse de départ. Se fier à l'URL fait
+  // alors manquer l'enrôlement, et conclure que l'administrateur « n'arrive
+  // pas dans son espace » alors qu'il est devant le bon écran.
+  const affiche = async (selecteur) => (await page.locator(selecteur).count()) > 0;
+
   // L'activation : le mot de passe temporaire doit être remplacé avant tout.
-  if (page.url().includes("/activation")) {
+  if (await affiche("#nouveau")) {
     const definitif = motDePasseFinal ?? `Definitif-${Math.random().toString(36).slice(2, 12)}!aA1`;
     await page.fill("#nouveau", definitif);
     await page.fill("#confirmation", definitif);
@@ -199,7 +208,7 @@ export async function connecter(page, base, identite) {
 
   // Le second facteur : enrôlement si la clé n'est pas encore connue, simple
   // vérification sinon.
-  if (page.url().includes("/second-facteur")) {
+  if (await affiche('[data-testid="totp-valider"]')) {
     if (secretTotp === null) {
       const affichee = await page.locator('[data-testid="cle-totp"]').textContent();
       if (affichee === null || affichee.trim() === "") {
@@ -221,7 +230,7 @@ export async function connecter(page, base, identite) {
   const probleme = await verifierEcran(page, base);
   if (probleme !== null) throw new Error(`connexion de ${login} : ${probleme}`);
 
-  if (page.url().includes("/connexion")) {
+  if (await affiche('[data-testid="connexion-valider"]')) {
     // Le message affiché dit pourquoi ; sans lui, « refusée » n'apprend rien et
     // oblige à rejouer la scène à la main.
     const dit = await page
@@ -233,6 +242,12 @@ export async function connecter(page, base, identite) {
       `connexion de ${login} : refusee${motif === "" ? "" : ` — « ${motif} »`}`,
     );
   }
+
+  // La destination réelle : celle que le produit sert, pas celle que l adresse
+  // affiche. On la relit en suivant un lien interne, faute de quoi une chaine
+  // de redirections laisserait « /app » comme destination apparente.
+  await page.goto(`${base}/app`, { waitUntil: "networkidle" }).catch(() => {});
+  await attendreStabilisation(page);
 
   return { destination: new URL(page.url()).pathname, secretTotp, motDePasse: motDePasseCourant };
 }
