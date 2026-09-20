@@ -20,3 +20,6 @@ tests/tmp/
 # Fiche d'acces generee localement, jamais versionnee
 ACCES-PROPRIETAIRE.txt
 cahier-v5.txt
+
+# Scripts jetables de recette : ils n'ont rien a faire dans le depot.
+_*.mjs
