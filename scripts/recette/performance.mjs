@@ -65,16 +65,6 @@ async function mesurer(navigateur, chemin, { mobile = false, cacheChaud = false 
       await page.goto(`${BASE}${chemin}`, { waitUntil: "networkidle" }).catch(() => {});
     }
 
-    const ressources = [];
-    page.on("response", async (reponse) => {
-      const taille = Number(reponse.headers()["content-length"] ?? 0);
-      ressources.push({
-        url: reponse.url(),
-        type: reponse.request().resourceType(),
-        octets: Number.isFinite(taille) ? taille : 0,
-      });
-    });
-
     const debut = Date.now();
     const reponse = await page.goto(`${BASE}${chemin}`, { waitUntil: "load", timeout: 60_000 });
     if (reponse === null || reponse.status() >= 400) {
@@ -88,45 +78,78 @@ async function mesurer(navigateur, chemin, { mobile = false, cacheChaud = false 
     const vitals = await page.evaluate(
       () =>
         new Promise((resoudre) => {
-          const resultat = { lcp: 0, cls: 0, fcp: 0, ttfb: 0 };
+          const resultat = { lcp: 0, cls: 0, fcp: 0, ttfb: 0, octets: 0, jsOctets: 0, requetes: 0, plusLourde: null };
 
           const navigation = performance.getEntriesByType("navigation")[0];
-          if (navigation !== undefined) resultat.ttfb = navigation.responseStart;
+          if (navigation !== undefined) {
+            resultat.ttfb = navigation.responseStart;
+            resultat.octets += navigation.transferSize || navigation.encodedBodySize || 0;
+            resultat.requetes += 1;
+          }
 
           const peinture = performance.getEntriesByName("first-contentful-paint")[0];
           if (peinture !== undefined) resultat.fcp = peinture.startTime;
 
+          // Le LCP ne se lit pas avec `getEntriesByType` : il n'est pas
+          // conservé dans le tampon standard. Il faut l'observer en demandant
+          // explicitement les entrées déjà survenues.
           try {
-            for (const entree of performance.getEntriesByType("largest-contentful-paint")) {
-              resultat.lcp = Math.max(resultat.lcp, entree.startTime);
-            }
-            const observateur = new PerformanceObserver((liste) => {
+            new PerformanceObserver((liste) => {
+              for (const entree of liste.getEntries()) {
+                resultat.lcp = Math.max(resultat.lcp, entree.startTime);
+              }
+            }).observe({ type: "largest-contentful-paint", buffered: true });
+
+            new PerformanceObserver((liste) => {
               for (const entree of liste.getEntries()) {
                 if (!entree.hadRecentInput) resultat.cls += entree.value;
               }
-            });
-            observateur.observe({ type: "layout-shift", buffered: true });
+            }).observe({ type: "layout-shift", buffered: true });
           } catch {
             /* métriques indisponibles sur ce navigateur */
           }
 
-          setTimeout(() => resoudre(resultat), 400);
+          // Les tailles viennent de l'API Resource Timing, pas de
+          // `content-length` : cet en-tête est absent dès qu'une réponse est
+          // compressée ou envoyée par morceaux, et l'on mesurait alors 1 Ko
+          // pour toute une application.
+          let maximum = { nom: "", octets: 0 };
+          for (const entree of performance.getEntriesByType("resource")) {
+            const octets = entree.transferSize || entree.encodedBodySize || 0;
+            resultat.octets += octets;
+            resultat.requetes += 1;
+            if (entree.initiatorType === "script") resultat.jsOctets += octets;
+            if (octets > maximum.octets) {
+              maximum = { nom: entree.name.split("/").pop().slice(0, 32), octets };
+            }
+          }
+          if (maximum.octets > 0) resultat.plusLourde = maximum;
+
+          setTimeout(() => resoudre(resultat), 600);
         }),
     );
 
-    // Le délai de la première interaction provoquée. Ce n'est pas l'INP, et le
-    // rapport ne prétendra pas que ça l'est.
-    const cible = page.locator("a, button").first();
-    let interaction = null;
-    if ((await cible.count()) > 0) {
-      const avant = Date.now();
-      await cible.hover().catch(() => {});
-      await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
-      interaction = Date.now() - avant;
-    }
+    // Le temps qu'il faut au navigateur pour répondre à un geste, mesuré dans
+    // la page : on demande une image du prochain rendu après un clic sur un
+    // élément réellement visible. Ce n'est **pas** l'INP — celui-ci se mesure
+    // sur des personnes, pas sur un navigateur au repos — et le rapport ne le
+    // présentera pas comme tel.
+    const reponseAuGeste = await page.evaluate(
+      () =>
+        new Promise((resoudre) => {
+          const candidats = [...document.querySelectorAll("a, button")].filter((element) => {
+            const boite = element.getBoundingClientRect();
+            return boite.width > 0 && boite.height > 0 && boite.top >= 0 && boite.top < window.innerHeight;
+          });
+          if (candidats.length === 0) return resoudre(null);
 
-    const js = ressources.filter((r) => r.type === "script");
-    const plusLourde = ressources.reduce((max, r) => (r.octets > (max?.octets ?? 0) ? r : max), null);
+          const debutGeste = performance.now();
+          candidats[0].dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => resoudre(Math.round(performance.now() - debutGeste))),
+          );
+        }),
+    );
 
     return {
       total: Date.now() - debut,
@@ -134,13 +157,11 @@ async function mesurer(navigateur, chemin, { mobile = false, cacheChaud = false 
       fcp: Math.round(vitals.fcp),
       lcp: Math.round(vitals.lcp),
       cls: Number(vitals.cls.toFixed(3)),
-      interaction,
-      requetes: ressources.length,
-      jsOctets: js.reduce((somme, r) => somme + r.octets, 0),
-      plusLourde:
-        plusLourde === null
-          ? null
-          : { nom: plusLourde.url.split("/").pop()?.slice(0, 32) ?? "", octets: plusLourde.octets },
+      interaction: reponseAuGeste,
+      requetes: vitals.requetes,
+      octets: vitals.octets,
+      jsOctets: vitals.jsOctets,
+      plusLourde: vitals.plusLourde,
     };
   } finally {
     await contexte.close();
@@ -160,8 +181,18 @@ const SEUILS = { lcp: 2500, fcp: 1800, cls: 0.1, ttfb: 800 };
 let alertes = 0;
 
 try {
+  // Une navigation jetée avant de mesurer.
+  //
+  // La toute première requête d'un navigateur neuf paie la résolution DNS et
+  // la poignée de main TLS : elle affichait 1,8 s de TTFB là où `curl` mesure
+  // 0,15 s sur la même page. Sans ce préchauffage, la première page de la
+  // liste porte le coût de toutes les autres, et le rapport accuse un écran
+  // qui n'y est pour rien.
+  await mesurer(navigateur, "/").catch(() => {});
+
   console.log("\nCache froid, poste de bureau");
-  console.log("  page              TTFB    FCP    LCP    CLS   requetes   JS");
+  console.log("  (« froid » = cache navigateur vide ; la connexion, elle, est etablie)");
+  console.log("  page              TTFB    FCP    LCP    CLS   requetes     JS    total");
 
   const froid = new Map();
   for (const chemin of PAGES) {
@@ -235,7 +266,7 @@ try {
   );
   for (const [chemin, m] of froid) {
     if (m.erreur !== undefined || m.interaction === null) continue;
-    console.log(`  ${chemin.padEnd(16)} premiere interaction : ${m.interaction} ms`);
+    console.log(`  ${chemin.padEnd(16)} reponse au premier geste : ${m.interaction} ms`);
   }
 } finally {
   await navigateur.close();
