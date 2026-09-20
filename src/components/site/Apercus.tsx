@@ -308,3 +308,118 @@ export function ApercuExcel() {
     </Fenetre>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+/* §2.2 et §2.4 — les fragments du téléphone                                  */
+/*                                                                            */
+/* Ce qui précède est une fenêtre : un cadre, une barre latérale, plusieurs   */
+/* colonnes. C'est juste sur un écran large, et faux sur un téléphone — le    */
+/* cahier le dit en toutes lettres : « remplacer l'aperçu par des fragments   */
+/* mobiles compacts sans sidebar », « aucun panneau desktop compressé ».      */
+/*                                                                            */
+/* Ce ne sont donc pas les mêmes composants réduits. Ce sont deux morceaux    */
+/* d'écran, à la taille où on les lit vraiment : ce que l'élève a aujourd'hui,*/
+/* et ce qu'il lui reste à faire. Pas de cadre de fenêtre, pas de navigation, */
+/* pas de faux chiffre.                                                       */
+/* -------------------------------------------------------------------------- */
+
+function EtiquetteFragment({ texte }: { texte: string }) {
+  return (
+    <p className="m-0 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-encre-tres-faible)]">
+      {texte}
+    </p>
+  );
+}
+
+/** « Aujourd'hui » : une séance, celle du jour. Rien d'autre. */
+function FragmentAujourdhui() {
+  return (
+    <div className="rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-4">
+      <EtiquetteFragment texte="Aujourd'hui" />
+
+      <p className="m-0 mt-2.5 text-[1.0625rem] font-bold leading-snug">Fonctions affines</p>
+      <p className="m-0 mt-1 text-[0.8125rem] text-[color:var(--color-encre-faible)]">
+        Mathématiques · Mme Bernard
+      </p>
+
+      <div className="mt-3 flex items-center gap-2 border-t border-[color:var(--color-bordure)] pt-3">
+        <span
+          aria-hidden="true"
+          className="h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--color-succes)]"
+        />
+        <span className="text-[0.8125rem] text-[color:var(--color-encre-faible)]">
+          Le cours et ses exercices sont en ligne
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * « À faire » : deux lignes, et une case qui tient.
+ *
+ * La case barrée n'est pas un ornement : c'est l'état persistant du §3.3, et
+ * c'est la seule chose que le produit retient d'un travail personnel. Pas de
+ * score, pas de série de jours, pas de pourcentage.
+ */
+function FragmentAFaire() {
+  const travaux = [
+    { titre: "Exercices n° 3 à 5", cours: "Mathématiques", quand: "Pour demain", fait: false },
+    { titre: "Lire le chapitre 4", cours: "Histoire", quand: "Vendredi", fait: true },
+  ] as const;
+
+  return (
+    <div className="rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-4">
+      <EtiquetteFragment texte="À faire" />
+
+      <ul className="m-0 mt-2 list-none p-0">
+        {travaux.map((travail) => (
+          <li
+            key={travail.titre}
+            className="flex items-center gap-3 border-b border-[color:var(--color-bordure)] py-2.5 last:border-b-0 last:pb-0"
+          >
+            <span
+              aria-hidden="true"
+              className={`grid h-5 w-5 shrink-0 place-items-center rounded-[5px] border text-[0.625rem] font-bold ${
+                travail.fait
+                  ? "border-[color:var(--color-succes)] bg-[color:var(--color-succes)] text-white"
+                  : "border-[color:var(--color-bordure-forte)]"
+              }`}
+            >
+              {travail.fait ? "✓" : ""}
+            </span>
+
+            <span className="min-w-0 flex-1">
+              <span
+                className={`block truncate text-[0.875rem] font-semibold ${
+                  travail.fait ? "text-[color:var(--color-encre-faible)] line-through" : ""
+                }`}
+              >
+                {travail.titre}
+              </span>
+              <span className="mt-0.5 block text-[0.75rem] text-[color:var(--color-encre-faible)]">
+                {travail.cours} · {travail.quand}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
+ * Les fragments du hero, sur téléphone.
+ *
+ * Deux morceaux, empilés, à la largeur du pouce. Ils ne remplacent pas la
+ * fenêtre d'aperçu : ils la remplacent **là où elle ne va pas**, c'est-à-dire
+ * sous 1024 pixels. Au-dessus, la fenêtre reprend sa place.
+ */
+export function FragmentsEleve() {
+  return (
+    <div className="grid gap-3 min-[560px]:grid-cols-2">
+      <FragmentAujourdhui />
+      <FragmentAFaire />
+    </div>
+  );
+}

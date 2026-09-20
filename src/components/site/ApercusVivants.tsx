@@ -31,7 +31,7 @@ function Laterale({ actif, entrees, nom, role }: {
   role: string;
 }) {
   return (
-    <div className="flex w-[84px] shrink-0 flex-col justify-between border-r border-[color:var(--color-bordure)] p-2 sm:w-[132px] sm:p-3">
+    <div className="hidden shrink-0 flex-col justify-between border-r border-[color:var(--color-bordure)] sm:flex sm:w-[132px] sm:p-3">
       <div>
         <p className="marque m-0 mb-3 px-1 text-[0.75rem] sm:mb-4 sm:px-1.5 sm:text-[0.9375rem]">
           AvecStudy.
@@ -149,12 +149,23 @@ export function ApercuProfesseur() {
             etiquette="Mes classes"
           />
 
+          {/* Sur téléphone, la barre latérale n'est pas là : l'identité du
+              professeur remonte ici, sur une ligne, plutôt que de disparaître. */}
+          <p className="m-0 mt-3 flex items-center gap-2 text-[0.6875rem] text-[color:var(--color-encre-faible)] sm:hidden">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-rose-clair)] text-[0.5rem] font-bold text-[color:var(--color-accent)]">
+              MB
+            </span>
+            Mme Bernard · Mathématiques
+          </p>
+
           <div className="mt-3 flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="m-0 text-[0.5625rem] uppercase tracking-[0.08em] text-[color:var(--color-encre-tres-faible)]">
                 {cours.chapitre}
               </p>
-              <p className="m-0 mt-0.5 truncate text-[0.875rem] font-bold">{cours.titre}</p>
+              <p className="m-0 mt-0.5 text-[0.9375rem] font-bold leading-snug sm:truncate sm:text-[0.875rem]">
+                {cours.titre}
+              </p>
             </div>
             <span className="shrink-0 rounded-md border border-[color:var(--color-bordure)] px-2 py-1 text-[0.625rem]">
               Modifier
@@ -167,7 +178,7 @@ export function ApercuProfesseur() {
                 key={point}
                 className="flex items-center justify-between gap-2 border-b border-[color:var(--color-bordure)] py-1.5 text-[0.75rem]"
               >
-                <span className="min-w-0 truncate">
+                <span className="min-w-0 sm:truncate">
                   <span className="mr-2 text-[color:var(--color-encre-tres-faible)]">{rang + 1}.</span>
                   {point}
                 </span>

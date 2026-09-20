@@ -6,6 +6,7 @@ import {
   ApercuMaison,
   ApercuOrdinateur,
   ApercuPapier,
+  FragmentsEleve,
 } from "@/components/site/Apercus";
 import { ApercuEntraide, ApercuProfesseur } from "@/components/site/ApercusVivants";
 import { Faq, Onglets } from "@/components/site/Onglets";
@@ -61,9 +62,15 @@ export default function PageAccueil() {
             </div>
           </div>
 
-          {/* L'aperçu descend sur la bande rose : c'est la composition de la
-              référence, et elle donne au produit la place qu'il mérite. */}
-          <div className="lg:-mb-24">
+          {/* Deux compositions, pas une redimensionnée. Sous 1024 pixels, des
+              fragments à la taille du pouce — ce que l'élève a aujourd'hui, ce
+              qu'il lui reste à faire — sans barre latérale ni cadre de fenêtre.
+              Au-dessus, la fenêtre reprend sa place et descend sur la bande
+              rose, comme dans la référence. */}
+          <div className="lg:hidden">
+            <FragmentsEleve />
+          </div>
+          <div className="hidden lg:-mb-24 lg:block">
             <ApercuEleve />
           </div>
         </div>

@@ -114,6 +114,45 @@ async function principal() {
 
   verifier(ordreTenu, "les sections se suivent dans l ordre de la reference");
 
+  // ---------------------------------------------------------------------
+  // §2.2 et §2.4 — le hero sur telephone
+  //
+  // Le cahier V5 demande deux choses, et la seconde est la correction d une
+  // faute constatee sur capture : « remplacer l apercu par des fragments
+  // mobiles compacts sans sidebar », « aucun panneau desktop compresse ».
+  //
+  // Ce qui se verifie ici sans navigateur : que les fragments existent dans
+  // un bloc masque au-dela du seuil, et que la fenetre d apercu - celle qui
+  // porte une barre laterale - est bien, elle, masquee en dessous. Un
+  // controle de position suffit : la fenetre doit venir apres son enveloppe
+  // `hidden lg:block`, et aucune barre laterale ne doit la preceder.
+  // ---------------------------------------------------------------------
+  console.log("\nLe hero sur telephone (V5 §2.2, §2.4)");
+
+  const brut = await (await fetch(`${BASE}/`, { headers: entetes })).text();
+
+  const fragments = /class="[^"]*lg:hidden[^"]*"/.test(brut);
+  verifier(fragments, "des fragments propres au telephone existent", "aucun bloc lg:hidden");
+
+  verifier(
+    html.includes(normaliser("Aujourd'hui")) && html.includes(normaliser("À faire")),
+    "les fragments nomment « Aujourd hui » et « A faire »",
+  );
+
+  // La barre laterale de la fenetre d apercu porte cette largeur fixe. Elle
+  // ne doit apparaitre qu a l interieur de l enveloppe reservee au grand
+  // ecran : si elle la precede, c est qu un panneau desktop est rendu sur
+  // telephone.
+  const enveloppe = brut.indexOf("hidden lg:-mb-24 lg:block");
+  const laterale = brut.indexOf("w-[84px]");
+
+  verifier(enveloppe >= 0, "la fenetre d apercu a une enveloppe reservee au grand ecran");
+  verifier(
+    laterale < 0 || (enveloppe >= 0 && laterale > enveloppe),
+    "aucune barre laterale de bureau avant cette enveloppe",
+    laterale < 0 ? "" : `barre laterale en position ${laterale}, enveloppe en ${enveloppe}`,
+  );
+
   console.log("\nCe qui ne doit pas s y trouver");
   for (const [nom, motif] of PROSCRITS) {
     const trouve = motif.exec(html);
