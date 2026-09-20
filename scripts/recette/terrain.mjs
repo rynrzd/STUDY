@@ -35,7 +35,7 @@ export function marqueurUnique() {
  * l'appelant : ce fichier ne peut pas les importer lui-même, elles exigent la
  * condition `react-server`.
  */
-export async function preparerTerrain({ service, exploitant, marqueur, lib }) {
+export async function preparerTerrain({ service, exploitant, marqueur, lib, activerAdministrateur }) {
   const suffixe = marqueur.slice(-6);
   const code = `RECETTE-${suffixe.toUpperCase()}`;
   const domaine = process.env.STUDENT_ALIAS_DOMAIN ?? "exemple.invalid";
@@ -84,6 +84,19 @@ export async function preparerTerrain({ service, exploitant, marqueur, lib }) {
     p_alias: courrielAdmin,
   });
   if (erreurAdmin !== null) throw new Error(`administrateur : ${erreurAdmin.message}`);
+
+  /* --- Son activation, par le navigateur ----------------------------------- */
+
+  // Elle n'est pas un détail d'installation : `etab_contexte` refuse un compte
+  // qui n'a pas choisi son mot de passe, et tout ce qui suit passe par lui.
+  // La faire jouer par le navigateur plutôt que par une écriture directe
+  // coûte quelques secondes et couvre, à chaque exécution, l'activation et
+  // l'enrôlement du second facteur d'un administrateur.
+  const acces = await activerAdministrateur({
+    code,
+    login: loginAdmin,
+    motDePasse: motDePasseAdmin,
+  });
 
   /* --- L'année, les classes, la matière ------------------------------------ */
 
@@ -182,8 +195,11 @@ export async function preparerTerrain({ service, exploitant, marqueur, lib }) {
     administrateur: {
       id: administrateur,
       login: loginAdmin,
-      motDePasse: motDePasseAdmin,
-      activationRequise: true,
+      // Le mot de passe definitif choisi a l activation, et la cle du second
+      // facteur : en memoire seulement, pour les scenarios qui rouvrent une
+      // session d administration. Jamais affiches, jamais ecrits.
+      motDePasse: acces.motDePasse,
+      secretTotp: acces.secretTotp,
     },
     comptes,
     marqueur,

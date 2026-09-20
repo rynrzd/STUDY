@@ -3,7 +3,7 @@
 import { instantLisible, jourLisible } from "@/lib/horodatage";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
   ajouterBloc,
@@ -581,6 +581,14 @@ const TYPES = [
 function AjoutBloc({ seance }: { seance: string }) {
   const [type, setType] = useState<string | null>(null);
   const [etat, action] = useActionState<EtatStudio, FormData>(ajouterBloc, ETAT_STUDIO_INITIAL);
+
+  // Le bloc ajouté, le formulaire se referme et rend la main à la barre de
+  // choix. Sans cela il restait ouvert sur le type précédent, avec ses champs
+  // vidés : pour ajouter un second bloc d'un autre type, il fallait deviner
+  // qu'il faut d'abord annuler. On revient à l'état d'où l'on était parti.
+  useEffect(() => {
+    if (etat.etat === "ok") setType(null);
+  }, [etat]);
 
   if (type === null) {
     return (

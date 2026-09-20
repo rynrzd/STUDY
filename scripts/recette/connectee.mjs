@@ -18,8 +18,8 @@
 import pg from "pg";
 import { createClient } from "@supabase/supabase-js";
 import { chargerEnv, titre } from "../_commun.mjs";
-import { ouvrirNavigateur } from "./navigateur.mjs";
-import { demonterDemandes, demonterEtablissement, demonterProfils, residuDeRecette } from "./nettoyage.mjs";
+import { connecter, contexteDe, ouvrirNavigateur } from "./navigateur.mjs";
+import { balayer, residuDeRecette } from "./nettoyage.mjs";
 import { marqueurUnique, preparerTerrain } from "./terrain.mjs";
 import { scenarioStudio } from "./scenario-studio.mjs";
 
@@ -98,15 +98,45 @@ let navigateur = null;
 
 try {
   console.log("\n0. Terrain de recette");
+  navigateur = await ouvrirNavigateur();
+
   terrain = await preparerTerrain({
     service: service(),
     exploitant: exploitants[0].profile_id,
     marqueur,
     lib,
+    /**
+     * L'activation de l'administrateur, jouée dans le navigateur.
+     *
+     * Ce n'est pas seulement une étape d'installation : c'est le seul moment
+     * où l'on voit un administrateur traverser l'activation **et** l'enrôlement
+     * du second facteur par l'interface. Ce qu'elle rend — mot de passe
+     * définitif et clé TOTP — reste en mémoire.
+     */
+    activerAdministrateur: async (identite) => {
+      const { contexte, page } = await contexteDe(navigateur);
+      try {
+        const session = await connecter(page, BASE, identite);
+        if (!session.destination.startsWith("/admin")) {
+          const titre = await page.locator("h1").first().innerText().catch(() => "(aucun h1)");
+          console.log(`       diagnostic : arrive sur ${session.destination} — « ${titre} »`);
+        }
+        verifier(
+          session.secretTotp !== null,
+          "l administrateur active son compte et enrole son second facteur",
+        );
+        verifier(
+          session.destination.startsWith("/admin"),
+          "il arrive bien dans son espace d administration",
+          session.destination,
+        );
+        return session;
+      } finally {
+        await contexte.close();
+      }
+    },
   });
   verifier(true, `etablissement ${terrain.code}, 2 classes, 1 professeur, 3 eleves`);
-
-  navigateur = await ouvrirNavigateur();
 
   await scenarioStudio({ navigateur, base: BASE, terrain, sql, verifier, service: service() });
 } catch (erreur) {
@@ -118,25 +148,13 @@ try {
   if (navigateur !== null) await navigateur.close().catch(() => {});
 
   try {
-    if (terrain !== null) {
-      const profils = [
-        terrain.administrateur.id,
-        ...Object.values(terrain.comptes).map((compte) => compte.id).filter(Boolean),
-      ];
+    // On balaie par marquage, jamais par liste : un terrain créé puis
+    // abandonné par une erreur survenue trois lignes plus loin n'est dans
+    // aucune liste — mais il porte son code `RECETTE`.
+    const bilan = await balayer(sql, service(), { trace: (ligne) => console.log(ligne) });
+    console.log(`  ${bilan.etablissements} etablissement(s), ${bilan.profils} compte(s) demontes.`);
 
-      await demonterEtablissement(sql, terrain.organisation, { trace: () => {} });
-      await demonterProfils(sql, profils, { trace: () => {} });
-      await demonterDemandes(sql, { trace: () => {} });
-
-      const fournisseur = service();
-      for (const profil of profils) {
-        await fournisseur.auth.admin.deleteUser(profil).catch(() => undefined);
-      }
-    }
-
-    const restes = await residuDeRecette(sql, {
-      organisations: terrain === null ? [] : [terrain.organisation],
-    });
+    const restes = await residuDeRecette(sql);
 
     if (restes.length > 0) {
       echecs += 1;

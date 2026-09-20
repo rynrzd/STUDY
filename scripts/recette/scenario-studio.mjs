@@ -18,7 +18,14 @@
 // leur type via `data-bloc-type`.
 // =============================================================================
 
-import { connecter, contexteDe, exigerPage, verifierEcran } from "./navigateur.mjs";
+import {
+  attendreEnBase,
+  connecter,
+  contexteDe,
+  exigerPage,
+  soumettre,
+  verifierEcran,
+} from "./navigateur.mjs";
 
 /** Les cinq types, avec ce qu'il faut saisir et ce qu'on doit relire. */
 function blocsAttendus(marque) {
@@ -63,14 +70,13 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
     });
 
     await page.fill('[data-testid="chapitre-label"]', `Chapitre ${marque}`);
-    await Promise.all([
-      page.waitForLoadState("networkidle"),
-      page.click('[data-testid="chapitre-valider"]'),
-    ]);
+    await soumettre(page, '[data-testid="chapitre-valider"]');
 
-    const { rows: chapitres } = await sql.query(
+    const chapitres = await attendreEnBase(
+      sql,
       "select id, label from study.chapters where label = $1",
       [`Chapitre ${marque}`],
+      (lignes) => lignes.length === 1,
     );
     verifier(chapitres.length === 1, "le chapitre est cree et ecrit en base", `${chapitres.length} ligne(s)`);
 
@@ -92,9 +98,11 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
 
     await page.waitForLoadState("networkidle");
 
-    const { rows: seances } = await sql.query(
+    const seances = await attendreEnBase(
+      sql,
       "select id, title, state, chapter_id from study.lessons where title = $1",
       [`Seance ${marque}`],
+      (lignes) => lignes.length === 1,
     );
     if (!verifier(seances.length === 1, "la seance est ecrite en base", `${seances.length} ligne(s)`)) {
       return;
@@ -119,9 +127,8 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
 
       const [reponse] = await Promise.all([
         page.waitForResponse((r) => r.request().method() === "POST" && r.url().startsWith(base)),
-        page.click('[data-testid="bloc-ajouter"]'),
+        soumettre(page, '[data-testid="bloc-ajouter"]'),
       ]);
-      await page.waitForLoadState("networkidle");
 
       verifier(
         reponse.status() < 400,
@@ -141,10 +148,7 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
       mimeType: "application/pdf",
       buffer: pdfMinimal(marque),
     });
-    await Promise.all([
-      page.waitForLoadState("networkidle"),
-      page.click('[data-testid="bloc-ajouter"]'),
-    ]);
+    await soumettre(page, '[data-testid="bloc-ajouter"]');
 
     /* --- Ce que la base a réellement écrit --------------------------------- */
 
@@ -157,7 +161,13 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
         )
       ).rows;
 
-    let enBase = await lireBlocs();
+    let enBase = await attendreEnBase(
+      sql,
+      `select id, kind, position, contenu, file_id, assignment_id
+         from study.lesson_blocks where lesson_id = $1 order by position`,
+      [seance.id],
+      (lignes) => lignes.length === 5,
+    );
     verifier(enBase.length === 5, "les cinq blocs sont ecrits en base", `${enBase.length} bloc(s)`);
 
     for (const type of ["texte", "exercice", "lien", "devoir", "document"]) {
@@ -210,10 +220,9 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
         await article.locator(`[data-testid="${champ}"]`).fill(valeur);
       }
 
-      await Promise.all([
-        page.waitForLoadState("networkidle"),
-        article.locator('[data-testid="bloc-enregistrer"]').click(),
-      ]);
+      await article.locator('[data-testid="bloc-enregistrer"]').click();
+      await page.waitForLoadState("networkidle").catch(() => {});
+      await page.waitForTimeout(600);
     }
 
     enBase = await lireBlocs();
@@ -239,12 +248,16 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
 
     const avantOrdre = (await lireBlocs()).map((b) => b.kind);
     const dernier = page.locator("[data-bloc-type]").last();
-    await Promise.all([
-      page.waitForLoadState("networkidle"),
-      dernier.locator('[data-testid="bloc-monter"]').click(),
-    ]);
+    await dernier.locator('[data-testid="bloc-monter"]').click();
+    await page.waitForLoadState("networkidle").catch(() => {});
 
-    const apresOrdre = (await lireBlocs()).map((b) => b.kind);
+    const reordonnes = await attendreEnBase(
+      sql,
+      `select kind from study.lesson_blocks where lesson_id = $1 order by position`,
+      [seance.id],
+      (lignes) => JSON.stringify(lignes.map((b) => b.kind)) !== JSON.stringify(avantOrdre),
+    );
+    const apresOrdre = reordonnes.map((b) => b.kind);
     verifier(
       JSON.stringify(avantOrdre) !== JSON.stringify(apresOrdre),
       "reordonner change l ordre en base",
@@ -272,14 +285,13 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
     /* --- Publication dans une seule classe ---------------------------------- */
 
     await exigerPage(page, base, `/studio/${seance.id}`, { marqueur: '[data-testid="publication"]' });
-    await Promise.all([
-      page.waitForLoadState("networkidle"),
-      page.click('[data-testid="publication-basculer"]'),
-    ]);
+    await soumettre(page, '[data-testid="publication-basculer"]');
 
-    const { rows: publiee } = await sql.query(
+    const publiee = await attendreEnBase(
+      sql,
       "select state, teaching_space_id from study.lessons where id = $1",
       [seance.id],
+      (lignes) => lignes[0]?.state === "publiee",
     );
     verifier(publiee[0]?.state === "publiee", "la seance est publiee", publiee[0]?.state);
     verifier(
@@ -311,7 +323,8 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
 
       const lien = vueEleve.page.locator(`a:has-text("Seance ${marque}")`).first();
       if ((await lien.count()) > 0) {
-        await Promise.all([vueEleve.page.waitForLoadState("networkidle"), lien.click()]);
+        await lien.click();
+        await vueEleve.page.waitForLoadState("networkidle").catch(() => {});
         const rendu = await vueEleve.page.evaluate(() => document.body.innerText);
         const presents = blocsAttendus(marque)
           .map((b) => b.type)
@@ -353,14 +366,13 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
       verifier(false, "le formulaire de duplication est present sur l ecran de seance");
     } else {
       await page.selectOption('[data-testid="dupliquer-cours"]', terrain.cours.temoin);
-      await Promise.all([
-        page.waitForLoadState("networkidle"),
-        page.click('[data-testid="dupliquer-valider"]'),
-      ]);
+      await soumettre(page, '[data-testid="dupliquer-valider"]');
 
-      const { rows: copies } = await sql.query(
+      const copies = await attendreEnBase(
+        sql,
         "select id, title, teaching_space_id from study.lessons where teaching_space_id = $1",
         [terrain.cours.temoin],
+        (lignes) => lignes.length === 1,
       );
       if (verifier(copies.length === 1, "la copie existe dans l autre classe", `${copies.length}`)) {
         const copie = copies[0];
@@ -392,30 +404,43 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
     /* --- Dépublier puis republier -------------------------------------------- */
 
     await exigerPage(page, base, `/studio/${seance.id}`, { marqueur: '[data-testid="publication"]' });
-    await Promise.all([
-      page.waitForLoadState("networkidle"),
-      page.click('[data-testid="publication-basculer"]'),
-    ]);
-    let etat = (await sql.query("select state from study.lessons where id = $1", [seance.id])).rows[0];
+    await soumettre(page, '[data-testid="publication-basculer"]');
+    let etat = (
+      await attendreEnBase(
+        sql,
+        "select state from study.lessons where id = $1",
+        [seance.id],
+        (lignes) => lignes[0]?.state !== "publiee",
+      )
+    )[0];
     verifier(etat.state !== "publiee", "depublier ramene la seance en brouillon", etat.state);
 
-    await Promise.all([
-      page.waitForLoadState("networkidle"),
-      page.click('[data-testid="publication-basculer"]'),
-    ]);
-    etat = (await sql.query("select state from study.lessons where id = $1", [seance.id])).rows[0];
+    await exigerPage(page, base, `/studio/${seance.id}`, { marqueur: '[data-testid="publication"]' });
+    await soumettre(page, '[data-testid="publication-basculer"]');
+    etat = (
+      await attendreEnBase(
+        sql,
+        "select state from study.lessons where id = $1",
+        [seance.id],
+        (lignes) => lignes[0]?.state === "publiee",
+      )
+    )[0];
     verifier(etat.state === "publiee", "republier la remet en ligne", etat.state);
 
     /* --- Suppression d'un bloc ----------------------------------------------- */
 
     page.once("dialog", (dialogue) => dialogue.accept());
     const aSupprimer = page.locator('[data-bloc-type="lien"]').first();
-    await Promise.all([
-      page.waitForLoadState("networkidle"),
-      aSupprimer.locator('[data-testid="bloc-supprimer"]').click(),
-    ]);
+    await aSupprimer.locator('[data-testid="bloc-supprimer"]').click();
+    await page.waitForLoadState("networkidle").catch(() => {});
 
-    enBase = await lireBlocs();
+    enBase = await attendreEnBase(
+      sql,
+      `select id, kind, position, contenu, file_id, assignment_id
+         from study.lesson_blocks where lesson_id = $1 order by position`,
+      [seance.id],
+      (lignes) => !lignes.some((b) => b.kind === "lien"),
+    );
     verifier(
       !enBase.some((b) => b.kind === "lien"),
       "le bloc supprime disparait de la base",

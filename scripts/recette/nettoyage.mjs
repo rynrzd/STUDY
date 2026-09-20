@@ -210,6 +210,59 @@ export async function residuDeRecette(sql, { organisations = [], profils = [] } 
 }
 
 /**
+ * Le balayage complet : tout ce qui porte une marque de recette.
+ *
+ * C'est la seule forme de nettoyage sur laquelle on puisse compter, parce
+ * qu'elle ne dépend pas de ce que l'appelant a pensé à noter. Un terrain
+ * créé puis abandonné par une erreur survenue trois lignes plus loin n'est
+ * dans aucune liste — mais il porte son code `RECETTE`.
+ *
+ * Les profils sont relevés **avant** le démontage : une fois les adhésions
+ * supprimées, plus rien ne relie un compte à son établissement.
+ */
+export async function balayer(sql, fournisseur, { trace = () => {} } = {}) {
+  const { rows: etablissements } = await sql.query(
+    "select id, public_code, name from study.organizations where public_code like 'RECETTE%' order by created_at",
+  );
+
+  const profils = new Set();
+  for (const etablissement of etablissements) {
+    const { rows } = await sql.query(
+      "select profile_id from study.organization_memberships where organization_id = $1",
+      [etablissement.id],
+    );
+    for (const ligne of rows) profils.add(ligne.profile_id);
+  }
+
+  // L'exploitant n'est membre d'aucun établissement de recette. Ce garde-fou
+  // existe pour le cas où une requête le ramènerait par erreur : le compte du
+  // site ne doit jamais pouvoir être emporté par un nettoyage.
+  const { rows: exploitants } = await sql.query("select profile_id from study_prive.editor_staff");
+  for (const ligne of exploitants) {
+    if (profils.delete(ligne.profile_id)) trace("    (epargne) le compte de l exploitant");
+  }
+
+  for (const etablissement of etablissements) {
+    trace(`    ${etablissement.public_code} « ${etablissement.name} »`);
+    await demonterEtablissement(sql, etablissement.id, { trace });
+  }
+
+  await demonterProfils(sql, [...profils], { trace });
+  await demonterDemandes(sql, { trace });
+
+  let comptes = 0;
+  if (fournisseur !== undefined && fournisseur !== null) {
+    for (const profil of profils) {
+      const { error } = await fournisseur.auth.admin.deleteUser(profil);
+      if (error === null) comptes += 1;
+    }
+    if (comptes > 0) trace(`    comptes de connexion chez le fournisseur : ${comptes}`);
+  }
+
+  return { etablissements: etablissements.length, profils: profils.size, comptes };
+}
+
+/**
  * Supprime les demandes commerciales de recette.
  *
  * Reconnues à leur adresse : le domaine `exemple.invalid` est réservé par la

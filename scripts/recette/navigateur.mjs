@@ -106,6 +106,64 @@ export async function verifierEcran(page, base, { attendu = null, marqueur = nul
 }
 
 /**
+ * Clique, et attend que la page ait **réellement** changé.
+ *
+ * `waitForLoadState("networkidle")` ne suffit pas : il peut se satisfaire de
+ * l'état courant avant même que la navigation commence. On lit alors l'ancienne
+ * adresse et l'on conclut « refusé » alors que le produit fonctionnait — c'est
+ * exactement l'erreur qui a fait croire à une connexion cassée.
+ *
+ * `quitter` nomme le chemin qu'on doit avoir quitté ; à défaut, on se contente
+ * d'attendre que le réseau se taise après la navigation.
+ */
+export async function soumettre(page, selecteur, { quitter = null, delai = 30_000 } = {}) {
+  const depart = new URL(page.url()).pathname;
+  await page.click(selecteur);
+
+  try {
+    if (quitter !== null) {
+      await page.waitForURL((url) => new URL(url).pathname !== quitter, { timeout: delai });
+    } else {
+      await page.waitForURL((url) => new URL(url).pathname !== depart, { timeout: delai });
+    }
+  } catch {
+    // Certaines actions ne naviguent pas : elles remplacent le contenu sur
+    // place. Ce n'est pas une faute, et l'appelant vérifiera le résultat.
+  }
+
+  await page.waitForLoadState("networkidle").catch(() => {});
+  await attendreStabilisation(page);
+}
+
+/**
+ * Attend que l'adresse cesse de bouger.
+ *
+ * Le produit enchaîne des redirections : `/app` aiguille selon le rôle, et
+ * `/admin` renvoie vers le second facteur. Lire l'adresse au milieu de cette
+ * chaîne donne une réponse vraie à un instant qui n'intéresse personne — et
+ * fait manquer l'écran qu'on cherchait.
+ */
+export async function attendreStabilisation(page, { calme = 600, delai = 20_000 } = {}) {
+  const limite = Date.now() + delai;
+  let precedente = page.url();
+  let stableDepuis = Date.now();
+
+  while (Date.now() < limite) {
+    await page.waitForTimeout(150);
+    const courante = page.url();
+
+    if (courante !== precedente) {
+      precedente = courante;
+      stableDepuis = Date.now();
+      continue;
+    }
+    if (Date.now() - stableDepuis >= calme) return courante;
+  }
+
+  return page.url();
+}
+
+/**
  * Connecte un compte, en traversant tout ce que le produit peut exiger.
  *
  * Trois étapes possibles, dans l'ordre où le produit les impose : le mot de
@@ -125,10 +183,7 @@ export async function connecter(page, base, identite) {
   await page.fill("#code", code);
   await page.fill("#identifiant", login);
   await page.fill("#motDePasse", motDePasse);
-  await Promise.all([
-    page.waitForLoadState("networkidle"),
-    page.click('[data-testid="connexion-valider"]'),
-  ]);
+  await soumettre(page, '[data-testid="connexion-valider"]', { quitter: "/connexion" });
 
   let secretTotp = identite.secretTotp ?? null;
   let motDePasseCourant = motDePasse;
@@ -138,10 +193,7 @@ export async function connecter(page, base, identite) {
     const definitif = motDePasseFinal ?? `Definitif-${Math.random().toString(36).slice(2, 12)}!aA1`;
     await page.fill("#nouveau", definitif);
     await page.fill("#confirmation", definitif);
-    await Promise.all([
-      page.waitForLoadState("networkidle"),
-      page.click('[data-testid="activation-valider"]'),
-    ]);
+    await soumettre(page, '[data-testid="activation-valider"]', { quitter: "/activation" });
     motDePasseCourant = definitif;
   }
 
@@ -157,14 +209,12 @@ export async function connecter(page, base, identite) {
     }
 
     await page.fill("#code", await codeStable(secretTotp));
-    await Promise.all([
-      page.waitForLoadState("networkidle"),
-      page.click('[data-testid="totp-valider"]'),
-    ]);
+    await soumettre(page, '[data-testid="totp-valider"]');
 
     const continuer = page.locator('a:has-text("Continuer")');
     if ((await continuer.count()) > 0) {
-      await Promise.all([page.waitForLoadState("networkidle"), continuer.click()]);
+      await continuer.click();
+      await page.waitForLoadState("networkidle").catch(() => {});
     }
   }
 
@@ -172,10 +222,42 @@ export async function connecter(page, base, identite) {
   if (probleme !== null) throw new Error(`connexion de ${login} : ${probleme}`);
 
   if (page.url().includes("/connexion")) {
-    throw new Error(`connexion de ${login} : refusee, on reste sur l ecran de connexion`);
+    // Le message affiché dit pourquoi ; sans lui, « refusée » n'apprend rien et
+    // oblige à rejouer la scène à la main.
+    const dit = await page
+      .locator('[role="alert"], [role="status"]')
+      .allInnerTexts()
+      .catch(() => []);
+    const motif = dit.join(" / ").trim();
+    throw new Error(
+      `connexion de ${login} : refusee${motif === "" ? "" : ` — « ${motif} »`}`,
+    );
   }
 
   return { destination: new URL(page.url()).pathname, secretTotp, motDePasse: motDePasseCourant };
+}
+
+/**
+ * Attend qu'une écriture attendue apparaisse en base.
+ *
+ * Une action serveur répond à l'écran avant que tout soit relu ; interroger la
+ * base dans la foulée donne parfois zéro ligne pour une écriture qui a bien eu
+ * lieu. On patiente donc un peu — mais on abandonne, plutôt que d'attendre
+ * indéfiniment une écriture qui n'arrivera jamais.
+ *
+ * Ce n'est pas une indulgence : au bout du délai, le contrôle échoue.
+ */
+export async function attendreEnBase(sql, requete, params, accepte, { delai = 8000 } = {}) {
+  const limite = Date.now() + delai;
+  let dernier = [];
+
+  for (;;) {
+    const { rows } = await sql.query(requete, params);
+    dernier = rows;
+    if (accepte(rows)) return rows;
+    if (Date.now() >= limite) return dernier;
+    await new Promise((resoudre) => setTimeout(resoudre, 400));
+  }
 }
 
 /** Ferme la session côté serveur, comme le ferait la personne. */
