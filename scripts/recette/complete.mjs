@@ -56,16 +56,28 @@ function noter(nom, etat, detail = "") {
 /** Lance une commande npm et rend son code de sortie, sans jamais jeter. */
 function lancer(nom, arguments_) {
   return new Promise((resoudre) => {
-    // `npm.cmd` plutôt que `shell: true` : passer des arguments à un shell les
-    // concatène sans les échapper. Ils sont ici tous écrits en dur, mais
-    // l'habitude d'ouvrir un shell pour lancer un programme finit toujours par
-    // rencontrer une chaîne qui vient d'ailleurs.
-    const commande = process.platform === "win32" ? "npm.cmd" : "npm";
+    // On évite le shell : lui passer des arguments les concatène sans les
+    // échapper, et l'habitude finit toujours par rencontrer une chaîne venue
+    // d'ailleurs.
+    //
+    // Mais on ne peut pas non plus lancer `npm.cmd` directement : depuis
+    // Node 20, exécuter un `.cmd` sans shell est refusé (EINVAL), précisément
+    // à cause de ce risque d'injection. La bonne porte est le CLI de npm en
+    // JavaScript, que npm expose dans `npm_execpath` — on l'exécute avec le
+    // même Node, sans shell du tout.
+    const cliNpm = process.env.npm_execpath;
+    const parJavaScript = typeof cliNpm === "string" && cliNpm.endsWith(".js");
 
-    const processus = spawn(commande, ["run", ...arguments_], {
-      stdio: ["ignore", "pipe", "pipe"],
-      env: { ...process.env, RECETTE_MARQUEUR: MARQUEUR },
-    });
+    const processus = parJavaScript
+      ? spawn(process.execPath, [cliNpm, "run", ...arguments_], {
+          stdio: ["ignore", "pipe", "pipe"],
+          env: { ...process.env, RECETTE_MARQUEUR: MARQUEUR },
+        })
+      : spawn("npm", ["run", ...arguments_], {
+          stdio: ["ignore", "pipe", "pipe"],
+          shell: process.platform === "win32",
+          env: { ...process.env, RECETTE_MARQUEUR: MARQUEUR },
+        });
 
     let sortie = "";
     processus.stdout.on("data", (bloc) => (sortie += bloc));
