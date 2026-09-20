@@ -123,10 +123,6 @@ export async function scenarioFichiers({ navigateur, base, terrain, sql, verifie
         "double extension",
         deposerFichier(`devoir-${marque}.pdf.exe`, "application/pdf", Buffer.from("MZ programme", "utf8")),
       ],
-      [
-        "PDF annonce, PNG reel, extension trompeuse",
-        deposerFichier(`image-${marque}.pdf`, "application/pdf", png()),
-      ],
     ];
 
     for (const [libelle, fichier] of refuses) {
@@ -134,6 +130,31 @@ export async function scenarioFichiers({ navigateur, base, terrain, sql, verifie
       await deposer(fichier).catch(() => "");
       const apres = await compterFichiers();
       verifier(apres === avant, `refus : ${libelle}`, `${avant} puis ${apres} fichier(s)`);
+    }
+
+    /* --- Le contenu fait foi, pas le nom -------------------------------------- */
+
+    // Un PNG nomme « .pdf » et annonce « application/pdf » est accepte : c est
+    // bien un PNG, et le produit ne croit que les octets. Ce qui compte est
+    // qu il soit enregistre pour ce qu il est, et servi comme tel — sans quoi
+    // un navigateur pourrait l interpreter autrement que prevu.
+    const avantTrompeur = await compterFichiers();
+    await deposer(deposerFichier(`image-${marque}.pdf`, "application/pdf", png())).catch(() => "");
+
+    if ((await compterFichiers()) > avantTrompeur) {
+      const dernier = (
+        await sql.query(
+          "select mime_detected from study.files where organization_id = $1 order by created_at desc limit 1",
+          [terrain.organisation],
+        )
+      ).rows[0];
+      verifier(
+        String(dernier.mime_detected) === "image/png",
+        "un PNG nomme .pdf est enregistre comme PNG, pas comme PDF",
+        String(dernier.mime_detected),
+      );
+    } else {
+      verifier(false, "un PNG nomme .pdf reste acceptable : c est bien une image");
     }
 
     /* --- Un nom hostile est assaini, pas rejete ------------------------------- */
@@ -190,9 +211,18 @@ export async function scenarioFichiers({ navigateur, base, terrain, sql, verifie
     const fichierId = attaches[0]?.file_id ?? null;
     if (!verifier(fichierId !== null, "un fichier est attache a la seance publiee")) return;
 
+    // `maxRedirects: 0` : un visiteur non connecte est **redirige** vers la
+    // connexion. Suivre la redirection donnerait 200 — la page de connexion —
+    // et l on conclurait que le document a ete servi.
     const telecharger = async (page) => {
-      const reponse = await page.request.get(`${base}/documents/${fichierId}`);
-      return { statut: reponse.status(), type: reponse.headers()["content-type"] ?? "" };
+      const reponse = await page.request.get(`${base}/documents/${fichierId}`, {
+        maxRedirects: 0,
+      });
+      return {
+        statut: reponse.status(),
+        type: reponse.headers()["content-type"] ?? "",
+        vers: reponse.headers()["location"] ?? "",
+      };
     };
 
     const parLeProf = await telecharger(prof.page);
@@ -226,8 +256,16 @@ export async function scenarioFichiers({ navigateur, base, terrain, sql, verifie
       const parPersonne = await telecharger(anonyme.page);
       verifier(
         parPersonne.statut !== 200,
-        "un visiteur non connecte n obtient rien",
+        "un visiteur non connecte n obtient pas le document",
         `HTTP ${parPersonne.statut}`,
+      );
+      // La redirection doit rester sur le site. Le repli du code est
+      // « localhost:3100 » : si APP_ORIGIN manquait chez l hebergeur, un
+      // visiteur serait renvoye vers une adresse qui n existe pas.
+      verifier(
+        parPersonne.vers === "" || parPersonne.vers.startsWith(base),
+        "elle renvoie vers la connexion du site, pas vers une adresse locale",
+        parPersonne.vers,
       );
 
       /* --- Dépublier coupe l'accès, ce qu'une URL signée ne ferait pas ------ */

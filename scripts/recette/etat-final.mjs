@@ -94,7 +94,11 @@ const { rows: orphelins } = await sql.query(`
     (select count(*)::int from study.fils_entraide)                                               as fils_entraide,
     (select count(*)::int from study.travaux_faits)                                               as travaux_faits,
     (select count(*)::int from study.teaching_spaces)                                             as cours,
-    (select count(*)::int from study_prive.auth_aliases)                                          as alias
+    -- Un alias n'est orphelin que si son profil a disparu. Le compte du site en
+    -- porte un, sans établissement : le compter comme un résidu ferait échouer
+    -- un état pourtant conforme, et l'on apprendrait à ignorer l'alerte.
+    (select count(*)::int from study_prive.auth_aliases a
+      where not exists (select 1 from study.profiles p where p.id = a.profile_id))                as alias_orphelins
 `);
 
 const restes = orphelins[0];

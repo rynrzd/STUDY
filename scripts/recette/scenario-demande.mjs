@@ -27,10 +27,31 @@ function demandeValide(marque) {
   };
 }
 
+/**
+ * Remplit le formulaire, y compris avec ce qu'un champ refuserait.
+ *
+ * Un `input[type=number]` empêche de taper « 12,5 » : le navigateur filtre la
+ * frappe. Mais le produit doit quand même refuser cette valeur, parce qu'un
+ * envoi sans JavaScript — que le formulaire accepte, par amélioration
+ * progressive — peut très bien la transmettre. On pose donc la valeur
+ * directement dans le champ, ce qui reproduit exactement ce cas.
+ */
 async function remplir(page, valeurs) {
   for (const [nom, valeur] of Object.entries(valeurs)) {
     const champ = page.locator(`[name="${nom}"]`).first();
     if ((await champ.count()) === 0) continue;
+
+    const type = await champ.getAttribute("type");
+    if (type === "number") {
+      await champ.evaluate((element, texte) => {
+        const champNatif = element;
+        champNatif.value = texte;
+        champNatif.dispatchEvent(new Event("input", { bubbles: true }));
+        champNatif.dispatchEvent(new Event("change", { bubbles: true }));
+      }, String(valeur));
+      continue;
+    }
+
     await champ.fill(String(valeur));
   }
 }
