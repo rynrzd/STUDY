@@ -14,6 +14,13 @@ import { randomBytes } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import pg from "pg";
 import { chargerEnv } from "./_commun.mjs";
+import { codeStable, codeTotp } from "./recette/totp.mjs";
+import {
+  demonterDemandes,
+  demonterEtablissement,
+  demonterProfils,
+  residuDeRecette,
+} from "./recette/nettoyage.mjs";
 
 chargerEnv();
 
@@ -71,8 +78,8 @@ async function seConnecter(code, identifiant, secret) {
   );
 }
 
-/** Jeton d'accès du fournisseur, déchiffré depuis la session — comme le BFF. */
-async function jetonAccesDe(jetonSession) {
+/** Les deux jetons du fournisseur, déchiffrés depuis la session — comme le BFF. */
+async function jetonsDe(jetonSession) {
   const { data } = await service().rpc("auth_lire_session", {
     p_empreinte: empreinteHexa(jetonSession),
   });
@@ -81,7 +88,43 @@ async function jetonAccesDe(jetonSession) {
 
   const brut = ligne.provider_tokens_chiffres;
   const scelle = brut.startsWith("\\x") ? Buffer.from(brut.slice(2), "hex").toString("utf8") : brut;
-  return JSON.parse(dechiffrer(scelle, CLES)).access;
+  const clair = JSON.parse(dechiffrer(scelle, CLES));
+
+  return { accessToken: clair.access, refreshToken: clair.refresh };
+}
+
+/** Jeton d'accès seul, pour les contrôles qui n'ont pas besoin du reste. */
+async function jetonAccesDe(jetonSession) {
+  return (await jetonsDe(jetonSession))?.accessToken ?? null;
+}
+
+/**
+ * L'identifiant de profil de l'exploitant, lu en base.
+ *
+ * Ce n'est pas un contournement d'authentification : la clé de service a déjà
+ * tous les droits, et ce que l'on cherche ici n'est qu'une clé primaire. Cela
+ * permet de jouer le reste de la recette sur une machine où le mot de passe de
+ * l'exploitant n'a — à juste titre — pas été déposé.
+ */
+async function identifiantExploitant() {
+  // `study_prive` n'est volontairement pas exposé à PostgREST : on passe donc
+  // par la connexion PostgreSQL, comme les scripts d'exploitation.
+  const client = new pg.Client({
+    connectionString: process.env.WORKER_DATABASE_URL,
+    application_name: "recette-reelle",
+  });
+
+  try {
+    await client.connect();
+    const { rows } = await client.query(
+      "select profile_id from study_prive.editor_staff where state = 'active' limit 1",
+    );
+    return rows[0]?.profile_id ?? null;
+  } catch {
+    return null;
+  } finally {
+    await client.end().catch(() => {});
+  }
 }
 
 /* ========================================================================== */
@@ -102,16 +145,24 @@ async function connexionProprietaire() {
     try {
       texte = readFileSync("ACCES-PROPRIETAIRE.txt", "utf8");
     } catch {
+      texte = null;
+    }
+
+    if (texte === null) {
+      // Pas d'identifiants : la connexion réelle de l'exploitant ne peut pas
+      // être jouée. Le reste de la recette, lui, n'a besoin que de son
+      // **identifiant de profil**, que la clé de service sait lire.
+      //
+      // On le dit franchement plutôt que de compter un succès : une section
+      // non jouée n'est pas une section réussie. Et on ne s'arrête pas là,
+      // sinon tout le reste deviendrait intestable faute d'un mot de passe
+      // qui n'a rien à faire sur cette machine.
       console.log(
-        "  Identifiants du proprietaire introuvables.\n" +
-          "  Cette recette se connecte reellement : elle a besoin du compte\n" +
-          "  proprietaire. Deux facons de les fournir, au choix :\n\n" +
-          "    STUDY_EDITEUR_IDENTIFIANT=... STUDY_EDITEUR_MOT_DE_PASSE=... npm run recette:reelle\n\n" +
-          "  ou les laisser dans ACCES-PROPRIETAIRE.txt, produit par\n" +
-          "  « npm run bootstrap:editeur », le temps de la recette.",
+        "  (non joue) connexion reelle de l exploitant : identifiants absents de cette machine.\n" +
+          "             Pour la jouer : STUDY_EDITEUR_IDENTIFIANT=... STUDY_EDITEUR_MOT_DE_PASSE=... npm run recette:reelle",
       );
-      echecs += 1;
-      return null;
+
+      return identifiantExploitant();
     }
 
     identifiant = identifiant ?? /Identifiant\s*:\s*(\S+)/.exec(texte)?.[1] ?? null;
@@ -338,7 +389,135 @@ async function parcoursEtablissement(proprietaire) {
   const { data: apres } = await client.rpc("etab_contexte", { p_acteur: administrateur });
   verifier(apres?.[0]?.organization_id === organisation, "contexte d etablissement accessible apres activation");
 
-  return { organisation, administrateur, code };
+  return { organisation, administrateur, code, login, motDePasse: nouveau };
+}
+
+/* ========================================================================== */
+/* 3 bis. Second facteur                                                       */
+/* ========================================================================== */
+
+/**
+ * Le second facteur, joué en entier contre le vrai fournisseur.
+ *
+ * C'est la seule preuve qui compte : les tests PGlite montrent que la base
+ * refuse en `aal1`, mais ils n'atteignent pas Supabase Auth. Ici on enrôle un
+ * facteur, on calcule un code, on le présente, et on vérifie que la session
+ * est réellement montée en `aal2`.
+ *
+ * Le secret n'est jamais affiché, jamais écrit, et meurt avec le compte
+ * jetable à la fin de la recette.
+ */
+async function secondFacteur(contexte, motDePasse) {
+  console.log("\n3 bis. Second facteur (MFA)");
+
+  const client = service();
+  const fournisseur = new FournisseurSupabase();
+
+  const { data: exige } = await client.rpc("auth_second_facteur_exige", {
+    p_profile: contexte.administrateur,
+  });
+  if (!verifier(exige === true, "le second facteur est exige d un administrateur")) return;
+
+  // Deux sessions : celle sur laquelle on enrôle, et une autre restée ouverte
+  // ailleurs. La seconde doit tomber au moment de l'activation.
+  const ailleurs = await seConnecter(contexte.code, contexte.login, motDePasse);
+  const courante = await seConnecter(contexte.code, contexte.login, motDePasse);
+  if (!verifier(courante.reussi && ailleurs.reussi, "deux sessions ouvertes au mot de passe")) return;
+
+  const { data: avant } = await client.rpc("auth_lire_session", {
+    p_empreinte: empreinteHexa(courante.jetonSession),
+  });
+  verifier(avant?.[0]?.niveau_assurance === "aal1", "une session au mot de passe nait en aal1", avant?.[0]?.niveau_assurance);
+
+  const jetons = await jetonsDe(courante.jetonSession);
+  if (!verifier(jetons !== null, "jetons du fournisseur lisibles depuis la session")) return;
+
+  // Un enrôlement abandonné ne doit pas empiler les facteurs : on part d'une
+  // liste propre, comme le fait `preparerEnrolement`.
+  for (const facteur of await fournisseur.listerFacteurs(jetons)) {
+    if (!facteur.verifie) await fournisseur.retirerFacteur(jetons, facteur.id);
+  }
+
+  let enrolement;
+  try {
+    enrolement = await fournisseur.enrolerTotp(jetons);
+  } catch (erreur) {
+    verifier(false, "facteur TOTP enrole chez le fournisseur", erreur.message);
+    return;
+  }
+  verifier(typeof enrolement.facteurId === "string" && enrolement.facteurId !== "", "facteur TOTP enrole chez le fournisseur");
+  verifier(typeof enrolement.secret === "string" && enrolement.secret.length >= 16, "un secret est remis une fois");
+  verifier(enrolement.qrCode.startsWith("data:"), "le QR est une image « data: », sans requete exterieure");
+
+  // Un facteur enrôlé mais non vérifié n'élève rien : l'étape reste « à
+  // vérifier », et la session est toujours en aal1.
+  const { data: pendant } = await client.rpc("auth_lire_session", {
+    p_empreinte: empreinteHexa(courante.jetonSession),
+  });
+  verifier(pendant?.[0]?.niveau_assurance === "aal1", "un facteur enrole mais non verifie n eleve rien");
+
+  // Un code faux doit être refusé — sans quoi tout le reste ne prouve rien.
+  const faux = codeTotp(enrolement.secret, { pas: -5 });
+  let refus;
+  try {
+    refus = await fournisseur.verifierTotp(jetons, enrolement.facteurId, faux);
+  } catch {
+    refus = { reussi: false };
+  }
+  verifier(refus.reussi === false, "un code hors fenetre est refuse");
+
+  // Le bon code, pris confortablement dans sa fenêtre.
+  const code = await codeStable(enrolement.secret);
+  let verification;
+  try {
+    verification = await fournisseur.verifierTotp(jetons, enrolement.facteurId, code);
+  } catch (erreur) {
+    verifier(false, "le code presente est accepte", erreur.message);
+    return;
+  }
+  if (!verifier(verification.reussi === true, "le code presente est accepte")) return;
+
+  // `reussi` n'est vrai que si le fournisseur a effectivement émis des jetons
+  // `aal2` : le niveau voyage avec les jetons, pas à côté d'eux.
+  verifier(
+    verification.jetons?.niveauAssurance === "aal2",
+    "les jetons emis portent aal2",
+    verification.jetons?.niveauAssurance,
+  );
+
+  const { data: eleves } = await client.rpc("auth_elever_assurance", {
+    p_empreinte: empreinteHexa(courante.jetonSession),
+    p_niveau: "aal2",
+  });
+  // Le compte a ouvert plusieurs sessions au cours de son activation. Toutes
+  // doivent tomber : aucune n'a présenté ce facteur, puisqu'il n'existait pas
+  // encore. On vérifie donc « au moins celle-là », pas un compte exact.
+  verifier(typeof eleves === "number" && eleves >= 1, "l activation ferme les sessions anterieures", String(eleves));
+
+  const { data: apres } = await client.rpc("auth_lire_session", {
+    p_empreinte: empreinteHexa(courante.jetonSession),
+  });
+  verifier(apres?.[0]?.niveau_assurance === "aal2", "la session est montee en aal2", apres?.[0]?.niveau_assurance);
+
+  const { data: fermee } = await client.rpc("auth_lire_session", {
+    p_empreinte: empreinteHexa(ailleurs.jetonSession),
+  });
+  verifier(
+    (fermee?.length ?? 0) === 0 || fermee[0].revoked_at !== null,
+    "la session ouverte avant l enrolement n est plus utilisable",
+  );
+
+  // Le facteur est retiré : le compte est supprimé juste après, mais on ne
+  // laisse pas traîner un facteur chez le fournisseur si la suppression
+  // échouait.
+  const finaux = (await jetonsDe(courante.jetonSession)) ?? jetons;
+  try {
+    await fournisseur.retirerFacteur(finaux, enrolement.facteurId);
+  } catch {
+    /* le compte disparaît de toute façon au nettoyage */
+  }
+
+  console.log("  (le secret TOTP n a ete ni affiche, ni ecrit, ni journalise)");
 }
 
 /* ========================================================================== */
@@ -531,12 +710,7 @@ async function nettoyer() {
   console.log("\n7. Nettoyage des donnees de recette");
 
   const client = service();
-  for (const id of aNettoyer.demandes) {
-    await client.from("commercial_requests").delete().eq("id", id);
-  }
 
-  // Les liens scolaires sont en « on delete restrict » : on supprime dans
-  // l'ordre inverse des dependances, par SQL direct.
   const sql = new pg.Client({
     connectionString: process.env.WORKER_DATABASE_URL,
     ssl: { rejectUnauthorized: false },
@@ -544,39 +718,46 @@ async function nettoyer() {
   });
   await sql.connect();
 
-  // Les déclencheurs de garde — dont « dernier administrateur actif » —
-  // protègent un établissement vivant. Ici on démonte un établissement de
-  // recette entier : on les met en sommeil le temps du nettoyage, et
-  // uniquement pour cette connexion.
-  await sql.query("set session_replication_role = replica");
+  const trace = (ligne) => console.log(ligne);
 
-  for (const organisation of aNettoyer.organisations) {
-    await sql.query("delete from study.class_enrollments where organization_id = $1", [organisation]);
-    await sql.query("delete from study.classes where organization_id = $1", [organisation]);
-    await sql.query("delete from study.external_identities where organization_id = $1", [organisation]);
-    await sql.query("delete from study_prive.auth_aliases where organization_id = $1", [organisation]);
-    await sql.query("delete from study_prive.sessions where organization_id = $1", [organisation]);
-    await sql.query("delete from study.organization_memberships where organization_id = $1", [organisation]);
-    await sql.query("delete from study.academic_years where organization_id = $1", [organisation]);
-    await sql.query("delete from study.audit_events where organization_id = $1", [organisation]);
-    await sql.query("delete from study.organizations where id = $1", [organisation]);
+  try {
+    for (const organisation of aNettoyer.organisations) {
+      await demonterEtablissement(sql, organisation, { trace });
+    }
+    await demonterProfils(sql, aNettoyer.profils, { trace });
+    await demonterDemandes(sql, { trace });
+
+    // Les comptes de connexion vivent chez le fournisseur, pas en base : les
+    // oublier laisserait des identifiants actifs sans profil en face.
+    for (const profil of aNettoyer.profils) {
+      await client.auth.admin.deleteUser(profil).catch(() => undefined);
+    }
+
+    // Le contrôle qui donne sa valeur au reste. Sans lui, un nettoyage
+    // inopérant se raconte comme un succes — c'est exactement ce qui s'est
+    // produit avant que ce controle existe.
+    const restes = await residuDeRecette(sql, {
+      organisations: aNettoyer.organisations,
+      profils: aNettoyer.profils,
+    });
+
+    if (restes.length > 0) {
+      echecs += 1;
+      console.log("  CRITIQUE : la recette a laisse des traces en production :");
+      for (const reste of restes) console.log(`    - ${reste}`);
+      console.log("  Les supprimer avant toute autre chose.");
+    } else {
+      console.log(
+        `  ${aNettoyer.demandes.length} demande(s), ${aNettoyer.organisations.length} etablissement(s), ` +
+          `${aNettoyer.profils.length} compte(s) supprimes — verifie, plus rien ne reste.`,
+      );
+    }
+  } catch (erreur) {
+    echecs += 1;
+    console.log(`  CRITIQUE : le nettoyage a echoue — ${erreur.message}`);
+  } finally {
+    await sql.end().catch(() => {});
   }
-
-  for (const profil of aNettoyer.profils) {
-    await sql.query("delete from study_prive.sessions where profile_id = $1", [profil]);
-    await sql.query("delete from study_prive.tentatives_connexion where profile_id = $1", [profil]);
-    await sql.query("delete from study.profiles where id = $1", [profil]);
-  }
-  await sql.end();
-
-  for (const profil of aNettoyer.profils) {
-    await client.auth.admin.deleteUser(profil).catch(() => undefined);
-  }
-
-  console.log(
-    `  ${aNettoyer.demandes.length} demande(s), ${aNettoyer.organisations.length} etablissement(s), ` +
-      `${aNettoyer.profils.length} compte(s) supprimes.`,
-  );
 }
 
 /* ========================================================================== */
@@ -589,6 +770,7 @@ try {
   if (proprietaire !== null) {
     const contexte = await parcoursEtablissement(proprietaire);
     if (contexte !== null) {
+      await secondFacteur(contexte, contexte.motDePasse);
       const eleves = await importRentree(contexte);
       await isolation(contexte, eleves);
       await journal(proprietaire);

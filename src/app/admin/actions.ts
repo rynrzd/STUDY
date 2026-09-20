@@ -14,6 +14,7 @@ import {
   membres as listerMembres,
 } from "@/lib/etablissement";
 import { proposerLogin } from "@/lib/import-rentree";
+import { assuranceSuffisante, REFUS_ASSURANCE } from "@/lib/garde-assurance";
 import { sessionCourante } from "@/lib/session-serveur";
 
 /**
@@ -32,6 +33,15 @@ async function exigerAdministrateur(): Promise<string> {
   if (personne === null || !personne.roles.includes("admin_etablissement")) {
     throw new Error("Action refusée.");
   }
+
+  // Un administrateur d'établissement crée des comptes, réinitialise des mots
+  // de passe et imprime des accès. Le second facteur lui est exigé au même
+  // titre qu'à l'exploitant, et il est vérifié **ici** plutôt que dans l'écran
+  // : une action serveur s'atteint directement.
+  if (!(await assuranceSuffisante(personne))) {
+    throw new Error(REFUS_ASSURANCE);
+  }
+
   return personne.profileId;
 }
 

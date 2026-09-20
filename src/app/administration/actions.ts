@@ -10,6 +10,7 @@ import {
   suspendreCompte,
 } from "@/lib/administration";
 import { ETATS } from "@/lib/demande-commerciale";
+import { assuranceSuffisante, REFUS_ASSURANCE } from "@/lib/garde-assurance";
 import { estExploitant, sessionCourante } from "@/lib/session-serveur";
 
 /**
@@ -26,6 +27,18 @@ async function exigerExploitant(): Promise<string> {
   if (personne === null || !estExploitant(personne)) {
     throw new Error("Action refusée.");
   }
+
+  // Le second facteur est vérifié **ici**, au début de chaque geste, et non
+  // seulement dans le gabarit de page. Une action serveur s'atteint
+  // directement : la masquer derrière un écran ne la protège pas.
+  //
+  // Ces cinq actions créent des établissements, nomment des administrateurs et
+  // désactivent des comptes. Ce sont exactement les gestes qu'un mot de passe
+  // volé permettrait de détourner.
+  if (!(await assuranceSuffisante(personne))) {
+    throw new Error(REFUS_ASSURANCE);
+  }
+
   return personne.profileId;
 }
 

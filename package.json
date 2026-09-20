@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "npm run test:unite && npm run test:rls",
-    "test:unite": "node --no-warnings --conditions=react-server --test \"tests/unite/*.test.ts\"",
+    "test:unite": "node --no-warnings --conditions=react-server --test \"tests/unite/*.test.ts\" \"tests/unite/*.test.mjs\"",
     "test:rls": "node --test \"tests/db/*.test.mjs\"",
     "test:navigateur": "node --test \"tests/navigateur/*.test.mjs\"",
     "diagnostic": "node --no-warnings scripts/diagnostic.mjs",
@@ -28,6 +28,7 @@
     "verifier:schema": "node scripts/comparer-schema.mjs",
     "recette:reelle": "node --conditions=react-server scripts/recette-reelle.mjs",
     "recette:deployee": "node scripts/recette-deployee.mjs",
+    "recette:balai": "node scripts/recette/balai.mjs",
     "verifier:landing": "node scripts/verifier-landing.mjs",
     "verifier:responsive": "node scripts/verifier-responsive.mjs"
   },

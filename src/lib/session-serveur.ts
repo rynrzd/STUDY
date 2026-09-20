@@ -3,6 +3,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { DepotSupabase, type LigneSession } from "./depot-authentification.ts";
 import { chiffrer, dechiffrer, lireCles } from "./chiffrement.ts";
+import type { JetonsFournisseur } from "./identite.ts";
 import {
   dureesPour,
   empreinteJeton,
@@ -167,6 +168,71 @@ export async function jetonAccesDe(personne: Personne): Promise<string | null> {
     // Le renouvellement a échoué : on rend le jeton courant. S'il est périmé,
     // la requête suivante échouera proprement et la personne se reconnectera.
     return jetons.access;
+  }
+}
+
+/**
+ * Le couple de jetons du fournisseur, pour cette session.
+ *
+ * `jetonAccesDe` ne rend que le jeton d'accès, ce qui suffit à lire des
+ * données sous RLS. Le second facteur, lui, a besoin des deux : le client du
+ * fournisseur exige une session complète pour accepter `auth.mfa.*`.
+ *
+ * Aucun renouvellement n'est tenté ici : on rend ce que la session porte. Un
+ * enrôlement dure quelques dizaines de secondes, et renouveler au milieu
+ * changerait les jetons sous les pieds de l'appelant.
+ */
+export async function jetonsDe(personne: Personne): Promise<JetonsFournisseur | null> {
+  const ligne = await depot.lireSession(personne.empreinte);
+  if (ligne === null || ligne.provider_tokens_chiffres === null) return null;
+
+  try {
+    const scelle = decoderBytea(ligne.provider_tokens_chiffres);
+    const jetons = JSON.parse(dechiffrer(scelle, lireCles())) as {
+      access?: string;
+      refresh?: string;
+      expire?: string;
+    };
+
+    if (typeof jetons.access !== "string" || typeof jetons.refresh !== "string") return null;
+
+    return {
+      accessToken: jetons.access,
+      refreshToken: jetons.refresh,
+      expireLe: new Date(jetons.expire ?? Date.now() + 3_600_000),
+      niveauAssurance: personne.niveauAssurance,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Range de nouveaux jetons dans cette session.
+ *
+ * Employé après la vérification d'un second facteur : le fournisseur rend
+ * alors des jetons portant `aal2`, et les garder serait sans effet s'ils ne
+ * remplaçaient pas ceux de la session.
+ */
+export async function remplacerJetonsDe(
+  personne: Personne,
+  jetons: JetonsFournisseur,
+): Promise<boolean> {
+  try {
+    await depot.remplacerJetons(
+      personne.empreinte,
+      chiffrer(
+        JSON.stringify({
+          access: jetons.accessToken,
+          refresh: jetons.refreshToken,
+          expire: jetons.expireLe.toISOString(),
+        }),
+        lireCles(),
+      ),
+    );
+    return true;
+  } catch {
+    return false;
   }
 }
 

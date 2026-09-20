@@ -1,6 +1,8 @@
 import "server-only";
 
 import {
+  type EnrolementTotp,
+  type FacteurTotp,
   type FournisseurIdentite,
   type JetonsFournisseur,
   type NiveauAssurance,
@@ -105,6 +107,118 @@ export class FournisseurSupabase implements FournisseurIdentite {
       niveauAssurance: NIVEAU_MOT_DE_PASSE,
     };
   }
+
+  /* ---------------------------------------------------------------------- */
+  /* Second facteur                                                          */
+  /*                                                                         */
+  /* Ces quatre opérations agissent **au nom d'une session**, jamais au nom   */
+  /* du service : elles reposent le couple de jetons de la personne sur un    */
+  /* client neuf. Passer par la clé privilégiée permettrait d'enrôler un      */
+  /* facteur sur le compte de n'importe qui, ce qui retournerait la mesure    */
+  /* contre son but.                                                         */
+  /* ---------------------------------------------------------------------- */
+
+  async listerFacteurs(jetons: JetonsFournisseur): Promise<FacteurTotp[]> {
+    const client = await clientDeLaSession(jetons);
+    const { data, error } = await client.auth.mfa.listFactors();
+
+    if (error !== null || data === null) return [];
+
+    return (data.all ?? [])
+      .filter((facteur) => facteur.factor_type === "totp")
+      .map((facteur) => ({ id: facteur.id, verifie: facteur.status === "verified" }));
+  }
+
+  async enrolerTotp(jetons: JetonsFournisseur): Promise<EnrolementTotp> {
+    const client = await clientDeLaSession(jetons);
+
+    const { data, error } = await client.auth.mfa.enroll({
+      factorType: "totp",
+      // Ce libellé apparaît dans l'application d'authentification de la
+      // personne. Il doit dire de quel service il s'agit, sans dire qui elle
+      // est : un téléphone perdu ne doit pas annoncer le compte qu'il ouvre.
+      friendlyName: `AvecStudy ${new Date().toISOString().slice(0, 10)}`,
+    });
+
+    if (error !== null || data === null) {
+      throw new Error("Enrolement du second facteur refuse");
+    }
+
+    return {
+      facteurId: data.id,
+      qrCode: data.totp.qr_code,
+      secret: data.totp.secret,
+    };
+  }
+
+  async verifierTotp(
+    jetons: JetonsFournisseur,
+    facteurId: string,
+    code: string,
+  ): Promise<ResultatVerification> {
+    const client = await clientDeLaSession(jetons);
+
+    // Le fournisseur veut un défi avant la réponse : c'est lui qui borne la
+    // fenêtre de validité du code, et non nous.
+    const defi = await client.auth.mfa.challenge({ factorId: facteurId });
+    if (defi.error !== null || defi.data === null) return { reussi: false };
+
+    const { data, error } = await client.auth.mfa.verify({
+      factorId: facteurId,
+      challengeId: defi.data.id,
+      code,
+    });
+
+    if (error !== null || data === null) return { reussi: false };
+
+    // Les jetons rendus ici portent `aal2`. On ne le suppose pas : on relit
+    // ce que le fournisseur a effectivement émis.
+    const apres = await client.auth.mfa.getAuthenticatorAssuranceLevel();
+    const niveau: NiveauAssurance = apres.data?.currentLevel === "aal2" ? "aal2" : "aal1";
+
+    return {
+      reussi: niveau === "aal2",
+      identifiantFournisseur: data.user?.id,
+      jetons: {
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        // La vérification d'un facteur rend `expires_in` mais pas
+        // `expires_at` : on laisse le repli calculer l'échéance.
+        expireLe: echeance(undefined, data.expires_in),
+        niveauAssurance: niveau,
+      },
+    };
+  }
+
+  async retirerFacteur(jetons: JetonsFournisseur, facteurId: string): Promise<void> {
+    const client = await clientDeLaSession(jetons);
+    await client.auth.mfa.unenroll({ factorId: facteurId });
+  }
+
+}
+
+/**
+ * Un client qui agit au nom d'une personne, et d'elle seule.
+ *
+ * On repose explicitement le couple de jetons : sans cela le client Supabase
+ * n'a pas de session, et `auth.mfa.*` repond « pas d'utilisateur ». Ce n'est
+ * pas la cle privilegiee qui est employee ici — elle permettrait d'enroler un
+ * facteur sur le compte de n'importe qui, ce qui retournerait la mesure
+ * contre son but.
+ */
+async function clientDeLaSession(jetons: JetonsFournisseur) {
+  const client = clientAuthentification();
+
+  const { error } = await client.auth.setSession({
+    access_token: jetons.accessToken,
+    refresh_token: jetons.refreshToken,
+  });
+
+  if (error !== null) {
+    throw new Error("Session du fournisseur illisible");
+  }
+
+  return client;
 }
 
 /**

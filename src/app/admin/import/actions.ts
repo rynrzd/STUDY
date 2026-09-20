@@ -16,6 +16,7 @@ import {
   definirClasse,
   type FichierDepose,
 } from "@/lib/lot-rentree";
+import { assuranceSuffisante, REFUS_ASSURANCE } from "@/lib/garde-assurance";
 import { sessionCourante } from "@/lib/session-serveur";
 import { TAILLE_MAXIMALE } from "@/lib/tableur";
 
@@ -48,6 +49,15 @@ async function exigerAdministrateur(): Promise<string> {
   if (personne === null || !personne.roles.includes("admin_etablissement")) {
     throw new Error("Action refusée.");
   }
+
+  // C'est l'action qui fabrique des élèves par centaines et imprime leurs
+  // accès. Le second facteur y est exigé au même titre que chez l'exploitant,
+  // et il est vérifié **ici** plutôt que dans l'écran : une action serveur
+  // s'atteint directement, sans passer par le gabarit qui la masque.
+  if (!(await assuranceSuffisante(personne))) {
+    throw new Error(REFUS_ASSURANCE);
+  }
+
   return personne.profileId;
 }
 

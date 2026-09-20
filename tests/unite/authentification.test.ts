@@ -115,6 +115,22 @@ class FournisseurDoublure implements FournisseurIdentite {
   async renouveler(): Promise<never> {
     throw new Error("non utilise dans ces tests");
   }
+
+  // Le second facteur ne passe pas par `tenterConnexion` : il s'enrôle et se
+  // vérifie après, sur une session déjà ouverte. Ces méthodes existent pour
+  // satisfaire le contrat, et disent clairement qu'elles ne servent pas ici.
+  async listerFacteurs(): Promise<never> {
+    throw new Error("non utilise dans ces tests");
+  }
+  async enrolerTotp(): Promise<never> {
+    throw new Error("non utilise dans ces tests");
+  }
+  async verifierTotp(): Promise<never> {
+    throw new Error("non utilise dans ces tests");
+  }
+  async retirerFacteur(): Promise<never> {
+    throw new Error("non utilise dans ces tests");
+  }
 }
 
 function options(surcharge: Partial<Parameters<typeof tenterConnexion>[0]> = {}) {

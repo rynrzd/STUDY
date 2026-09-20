@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { seDeconnecter } from "@/app/deconnexion/actions";
 import { MARQUE } from "@/lib/identite-legale";
+import { etapeSecondFacteur } from "@/lib/second-facteur";
 import { estExploitant, sessionCourante } from "@/lib/session-serveur";
 
 export const metadata: Metadata = {
@@ -36,6 +37,12 @@ export default async function GabaritAdministration({
 }) {
   const personne = await sessionCourante();
   if (personne === null || !estExploitant(personne)) redirect("/connexion");
+
+  // Le gabarit emmène la personne là où elle peut agir. Ce qui refuse
+  // réellement, c'est la garde posée au début de chaque action serveur :
+  // cacher un écran ne protège pas une ressource.
+  const etape = await etapeSecondFacteur(personne);
+  if (etape === "a_enroler" || etape === "a_verifier") redirect("/second-facteur");
 
   return (
     <div className="sans-debordement min-h-screen bg-[color:var(--color-fond)]">

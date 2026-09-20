@@ -32,6 +32,28 @@ export interface ResultatVerification {
   readonly jetons?: JetonsFournisseur;
 }
 
+/** Un facteur de second niveau, tel que le fournisseur le connaît. */
+export interface FacteurTotp {
+  readonly id: string;
+  readonly verifie: boolean;
+}
+
+/**
+ * Ce qu'il faut montrer, une fois, pour enrôler un facteur.
+ *
+ * Le secret et son image QR ne transitent que d'ici vers l'écran qui les
+ * affiche. Ils ne sont écrits nulle part : ni journal, ni base, ni trace. Une
+ * fois le facteur vérifié, ils n'ont plus aucune utilité — et les garder
+ * reviendrait à conserver la clé à côté de la serrure.
+ */
+export interface EnrolementTotp {
+  readonly facteurId: string;
+  /** Image QR prête à afficher, fournie par le fournisseur. */
+  readonly qrCode: string;
+  /** La même chose en toutes lettres, pour une saisie à la main. */
+  readonly secret: string;
+}
+
 export interface FournisseurIdentite {
   /** Vérifie une identité et un secret. Ne dit jamais si le compte existe. */
   verifierSecret(identite: string, secret: string): Promise<ResultatVerification>;
@@ -44,6 +66,32 @@ export interface FournisseurIdentite {
 
   /** Renouvelle les jetons. Sérialisé par session côté appelant (ch. 37). */
   renouveler(refreshToken: string): Promise<JetonsFournisseur>;
+
+  /** Les facteurs de second niveau connus pour cette session. */
+  listerFacteurs(jetons: JetonsFournisseur): Promise<FacteurTotp[]>;
+
+  /**
+   * Prépare un facteur TOTP.
+   *
+   * Rien n'est acquis tant qu'un code n'a pas été vérifié : un enrôlement
+   * abandonné laisse un facteur non vérifié, que `retirerFacteur` reprend.
+   */
+  enrolerTotp(jetons: JetonsFournisseur): Promise<EnrolementTotp>;
+
+  /**
+   * Vérifie un code à six chiffres.
+   *
+   * En cas de succès le fournisseur rend de **nouveaux** jetons, portant cette
+   * fois `aal2` : c'est cette session-là qui est élevée, pas le compte.
+   */
+  verifierTotp(
+    jetons: JetonsFournisseur,
+    facteurId: string,
+    code: string,
+  ): Promise<ResultatVerification>;
+
+  /** Retire un facteur — sert à reprendre un enrôlement interrompu. */
+  retirerFacteur(jetons: JetonsFournisseur, facteurId: string): Promise<void>;
 
   /** Le fournisseur est-il réellement joignable et configuré ? */
   disponible(): boolean;
@@ -87,6 +135,26 @@ export class FournisseurAbsent implements FournisseurIdentite {
 
   async renouveler(_refreshToken: string): Promise<JetonsFournisseur> {
     throw new FournisseurNonConfigure("renouveler des jetons");
+  }
+
+  async listerFacteurs(_jetons: JetonsFournisseur): Promise<FacteurTotp[]> {
+    throw new FournisseurNonConfigure("lister les facteurs");
+  }
+
+  async enrolerTotp(_jetons: JetonsFournisseur): Promise<EnrolementTotp> {
+    throw new FournisseurNonConfigure("enroler un second facteur");
+  }
+
+  async verifierTotp(
+    _jetons: JetonsFournisseur,
+    _facteurId: string,
+    _code: string,
+  ): Promise<ResultatVerification> {
+    throw new FournisseurNonConfigure("verifier un second facteur");
+  }
+
+  async retirerFacteur(_jetons: JetonsFournisseur, _facteurId: string): Promise<void> {
+    throw new FournisseurNonConfigure("retirer un facteur");
   }
 }
 

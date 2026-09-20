@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Cadre } from "@/components/app/Cadre";
 import { LIENS_ADMIN } from "@/components/app/espaces";
+import { etapeSecondFacteur } from "@/lib/second-facteur";
 import { sessionCourante } from "@/lib/session-serveur";
 
 export const metadata: Metadata = {
@@ -24,6 +25,12 @@ export default async function GabaritAdmin({ children }: { children: React.React
   if (personne === null) redirect("/connexion");
   if (personne.activationRequise) redirect("/activation");
   if (!personne.roles.includes("admin_etablissement")) redirect("/app");
+
+  // Même exigence que pour l'exploitation : ce compte crée des élèves et
+  // imprime leurs accès. La redirection est une politesse — ce qui refuse
+  // vraiment est la garde posée au début de chaque action.
+  const etape = await etapeSecondFacteur(personne);
+  if (etape === "a_enroler" || etape === "a_verifier") redirect("/second-facteur");
 
   return (
     <Cadre
