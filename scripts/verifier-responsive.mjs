@@ -17,7 +17,12 @@
 // =============================================================================
 
 import { chromium } from "playwright-core";
-import { titre } from "./_commun.mjs";
+import { chargerEnv, titre } from "./_commun.mjs";
+
+// Sans ceci, `SITE_BASE` n est pas lue et le script mesure
+// `localhost:3100` — c est-a-dire, au mieux, un serveur local reste ouvert,
+// et non le site deploye que l on croit verifier.
+chargerEnv();
 
 const BASE = (process.env.SITE_BASE ?? "http://localhost:3100").replace(/\/+$/, "");
 
@@ -60,6 +65,37 @@ function verifier(condition, libelle, detail = "") {
 }
 
 /**
+ * Ouvre une page, et refuse de continuer si ce n'est pas la nôtre.
+ *
+ * Sans ce contrôle, une navigation ratée — réveil à froid de l'hébergeur,
+ * coupure d'une seconde — laisse le navigateur afficher **sa propre** page
+ * d'erreur, que le script mesure ensuite en croyant mesurer le site. Il en
+ * ressort des défauts de conception imaginaires : « le H1 ne grandit pas »,
+ * « les cibles tactiles sont trop petites ». Un outil de mesure qui ment coûte
+ * plus cher que pas d'outil du tout.
+ *
+ * On réessaie deux fois avant d'abandonner : l'incident est passager par
+ * nature, et échouer sur une seconde de réseau serait tout aussi trompeur.
+ */
+async function ouvrir(page, url, { essais = 3 } = {}) {
+  let dernier = null;
+
+  for (let essai = 1; essai <= essais; essai += 1) {
+    try {
+      const reponse = await page.goto(url, { waitUntil: "networkidle", timeout: 30_000 });
+      const statut = reponse?.status() ?? 0;
+
+      if (statut >= 200 && statut < 400) return reponse;
+      dernier = `HTTP ${statut}`;
+    } catch (erreur) {
+      dernier = erreur.message.split("\n")[0];
+    }
+  }
+
+  throw new Error(`${url} n a pas pu etre ouverte (${dernier}) — mesure abandonnee`);
+}
+
+/**
  * Mesure une page à une largeur donnée.
  *
  * On tolère un pixel : les navigateurs arrondissent les largeurs fractionnaires
@@ -68,7 +104,7 @@ function verifier(condition, libelle, detail = "") {
  */
 async function mesurer(page, adresse, largeur) {
   await page.setViewportSize({ width: largeur, height: 900 });
-  await page.goto(`${BASE}${adresse}`, { waitUntil: "networkidle" });
+  await ouvrir(page, `${BASE}${adresse}`);
 
   return page.evaluate(() => {
     const racine = document.documentElement;
@@ -172,7 +208,7 @@ async function principal() {
     console.log("\nLes fragments du hero (V5 §2.4)");
 
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+    await ouvrir(page, `${BASE}/`);
 
     // La barre laterale de la fenetre d apercu : elle ne doit occuper aucune
     // surface sur telephone. Zero pixel, pas « petite ».
@@ -207,7 +243,7 @@ async function principal() {
     verifier(fragmentsVus.aFaire, "le fragment « A faire » est visible a 390 px");
 
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+    await ouvrir(page, `${BASE}/`);
     const lateraleLarge = await page.evaluate(() => {
       const element = document.querySelector('[class*="w-[84px]"]');
       return element === null ? 0 : element.getBoundingClientRect().width;
@@ -217,7 +253,7 @@ async function principal() {
     console.log("\nCible tactile (V5 §11)");
 
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+    await ouvrir(page, `${BASE}/`);
 
     const tropPetits = await page.evaluate(() => {
       const trouves = [];
@@ -247,7 +283,7 @@ async function principal() {
 
     console.log("\nNavigation au clavier (V5 §11)");
 
-    await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+    await ouvrir(page, `${BASE}/`);
     await page.keyboard.press("Tab");
 
     const premier = await page.evaluate(() => {

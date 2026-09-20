@@ -13,7 +13,13 @@
 //   SITE_BASE=http://localhost:3100 node scripts/verifier-landing.mjs
 // =============================================================================
 
-import { titre, abandonner } from "./_commun.mjs";
+import { chargerEnv, titre, abandonner } from "./_commun.mjs";
+
+// Sans ceci, `SITE_BASE` n'est pas lue et le script mesure `localhost:3100` —
+// c'est-à-dire, au mieux, un serveur local resté ouvert, et non le site
+// déployé que l'on croit vérifier. Une vérification qui vise la mauvaise cible
+// est plus dangereuse qu'une vérification absente : elle rassure.
+chargerEnv();
 
 const BASE = (process.env.SITE_BASE ?? "http://localhost:3100").replace(/\/+$/, "");
 const BYPASS = process.env.VERCEL_AUTOMATION_BYPASS_SECRET ?? "";

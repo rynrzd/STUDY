@@ -12,6 +12,13 @@
 // =============================================================================
 
 import { chromium } from "playwright-core";
+import { chargerEnv } from "../../scripts/_commun.mjs";
+
+// `SITE_BASE` vit dans `.env.local` : sans cette lecture, les tests visent
+// `localhost:3100` et passent — ou échouent — contre un serveur local resté
+// ouvert, en croyant mesurer le site déployé. Un test qui vise la mauvaise
+// cible ne dit rien sur le produit, et le dit avec assurance.
+chargerEnv();
 
 export const BASE = (process.env.SITE_BASE ?? "http://localhost:3100").replace(/\/+$/, "");
 const CANAL = process.env.NAVIGATEUR_RECETTE ?? "msedge";
