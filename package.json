@@ -31,6 +31,7 @@
     "recette:connectee": "node --conditions=react-server scripts/recette/connectee.mjs",
     "recette:complete": "node scripts/recette/complete.mjs",
     "recette:balai": "node scripts/recette/balai.mjs",
+    "verifier:journal": "node scripts/recette/journal.mjs",
     "verifier:landing": "node scripts/verifier-landing.mjs",
     "verifier:responsive": "node scripts/verifier-responsive.mjs"
   },

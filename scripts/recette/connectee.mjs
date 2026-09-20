@@ -23,6 +23,9 @@ import { balayer, residuDeRecette } from "./nettoyage.mjs";
 import { marqueurUnique, preparerTerrain } from "./terrain.mjs";
 import { scenarioStudio } from "./scenario-studio.mjs";
 import { scenarioClasse } from "./scenario-classe.mjs";
+import { scenarioImport } from "./scenario-import.mjs";
+import { scenarioFichiers } from "./scenario-fichiers.mjs";
+import { scenarioDemande } from "./scenario-demande.mjs";
 
 chargerEnv();
 
@@ -139,8 +142,27 @@ try {
   });
   verifier(true, `etablissement ${terrain.code}, 2 classes, 1 professeur, 3 eleves`);
 
-  await scenarioStudio({ navigateur, base: BASE, terrain, sql, verifier, service: service() });
-  await scenarioClasse({ navigateur, base: BASE, terrain, sql, verifier });
+  // Chaque scénario est isolé : l'échec de l'un ne doit pas empêcher les
+  // autres de se jouer. Un scénario qui n'a pas pu tourner est compté comme un
+  // défaut **et** nommé à la fin — une section non jouée n'est pas une section
+  // réussie, et la taire laisserait croire qu'elle l'était.
+  const commun = { navigateur, base: BASE, terrain, sql, verifier };
+
+  for (const [nom, scenario, arguments_] of [
+    ["§1 Studio", scenarioStudio, { ...commun, service: service() }],
+    ["§2-§4 devoirs, entraide, case « fait »", scenarioClasse, commun],
+    ["§5 imports .xlsx", scenarioImport, commun],
+    ["§6 fichiers et stockage", scenarioFichiers, commun],
+    ["§7 formulaire de demonstration", scenarioDemande, { navigateur, base: BASE, sql, verifier }],
+  ]) {
+    try {
+      await scenario(arguments_);
+    } catch (erreur) {
+      echecs += 1;
+      nonJoues.push(`${nom} — ${erreur.message.split("\n")[0]}`);
+      console.log(`  INTERROMPU ${nom} : ${erreur.message.split("\n")[0]}`);
+    }
+  }
 } catch (erreur) {
   echecs += 1;
   console.log(`\n  ERREUR : ${erreur.message}`);

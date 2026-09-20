@@ -55,7 +55,7 @@ export function DepotRentree({ cible }: { cible: "eleves" | "professeurs" }) {
   }
 
   return (
-    <form action={deposer} className="space-y-5">
+    <form action={deposer} data-testid="depot-rentree" className="space-y-5">
       <div
         onDragOver={(evenement) => {
           evenement.preventDefault();
@@ -87,6 +87,7 @@ export function DepotRentree({ cible }: { cible: "eleves" | "professeurs" }) {
         <input
           ref={champ}
           id={`fichiers-${cible}`}
+          data-testid="depot-fichiers"
           name="fichiers"
           type="file"
           multiple
@@ -152,6 +153,7 @@ function BoutonDepot({ nombre }: { nombre: number }) {
     <div>
       <button
         type="submit"
+        data-testid="depot-valider"
         disabled={pending || nombre === 0}
         className="bouton bouton-primaire w-full disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
       >

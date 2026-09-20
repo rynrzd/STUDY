@@ -146,7 +146,7 @@ export function VerificationRentree({
           </p>
         ) : null}
 
-        <form action={creer} className="mt-5">
+        <form action={creer} data-testid="creation-comptes" className="mt-5">
           <input type="hidden" name="lot" value={lot.id} />
           <BoutonCreer bloque={lot.blocages.length > 0} nombre={lot.compte.valides} />
         </form>
@@ -648,6 +648,7 @@ function BoutonCreer({ bloque, nombre }: { bloque: boolean; nombre: number }) {
     <>
       <button
         type="submit"
+        data-testid="creer-comptes"
         disabled={bloque || pending || nombre === 0}
         className="bouton bouton-primaire w-full disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
       >
