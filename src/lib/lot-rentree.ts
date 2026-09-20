@@ -3,6 +3,7 @@ import "server-only";
 import {
   analyserFichier,
   attribuerIdentifiants,
+  classeNormalisee,
   construirePlan,
   fichierRejete,
   type ColonneReconnue,
@@ -180,7 +181,16 @@ export async function analyserLot(options: {
         import_job_id: jobId,
         row_number: ligne.numero,
         payload: enPayload(ligne),
-        state: ligne.anomalies.some((a) => a.gravite === "bloquante") ? "rejete" : "valide",
+        // Trois sorts possibles, pas deux. Une ligne en double exact - meme
+        // nom, meme prenom, meme classe - n est ni valide ni fautive : elle
+        // est deja couverte par la premiere. La creer produirait deux comptes
+        // pour une personne, ce que le §5.8 interdit dans l esprit comme dans
+        // la lettre. Elle est donc ecartee, et l ecran le dit.
+        state: ligne.anomalies.some((a) => a.gravite === "bloquante")
+          ? "rejete"
+          : ligne.anomalies.some((a) => a.code === "doublon_fichier")
+            ? "ignore"
+            : "valide",
         issue_code: ligne.anomalies[0]?.code ?? null,
         issue_detail: ligne.anomalies.map((a) => a.message).join(" ") || null,
       })),
@@ -247,7 +257,14 @@ export interface LigneDuLot {
   readonly prenom: string;
   readonly classe: string;
   readonly email: string | null;
-  readonly valide: boolean;
+  /**
+   * Le sort de la ligne.
+   *
+   * « ignoree » est le cas du doublon exact : rien à corriger, rien à
+   * créer non plus. Le confondre avec « à corriger » ferait clignoter un
+   * bloquant pour une ligne qui ne demande aucune action.
+   */
+  readonly etat: "valide" | "a_corriger" | "ignoree";
   readonly probleme: string | null;
 }
 
@@ -262,6 +279,7 @@ export interface LotComplet {
     readonly fichiersRejetes: number;
     readonly lignesLues: number;
     readonly valides: number;
+    readonly ignorees: number;
     readonly bloquantes: number;
   };
   readonly blocages: readonly string[];
@@ -342,17 +360,37 @@ export async function lireLot(acteur: string, lot: string): Promise<LotComplet |
     prenom: row.payload.prenom,
     classe: row.payload.classe,
     email: row.payload.email,
-    valide: row.state === "valide",
+    etat:
+      row.state === "valide" ? "valide" : row.state === "ignore" ? "ignoree" : "a_corriger",
     probleme: row.issue_detail,
   }));
 
-  const parClasse = new Map<string, number>();
-  for (const ligne of lignes) {
+  const bloquantes = lignes.filter((ligne) => ligne.etat === "a_corriger").length;
+  const ignorees = lignes.filter((ligne) => ligne.etat === "ignoree").length;
+  const retenues = lignes.filter((ligne) => ligne.etat === "valide");
+
+  // Le regroupement se fait sur la forme **comparée**, pas sur la forme
+  // écrite. C'est la règle de tout l'assistant : « 2nde 4 » et « SECONDE 4 »
+  // désignent une seule classe, et `study.lot_classe` n'en créera qu'une.
+  //
+  // Grouper sur le libellé brut faisait mentir l'écran : il annonçait deux
+  // classes là où une seule allait naître. Un aperçu qui ne correspond pas à
+  // ce qui sera créé ôte tout intérêt à la vérification.
+  //
+  // Le nom affiché reste la première écriture rencontrée : l'établissement
+  // doit se reconnaître dans ce qu'il a écrit.
+  const parClasse = new Map<string, { nom: string; effectif: number }>();
+  for (const ligne of retenues) {
     if (ligne.classe === "") continue;
-    parClasse.set(ligne.classe, (parClasse.get(ligne.classe) ?? 0) + 1);
+    const cle = classeNormalisee(ligne.classe);
+    const entree = parClasse.get(cle);
+    if (entree === undefined) {
+      parClasse.set(cle, { nom: ligne.classe, effectif: 1 });
+    } else {
+      entree.effectif += 1;
+    }
   }
 
-  const bloquantes = lignes.filter((ligne) => !ligne.valide).length;
   const blocages: string[] = [];
 
   for (const fichier of fichiers) {
@@ -375,14 +413,13 @@ export async function lireLot(acteur: string, lot: string): Promise<LotComplet |
     etat: entree.state,
     fichiers,
     lignes,
-    classes: [...parClasse.entries()]
-      .map(([nom, effectif]) => ({ nom, effectif }))
-      .sort((a, b) => a.nom.localeCompare(b.nom, "fr")),
+    classes: [...parClasse.values()].sort((a, b) => a.nom.localeCompare(b.nom, "fr")),
     compte: {
       fichiersLus: fichiers.filter((fichier) => fichier.erreur === null).length,
       fichiersRejetes: fichiers.filter((fichier) => fichier.erreur !== null).length,
       lignesLues: lignes.length,
-      valides: lignes.length - bloquantes,
+      valides: retenues.length,
+      ignorees,
       bloquantes,
     },
     blocages,
@@ -552,7 +589,7 @@ export async function appliquerLot(options: {
   );
 
   const aTraiter: LigneEleve[] = complet.lignes
-    .filter((ligne) => ligne.valide)
+    .filter((ligne) => ligne.etat === "valide")
     .map((ligne) => ({
       fichier: ligne.fichier,
       numero: ligne.numero,

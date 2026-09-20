@@ -731,11 +731,35 @@ test("import — une colonne de mot de passe est refusee par la base", async (t)
      values ($1, $2, 1, '{"prenom":"Test","nom":"Test","classe":"Seconde 1"}'::jsonb)`,
     [ACTEURS.lyceeA, "aaaaaaaa-dddd-4000-8000-000000000001"]);
 
-  // Un seul import actif par lycee (ABUSE-01).
+  // Un seul import actif par lycee (ABUSE-01) — mais au niveau du **lot**.
+  //
+  // La regle n a pas disparu, elle a change d unite. Elle portait sur le
+  // fichier, a l epoque ou un import etait un fichier ; depuis la V5, un
+  // import est un lot et un fichier n en est qu une piece. La garder sur le
+  // fichier empechait de deposer dix classes d un coup - c est le defaut
+  // corrige en 0037.
+  await db.query(
+    `insert into study.import_jobs (organization_id, academic_year_id, kind, created_by)
+     values ($1, $2, 'enseignants', $3)`,
+    [ACTEURS.lyceeA, "aaaaaaaa-0001-4000-8000-000000000001", ACTEURS.adminA]);
+
+  const jobs = await db.query(
+    "select count(*)::int as n from study.import_jobs where organization_id = $1",
+    [ACTEURS.lyceeA],
+  );
+  assert.ok(jobs.rows[0].n >= 2, "plusieurs fichiers coexistent dans un etablissement");
+
+  // Deux lots actifs, en revanche, restent refuses.
+  await db.query(
+    `insert into study.import_batches (organization_id, academic_year_id, kind, created_by, state)
+     values ($1, $2, 'eleves', $3, 'analyse')`,
+    [ACTEURS.lyceeA, "aaaaaaaa-0001-4000-8000-000000000001", ACTEURS.adminA],
+  );
+
   const erreurConcurrent = await doitEchouer(() =>
     db.query(
-      `insert into study.import_jobs (organization_id, academic_year_id, kind, created_by)
-       values ($1, $2, 'enseignants', $3)`,
+      `insert into study.import_batches (organization_id, academic_year_id, kind, created_by, state)
+       values ($1, $2, 'enseignants', $3, 'analyse')`,
       [ACTEURS.lyceeA, "aaaaaaaa-0001-4000-8000-000000000001", ACTEURS.adminA]));
   assert.match(erreurConcurrent.message, /single_active|duplicate|unique/i);
 });

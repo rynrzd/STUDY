@@ -39,7 +39,7 @@ export function VerificationRentree({
     return <DejaApplique lot={lot} />;
   }
 
-  const aCorriger = lot.lignes.filter((ligne) => !ligne.valide);
+  const aCorriger = lot.lignes.filter((ligne) => ligne.etat === "a_corriger");
 
   return (
     <div className="space-y-8">
@@ -159,16 +159,32 @@ export function VerificationRentree({
 
 function Compteurs({ lot }: { lot: LotComplet }) {
   return (
-    <dl className="m-0 grid grid-cols-2 gap-4 sm:grid-cols-4">
-      <Chiffre terme="Fichiers lus" valeur={lot.compte.fichiersLus} />
-      <Chiffre
-        terme="Fichiers rejetés"
-        valeur={lot.compte.fichiersRejetes}
-        alerte={lot.compte.fichiersRejetes > 0}
-      />
-      <Chiffre terme="Élèves à créer" valeur={lot.compte.valides} accent />
-      <Chiffre terme="À corriger" valeur={lot.compte.bloquantes} alerte={lot.compte.bloquantes > 0} />
-    </dl>
+    <>
+      <dl className="m-0 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Chiffre terme="Fichiers lus" valeur={lot.compte.fichiersLus} />
+        <Chiffre
+          terme="Fichiers rejetés"
+          valeur={lot.compte.fichiersRejetes}
+          alerte={lot.compte.fichiersRejetes > 0}
+        />
+        <Chiffre terme="Élèves à créer" valeur={lot.compte.valides} accent />
+        <Chiffre
+          terme="À corriger"
+          valeur={lot.compte.bloquantes}
+          alerte={lot.compte.bloquantes > 0}
+        />
+      </dl>
+
+      {/* Le compte doit tomber juste. Sans cette ligne, un fichier de six
+          lignes annonçant cinq élèves laisse chercher la sixième. */}
+      {lot.compte.ignorees > 0 ? (
+        <p className="m-0 mt-3 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
+          {lot.compte.ignorees} ligne{lot.compte.ignorees > 1 ? "s" : ""} en double dans vos
+          fichiers {lot.compte.ignorees > 1 ? "ont été écartées" : "a été écartée"} : la
+          première suffit, et créer la seconde ferait deux comptes pour une seule personne.
+        </p>
+      ) : null}
+    </>
   );
 }
 
@@ -417,8 +433,12 @@ function ListeComplete({ lignes }: { lignes: readonly LigneDuLot[] }) {
                   {ligne.fichier}
                 </td>
                 <td className="p-2.5">
-                  {ligne.valide ? (
+                  {ligne.etat === "valide" ? (
                     <span className="text-[color:var(--color-encre-faible)]">prêt</span>
+                  ) : ligne.etat === "ignoree" ? (
+                    <span className="text-[color:var(--color-encre-tres-faible)]">
+                      en double, ignorée
+                    </span>
                   ) : (
                     <span className="text-[color:var(--color-erreur)]">
                       {ligne.probleme ?? "à corriger"}

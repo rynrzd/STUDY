@@ -58,7 +58,11 @@ async function connecter(code, identifiant, motDePasse) {
   await page.locator('[name="motDePasse"]').fill(motDePasse);
   await page.locator('button[type="submit"]').first().click();
   await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(2500);
+  await page.waitForTimeout(3500);
+  const message = await page.evaluate(() =>
+    [...document.querySelectorAll("[role=alert]")].map((e) => e.textContent.trim().slice(0, 160)),
+  );
+  if (message.length > 0) console.log("MESSAGE DE CONNEXION :", JSON.stringify(message));
   return page.url();
 }
 
