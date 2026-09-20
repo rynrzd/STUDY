@@ -345,7 +345,59 @@ async function verifierSecurite() {
   const csp = reponse.headers.get("content-security-policy") ?? "";
   verifier(csp.includes("frame-ancestors 'none'"), "CSP : page non encadrable");
   verifier(csp.includes("object-src 'none'"), "CSP : aucun objet externe");
-  verifier(/nonce-/.test(csp), "CSP : scripts a nonce");
+
+  // ---------------------------------------------------------------------
+  // Deux politiques de scripts, et chacune à sa place.
+  //
+  // Ce contrôle exigeait un nonce partout. C'était une exigence impossible à
+  // tenir sur les pages prérendues — elles sont écrites une fois, au build, et
+  // ne peuvent pas porter une valeur régénérée à chaque requête. Le résultat
+  // en production a été exactement l'inverse du but recherché : un nonce
+  // promis dans l'en-tête, absent des balises, et `'strict-dynamic'` qui fait
+  // ignorer `'self'` — donc plus un seul script chargé, et aucune
+  // interactivité.
+  //
+  // Ce qu'on vérifie désormais tient en deux phrases. Une page rendue à la
+  // demande porte la politique stricte à nonce. Une page prérendue porte
+  // `'self' 'unsafe-inline'` et **surtout pas** de nonce, puisqu'elle ne
+  // pourrait pas l'honorer.
+  // ---------------------------------------------------------------------
+  const directiveScript = (valeur) =>
+    (valeur.split(";").find((d) => d.trim().startsWith("script-src")) ?? "").trim();
+
+  const scriptVitrine = directiveScript(csp);
+  verifier(
+    !/nonce-/.test(scriptVitrine) && scriptVitrine.includes("'unsafe-inline'"),
+    "CSP : la vitrine prerendue ne promet pas de nonce",
+    scriptVitrine,
+  );
+
+  const cspApplication = directiveScript(
+    (await demander("/connexion")).headers.get("content-security-policy") ?? "",
+  );
+  verifier(
+    /nonce-/.test(cspApplication) && cspApplication.includes("'strict-dynamic'"),
+    "CSP : l application rendue a la demande garde le nonce strict",
+    cspApplication,
+  );
+  verifier(
+    !cspApplication.includes("'unsafe-inline'"),
+    "CSP : la politique stricte n ouvre pas les scripts en ligne",
+    cspApplication,
+  );
+
+  // Et la preuve par le HTML : quand un nonce est promis, les balises le
+  // portent. C'est ce contrôle-là qui aurait vu la panne.
+  const htmlApplication = await (await demander("/connexion")).text();
+  const nonceAnnonce = cspApplication.match(/'nonce-([^']+)'/)?.[1] ?? null;
+  const scriptsAvecNonce = (htmlApplication.match(/<script[^>]+nonce="/g) ?? []).length;
+  const scriptsTotal = (htmlApplication.match(/<script/g) ?? []).length;
+
+  verifier(
+    nonceAnnonce !== null && scriptsAvecNonce === scriptsTotal && scriptsTotal > 0,
+    "CSP : chaque script de l application porte le nonce annonce",
+    `${scriptsAvecNonce}/${scriptsTotal} balises`,
+  );
 
   verifier(reponse.headers.get("x-powered-by") === null, "aucune signature de serveur");
 

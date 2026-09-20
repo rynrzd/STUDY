@@ -124,8 +124,16 @@ export async function analyserLot(options: {
 
   const purge = new Date(Date.now() + PURGE_JOURS * 86_400_000).toISOString();
 
+  // Ce qui n'a pas pu être enregistré est dit, pas tu.
+  //
+  // Ces erreurs étaient ignorées : une insertion refusée faisait `continue`,
+  // et l'écran de vérification s'ouvrait sur « Fichiers lus : 0 » sans
+  // expliquer pourquoi. C'est exactement ce qui est arrivé en production —
+  // une contrainte d'unicité refusait chaque fichier, en silence.
+  const refus: string[] = [];
+
   for (const analyse of analyses) {
-    const { data: job } = await client
+    const { data: job, error: refusJob } = await client
       .from("import_jobs")
       .insert({
         organization_id: options.organisation,
@@ -149,12 +157,24 @@ export async function analyserLot(options: {
       .single();
 
     const jobId = (job as { id: string } | null)?.id ?? null;
-    if (jobId === null) continue;
+
+    if (jobId === null) {
+      console.error(
+        JSON.stringify({
+          niveau: "erreur",
+          contexte: "lot.enregistrer_fichier",
+          fichier: analyse.nom,
+          code: refusJob?.code ?? "inconnu",
+        }),
+      );
+      refus.push(analyse.nom);
+      continue;
+    }
 
     const lignesDuFichier = plan.lignes.filter((ligne) => ligne.fichier === analyse.nom);
     if (lignesDuFichier.length === 0) continue;
 
-    await client.from("import_rows").insert(
+    const { error: refusLignes } = await client.from("import_rows").insert(
       lignesDuFichier.map((ligne) => ({
         organization_id: options.organisation,
         import_job_id: jobId,
@@ -165,6 +185,28 @@ export async function analyserLot(options: {
         issue_detail: ligne.anomalies.map((a) => a.message).join(" ") || null,
       })),
     );
+
+    if (refusLignes !== null) {
+      console.error(
+        JSON.stringify({
+          niveau: "erreur",
+          contexte: "lot.enregistrer_lignes",
+          fichier: analyse.nom,
+          code: refusLignes.code,
+        }),
+      );
+      refus.push(analyse.nom);
+    }
+  }
+
+  // Aucun fichier enregistré : l'écran suivant serait vide et muet. Mieux vaut
+  // le dire ici, là où la personne vient d'agir.
+  if (refus.length === analyses.length) {
+    return {
+      erreur:
+        "Aucun fichier n'a pu être enregistré. Réessayez dans un instant ; " +
+        "si cela se reproduit, signalez-le à votre interlocuteur AvecStudy.",
+    };
   }
 
   return { lot: lotCree, plan };

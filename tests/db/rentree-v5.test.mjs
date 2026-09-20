@@ -1455,3 +1455,144 @@ test("D06 — la duplication ne franchit pas la frontiere entre deux lycees", as
   );
   assert.equal(chezB.rows[0].n, 1, "le lycee B garde sa seule seance");
 });
+
+/* ========================================================================== */
+/* §5.1 — plusieurs fichiers dans un même lot                                 */
+/*                                                                            */
+/* Le défaut, constaté sur la production : déposer un fichier ouvrait un      */
+/* écran « Fichiers lus : 0 ». Un index de 0006 n'autorisait qu'un job actif  */
+/* par établissement — il datait de l'époque où un import était un fichier.   */
+/* La V5 en fait dix.                                                         */
+/* ========================================================================== */
+
+test("M01 — dix fichiers tiennent dans un seul lot", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  const etab = await lycee(db, "MA");
+
+  const lot = await enTantQueServeur(db, async () => {
+    const { rows } = await db.query("select study.lot_ouvrir($1, $2, 'eleves') as id", [
+      etab.administrateur,
+      etab.annee,
+    ]);
+    return rows[0].id;
+  });
+
+  await enTantQueServeur(db, async () => {
+    for (let i = 1; i <= 10; i += 1) {
+      await db.query(
+        `insert into study.import_jobs
+           (organization_id, academic_year_id, kind, state, created_by,
+            batch_id, file_name, classe_detectee, classe_source, rows_total)
+         values ($1, $2, 'eleves', 'apercu_pret', $3, $4, $5, $6, 'fichier', 3)`,
+        [etab.organisation, etab.annee, etab.administrateur, lot, `classe-${i}.csv`, `2nde ${i}`],
+      );
+    }
+  });
+
+  const comptes = await enTantQueServeur(db, () =>
+    db.query("select count(*)::int as n from study.import_jobs where batch_id = $1", [lot]),
+  );
+  assert.equal(comptes.rows[0].n, 10, "les dix fichiers sont enregistres");
+});
+
+test("M02 — analyser a nouveau abandonne l analyse precedente", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  const etab = await lycee(db, "MB");
+
+  const premier = await enTantQueServeur(db, async () => {
+    const { rows } = await db.query("select study.lot_ouvrir($1, $2, 'eleves') as id", [
+      etab.administrateur,
+      etab.annee,
+    ]);
+    const lot = rows[0].id;
+    await db.query(
+      `insert into study.import_jobs
+         (organization_id, academic_year_id, kind, state, created_by, batch_id, file_name, rows_total)
+       values ($1, $2, 'eleves', 'apercu_pret', $3, $4, 'oublie.csv', 2)`,
+      [etab.organisation, etab.annee, etab.administrateur, lot],
+    );
+    return lot;
+  });
+
+  // Le lendemain, on recommence sans avoir valide la veille. Refuser ici
+  // enfermerait l etablissement : il n a aucun moyen de se debloquer depuis
+  // l ecran.
+  const second = await enTantQueServeur(db, async () => {
+    const { rows } = await db.query("select study.lot_ouvrir($1, $2, 'eleves') as id", [
+      etab.administrateur,
+      etab.annee,
+    ]);
+    return rows[0].id;
+  });
+
+  assert.notEqual(second, premier, "un nouveau lot est bien ouvert");
+
+  const etats = await enTantQueServeur(db, () =>
+    db.query(
+      `select b.id, b.state::text as lot,
+              (select j.state::text from study.import_jobs j where j.batch_id = b.id limit 1) as fichier
+         from study.import_batches b where b.organization_id = $1 order by b.created_at`,
+      [etab.organisation],
+    ),
+  );
+
+  assert.equal(etats.rows[0].lot, "abandonne", "l analyse precedente est abandonnee");
+  assert.equal(etats.rows[0].fichier, "annule", "ses fichiers aussi");
+  assert.equal(etats.rows[1].lot, "analyse", "la nouvelle est en cours");
+
+  // Et rien n a ete cree au passage : c est tout l interet d analyser avant.
+  const crees = await enTantQueServeur(db, () =>
+    db.query(
+      "select (select count(*)::int from study.classes where organization_id = $1) as classes," +
+        " (select count(*)::int from study.organization_memberships" +
+        "   where organization_id = $1 and roles && array['eleve']::study.role_type[]) as eleves",
+      [etab.organisation],
+    ),
+  );
+  assert.equal(crees.rows[0].classes, 0);
+  assert.equal(crees.rows[0].eleves, 0);
+});
+
+test("M03 — deux etablissements analysent en meme temps", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  const a = await lycee(db, "MC");
+  const b = await lycee(db, "MD");
+
+  // La contrainte borne un etablissement, jamais deux. Si elle debordait, la
+  // rentree d un lycee bloquerait celle du voisin.
+  const lotA = await enTantQueServeur(db, async () => {
+    const { rows } = await db.query("select study.lot_ouvrir($1, $2, 'eleves') as id", [
+      a.administrateur,
+      a.annee,
+    ]);
+    return rows[0].id;
+  });
+
+  const lotB = await enTantQueServeur(db, async () => {
+    const { rows } = await db.query("select study.lot_ouvrir($1, $2, 'eleves') as id", [
+      b.administrateur,
+      b.annee,
+    ]);
+    return rows[0].id;
+  });
+
+  const etats = await enTantQueServeur(db, () =>
+    db.query("select state::text as state from study.import_batches where id in ($1, $2)", [
+      lotA,
+      lotB,
+    ]),
+  );
+
+  assert.equal(etats.rows.length, 2);
+  assert.deepEqual(
+    etats.rows.map((l) => l.state),
+    ["analyse", "analyse"],
+    "les deux analyses vivent en parallele",
+  );
+});
