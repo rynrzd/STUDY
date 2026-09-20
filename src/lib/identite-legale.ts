@@ -62,9 +62,13 @@ export const IDENTITE: IdentiteLegale = {
 
   hebergeur: {
     nom: "Vercel",
-    // Les coordonnées légales exactes sont à vérifier avant publication.
-    raisonSociale: null,
-    adresse: null,
+    // Relevées le 20 septembre 2026 sur les deux pages légales de l'hébergeur
+    // — conditions d'utilisation et politique de confidentialité — qui portent
+    // la même entité et la même adresse. Elles ne sont pas écrites de mémoire :
+    // publier une adresse d'hébergeur fausse est une fausse déclaration comme
+    // une autre.
+    raisonSociale: "Vercel Inc.",
+    adresse: "440 N Barranca Ave #4133, Covina, CA 91723, États-Unis",
     role: "Hébergement de l'application web",
   },
 
