@@ -38,9 +38,12 @@ export function Cadre({
       <header className="border-b border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] print:hidden">
         <div className="contenu-app flex h-[60px] items-center justify-between gap-4">
           <div className="flex min-w-0 items-baseline gap-3">
+            {/* La zone cliquable fait 44 px de haut, la hauteur de l'en-tête
+                moins ses bordures : le mot, lui, garde sa taille. Sur un
+                téléphone, un lien de 27 px se rate une fois sur trois. */}
             <Link
               href="/app"
-              className="text-[1.125rem] font-extrabold tracking-[-0.035em] no-underline"
+              className="inline-flex min-h-[44px] items-center text-[1.125rem] font-extrabold tracking-[-0.035em] no-underline"
             >
               {MARQUE}
             </Link>

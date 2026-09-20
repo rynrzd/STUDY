@@ -13,6 +13,17 @@
 
 import { exigerPage, soumettre } from "./navigateur.mjs";
 
+/**
+ * Le formulaire refuse tout envoi survenu moins de trois secondes apres son
+ * ouverture — un filtre anti-robot, et une bonne idee.
+ *
+ * Il faut donc attendre **avant chaque envoi**, sinon tous les refus sont
+ * obtenus pour cette raison-la et aucun ne prouve quoi que ce soit sur la
+ * validation des champs. C est exactement ce qui se passait : dix-huit
+ * controles au vert, et pas un seul qui testait ce qu il annoncait.
+ */
+const DELAI_ANTI_ROBOT = 3400;
+
 /** Une demande complète et valide, dont on dérive les cas fautifs. */
 function demandeValide(marque) {
   return {
@@ -23,7 +34,8 @@ function demandeValide(marque) {
     fonction: "Proviseur",
     email: `demande.${marque.toLowerCase()}@exemple.invalid`,
     telephone: "0320000000",
-    besoin: "Nous cherchons a organiser les devoirs de seconde pour la rentree.",
+    besoin:
+      "Nous cherchons a organiser les devoirs de seconde pour la rentree.",
   };
 }
 
@@ -56,17 +68,33 @@ async function remplir(page, valeurs) {
   }
 }
 
-/** Le formulaire a-t-il refusé ? On lit ce qu'il affiche, pas ce qu'on espère. */
-async function aRefuse(page) {
-  const erreurs = await page.locator(".erreur-champ, [role='alert']").allInnerTexts();
-  return erreurs.filter((texte) => texte.trim() !== "").length > 0;
+/**
+ * Le formulaire a-t-il refusé, et de quelle façon ?
+ *
+ * On distingue le refus **au champ** du refus global. Un champ mal rempli doit
+ * être signalé à côté du champ : c'est ce qui permet à la personne de savoir
+ * quoi corriger. Un message global, lui, peut vouloir dire tout autre chose —
+ * y compris « vous avez envoyé trop vite », ce qui ne prouverait rien sur la
+ * validation.
+ */
+async function refus(page) {
+  const auChamp = (await page.locator(".erreur-champ").allInnerTexts()).filter(
+    (texte) => texte.trim() !== "",
+  );
+  const global = (
+    await page.locator("[role='alert']").allInnerTexts()
+  ).filter((texte) => texte.trim() !== "");
+
+  return { auChamp, global, refuse: auChamp.length > 0 || global.length > 0 };
 }
 
 export async function scenarioDemande({ navigateur, base, sql, verifier }) {
   console.log("\n§7. Formulaire de demonstration");
 
   const marque = `RD${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-  const contexte = await navigateur.newContext({ viewport: { width: 1280, height: 900 } });
+  const contexte = await navigateur.newContext({
+    viewport: { width: 1280, height: 900 },
+  });
   const page = await contexte.newPage();
 
   const compter = async () =>
@@ -81,7 +109,7 @@ export async function scenarioDemande({ navigateur, base, sql, verifier }) {
   try {
     /* --- Les cas qui doivent être refusés ---------------------------------- */
 
-    const refus = [
+    const casDeRefus = [
       ["formulaire entierement vide", {}, false],
       ["etablissement manquant", { etablissement: "" }, true],
       ["commune manquante", { commune: "" }, true],
@@ -97,7 +125,7 @@ export async function scenarioDemande({ navigateur, base, sql, verifier }) {
       ["effectif demesure", { effectif: "900000" }, true],
     ];
 
-    for (const [libelle, ecart, avecConsentement] of refus) {
+    for (const [libelle, ecart, avecConsentement] of casDeRefus) {
       await exigerPage(page, base, "/etablissements", {
         marqueur: '[data-testid="demande-formulaire"]',
       });
@@ -107,15 +135,24 @@ export async function scenarioDemande({ navigateur, base, sql, verifier }) {
       }
       if (avecConsentement) await page.locator('[name="consentement"]').check();
 
+      await page.waitForTimeout(DELAI_ANTI_ROBOT);
       await soumettre(page, '[data-testid="demande-envoyer"]');
       await page.waitForTimeout(500);
 
-      const refuse = await aRefuse(page);
+      const verdict = await refus(page);
       const apres = await compter();
+
+      // Le champ vide du formulaire entierement vide est signale au champ ;
+      // le reste aussi. Un refus qui ne se manifeste que globalement ne dit
+      // pas a la personne quoi corriger — et pourrait venir d autre chose.
       verifier(
-        refuse && apres === avant,
+        verdict.refuse && apres === avant && verdict.auChamp.length > 0,
         `refus : ${libelle}`,
-        refuse ? "" : "aucun message d erreur, et rien n a ete refuse",
+        verdict.refuse
+          ? verdict.auChamp.length === 0
+            ? `refus global seulement : « ${verdict.global.join(" / ").slice(0, 70)} »`
+            : ""
+          : "aucun message d erreur, et rien n a ete refuse",
       );
     }
 
@@ -124,11 +161,14 @@ export async function scenarioDemande({ navigateur, base, sql, verifier }) {
       marqueur: '[data-testid="demande-formulaire"]',
     });
     await remplir(page, demandeValide(marque));
+    await page.waitForTimeout(DELAI_ANTI_ROBOT);
     await soumettre(page, '[data-testid="demande-envoyer"]');
     await page.waitForTimeout(500);
+    const sansConsentement = await refus(page);
     verifier(
-      (await aRefuse(page)) && (await compter()) === avant,
+      sansConsentement.refuse && (await compter()) === avant,
       "refus : consentement non coche",
+      sansConsentement.refuse ? "" : "envoye sans consentement",
     );
 
     /* --- Le cas qui doit réussir -------------------------------------------- */
@@ -138,6 +178,7 @@ export async function scenarioDemande({ navigateur, base, sql, verifier }) {
     });
     await remplir(page, demandeValide(marque));
     await page.locator('[name="consentement"]').check();
+    await page.waitForTimeout(DELAI_ANTI_ROBOT);
     await soumettre(page, '[data-testid="demande-envoyer"]');
     await page.waitForTimeout(1500);
 
@@ -148,12 +189,22 @@ export async function scenarioDemande({ navigateur, base, sql, verifier }) {
       )
     ).rows;
 
-    if (!verifier(enregistrees.length === 1, "une demande valide est enregistree", `${enregistrees.length}`)) {
+    if (
+      !verifier(
+        enregistrees.length === 1,
+        "une demande valide est enregistree",
+        `${enregistrees.length}`,
+      )
+    ) {
       return;
     }
 
     const reference = enregistrees[0].reference;
-    verifier(enregistrees[0].state === "nouvelle", "elle arrive a l etat « nouvelle »", enregistrees[0].state);
+    verifier(
+      enregistrees[0].state === "nouvelle",
+      "elle arrive a l etat « nouvelle »",
+      enregistrees[0].state,
+    );
     verifier(
       typeof reference === "string" && reference.length >= 8,
       "une reference lisible est attribuee",
@@ -163,10 +214,15 @@ export async function scenarioDemande({ navigateur, base, sql, verifier }) {
     // La référence est annoncée à la personne : sans elle, un lycée qui
     // rappelle ne peut pas dire de quoi il parle.
     const affiche = await page.evaluate(() => document.body.innerText);
-    verifier(affiche.includes(reference), "la reference est affichee au visiteur");
+    verifier(
+      affiche.includes(reference),
+      "la reference est affichee au visiteur",
+    );
 
     // Le message de confirmation doit être annoncé aux lecteurs d'écran.
-    const annonce = await page.locator("[role='status'], [role='alert']").allInnerTexts();
+    const annonce = await page
+      .locator("[role='status'], [role='alert']")
+      .allInnerTexts();
     verifier(
       annonce.some((texte) => texte.includes(reference)),
       "la confirmation est annoncee (role status ou alert)",
@@ -179,6 +235,7 @@ export async function scenarioDemande({ navigateur, base, sql, verifier }) {
     });
     await remplir(page, demandeValide(marque));
     await page.locator('[name="consentement"]').check();
+    await page.waitForTimeout(DELAI_ANTI_ROBOT);
     await soumettre(page, '[data-testid="demande-envoyer"]');
     await page.waitForTimeout(1500);
 
@@ -188,7 +245,11 @@ export async function scenarioDemande({ navigateur, base, sql, verifier }) {
         [`Lycee de recette ${marque}`],
       )
     ).rows[0].n;
-    verifier(apresDouble === 1, "un second envoi identique ne cree pas de doublon", `${apresDouble}`);
+    verifier(
+      apresDouble === 1,
+      "un second envoi identique ne cree pas de doublon",
+      `${apresDouble}`,
+    );
 
     /* --- Aucun compte n'a été créé ------------------------------------------ */
 
@@ -197,7 +258,11 @@ export async function scenarioDemande({ navigateur, base, sql, verifier }) {
         "select count(*)::int n from study.profiles p where p.created_at > now() - interval '5 minutes'",
       )
     ).rows[0].n;
-    verifier(comptes === 0, "deposer une demande ne cree aucun compte", `${comptes} profil(s) recent(s)`);
+    verifier(
+      comptes === 0,
+      "deposer une demande ne cree aucun compte",
+      `${comptes} profil(s) recent(s)`,
+    );
 
     /* --- Le formulaire tient sur un telephone -------------------------------- */
 
@@ -210,7 +275,9 @@ export async function scenarioDemande({ navigateur, base, sql, verifier }) {
     );
     verifier(!deborde, "le formulaire ne deborde pas a 360 px");
 
-    const bouton = await page.locator('[data-testid="demande-envoyer"]').boundingBox();
+    const bouton = await page
+      .locator('[data-testid="demande-envoyer"]')
+      .boundingBox();
     verifier(
       bouton !== null && bouton.height >= 40,
       "le bouton d envoi reste une cible tactile",

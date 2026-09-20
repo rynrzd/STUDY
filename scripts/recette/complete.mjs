@@ -117,6 +117,16 @@ try {
   if (CIBLE === "") {
     noter("verifications du site deploye", "absent", "SITE_BASE absente de l environnement");
   } else {
+    // D'abord : **quel** code est servi. Tout ce qui suit ne vaut que pour ce
+    // déploiement-là, et une vérification qui ne sait pas ce qu'elle mesure ne
+    // vaut rien — c'est arrivé.
+    const servi = await lancer("code servi", ["verifier:deploiement"]);
+    noter(
+      "l origine repond et la construction servie est identifiee",
+      servi.code === 0 ? "ok" : "echec",
+      resume(servi.sortie),
+    );
+
     for (const [nom, script] of [
       ["balisage, SEO et CSP", "verifier:site"],
       ["landing conforme a la reference", "verifier:landing"],

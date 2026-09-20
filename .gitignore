@@ -24,3 +24,6 @@ cahier-v5.txt
 # Scripts jetables de recette : ils n'ont rien a faire dans le depot.
 _*.mjs
 sauvegarde-*.json
+
+# Empreinte du dernier deploiement observe, propre a la machine
+.deploiement-servi

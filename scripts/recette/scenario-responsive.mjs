@@ -62,11 +62,30 @@ async function mesurer(page) {
       break;
     }
 
+    /**
+     * Un élément n'est-il visible qu'une fois atteint au clavier ?
+     *
+     * Le lien d'évitement est posé hors écran et ne revient qu'au focus.
+     * Le compter comme « bouton hors écran » ou comme cible tactile trop
+     * petite signalerait un défaut là où il y a une bonne pratique — et une
+     * alerte qui se trompe finit par être ignorée.
+     */
+    const cacheJusquAuFocus = (element) => {
+      const style = getComputedStyle(element);
+      const boite = element.getBoundingClientRect();
+      if (style.clip === "rect(0px, 0px, 0px, 0px)") return true;
+      if (Number(style.opacity) === 0) return true;
+      if (boite.right < 0 || boite.bottom < 0) return true;
+      if (style.position === "absolute" && boite.left < 0) return true;
+      return false;
+    };
+
     /** Les cibles tactiles trop petites, hors liens au fil du texte. */
     const cibles = [];
     for (const element of document.querySelectorAll("a, button, input[type=checkbox], select")) {
       const boite = element.getBoundingClientRect();
       if (boite.width === 0 || boite.height === 0) continue;
+      if (cacheJusquAuFocus(element)) continue;
 
       const parent = element.parentElement;
       const auFilDuTexte =
@@ -85,6 +104,7 @@ async function mesurer(page) {
     for (const element of document.querySelectorAll("a, button")) {
       const boite = element.getBoundingClientRect();
       if (boite.width === 0 || boite.height === 0) continue;
+      if (cacheJusquAuFocus(element)) continue;
       if (boite.left < -1 || boite.right > largeur + 1) {
         horsEcran.push((element.textContent ?? "").trim().slice(0, 24));
       }
@@ -164,7 +184,7 @@ export async function scenarioResponsive({ navigateur, base, terrain, verifier }
         ["/admin/classes", "main"],
         ["/admin/import", '[data-testid="depot-rentree"]'],
         ["/admin/utilisateurs", "main"],
-        ["/admin/acces", "main"],
+        ["/admin/professeurs", "main"],
       ],
     },
     {
