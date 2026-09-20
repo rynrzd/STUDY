@@ -699,11 +699,52 @@
     color: #000;
   }
 
-  /* Les fiches sont des enfants directs de `body` — voir le portail de
+  /* Une fiche d'accès imprime la fiche, et elle seule.
+     -----------------------------------------------------------------------
+     Les fiches sont des enfants directs de `body` — voir le portail de
      `FicheImprimable`. Tout le reste du corps disparaît d'un seul trait :
-     navigation, filtres, tableau des comptes, boutons. */
-  body > *:not(.fiche-impression) {
+     navigation, filtres, tableau des comptes, boutons. Distribuer une fiche
+     qui emporterait la liste des comptes du lycée serait une fuite remise en
+     main propre.
+
+     La règle est **portée par une classe sur `body`**, posée par la fiche
+     elle-même quand elle se monte. Elle était auparavant inconditionnelle, et
+     elle vidait donc toute page imprimée : un cours, un devoir, une
+     correction sortaient de l'imprimante entièrement blancs — mesuré sur la
+     production, sur une séance publiée. Ce que le §11 demande de conserver —
+     titre, matière, classe, contenu, consignes — disparaissait avec le reste.
+
+     On n'emploie pas `:has()` ici : quand il n'est pas reconnu, la règle
+     entière est ignorée, et la fiche partirait alors avec toute l'interface
+     autour. Une classe se comporte de la même façon partout. */
+  body.avec-fiche > *:not(.fiche-impression) {
     display: none !important;
+  }
+
+  /* Toute autre page : on retire l'interface, on garde le document.
+     -----------------------------------------------------------------------
+     Un cours qu'on imprime pour le coller dans un cahier n'a que faire du
+     menu, du bouton « Publier » ou du sélecteur de classe. Le contenu, lui,
+     est la raison de l'impression. */
+  header,
+  nav,
+  footer,
+  aside,
+  button,
+  [role="tablist"],
+  [role="alert"],
+  [role="status"],
+  .bouton,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Un lien reste lisible sur papier : son adresse suit le texte. Sans cela,
+     « voir la correction » ne mène nulle part une fois imprimé. */
+  main a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    word-break: break-all;
   }
 
   .fiche-impression {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { MARQUE } from "@/lib/identite-legale";
 
@@ -53,6 +53,22 @@ export function FicheImprimable({
     () => true,
     () => false,
   );
+
+  // La fiche annonce sa présence sur `body`. C'est cette classe qui autorise
+  // la règle d'impression à masquer tout le reste — et son absence qui permet
+  // à un cours ou à un devoir de s'imprimer normalement.
+  //
+  // Le nettoyage au démontage n'est pas facultatif : une classe oubliée
+  // rendrait blanche la page suivante qu'on imprimerait.
+  useEffect(() => {
+    if (!dansLeNavigateur) return;
+    document.body.classList.add("avec-fiche");
+    return () => {
+      if (document.querySelectorAll(".fiche-impression").length <= 1) {
+        document.body.classList.remove("avec-fiche");
+      }
+    };
+  }, [dansLeNavigateur]);
 
   if (!dansLeNavigateur) return null;
 
