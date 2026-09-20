@@ -29,8 +29,10 @@ export function Entraide({
   const [ouvert, setOuvert] = useState(false);
   const [etat, poser] = useActionState<EtatEleve, FormData>(demanderDeLAide, ETAT_ELEVE_INITIAL);
 
+  // `print:hidden` : une discussion ne s'imprime pas. Ce qu'on colle dans un
+  // cahier, c'est le cours — pas les questions qu'il a suscitées.
   return (
-    <section aria-labelledby="titre-entraide" className="mt-12">
+    <section aria-labelledby="titre-entraide" className="mt-12 print:hidden">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h2
           id="titre-entraide"

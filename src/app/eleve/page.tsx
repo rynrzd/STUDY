@@ -194,7 +194,9 @@ export default async function PageEleve() {
 
           {recentes.length === 0 ? (
             <p className="m-0 mt-3 text-[color:var(--color-encre-faible)]">
-              Aucune séance n&apos;a encore été publiée dans vos cours.
+              {duJour.length > 0
+                ? "Rien d'autre pour l'instant : la séance du jour est au-dessus."
+                : "Aucune séance n'a encore été publiée dans vos cours."}
             </p>
           ) : (
             <ul className="m-0 mt-3 list-none p-0">

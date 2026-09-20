@@ -190,7 +190,7 @@ function EnteteSeance({
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <Bouton libelle="Enregistrer" variante="secondaire" />
+        <Bouton libelle="Enregistrer la séance" variante="secondaire" />
         <p className="m-0 text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)]">
           Dernière modification {instantLisible(seance.updated_at)}
         </p>
@@ -343,7 +343,7 @@ function BlocEditable({
               className="champ min-h-[7rem] py-2.5"
             />
             <div className="mt-2 flex gap-2">
-              <Bouton libelle="Enregistrer" variante="secondaire" />
+              <Bouton libelle="Enregistrer ce bloc" variante="secondaire" />
             </div>
             <Retour etat={etatModif} />
           </form>
