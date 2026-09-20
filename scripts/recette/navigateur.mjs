@@ -197,34 +197,50 @@ export async function connecter(page, base, identite) {
   // pas dans son espace » alors qu'il est devant le bon écran.
   const affiche = async (selecteur) => (await page.locator(selecteur).count()) > 0;
 
-  // L'activation : le mot de passe temporaire doit être remplacé avant tout.
-  if (await affiche("#nouveau")) {
-    const definitif = motDePasseFinal ?? `Definitif-${Math.random().toString(36).slice(2, 12)}!aA1`;
-    await page.fill("#nouveau", definitif);
-    await page.fill("#confirmation", definitif);
-    await soumettre(page, '[data-testid="activation-valider"]', { quitter: "/activation" });
-    motDePasseCourant = definitif;
-  }
+  // Les étapes s'enchaînent, et l'ordre n'est pas toujours celui qu'on croit :
+  // après l'activation, le produit peut enchaîner directement sur le second
+  // facteur. On boucle donc sur « quel écran ai-je devant moi » au lieu de
+  // dérouler une séquence fixe — et l'on repasse par `/app`, qui résout les
+  // redirections côté serveur, plutôt que de lire un écran en plein transit.
+  for (let etape = 0; etape < 4; etape += 1) {
+    await exigerPage(page, base, "/app", {}).catch(() => {});
+    await attendreStabilisation(page);
 
-  // Le second facteur : enrôlement si la clé n'est pas encore connue, simple
-  // vérification sinon.
-  if (await affiche('[data-testid="totp-valider"]')) {
-    if (secretTotp === null) {
-      const affichee = await page.locator('[data-testid="cle-totp"]').textContent();
-      if (affichee === null || affichee.trim() === "") {
-        throw new Error("second facteur : aucune cle presentee a l enrolement");
+    if (await affiche("#nouveau")) {
+      const definitif = motDePasseFinal ?? `Definitif-${Math.random().toString(36).slice(2, 12)}!aA1`;
+      await page.fill("#nouveau", definitif);
+      await page.fill("#confirmation", definitif);
+      await soumettre(page, '[data-testid="activation-valider"]');
+      motDePasseCourant = definitif;
+      continue;
+    }
+
+    if (await affiche('[data-testid="totp-valider"]')) {
+      // Enrôlement si la clé n'est pas encore connue, simple vérification
+      // sinon. La clé n'est lue qu'ici, et ne quitte pas la mémoire.
+      if (secretTotp === null && (await affiche('[data-testid="cle-totp"]'))) {
+        const affichee = await page.locator('[data-testid="cle-totp"]').textContent();
+        if (affichee === null || affichee.trim() === "") {
+          throw new Error("second facteur : aucune cle presentee a l enrolement");
+        }
+        secretTotp = affichee.replace(/\s/g, "");
       }
-      secretTotp = affichee.replace(/\s/g, "");
+      if (secretTotp === null) {
+        throw new Error("second facteur : un code est demande, sans cle connue ni presentee");
+      }
+
+      await page.fill("#code", await codeStable(secretTotp));
+      await soumettre(page, '[data-testid="totp-valider"]');
+
+      const continuer = page.locator('a:has-text("Continuer")');
+      if ((await continuer.count()) > 0) {
+        await continuer.click();
+        await page.waitForLoadState("networkidle").catch(() => {});
+      }
+      continue;
     }
 
-    await page.fill("#code", await codeStable(secretTotp));
-    await soumettre(page, '[data-testid="totp-valider"]');
-
-    const continuer = page.locator('a:has-text("Continuer")');
-    if ((await continuer.count()) > 0) {
-      await continuer.click();
-      await page.waitForLoadState("networkidle").catch(() => {});
-    }
+    break;
   }
 
   const probleme = await verifierEcran(page, base);
@@ -243,10 +259,10 @@ export async function connecter(page, base, identite) {
     );
   }
 
-  // La destination réelle : celle que le produit sert, pas celle que l adresse
-  // affiche. On la relit en suivant un lien interne, faute de quoi une chaine
-  // de redirections laisserait « /app » comme destination apparente.
-  await page.goto(`${base}/app`, { waitUntil: "networkidle" }).catch(() => {});
+  // La destination réelle : celle que le produit sert une fois toutes les
+  // exigences satisfaites. On la relit par « /app », qui aiguille selon le
+  // rôle, plutôt que de garder une adresse de transit.
+  await exigerPage(page, base, "/app", {}).catch(() => {});
   await attendreStabilisation(page);
 
   return { destination: new URL(page.url()).pathname, secretTotp, motDePasse: motDePasseCourant };

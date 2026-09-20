@@ -222,7 +222,12 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
 
       await article.locator('[data-testid="bloc-enregistrer"]').click();
       await page.waitForLoadState("networkidle").catch(() => {});
-      await page.waitForTimeout(600);
+      await page.waitForTimeout(800);
+
+      const retour = await article.locator('[data-testid="retour"]').innerText().catch(() => "");
+      if (retour !== "" && !/modifi/i.test(retour)) {
+        console.log(`       diagnostic « ${type} » : le serveur repond « ${retour.trim()} »`);
+      }
     }
 
     enBase = await lireBlocs();
@@ -326,10 +331,12 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
       texteEleve = await vueEleve.page.evaluate(() => document.body.innerText);
       verifier(texteEleve.includes(`Seance ${marque}`), "l eleve voit la seance publiee");
 
-      const lien = vueEleve.page.locator(`a:has-text("Seance ${marque}")`).first();
-      if ((await lien.count()) > 0) {
-        await lien.click();
-        await vueEleve.page.waitForLoadState("networkidle").catch(() => {});
+      // On ouvre la seance par son adresse : le rendu eleve doit etre
+      // atteignable directement, et cela evite de dependre d un libelle de lien.
+      await exigerPage(vueEleve.page, base, `/eleve/cours/${seance.id}`, {
+        attendu: `/eleve/cours/${seance.id}`,
+      });
+      {
         const rendu = await vueEleve.page.evaluate(() => document.body.innerText);
         const attendus = [
           `Plan revise ${marque}`,
@@ -339,6 +346,11 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
           `Fiche revisee ${marque}`,
         ];
         const manquants = attendus.filter((texte) => !rendu.includes(texte));
+        if (manquants.length > 0) {
+          console.log(
+            `       diagnostic eleve : ${new URL(vueEleve.page.url()).pathname} — « ${rendu.replace(/s+/g, " ").slice(0, 160)} »`,
+          );
+        }
         verifier(
           manquants.length === 0,
           "le rendu eleve porte les cinq blocs, dans leur version modifiee",
@@ -400,7 +412,15 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
           "select id, kind, contenu from study.lesson_blocks where lesson_id = $1 order by position",
           [copie.id],
         );
-        verifier(blocsCopie.length === 5, "la copie porte les cinq blocs", `${blocsCopie.length}`);
+        // Le devoir n est **volontairement** pas recopie : il appartient aux
+        // eleves d une classe, et le recopier ailleurs creerait un travail a
+        // rendre que personne n a donne. Quatre blocs sur cinq est la reponse
+        // juste, et c est cela qu on verifie.
+        verifier(
+          blocsCopie.length === 4 && !blocsCopie.some((b) => b.kind === "devoir"),
+          "la copie porte les blocs copiables, et laisse le devoir a sa classe",
+          blocsCopie.map((b) => b.kind).join(", "),
+        );
 
         // Modifier la copie, et prouver que l'original ne bouge pas : c'est
         // toute la question d'une duplication — deux objets, pas deux vues.
