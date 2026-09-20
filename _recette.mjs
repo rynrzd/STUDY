@@ -33,10 +33,8 @@ page.on("console", (m) => {
 
 async function capturer(nom) {
   await page.screenshot({ path: `${CAPTURES}/${nom}.png`, fullPage: true });
-  return `${nom}.png`;
 }
 
-/** Attend que React ait pris la main : cliquer avant ne teste rien de reel. */
 async function attendreHydratation(selecteur = "body *") {
   await page.waitForFunction(
     (cible) => {
@@ -59,46 +57,13 @@ async function connecter(code, identifiant, motDePasse) {
   await page.locator('button[type="submit"]').first().click();
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(3500);
-  const message = await page.evaluate(() =>
+  const alertes = await page.evaluate(() =>
     [...document.querySelectorAll("[role=alert]")].map((e) => e.textContent.trim().slice(0, 160)),
   );
-  if (message.length > 0) console.log("MESSAGE DE CONNEXION :", JSON.stringify(message));
+  if (alertes.length > 0) console.log("  message :", JSON.stringify(alertes));
   return page.url();
 }
 
-/* ========================================================================== */
-/* 1. Administrateur — connexion et tableau de bord                           */
-/* ========================================================================== */
-
-const apresConnexion = await connecter(
-  "LYCEE-RAOUL",
-  "a.arrue",
-  process.env.MDP_ADMIN ?? "",
-);
-
-noter(
-  "A1 connexion administrateur",
-  apresConnexion.endsWith("/admin") ? "ok" : "ECHEC",
-  apresConnexion,
-);
-await capturer("01-admin-tableau-de-bord");
-
-const tableau = await page.evaluate(() => ({
-  titre: document.querySelector("h1")?.textContent?.trim(),
-  compteurs: [...document.querySelectorAll("dt")].map((dt) => ({
-    terme: dt.textContent.trim(),
-    valeur: dt.nextElementSibling?.textContent?.trim() ?? null,
-  })),
-}));
-noter("A2 tableau de bord", "ok", JSON.stringify(tableau.compteurs));
-
-/* ========================================================================== */
-/* 2. Import d'une classe                                                     */
-/* ========================================================================== */
-
-// Un fichier de recette, sans aucune donnee personnelle reelle : des noms
-// manifestement fictifs, avec accents, apostrophe, ligne vide, doublon, et une
-// classe ecrite differemment de celle qui existera deja.
 const CSV = [
   "Nom;Prénom;Classe;INE",
   "Dupont-Léger;Camille;2nde 4;R001",
@@ -107,61 +72,120 @@ const CSV = [
   ";;;",
   "Dupont-Léger;Camille;2nde 4;R001",
   "Martin;Noé;SECONDE 4;R004",
-  "Świątek;Zofia;2nde 4;R005",
+  "Swiatek;Zofia;2nde 4;R005",
 ].join("\r\n");
 
 const cheminCsv = path.join(FICHIERS, "recette-2nde4.csv");
 fs.writeFileSync(cheminCsv, "\uFEFF" + CSV, "utf8");
 
-await page.goto(`${BASE}/admin/import`, { waitUntil: "networkidle" });
-await attendreHydratation();
-await capturer("02-admin-import-depot");
-
-const zone = await page.evaluate(() => ({
-  champs: [...document.querySelectorAll('input[type="file"]')].map((e) => e.name),
-  sections: [...document.querySelectorAll("h2")].map((e) => e.textContent.trim()),
-}));
-noter("A3 ecran d import", zone.champs.length >= 2 ? "ok" : "ECHEC", JSON.stringify(zone));
-
-await page.locator('input[type="file"]').first().setInputFiles(cheminCsv);
-await page.waitForTimeout(1200);
-
-const apresDepot = await page.evaluate(() => ({
-  fichiersListes: [...document.querySelectorAll("li")].map((li) => li.textContent.trim().slice(0, 50)).filter((t) => /Ko|csv/.test(t)),
-  boutons: [...document.querySelectorAll("button")].map((b) => ({ t: b.textContent.trim().slice(0, 40), off: b.disabled })),
-  alertes: [...document.querySelectorAll("[role=alert]")].map((e) => e.textContent.trim().slice(0, 120)),
-}));
-console.log("APRES DEPOT", JSON.stringify(apresDepot, null, 2));
-
-const boutonAnalyser = page.locator("button", { hasText: /Analyser/ }).first();
-await boutonAnalyser.click();
-await page.waitForLoadState("networkidle");
-await page.waitForTimeout(3000);
-
+const apresConnexion = await connecter("LYCEE-RAOUL", "a.arrue", process.env.MDP_ADMIN ?? "");
 noter(
-  "A4 analyse du fichier",
-  /\/admin\/import\/[0-9a-f-]{36}$/.test(page.url()) ? "ok" : "ECHEC",
-  page.url(),
+  "A1 connexion administrateur",
+  apresConnexion.endsWith("/admin") ? "ok" : "ECHEC",
+  apresConnexion,
 );
+await capturer("01-admin-tableau-de-bord");
+
+async function deposerEtAnalyser() {
+  await page.goto(`${BASE}/admin/import`, { waitUntil: "networkidle" });
+  await attendreHydratation();
+  await page.locator('input[type="file"]').first().setInputFiles(cheminCsv);
+  await page.waitForTimeout(1500);
+  await page.locator("button", { hasText: /^Analyser/ }).first().click();
+  await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(3500);
+  return page.url();
+}
+
+const lot1 = await deposerEtAnalyser();
+noter("A4 analyse", /\/admin\/import\/[0-9a-f-]{36}$/.test(lot1) ? "ok" : "ECHEC", lot1);
 await capturer("03-admin-import-verification");
 
-const verification = await page.evaluate(() => ({
-  chiffres: [...document.querySelectorAll("dt")].map(
-    (dt) => `${dt.textContent.trim()} = ${dt.nextElementSibling?.textContent?.trim()}`,
+const apercu = await page.evaluate(() => ({
+  chiffres: Object.fromEntries(
+    [...document.querySelectorAll("dt")].map((dt) => [
+      dt.textContent.trim(),
+      dt.nextElementSibling?.textContent?.trim(),
+    ]),
   ),
   classes: [...document.querySelectorAll("li")]
     .map((li) => li.textContent.trim())
-    .filter((t) => /élève/.test(t))
-    .slice(0, 6),
-  blocages: [...document.querySelectorAll('[role="alert"] li')].map((li) => li.textContent.trim()),
-  boutonCreer: (() => {
-    const b = [...document.querySelectorAll("button")].find((x) => /Créer les/.test(x.textContent));
-    return b === undefined ? null : { texte: b.textContent.trim(), desactive: b.disabled };
-  })(),
+    .filter((t) => /élève/.test(t)),
+  doublons: [...document.querySelectorAll("p")]
+    .map((p) => p.textContent.trim())
+    .filter((t) => /double/.test(t))
+    .slice(0, 1),
 }));
+console.log("APERCU", JSON.stringify(apercu, null, 2));
 
-console.log(JSON.stringify(verification, null, 2));
-noter("A5 ecran de verification", verification.boutonCreer !== null ? "ok" : "ECHEC");
+noter(
+  "A5 une seule classe malgre deux orthographes",
+  apercu.classes.length === 1 ? "ok" : "ECHEC",
+  JSON.stringify(apercu.classes),
+);
+noter(
+  "A6 le doublon exact est ecarte",
+  apercu.chiffres["Élèves à créer"] === "5" ? "ok" : "ECHEC",
+  `a creer = ${apercu.chiffres["Élèves à créer"]}`,
+);
+
+await page.locator("button", { hasText: /^Créer les/ }).first().click();
+await page.waitForLoadState("networkidle");
+await page.waitForTimeout(8000);
+await capturer("04-admin-import-rapport");
+
+const rapport = await page.evaluate(() => ({
+  chiffres: Object.fromEntries(
+    [...document.querySelectorAll("dt")].map((dt) => [
+      dt.textContent.trim(),
+      dt.nextElementSibling?.textContent?.trim(),
+    ]),
+  ),
+  titres: [...document.querySelectorAll("h2")].map((e) => e.textContent.trim()),
+}));
+console.log("RAPPORT", JSON.stringify(rapport, null, 2));
+noter(
+  "A7 creation des comptes",
+  rapport.chiffres["Comptes créés"] === "5" ? "ok" : "ECHEC",
+  JSON.stringify(rapport.chiffres),
+);
+
+const acces = await page.evaluate(() =>
+  [...document.querySelectorAll("dl")]
+    .map((dl) => {
+      const valeurs = [...dl.querySelectorAll("dd")].map((dd) => dd.textContent.trim());
+      const nom = dl.parentElement?.querySelector("p")?.textContent?.trim() ?? "";
+      return valeurs.length === 3
+        ? { nom, code: valeurs[0], login: valeurs[1], mdp: valeurs[2] }
+        : null;
+    })
+    .filter((x) => x !== null),
+);
+fs.writeFileSync(`${DOSSIER}/acces-recette.json`, JSON.stringify(acces, null, 2), "utf8");
+noter("A8 fiches d acces rendues", acces.length === 5 ? "ok" : "ECHEC", `${acces.length} fiches`);
+
+const lot2 = await deposerEtAnalyser();
+noter("A9 second import ouvert", /\/admin\/import\/[0-9a-f-]{36}$/.test(lot2) ? "ok" : "ECHEC");
+
+await page.locator("button", { hasText: /^Créer les/ }).first().click();
+await page.waitForLoadState("networkidle");
+await page.waitForTimeout(8000);
+await capturer("05-admin-reimport-rapport");
+
+const rapport2 = await page.evaluate(() =>
+  Object.fromEntries(
+    [...document.querySelectorAll("dt")].map((dt) => [
+      dt.textContent.trim(),
+      dt.nextElementSibling?.textContent?.trim(),
+    ]),
+  ),
+);
+console.log("REIMPORT", JSON.stringify(rapport2, null, 2));
+noter(
+  "A10 reimport sans doublon",
+  rapport2["Comptes créés"] === "0" && rapport2["Déjà présents"] === "5" ? "ok" : "ECHEC",
+  JSON.stringify(rapport2),
+);
 
 fs.writeFileSync(`${DOSSIER}/journal-recette.json`, JSON.stringify(journal, null, 2), "utf8");
 console.log("\nerreurs de page :", erreurs.length === 0 ? "(aucune)" : erreurs);

@@ -258,6 +258,14 @@ export interface LigneDuLot {
   readonly classe: string;
   readonly email: string | null;
   /**
+   * L'identifiant national, quand le fichier en portait un.
+   *
+   * Il était lu puis jeté au moment d'appliquer. C'est pourtant la seule
+   * clé stable d'une année sur l'autre : sans lui, reconnaître quelqu'un
+   * revient à comparer des noms.
+   */
+  readonly identifiantExterne: string | null;
+  /**
    * Le sort de la ligne.
    *
    * « ignoree » est le cas du doublon exact : rien à corriger, rien à
@@ -360,6 +368,7 @@ export async function lireLot(acteur: string, lot: string): Promise<LotComplet |
     prenom: row.payload.prenom,
     classe: row.payload.classe,
     email: row.payload.email,
+    identifiantExterne: row.payload.identifiantExterne ?? null,
     etat:
       row.state === "valide" ? "valide" : row.state === "ignore" ? "ignoree" : "a_corriger",
     probleme: row.issue_detail,
@@ -578,15 +587,6 @@ export async function appliquerLot(options: {
 
   const client = clientExploitation("administration_des_comptes");
 
-  // Les identifiants déjà pris viennent de la base, pas d'un cache : deux
-  // imports lancés le même matin ne doivent pas se marcher dessus.
-  const { data: membres } = await client.rpc("etab_membres", {
-    p_acteur: options.acteur,
-    p_limite: 5000,
-  });
-  const pris = new Set(
-    ((membres ?? []) as { local_login: string }[]).map((membre) => membre.local_login),
-  );
 
   const aTraiter: LigneEleve[] = complet.lignes
     .filter((ligne) => ligne.etat === "valide")
@@ -597,11 +597,21 @@ export async function appliquerLot(options: {
       prenom: ligne.prenom,
       classe: ligne.classe,
       email: ligne.email,
-      identifiantExterne: null,
+      identifiantExterne: ligne.identifiantExterne,
       anomalies: [],
     }));
 
-  const attribues = attribuerIdentifiants(aTraiter, pris);
+  // On propose une **racine**, pas un identifiant définitif.
+  //
+  // Le suffixe était calculé ici, à partir des identifiants déjà pris. Cela
+  // cassait le réimport : au second passage, « zofia.swiatek » était prise —
+  // par Zofia — donc on proposait « zofia.swiatek2 », que la base ne
+  // reconnaissait pas et qu'elle créait. Chaque réimport fabriquait une
+  // personne de plus.
+  //
+  // C'est désormais la base qui identifie la personne, puis cherche un
+  // identifiant libre si elle doit vraiment la créer.
+  const attribues = attribuerIdentifiants(aTraiter, new Set<string>());
 
   let cree = 0;
   let existant = 0;
@@ -652,11 +662,21 @@ export async function appliquerLot(options: {
 
     if (resultat === "cree") {
       cree += 1;
+
+      // L'identifiant imprimé est celui que la base a écrit, pas celui
+      // qu'on a proposé : elle a pu le suffixer pour éviter un homonyme.
+      // Imprimer la proposition enverrait l'élève se connecter avec un
+      // identifiant qui n'existe pas.
+      const { data: reel } = await client.rpc("etab_login_de", {
+        p_acteur: options.acteur,
+        p_profile: profileId,
+      });
+
       acces.push({
         prenom: ligne.prenom,
         nom: ligne.nom,
         classe: ligne.classe,
-        login,
+        login: typeof reel === "string" && reel !== "" ? reel : login,
         motDePasseTemporaire: motDePasse,
       });
       continue;

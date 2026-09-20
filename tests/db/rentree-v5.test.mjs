@@ -1596,3 +1596,197 @@ test("M03 — deux etablissements analysent en meme temps", async (t) => {
     "les deux analyses vivent en parallele",
   );
 });
+
+/* ========================================================================== */
+/* §5.8 — reimporter le meme fichier, tel que le BFF le fait vraiment         */
+/*                                                                            */
+/* R03 verifiait deja le reimport, mais en passant un identifiant local fixe. */
+/* Il mesurait donc la deduplication de la base, pas celle du parcours : dans */
+/* le produit, l identifiant est **derive** du nom et suffixe quand la racine */
+/* est prise. Au second import, « zofia.swiatek » etait prise par Zofia, donc */
+/* le serveur proposait « zofia.swiatek2 » — un inconnu, que la base creait.  */
+/* Cinq eleves importes deux fois donnaient dix comptes, en production.       */
+/* ========================================================================== */
+
+/** Reproduit ce que fait le serveur : une racine derivee, jamais suffixee. */
+function racine(prenom, nom) {
+  const plat = (valeur) =>
+    valeur
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "")
+      .trim();
+  return `${plat(prenom)}.${plat(nom)}`;
+}
+
+/** Applique un lot en derivant l identifiant, comme le BFF. */
+async function importerCommeLeBff(db, etab, eleves) {
+  return enTantQueServeur(db, async () => {
+    const { rows } = await db.query("select study.lot_ouvrir($1, $2, 'eleves') as id", [
+      etab.administrateur,
+      etab.annee,
+    ]);
+    const lot = rows[0].id;
+    const compte = { cree: 0, existant: 0, reinscrit: 0, erreur: 0 };
+
+    for (const eleve of eleves) {
+      try {
+        const r = await db.query(
+          "select * from study.lot_inscrire_eleve($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+          [
+            etab.administrateur,
+            lot,
+            etab.annee,
+            randomUUID(),
+            eleve.prenom,
+            eleve.nom,
+            racine(eleve.prenom, eleve.nom),
+            alias(),
+            eleve.classe,
+            eleve.ine ?? null,
+          ],
+        );
+        compte[r.rows[0].resultat] += 1;
+      } catch {
+        compte.erreur += 1;
+      }
+    }
+
+    await db.query("select study.lot_clore($1, $2, $3::jsonb)", [
+      etab.administrateur,
+      lot,
+      JSON.stringify(compte),
+    ]);
+    return compte;
+  });
+}
+
+const CLASSE_RECETTE = [
+  { prenom: "Camille", nom: "Dupont-Leger", classe: "2nde 4", ine: "R001" },
+  { prenom: "Lea", nom: "O Brien", classe: "2nde 4", ine: "R002" },
+  { prenom: "Zofia", nom: "Swiatek", classe: "2nde 4", ine: "R005" },
+];
+
+test("R07 — reimporter le meme fichier ne cree aucun compte, identifiant derive", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  const etab = await lycee(db, "RA");
+
+  const premier = await importerCommeLeBff(db, etab, CLASSE_RECETTE);
+  assert.deepEqual(premier, { cree: 3, existant: 0, reinscrit: 0, erreur: 0 });
+
+  const second = await importerCommeLeBff(db, etab, CLASSE_RECETTE);
+  assert.deepEqual(
+    second,
+    { cree: 0, existant: 3, reinscrit: 0, erreur: 0 },
+    "le second passage ne cree personne",
+  );
+
+  const troisieme = await importerCommeLeBff(db, etab, CLASSE_RECETTE);
+  assert.equal(troisieme.cree, 0, "ni le troisieme");
+
+  const comptes = await enTantQueServeur(db, () =>
+    db.query(
+      "select count(*)::int as n from study.organization_memberships" +
+        " where organization_id = $1 and roles && array['eleve']::study.role_type[]",
+      [etab.organisation],
+    ),
+  );
+  assert.equal(comptes.rows[0].n, 3, "trois eleves, pas neuf");
+
+  const identifiants = await enTantQueServeur(db, () =>
+    db.query(
+      "select local_login from study.organization_memberships" +
+        " where organization_id = $1 and roles && array['eleve']::study.role_type[] order by local_login",
+      [etab.organisation],
+    ),
+  );
+  assert.deepEqual(
+    identifiants.rows.map((l) => l.local_login),
+    ["camille.dupontleger", "lea.obrien", "zofia.swiatek"],
+    "aucun identifiant suffixe : personne n a ete recree",
+  );
+});
+
+test("R08 — l identifiant national reconnait un eleve qui a change de nom", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  const etab = await lycee(db, "RB");
+
+  await importerCommeLeBff(db, etab, [
+    { prenom: "Lea", nom: "Martin", classe: "2nde 4", ine: "R100" },
+  ]);
+
+  // Mariage, nom d usage, correction d une faute de saisie : le nom change,
+  // l identifiant national non. C est exactement son role.
+  const apres = await importerCommeLeBff(db, etab, [
+    { prenom: "Lea", nom: "Bernard", classe: "2nde 4", ine: "R100" },
+  ]);
+
+  assert.equal(apres.cree, 0, "ce n est pas quelqu un de nouveau");
+  assert.equal(apres.existant, 1);
+
+  const comptes = await enTantQueServeur(db, () =>
+    db.query(
+      "select count(*)::int as n from study.organization_memberships" +
+        " where organization_id = $1 and roles && array['eleve']::study.role_type[]",
+      [etab.organisation],
+    ),
+  );
+  assert.equal(comptes.rows[0].n, 1);
+});
+
+test("R09 — deux homonymes restent deux personnes", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  const etab = await lycee(db, "RC");
+
+  // Meme nom, meme prenom, meme classe, mais deux identifiants nationaux
+  // distincts : ce sont deux eleves. Le §5.4 interdit de les fusionner.
+  const compte = await importerCommeLeBff(db, etab, [
+    { prenom: "Camille", nom: "Martin", classe: "2nde 4", ine: "R201" },
+    { prenom: "Camille", nom: "Martin", classe: "2nde 4", ine: "R202" },
+  ]);
+
+  assert.equal(compte.cree, 2, "deux comptes pour deux personnes");
+
+  const identifiants = await enTantQueServeur(db, () =>
+    db.query(
+      "select local_login from study.organization_memberships" +
+        " where organization_id = $1 and roles && array['eleve']::study.role_type[] order by local_login",
+      [etab.organisation],
+    ),
+  );
+  assert.deepEqual(
+    identifiants.rows.map((l) => l.local_login),
+    ["camille.martin", "camille.martin2"],
+    "le second recoit un identifiant distinct, attribue par la base",
+  );
+
+  // Et un troisieme import ne les dedouble pas.
+  const encore = await importerCommeLeBff(db, etab, [
+    { prenom: "Camille", nom: "Martin", classe: "2nde 4", ine: "R201" },
+    { prenom: "Camille", nom: "Martin", classe: "2nde 4", ine: "R202" },
+  ]);
+  assert.equal(encore.cree, 0, "les deux sont reconnus");
+  assert.equal(encore.existant, 2);
+});
+
+test("R10 — sans identifiant national, le nom suffit a reconnaitre", async (t) => {
+  const db = await baseDeTest({ seed: false });
+  t.after(() => db.close());
+
+  const etab = await lycee(db, "RD");
+
+  const eleves = [{ prenom: "Noe", nom: "Martin", classe: "2nde 4" }];
+
+  await importerCommeLeBff(db, etab, eleves);
+  const second = await importerCommeLeBff(db, etab, eleves);
+
+  assert.equal(second.cree, 0, "un fichier sans INE reste idempotent");
+  assert.equal(second.existant, 1);
+});
