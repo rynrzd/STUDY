@@ -58,7 +58,7 @@ export function Editeur({
               </p>
             </div>
           ) : (
-            <ul className="m-0 list-none space-y-3 p-0">
+            <ul data-testid="blocs-liste" className="m-0 list-none space-y-3 p-0">
               {blocs.map((bloc, index) => (
                 <li key={bloc.id}>
                   <BlocEditable
@@ -113,7 +113,11 @@ function EnteteSeance({
   const [etat, action] = useActionState<EtatStudio, FormData>(majSeance, ETAT_STUDIO_INITIAL);
 
   return (
-    <form action={action} className="bloc border border-[color:var(--color-bordure)] p-5">
+    <form
+      action={action}
+      data-testid="seance-entete"
+      className="bloc border border-[color:var(--color-bordure)] p-5"
+    >
       <input type="hidden" name="id" value={seance.id} />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -190,7 +194,7 @@ function EnteteSeance({
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <Bouton libelle="Enregistrer la séance" variante="secondaire" />
+        <Bouton libelle="Enregistrer la séance" variante="secondaire" marque="seance-enregistrer" />
         <p className="m-0 text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)]">
           Dernière modification {instantLisible(seance.updated_at)}
         </p>
@@ -205,7 +209,12 @@ function Publication({ seance, publiee }: { seance: Seance; publiee: boolean }) 
   const [etat, action] = useActionState<EtatStudio, FormData>(publierSeance, ETAT_STUDIO_INITIAL);
 
   return (
-    <form action={action} className="bloc border border-[color:var(--color-bordure)] p-4">
+    <form
+      action={action}
+      data-testid="publication"
+      data-publiee={publiee ? "oui" : "non"}
+      className="bloc border border-[color:var(--color-bordure)] p-4"
+    >
       <input type="hidden" name="id" value={seance.id} />
       <input type="hidden" name="publier" value={publiee ? "non" : "oui"} />
 
@@ -233,6 +242,7 @@ function Publication({ seance, publiee }: { seance: Seance; publiee: boolean }) 
         libelle={publiee ? "Dépublier" : "Publier la séance"}
         variante={publiee ? "secondaire" : "rose"}
         pleineLargeur
+        marque="publication-basculer"
       />
       <Retour etat={etat} />
     </form>
@@ -274,11 +284,19 @@ function BlocEditable({
     ETAT_STUDIO_INITIAL,
   );
 
-  const modifiable = bloc.kind === "texte" || bloc.kind === "exercice";
+  // Les cinq types se modifient. Auparavant seuls « texte » et « exercice »
+  // l'étaient, et corriger une faute dans l'intitulé d'un devoir imposait de le
+  // supprimer puis de le recréer — ce qui emportait les remises des élèves.
   const texte = String(bloc.contenu.texte ?? bloc.contenu.consigne ?? "");
 
   return (
-    <article className="bloc border border-[color:var(--color-bordure)] p-4">
+    <article
+      data-testid="bloc"
+      data-bloc-id={bloc.id}
+      data-bloc-type={bloc.kind}
+      data-bloc-position={bloc.position}
+      className="bloc border border-[color:var(--color-bordure)] p-4"
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <span className="text-[0.625rem] font-semibold uppercase tracking-[0.07em] text-[color:var(--color-encre-tres-faible)]">
           {LIBELLES[bloc.kind] ?? bloc.kind}
@@ -292,6 +310,7 @@ function BlocEditable({
             <input type="hidden" name="sens" value="haut" />
             <button
               type="submit"
+              data-testid="bloc-monter"
               disabled={premier}
               aria-label="Déplacer ce bloc vers le haut"
               className="bouton bouton-discret bouton-compact px-2"
@@ -306,6 +325,7 @@ function BlocEditable({
             <input type="hidden" name="sens" value="bas" />
             <button
               type="submit"
+              data-testid="bloc-descendre"
               disabled={dernier}
               aria-label="Déplacer ce bloc vers le bas"
               className="bouton bouton-discret bouton-compact px-2"
@@ -314,36 +334,25 @@ function BlocEditable({
             </button>
           </form>
 
-          {modifiable ? (
-            <button
-              type="button"
-              onClick={() => setEdition(!edition)}
-              className="bouton bouton-discret bouton-compact"
-            >
-              {edition ? "Fermer" : "Modifier"}
-            </button>
-          ) : null}
+          <button
+            type="button"
+            data-testid="bloc-modifier"
+            onClick={() => setEdition(!edition)}
+            className="bouton bouton-discret bouton-compact"
+          >
+            {edition ? "Fermer" : "Modifier"}
+          </button>
         </div>
       </div>
 
       <div className="mt-2">
-        {edition && modifiable ? (
-          <form action={actionModif}>
+        {edition ? (
+          <form action={actionModif} data-testid="bloc-edition">
             <input type="hidden" name="id" value={bloc.id} />
             <input type="hidden" name="seance" value={seance} />
-            <label className="sr-only" htmlFor={`texte-${bloc.id}`}>
-              Contenu du bloc
-            </label>
-            <textarea
-              id={`texte-${bloc.id}`}
-              name="texte"
-              rows={4}
-              defaultValue={texte}
-              maxLength={5000}
-              className="champ min-h-[7rem] py-2.5"
-            />
+            <ChampsDuType bloc={bloc} texte={texte} />
             <div className="mt-2 flex gap-2">
-              <Bouton libelle="Enregistrer ce bloc" variante="secondaire" />
+              <Bouton libelle="Enregistrer ce bloc" variante="secondaire" marque="bloc-enregistrer" />
             </div>
             <Retour etat={etatModif} />
           </form>
@@ -364,6 +373,146 @@ function BlocEditable({
         <Retour etat={etatSuppr} />
       </form>
     </article>
+  );
+}
+
+/**
+ * Les champs modifiables d'un bloc, selon son type.
+ *
+ * Chaque type n'envoie que **ses** champs. Un formulaire unique qui posterait
+ * tous les noms écraserait avec du vide ce qu'il n'affiche pas — l'URL d'un
+ * lien disparaîtrait en corrigeant son intitulé.
+ *
+ * Le fichier d'un bloc « document » ne se remplace pas ici : seul son nom
+ * affiché se corrige. Remplacer le fichier, c'est déposer un autre document,
+ * et le cahier veut que cela se voie.
+ */
+function ChampsDuType({ bloc, texte }: { bloc: Bloc; texte: string }) {
+  if (bloc.kind === "lien") {
+    return (
+      <div className="space-y-3">
+        <div>
+          <label className="etiquette" htmlFor={`url-${bloc.id}`}>
+            Adresse
+          </label>
+          <input
+            id={`url-${bloc.id}`}
+            data-testid="bloc-url"
+            name="url"
+            type="url"
+            required
+            defaultValue={String(bloc.contenu.url ?? "")}
+            className="champ"
+          />
+        </div>
+        <div>
+          <label className="etiquette" htmlFor={`titre-${bloc.id}`}>
+            Intitulé
+          </label>
+          <input
+            id={`titre-${bloc.id}`}
+            data-testid="bloc-titre"
+            name="titre"
+            type="text"
+            maxLength={160}
+            defaultValue={String(bloc.contenu.titre ?? "")}
+            className="champ"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (bloc.kind === "devoir") {
+    return (
+      <div className="space-y-3">
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <div>
+            <label className="etiquette" htmlFor={`titre-${bloc.id}`}>
+              Titre du devoir
+            </label>
+            <input
+              id={`titre-${bloc.id}`}
+              data-testid="bloc-titre"
+              name="titre"
+              type="text"
+              required
+              maxLength={160}
+              defaultValue={String(bloc.contenu.titre ?? "")}
+              className="champ"
+            />
+          </div>
+          <div>
+            <label className="etiquette" htmlFor={`echeance-${bloc.id}`}>
+              À rendre le
+            </label>
+            <input
+              id={`echeance-${bloc.id}`}
+              data-testid="bloc-echeance"
+              name="echeance"
+              type="date"
+              defaultValue={String(bloc.contenu.echeance ?? "")}
+              className="champ"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="etiquette" htmlFor={`consigne-${bloc.id}`}>
+            Consigne
+          </label>
+          <textarea
+            id={`consigne-${bloc.id}`}
+            data-testid="bloc-consigne"
+            name="consigne"
+            rows={3}
+            maxLength={5000}
+            defaultValue={String(bloc.contenu.consigne ?? "")}
+            className="champ min-h-[5.5rem] py-2.5"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (bloc.kind === "document") {
+    return (
+      <div>
+        <label className="etiquette" htmlFor={`nom-${bloc.id}`}>
+          Nom affiché
+        </label>
+        <input
+          id={`nom-${bloc.id}`}
+          data-testid="bloc-nom"
+          name="nom"
+          type="text"
+          required
+          maxLength={200}
+          defaultValue={String(bloc.contenu.nom ?? "")}
+          className="champ"
+        />
+        <p className="aide-champ">
+          Le fichier lui-même ne change pas. Pour en mettre un autre, ajoutez un
+          nouveau bloc « Document » et retirez celui-ci.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <label className="sr-only" htmlFor={`texte-${bloc.id}`}>
+        Contenu du bloc
+      </label>
+      <textarea
+        id={`texte-${bloc.id}`}
+        data-testid="bloc-texte"
+        name="texte"
+        rows={4}
+        defaultValue={texte}
+        maxLength={5000}
+        className="champ min-h-[7rem] py-2.5"
+      />
+    </>
   );
 }
 
@@ -444,6 +593,7 @@ function AjoutBloc({ seance }: { seance: string }) {
             <button
               key={entree.cle}
               type="button"
+              data-testid={`ajouter-${entree.cle}`}
               onClick={() => setType(entree.cle)}
               className="bouton bouton-secondaire bouton-compact"
             >
@@ -461,6 +611,8 @@ function AjoutBloc({ seance }: { seance: string }) {
     <form
       action={action}
       encType="multipart/form-data"
+      data-testid="bloc-nouveau"
+      data-type-en-cours={type}
       className="bloc border border-[color:var(--color-accent)] p-4"
     >
       <input type="hidden" name="seance" value={seance} />
@@ -472,6 +624,7 @@ function AjoutBloc({ seance }: { seance: string }) {
         </h2>
         <button
           type="button"
+          data-testid="bloc-annuler"
           onClick={() => setType(null)}
           className="bouton bouton-discret bouton-compact"
         >
@@ -491,6 +644,7 @@ function AjoutBloc({ seance }: { seance: string }) {
             </label>
             <textarea
               id="contenu-bloc"
+              data-testid="champ-texte"
               name="texte"
               rows={4}
               maxLength={5000}
@@ -508,6 +662,7 @@ function AjoutBloc({ seance }: { seance: string }) {
             </label>
             <input
               id="fichier-bloc"
+              data-testid="champ-fichier"
               name="fichier"
               type="file"
               required
@@ -530,6 +685,7 @@ function AjoutBloc({ seance }: { seance: string }) {
               </label>
               <input
                 id="url-bloc"
+                data-testid="champ-url"
                 name="url"
                 type="url"
                 required
@@ -542,7 +698,14 @@ function AjoutBloc({ seance }: { seance: string }) {
               <label className="etiquette" htmlFor="titre-lien">
                 Intitulé
               </label>
-              <input id="titre-lien" name="titre" type="text" maxLength={160} className="champ" />
+              <input
+                id="titre-lien"
+                data-testid="champ-titre-lien"
+                name="titre"
+                type="text"
+                maxLength={160}
+                className="champ"
+              />
             </div>
           </>
         )}
@@ -556,6 +719,7 @@ function AjoutBloc({ seance }: { seance: string }) {
                 </label>
                 <input
                   id="titre-devoir"
+                  data-testid="champ-titre-devoir"
                   name="titre"
                   type="text"
                   required
@@ -569,7 +733,13 @@ function AjoutBloc({ seance }: { seance: string }) {
                 <label className="etiquette" htmlFor="echeance-devoir">
                   À rendre le
                 </label>
-                <input id="echeance-devoir" name="echeance" type="date" className="champ" />
+                <input
+                  id="echeance-devoir"
+                  data-testid="champ-echeance"
+                  name="echeance"
+                  type="date"
+                  className="champ"
+                />
               </div>
             </div>
             <div>
@@ -578,6 +748,7 @@ function AjoutBloc({ seance }: { seance: string }) {
               </label>
               <textarea
                 id="consigne-devoir"
+                data-testid="champ-consigne"
                 name="consigne"
                 rows={3}
                 maxLength={5000}
@@ -589,7 +760,7 @@ function AjoutBloc({ seance }: { seance: string }) {
       </div>
 
       <div className="mt-4">
-        <Bouton libelle="Ajouter le bloc" variante="rose" />
+        <Bouton libelle="Ajouter le bloc" variante="rose" marque="bloc-ajouter" />
       </div>
       <Retour etat={etat} />
     </form>
@@ -602,15 +773,21 @@ function Bouton({
   libelle,
   variante = "rose",
   pleineLargeur = false,
+  marque,
 }: {
   libelle: string;
   variante?: "rose" | "secondaire";
   pleineLargeur?: boolean;
+  /** Identifiant stable pour la recette : deux boutons « Enregistrer » ne se
+      distinguent pas par leur texte, et un script qui prend « le premier »
+      teste ce qu il trouve, pas ce qu il vise. */
+  marque?: string;
 }) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
+      data-testid={marque}
       disabled={pending}
       className={`bouton bouton-${variante} ${pleineLargeur ? "mt-3 w-full" : ""}`}
     >
@@ -624,6 +801,7 @@ function BoutonSuppression({ estDevoir }: { estDevoir: boolean }) {
   return (
     <button
       type="submit"
+      data-testid="bloc-supprimer"
       disabled={pending}
       onClick={(evenement) => {
         const message = estDevoir
@@ -643,6 +821,8 @@ function Retour({ etat }: { etat: EtatStudio }) {
   return (
     <p
       role="status"
+      data-testid="retour"
+      data-etat={etat.etat}
       className={`m-0 mt-3 text-[length:var(--text-aide)] ${
         etat.etat === "ok"
           ? "text-[color:var(--color-succes)]"

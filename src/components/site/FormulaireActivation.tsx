@@ -74,7 +74,12 @@ export function FormulaireActivation() {
 function BoutonActivation() {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} className="bouton bouton-primaire mt-8 w-full">
+    <button
+      type="submit"
+      data-testid="activation-valider"
+      disabled={pending}
+      className="bouton bouton-primaire mt-8 w-full"
+    >
       {pending ? "Enregistrement…" : "Enregistrer et continuer"}
     </button>
   );

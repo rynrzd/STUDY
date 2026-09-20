@@ -247,6 +247,7 @@ function BoutonConnexion() {
   return (
     <button
       type="submit"
+      data-testid="connexion-valider"
       disabled={pending}
       className="bouton bouton-primaire mt-8 w-full"
     >

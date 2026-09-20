@@ -39,6 +39,7 @@ export function NouvelleSeance({
     return (
       <button
         type="button"
+        data-testid="ouvrir-nouvelle-seance"
         onClick={() => setOuvert(true)}
         className={`bouton ${compact ? "bouton-discret bouton-compact" : "bouton-rose"}`}
       >
@@ -48,7 +49,11 @@ export function NouvelleSeance({
   }
 
   return (
-    <form action={action} className="bloc border border-[color:var(--color-bordure)] p-4">
+    <form
+      action={action}
+      data-testid="seance-nouvelle"
+      className="bloc border border-[color:var(--color-bordure)] p-4"
+    >
       <input type="hidden" name="cours" value={cours} />
 
       <div className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
@@ -58,6 +63,7 @@ export function NouvelleSeance({
           </label>
           <input
             id={`titre-${cours}`}
+            data-testid="seance-titre"
             name="titre"
             type="text"
             className="champ"
@@ -72,7 +78,13 @@ export function NouvelleSeance({
           <label className="etiquette" htmlFor={`date-${cours}`}>
             Date
           </label>
-          <input id={`date-${cours}`} name="date" type="date" className="champ" />
+          <input
+            id={`date-${cours}`}
+            data-testid="seance-date"
+            name="date"
+            type="date"
+            className="champ"
+          />
         </div>
       </div>
 
@@ -83,6 +95,7 @@ export function NouvelleSeance({
           </label>
           <select
             id={`chapitre-${cours}`}
+            data-testid="seance-chapitre"
             name="chapitre"
             className="champ"
             defaultValue={chapitreParDefaut ?? ""}
@@ -98,7 +111,7 @@ export function NouvelleSeance({
       ) : null}
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <Bouton libelle="Créer et ouvrir" />
+        <Bouton libelle="Créer et ouvrir" marque="seance-valider" />
         <button type="button" onClick={() => setOuvert(false)} className="bouton bouton-discret">
           Annuler
         </button>
@@ -113,7 +126,11 @@ export function NouveauChapitre({ cours }: { cours: string }) {
   const [etat, action] = useActionState<EtatStudio, FormData>(creerChapitre, ETAT_STUDIO_INITIAL);
 
   return (
-    <form action={action} className="bloc border border-[color:var(--color-bordure)] p-4">
+    <form
+      action={action}
+      data-testid="chapitre-nouveau"
+      className="bloc border border-[color:var(--color-bordure)] p-4"
+    >
       <h2 className="m-0 text-[length:var(--text-tableau)] font-semibold uppercase tracking-[0.06em] text-[color:var(--color-encre-faible)]">
         Nouveau chapitre
       </h2>
@@ -129,6 +146,7 @@ export function NouveauChapitre({ cours }: { cours: string }) {
       </label>
       <input
         id={`chapitre-nouveau-${cours}`}
+        data-testid="chapitre-label"
         name="label"
         type="text"
         className="champ mt-3"
@@ -137,7 +155,7 @@ export function NouveauChapitre({ cours }: { cours: string }) {
         maxLength={120}
       />
 
-      <Bouton libelle="Ajouter" pleineLargeur />
+      <Bouton libelle="Ajouter" pleineLargeur marque="chapitre-valider" />
       <Retour etat={etat} />
     </form>
   );
@@ -145,11 +163,21 @@ export function NouveauChapitre({ cours }: { cours: string }) {
 
 /* -------------------------------------------------------------------------- */
 
-function Bouton({ libelle, pleineLargeur = false }: { libelle: string; pleineLargeur?: boolean }) {
+function Bouton({
+  libelle,
+  pleineLargeur = false,
+  marque,
+}: {
+  libelle: string;
+  pleineLargeur?: boolean;
+  /** Identifiant stable pour la recette : « Ajouter » ne distingue rien. */
+  marque?: string;
+}) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
+      data-testid={marque}
       disabled={pending}
       className={`bouton bouton-rose ${pleineLargeur ? "mt-3 w-full" : ""}`}
     >

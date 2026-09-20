@@ -517,6 +517,17 @@ export async function ajouterBloc(
   return { etat: "ok", message: "Bloc ajouté." };
 }
 
+/**
+ * Modifie un bloc, quel que soit son type.
+ *
+ * Les cinq types se modifiaient mal : seuls \`texte\` et \`exercice\` étaient
+ * éditables, et les trois autres imposaient de supprimer puis recréer — ce qui,
+ * pour un devoir, effaçait les remises des élèves. Une correction de faute de
+ * frappe dans un intitulé ne peut pas coûter le travail rendu.
+ *
+ * Chaque type a ses champs, et ils sont lus séparément : un formulaire qui
+ * enverrait tout pour tout écraserait avec du vide ce qu'il n'affiche pas.
+ */
 export async function modifierBloc(
   _precedent: EtatStudio,
   donnees: FormData,
@@ -526,34 +537,87 @@ export async function modifierBloc(
 
   const id = String(donnees.get("id") ?? "");
   const seanceId = String(donnees.get("seance") ?? "");
-  const texte = String(donnees.get("texte") ?? "").trim();
-
   if (!z.string().uuid().safeParse(id).success) return REFUS;
-  if (texte === "") return { etat: "erreur", message: "Le bloc ne peut pas être vide." };
-  if (texte.length > 5000) {
-    return { etat: "erreur", message: "Ce bloc est trop long : 5 000 caractères au maximum." };
-  }
 
   const client = clientUtilisateur(jeton);
 
   const { data: bloc } = await client
     .from("lesson_blocks")
-    .select("kind, contenu")
+    .select("kind, contenu, assignment_id")
     .eq("id", id)
     .maybeSingle();
 
   if (bloc === null) return REFUS;
-  const actuel = bloc as unknown as { kind: string; contenu: Record<string, unknown> };
+  const actuel = bloc as unknown as {
+    kind: string;
+    contenu: Record<string, unknown>;
+    assignment_id: string | null;
+  };
 
-  const contenu =
-    actuel.kind === "texte"
+  const lire = (champ: string) => String(donnees.get(champ) ?? "").trim();
+  const trop = (valeur: string, limite: number) => valeur.length > limite;
+
+  let contenu: Record<string, unknown>;
+
+  if (actuel.kind === "lien") {
+    const url = lire("url");
+    const titre = lire("titre");
+
+    // La même validation qu'à la création : un lien qui n'est pas une adresse
+    // ne mène nulle part, et le dire ici évite un bloc mort dans le cours.
+    if (!/^https?:\/\//i.test(url)) {
+      return { etat: "erreur", message: "L'adresse doit commencer par http:// ou https://." };
+    }
+    if (trop(url, 2000) || trop(titre, 160)) {
+      return { etat: "erreur", message: "Adresse ou intitulé trop long." };
+    }
+    contenu = { ...actuel.contenu, url, titre: titre === "" ? url : titre };
+  } else if (actuel.kind === "devoir") {
+    const titre = lire("titre");
+    const consigne = lire("consigne");
+    const echeance = lire("echeance");
+
+    if (titre === "") return { etat: "erreur", message: "Un devoir a besoin d'un titre." };
+    if (trop(titre, 160) || trop(consigne, 5000)) {
+      return { etat: "erreur", message: "Titre ou consigne trop long." };
+    }
+    contenu = { ...actuel.contenu, titre, consigne, echeance: echeance === "" ? null : echeance };
+  } else if (actuel.kind === "document") {
+    const nom = lire("nom");
+    if (nom === "") return { etat: "erreur", message: "Donnez un nom à ce document." };
+    if (trop(nom, 200)) return { etat: "erreur", message: "Ce nom est trop long." };
+    contenu = { ...actuel.contenu, nom };
+  } else {
+    const texte = lire("texte");
+    if (texte === "") return { etat: "erreur", message: "Le bloc ne peut pas être vide." };
+    if (trop(texte, 5000)) {
+      return { etat: "erreur", message: "Ce bloc est trop long : 5 000 caractères au maximum." };
+    }
+    contenu = actuel.kind === "texte"
       ? { ...actuel.contenu, texte }
       : { ...actuel.contenu, consigne: texte };
+  }
 
   const { error } = await client.from("lesson_blocks").update({ contenu }).eq("id", id);
   if (error !== null) return REFUS;
 
+  // Un devoir vit à deux endroits : le bloc du cours, et la ligne qui alimente
+  // « À faire » chez l'élève. Ne mettre à jour que le premier ferait diverger
+  // ce que l'élève lit dans le cours de ce qu'il lit dans sa liste.
+  if (actuel.kind === "devoir" && actuel.assignment_id !== null) {
+    const echeance = String(contenu.echeance ?? "");
+    await client
+      .from("assignments")
+      .update({
+        title: String(contenu.titre ?? ""),
+        instructions: { consigne: String(contenu.consigne ?? "") },
+        due_at: echeance === "" ? null : `${echeance}T23:59:00+02:00`,
+      })
+      .eq("id", actuel.assignment_id);
+  }
+
   revalidatePath(`/studio/${seanceId}`);
+  revalidatePath("/eleve");
   return { etat: "ok", message: "Bloc modifié." };
 }
 

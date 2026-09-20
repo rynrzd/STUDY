@@ -68,7 +68,7 @@ export function Dupliquer({
   }
 
   return (
-    <form action={dupliquer} className="carte p-5">
+    <form action={dupliquer} data-testid="dupliquer" className="carte p-5">
       <input type="hidden" name="seance" value={seance} />
 
       <h3 className="m-0 text-[length:var(--text-h3)] leading-[var(--text-h3--line-height)]">
@@ -86,7 +86,14 @@ export function Dupliquer({
           <label className="etiquette" htmlFor="cours-cible">
             Classe de destination
           </label>
-          <select id="cours-cible" name="cours" required className="champ" defaultValue="">
+          <select
+            id="cours-cible"
+            data-testid="dupliquer-cours"
+            name="cours"
+            required
+            className="champ"
+            defaultValue=""
+          >
             <option value="" disabled>
               Choisir…
             </option>
@@ -138,7 +145,12 @@ export function Dupliquer({
 function BoutonDupliquer() {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} className="bouton bouton-primaire">
+    <button
+      type="submit"
+      data-testid="dupliquer-valider"
+      disabled={pending}
+      className="bouton bouton-primaire"
+    >
       {pending ? "Copie en cours…" : "Dupliquer"}
     </button>
   );

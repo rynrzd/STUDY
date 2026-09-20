@@ -94,7 +94,10 @@ export function SecondFacteur({
               <p className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.08em] text-[color:var(--color-encre-tres-faible)]">
                 Ou saisissez cette clé à la main
               </p>
-              <p className="m-0 mt-2 break-all font-mono text-[length:var(--text-tableau)] font-semibold">
+              <p
+                data-testid="cle-totp"
+                className="m-0 mt-2 break-all font-mono text-[length:var(--text-tableau)] font-semibold"
+              >
                 {secret}
               </p>
               <p className="m-0 mt-3 max-w-[46ch] text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-faible)]">
@@ -153,7 +156,12 @@ export function SecondFacteur({
 function BoutonVerifier() {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} className="bouton bouton-primaire mt-5">
+    <button
+      type="submit"
+      data-testid="totp-valider"
+      disabled={pending}
+      className="bouton bouton-primaire mt-5"
+    >
       {pending ? "Vérification…" : "Vérifier"}
     </button>
   );
