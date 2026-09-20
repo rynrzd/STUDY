@@ -1,5 +1,7 @@
 "use client";
 
+import { dateCompleteLisible } from "@/lib/horodatage";
+
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { majDemande } from "@/app/administration/actions";
@@ -40,7 +42,7 @@ export function FicheDemande({ demande }: { demande: DemandeCommerciale }) {
             {demande.reference}
           </p>
           <p className="m-0 mt-1 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
-            {dateLisible(demande.created_at)}
+            {dateCompleteLisible(demande.created_at)}
           </p>
         </div>
       </div>
@@ -171,10 +173,4 @@ function typeEtablissement(valeur: string): string {
   return "Autre structure";
 }
 
-function dateLisible(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
+

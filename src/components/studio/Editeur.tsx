@@ -1,5 +1,7 @@
 "use client";
 
+import { instantLisible, jourLisible } from "@/lib/horodatage";
+
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -190,13 +192,7 @@ function EnteteSeance({
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <Bouton libelle="Enregistrer" variante="secondaire" />
         <p className="m-0 text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)]">
-          Dernière modification{" "}
-          {new Date(seance.updated_at).toLocaleString("fr-FR", {
-            day: "numeric",
-            month: "long",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+          Dernière modification {instantLisible(seance.updated_at)}
         </p>
       </div>
 
@@ -221,12 +217,7 @@ function Publication({ seance, publiee }: { seance: Seance; publiee: boolean }) 
         {publiee ? (
           <>
             Cette séance est visible par la classe depuis le{" "}
-            {seance.published_at === null
-              ? "—"
-              : new Date(seance.published_at).toLocaleDateString("fr-FR", {
-                  day: "numeric",
-                  month: "long",
-                })}
+            {jourLisible(seance.published_at)}
             . Vous pouvez continuer à la modifier : les élèves voient la date de
             dernière modification.
           </>
