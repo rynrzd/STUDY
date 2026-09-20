@@ -39,7 +39,12 @@ export function Entete() {
             c'est la composition de la référence, et elle se lit mieux qu'une
             navigation centrée qui flotte entre deux blocs. */}
         <div className="flex items-center gap-9">
-          <Link href="/" className="marque text-[1.375rem] no-underline">
+          <Link
+            href="/"
+            /* La marque est le lien de retour a l accueil : sur telephone elle se
+               touche, donc elle a la hauteur d une cible (V5 §11). */
+            className="marque inline-flex min-h-[var(--spacing-cible)] items-center text-[1.375rem] no-underline"
+          >
             {MARQUE}.
           </Link>
 

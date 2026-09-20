@@ -275,9 +275,14 @@
   .bouton:focus-visible .fleche,
   .lien-fleche:hover .fleche { transform: translateX(3px); }
 
+  /* Un lien de tete d affiche est une cible tactile, pas un mot dans un
+     paragraphe : il recoit la meme hauteur confortable qu un bouton voisin
+     (V5 §11). La hauteur vient d un minimum, pas d un remplissage, pour que
+     le soulignement reste colle au texte. */
   .lien-fleche {
     display: inline-flex;
     align-items: center;
+    min-height: var(--spacing-cible);
     gap: 6px;
     color: var(--color-accent);
     font-weight: 600;

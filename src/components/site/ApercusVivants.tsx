@@ -89,7 +89,7 @@ function Onglets({
             role="tab"
             aria-selected={selectionne}
             onClick={() => surChoix(entree)}
-            className={`-mb-px min-h-8 shrink-0 whitespace-nowrap border-b-2 pb-1.5 text-[0.75rem] transition-colors duration-[160ms] ${
+            className={`-mb-px min-h-[var(--spacing-cible)] shrink-0 whitespace-nowrap border-b-2 pb-1.5 text-[0.75rem] transition-colors duration-[160ms] ${
               selectionne
                 ? "border-[color:var(--color-accent)] font-semibold text-[color:var(--color-accent)]"
                 : "border-transparent text-[color:var(--color-encre-faible)] hover:text-[color:var(--color-encre)]"

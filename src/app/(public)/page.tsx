@@ -55,7 +55,7 @@ export default function PageAccueil() {
               </Link>
               <Link
                 href="/etablissements"
-                className="text-[length:var(--text-corps)] text-[color:var(--color-encre)]"
+                className="inline-flex min-h-[var(--spacing-cible)] items-center text-[length:var(--text-corps)] text-[color:var(--color-encre)]"
               >
                 Équiper mon lycée
               </Link>
