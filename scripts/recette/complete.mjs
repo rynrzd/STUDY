@@ -187,6 +187,15 @@ try {
       resume(requetes.sortie),
     );
 
+    // La matrice des promesses : une page publique est un engagement, et une
+    // promesse sans scenario reussi ne doit pas pouvoir rester en ligne.
+    const promesses = await lancer("matrice des promesses", ["verifier:promesses"]);
+    noter(
+      "chaque promesse publique a un scenario qui la joue",
+      promesses.code === 0 ? "ok" : "echec",
+      resume(promesses.sortie),
+    );
+
     const journal = await lancer("journal d audit", ["verifier:journal"]);
     noter(
       "le journal d audit ne porte aucun secret et reste immuable",

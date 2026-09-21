@@ -208,7 +208,7 @@ export async function scenarioClasse({ navigateur, base, terrain, sql, verifier 
         [devoir.id, terrain.comptes.eleveA.id],
         (lignes) => lignes.length === 1,
       );
-      verifier(apres.length === 1, "cocher « fait » est enregistre en base");
+      verifier(apres.length === 1, "FAIT_01 — cocher « fait » est enregistre en base");
 
       // Persistance : c'est l'état en base qui décide, pas l'écran.
       await exigerPage(eleveA.page, base, "/eleve", { attendu: "/eleve" });
@@ -283,7 +283,7 @@ export async function scenarioClasse({ navigateur, base, terrain, sql, verifier 
         [seance.id],
         (lignes) => lignes.length === 1,
       );
-      if (verifier(fils.length === 1, "la question cree un fil", `${fils.length}`)) {
+      if (verifier(fils.length === 1, "ENTRAIDE_01 — la question cree un fil", `${fils.length}`)) {
         const fil = fils[0];
         verifier(
           String(fil.question ?? "").includes(marque),

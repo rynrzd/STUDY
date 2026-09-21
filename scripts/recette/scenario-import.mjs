@@ -140,7 +140,7 @@ export async function scenarioImport({ navigateur, base, terrain, sql, verifier 
 
     // Trois élèves du terrain + ceux de l'import.
     const importes = crees.filter((l) => String(l.external_id ?? "").startsWith(`INE${marque}`));
-    verifier(importes.length === 5, "les cinq eleves du fichier sont crees", `${importes.length}`);
+    verifier(importes.length === 5, "IMPORT_01 — les cinq eleves du fichier sont crees", `${importes.length}`);
 
     const classes = new Set(importes.map((l) => l.classe));
     verifier(

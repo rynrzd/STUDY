@@ -129,7 +129,7 @@ try {
         }
         verifier(
           session.secretTotp !== null,
-          "l administrateur active son compte et enrole son second facteur",
+          "MFA_01 — l administrateur active son compte et enrole son second facteur",
         );
         verifier(
           session.destination.startsWith("/admin"),

@@ -60,7 +60,7 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
       motDePasse: terrain.comptes.professeur.motDePasseTemporaire,
     });
     terrain.comptes.professeur.motDePasse = session.motDePasse;
-    verifier(true, "le professeur se connecte et active son compte");
+    verifier(true, "TERRAIN_AFFECTATION — le professeur atteint le cours de sa classe");
 
     /* --- Chapitre ---------------------------------------------------------- */
 
@@ -168,7 +168,7 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
       [seance.id],
       (lignes) => lignes.length === 5,
     );
-    verifier(enBase.length === 5, "les cinq blocs sont ecrits en base", `${enBase.length} bloc(s)`);
+    verifier(enBase.length === 5, "STUDIO_BLOCS — les cinq blocs sont ecrits en base", `${enBase.length} bloc(s)`);
 
     for (const type of ["texte", "exercice", "lien", "devoir", "document"]) {
       verifier(
@@ -290,7 +290,7 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
       attendu: `/studio/${seance.id}/apercu`,
     });
     const apercu = await page.evaluate(() => document.body.innerText);
-    verifier(apercu.includes(marque), "l apercu montre le contenu de la seance");
+    verifier(apercu.includes(marque), "STUDIO_APERCU — l apercu montre le contenu de la seance");
 
     /* --- Publication dans une seule classe ---------------------------------- */
 
@@ -306,7 +306,7 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
     verifier(publiee[0]?.state === "publiee", "la seance est publiee", publiee[0]?.state);
     verifier(
       publiee[0]?.teaching_space_id === terrain.cours.cible,
-      "elle est publiee dans la classe visee, et dans elle seule",
+      "STUDIO_PUBLICATION — publiee dans la classe visee, et dans elle seule",
     );
 
     const { rows: ailleurs } = await sql.query(
@@ -405,7 +405,7 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
         [terrain.cours.temoin],
         (lignes) => lignes.length === 1,
       );
-      if (verifier(copies.length === 1, "la copie existe dans l autre classe", `${copies.length}`)) {
+      if (verifier(copies.length === 1, "STUDIO_DUPLICATION — la copie existe dans l autre classe", `${copies.length}`)) {
         const copie = copies[0];
 
         const { rows: blocsCopie } = await sql.query(
@@ -502,7 +502,7 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
     await page.emulateMedia({ media: "print" });
     const visibleAImpression = await page.evaluate(() => document.body.innerText.trim().length);
     await page.emulateMedia({ media: "screen" });
-    verifier(visibleAImpression > 50, "la page imprimee n est pas vide", `${visibleAImpression} caracteres`);
+    verifier(visibleAImpression > 50, "STUDIO_IMPRESSION — la page imprimee n est pas vide", `${visibleAImpression} caracteres`);
 
     void service;
   } finally {

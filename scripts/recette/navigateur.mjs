@@ -206,6 +206,17 @@ export async function connecter(page, base, identite) {
     await exigerPage(page, base, "/app", {}).catch(() => {});
     await attendreStabilisation(page);
 
+    // On attend qu'un écran **connu** soit là avant de décider. Sans cela, la
+    // boucle lit une page encore en cours de rendu, ne reconnaît rien, sort,
+    // et l'on conclut que l'enrôlement n'a pas eu lieu alors qu'il n'a jamais
+    // été proposé. C'était intermittent, donc pire qu'une panne franche.
+    await page
+      .waitForSelector(
+        '#nouveau, [data-testid="totp-valider"], [data-testid="connexion-valider"], main',
+        { timeout: 15_000 },
+      )
+      .catch(() => {});
+
     if (await affiche("#nouveau")) {
       const definitif = motDePasseFinal ?? `Definitif-${Math.random().toString(36).slice(2, 12)}!aA1`;
       await page.fill("#nouveau", definitif);
