@@ -217,6 +217,24 @@ try {
     noter("production rendue propre", "ok", restait ? "des traces subsistaient, elles ont ete balayees" : "rien a balayer");
   }
 
+  // Le seau d'objets, que la base ne voit pas.
+  //
+  // « La production est propre » se disait jusqu'ici sans jamais avoir compare
+  // le stockage a la base : dix-huit octets orphelins ont ainsi survecu a
+  // plusieurs recettes declarees sans defaut. Un orphelin n'apparait dans aucun
+  // ecran — personne ne peut donc le trouver, ni le supprimer, autrement qu'ici.
+  //
+  // `--ramasser` ne retire que ce qui a plus de deux heures et qu'aucune ligne
+  // ne designe : un depot en cours n'est pas un orphelin, et effacer pendant
+  // qu'on ecrit est la meilleure facon de creer le probleme qu'on evitait.
+  const stockage = await lancer("stockage", ["verifier:stockage", "--", "--ramasser"]);
+  noter(
+    "le stockage et la base disent la meme chose",
+    stockage.code === 0 ? "ok" : "echec",
+    resume(stockage.sortie),
+  );
+  if (stockage.code !== 0) critique = true;
+
   // Et le dernier mot revient a la base, pas au script qui vient de nettoyer.
   const sql = new pg.Client({
     connectionString: process.env.WORKER_DATABASE_URL,

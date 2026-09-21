@@ -55,6 +55,17 @@ tout, et personne ne s'en apercevait parce que personne ne relisait la base
 après. Le contrôle final existe pour cela, et il interroge la base — pas le
 script qui vient de nettoyer.
 
+**« Propre » veut dire la base *et* le seau.** Le balai supprime des lignes ;
+il ne voyait pas les octets. Dix-huit objets orphelins ont ainsi survécu à
+plusieurs recettes déclarées sans défaut — et un orphelin n'apparaît dans aucun
+écran, donc personne ne peut le trouver ni le supprimer autrement que par un
+script. `verifier:stockage --ramasser` compare les deux inventaires et fait
+désormais partie du nettoyage : un écart y devient un échec, pas une note.
+
+Il ne retire que ce qui a plus de deux heures et qu'aucune ligne ne désigne. Un
+dépôt en cours n'est pas un orphelin, et effacer pendant qu'on écrit est la
+meilleure façon de créer le problème qu'on évitait.
+
 **Le journal d'audit n'est jamais touché.** `study.audit_events` ne porte aucune
 clé étrangère vers `organizations` : rien n'obligeait techniquement à l'effacer
 pour supprimer un établissement. L'ancienne version le vidait tout de même, en
