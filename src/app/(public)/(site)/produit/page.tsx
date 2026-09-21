@@ -9,53 +9,51 @@ export const metadata: Metadata = pagePublique({
   chemin: "/produit",
   titre: "Produit",
   description:
-    "Séances, devoirs, copies, corrections, entraide et révisions. Ce que fait AvecStudy, et ce qu'il ne fait pas.",
+    "Séances, devoirs et entraide, dans la continuité de la classe. Ce que fait AvecStudy aujourd'hui, et ce qu'il ne fait pas.",
 });
 
 const FAMILLES = [
   {
     titre: "Préparer et publier",
     entrees: [
-      ["Bibliothèque privée", "Chaque enseignant prépare ses ressources chez lui. Un collègue n'y accède que si l'auteur partage explicitement."],
-      ["Séance structurée", "Titre, objectif, chapitre, durée, blocs de cours, exercices, pièces jointes, corrigé séparé, devoir lié."],
-      ["Publication par classe", "La cible est confirmée avant publication, avec le nombre d'élèves concernés. Une séance publiée en Seconde 1 n'apparaît pas en Seconde 2."],
-      ["Réutilisation", "« Copier vers une autre classe » crée un brouillon indépendant. Modifier un modèle ne change pas une séance déjà donnée."],
+      ["Bibliothèque privée", "Chaque enseignant prépare ses documents chez lui. Un collègue n'y accède pas."],
+      ["Séance structurée", "Titre, objectif, chapitre, date, et cinq types de blocs : texte, exercice, lien, document joint, devoir."],
+      ["Publication par classe", "Une séance publiée en Seconde 1 n'apparaît pas en Seconde 2. Elle reste un brouillon invisible tant qu'elle n'est pas publiée."],
+      ["Réutilisation", "« Dupliquer vers une autre classe » crée un brouillon indépendant. Modifier la copie ne change pas l'original."],
     ],
   },
   {
     titre: "Animer la séance",
     entrees: [
-      ["Mode projection", "Une vue distincte qui masque noms, copies, notifications et statistiques individuelles — pour ne jamais projeter un tableau de corrections par accident."],
-      ["Papier, ordinateur ou mixte", "Le mode décrit l'organisation de la séance. Il ne change aucune permission."],
-      ["Signal « Je bloque »", "L'élève signale un blocage sur un exercice, sans que son nom s'affiche publiquement. Aucune mesure d'attention n'en est déduite."],
-      ["Corrigé libéré au bon moment", "Le corrigé ne devient visible qu'après une décision explicite de l'enseignant."],
+      ["Mode projection", "Une vue distincte, pensée pour être projetée au tableau."],
+      ["Aperçu élève", "Voir la séance exactement comme un élève de la classe la verra, avant de la publier."],
+      ["Impression", "Le support s'imprime sans la navigation, sans les boutons et sans les discussions."],
     ],
   },
   {
-    titre: "Devoirs et copies",
+    titre: "Donner du travail",
     entrees: [
-      ["Copie personnelle", "Le brouillon reste privé jusqu'à la remise. L'enseignant voit l'état de travail, pas le contenu non remis."],
-      ["Preuve de remise", "Date du serveur, version, fichiers reçus. « Enregistré » et « remis » ne sont jamais confondus."],
-      ["Remise papier", "Photo du cahier, ou remise physique cochée par l'enseignant. L'absence de photo n'est pas un échec."],
-      ["Correction", "Commentaire général, annotations ancrées, grille facultative. Les élèves ne voient rien tant que le retour n'est pas publié."],
+      ["Devoir rattaché à la séance", "Un bloc « devoir » porte un titre, une consigne et une échéance. Il apparaît chez l'élève dans « À faire »."],
+      ["Publié avec sa séance", "Un devoir préparé dans un brouillon reste invisible. Il paraît quand le cours paraît, et se retire avec lui."],
+      ["Case « fait »", "L'élève coche ce qu'il a terminé. C'est son suivi à lui : personne d'autre ne le voit, et rien n'en est déduit."],
     ],
   },
   {
-    titre: "Entraide et révisions",
+    titre: "Entraide",
     entrees: [
-      ["Groupes de travail", "De 2 à 6 élèves, liés à un devoir, si l'enseignant autorise l'entraide."],
-      ["Brouillon partagé", "Distinct de « Ma copie ». Fermer un groupe ne touche pas la copie personnelle."],
-      ["Signalement et modération", "Motif, contexte, décision justifiée et historique. Un modérateur désigné agit dans son périmètre."],
-      ["Fiches et quiz", "Flashcards et quiz saisis manuellement. Les bonnes réponses ne partent pas au navigateur avant le moment prévu."],
+      ["Questions sur le cours", "Un élève pose une question sur une séance ; ses camarades de la même classe y répondent. Le fil reste dans la classe."],
+      ["Groupes de travail", "De deux à six élèves, rattachés à un cours."],
+      ["Jamais imprimé", "Les discussions n'apparaissent pas sur le support imprimé : ce qu'on colle dans un cahier, c'est le cours."],
     ],
   },
   {
-    titre: "Administration",
+    titre: "Administrer l'établissement",
     entrees: [
-      ["Import de rentrée", "Un fichier .xlsx ou .csv crée les classes manquantes et rattache les élèves — après un récapitulatif et une confirmation."],
+      ["Import de rentrée", "Un fichier .xlsx ou .csv crée les classes manquantes et rattache les élèves — après un récapitulatif et une confirmation. Réimporter le même fichier ne crée aucun doublon."],
       ["Remise des accès", "Identifiant lisible et secret temporaire, sur fiche imprimable. Après la première activation, aucun document ne permet de retrouver le mot de passe."],
-      ["Affectations datées", "Un remplacement a une date de début et de fin. La révocation est automatique."],
-      ["Journal", "Les actions sensibles sont tracées, avec leur auteur, leur portée et leur motif."],
+      ["Affectation par cours", "Un professeur est rattaché à une classe pour une matière. Il ne voit que les classes où il enseigne."],
+      ["Second facteur", "L'exploitant et les administrateurs d'établissement présentent un code à usage unique, en plus de leur mot de passe."],
+      ["Journal", "Les actions sensibles sont tracées, avec leur auteur, leur portée et leur motif. Le journal est immuable."],
     ],
   },
 ] as const;
@@ -67,7 +65,19 @@ const ABSENT = [
   ["Aucune surveillance", "Pas d'enregistrement vidéo de session, pas de mesure d'attention. Une ouverture de document ne prouve pas qu'un contenu a été appris."],
 ] as const;
 
+/**
+ * Ce qui n'existe pas aujourd'hui.
+ *
+ * Écrit au présent de l'absence, sans « bientôt » ni « prévu » : un
+ * établissement ne doit pas demander un devis en croyant acheter une fonction
+ * qui n'est pas là. Ce qui rejoindra le produit sera écrit plus haut le jour
+ * où il fonctionnera — pas le jour où il sera décidé.
+ */
 const HORS_PREMIERE_LIVRAISON = [
+  "Brouillon partagé entre élèves d'un même groupe",
+  "Fiches de révision et quiz",
+  "Annotations ancrées dans une copie",
+  "Grille de notation",
   "Application native (le service fonctionne dans le navigateur)",
   "Intégration officielle ENT, EduConnect ou GAR",
   "Import universel Moodle ou Éléa",
@@ -82,7 +92,7 @@ export default function PageProduit() {
       <TitrePage
         surtitre="Produit"
         titre={`Ce que fait ${MARQUE}`}
-        chapeau="Le cours, les devoirs et l'entraide, dans la continuité de la classe. Le reste est dit aussi clairement : ce qui n'existe pas, et ce qui n'est pas prévu pour la première livraison."
+        chapeau="Le cours, les devoirs et l'entraide, dans la continuité de la classe. Cette page ne décrit que ce qui fonctionne aujourd'hui ; ce qui n'existe pas est dit aussi clairement."
         actions={
           <>
             <Link href="/etablissements" className="bouton bouton-primaire">

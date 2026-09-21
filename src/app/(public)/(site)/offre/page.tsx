@@ -26,7 +26,7 @@ const INCLUS = [
   "Comptes enseignants inclus, sans limite de nombre",
   "Comptes élèves pour l'effectif convenu au devis",
   "Import de rentrée depuis un fichier .xlsx ou .csv",
-  "Séances, devoirs, copies, corrections, entraide et révisions",
+  "Séances, devoirs et entraide, publiés classe par classe",
   "Espace d'administration et journal des actions sensibles",
   "Assistance pour l'équipe de l'établissement",
 ] as const;

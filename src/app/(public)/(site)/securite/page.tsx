@@ -80,7 +80,7 @@ export default function PageSecurite() {
     <>
       <TitrePage
         surtitre="Sécurité et données"
-        titre="Ce qui protège les copies de vos élèves."
+        titre="Ce qui protège les données de vos élèves."
         chapeau="Cette page décrit des mécanismes vérifiables et nomme ses limites. Elle ne revendique aucune certification."
       />
 

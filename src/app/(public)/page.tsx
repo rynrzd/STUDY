@@ -130,7 +130,7 @@ export default function PageAccueil() {
                   cle: "maison",
                   libelle: "À la maison",
                   texte:
-                    "Le soir, le cours, le devoir et la correction se retrouvent au même endroit — sans chercher dans un cahier de textes ou une pile de photocopies.",
+                    "Le soir, le cours et le devoir se retrouvent au même endroit — sans chercher dans un cahier de textes ou une pile de photocopies.",
                   apercu: <ApercuMaison />,
                 },
               ]}
@@ -152,8 +152,8 @@ export default function PageAccueil() {
               Votre classe aussi.
             </h2>
             <p className="m-0 mt-5 max-w-[42ch] text-[length:var(--text-corps)] leading-[var(--text-corps--line-height)] text-[color:var(--color-encre-faible)]">
-              Partagez le cours du jour. Retrouvez les copies et accompagnez
-              chaque élève.
+              Préparez votre séance, publiez-la à la bonne classe, donnez le
+              travail à faire.
             </p>
             <p className="m-0 mt-6">
               <Link href="/produit" className="lien-fleche">
