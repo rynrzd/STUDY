@@ -56,9 +56,19 @@ migration 0015 mais ne faisait que raccourcir la session. Voir
 [docs/12-second-facteur.md](12-second-facteur.md).
 
 **Le formulaire d'ajout de bloc** restait ouvert sur le type précédent après un
-succès, champs vidés.
+succès, champs vidés : pour ajouter un bloc d'un autre type, il fallait deviner
+qu'il faut d'abord annuler.
 
-**Le lien de marque** de l'en-tête applicatif ne faisait que 27 px de haut.
+**Quatre défauts d'accessibilité**, tous trouvés en mesurant les écrans
+connectés à huit largeurs :
+
+- le champ de dépôt de l'assistant de rentrée, masqué et piloté par un bouton,
+  n'avait aucun intitulé accessible ;
+- le lien « Gérer l'accès » de la liste des professeurs faisait 15 px de haut —
+  sous le minimum de 24 px exigé par WCAG 2.2 AA ;
+- les boutons compacts, dont « Se déconnecter », faisaient 36 px : sur un poste
+  partagé, c'est précisément le geste qu'il ne faut pas rater ;
+- le lien de marque de l'en-tête applicatif faisait 27 px.
 
 ### Défauts de l'outillage de recette
 
@@ -73,8 +83,21 @@ d'outil, parce qu'il fait corriger ce qui n'a rien.
   défauts de conception imaginaires étaient signalés — mesurés sur une page
   d'erreur.
 - Les dix-huit cas du formulaire de démonstration passaient **pour la mauvaise
-  raison** : le filtre anti-robot de trois secondes refusait tout, et aucun cas
-  ne testait la validation qu'il annonçait.
+  raison**, et deux fois de suite : d'abord le filtre anti-robot de trois
+  secondes refusait tout ; puis, une fois ce délai respecté, trois champs
+  obligatoires restaient vides à chaque tour parce que le scénario écrivait
+  `nom`, `fonction` et `email` là où le formulaire attend `contactNom`,
+  `contactFonction` et `contactEmail`. Chaque cas exige désormais **le message
+  du champ visé** : un refus obtenu autrement ne passe plus pour une validation.
+- Le contrôle responsive signalait comme défauts un lien d'évitement placé hors
+  écran par conception, et des onglets de navigation qui dépassent dans une
+  barre prévue pour défiler. Il applique maintenant deux seuils de cible
+  tactile : échec sous 24 px (WCAG 2.2 AA), simple signalement entre 24 et
+  44 px — une alerte qu'on apprend à ignorer ne sert plus à rien.
+- La vérification du journal d'audit cherchait l'amorçage du compte
+  propriétaire dans les cent dernières entrées. Le journal grandit à chaque
+  recette : l'amorçage en était sorti, et le contrôle accusait un produit
+  intact.
 - La mesure de performance sortait un LCP à 0, des tailles à 1 Ko et une
   « interaction » à 30 s, et attribuait à l'accueil la poignée de main TLS de
   tout le navigateur (1,8 s de TTFB là où `curl` en mesure 0,15).
@@ -113,3 +136,41 @@ compte ne peut le scanner — c'est le sens même de la mesure.
 
 Tout le reste a été joué avec des comptes jetables, second facteur compris :
 la recette sait enrôler et vérifier un TOTP, et le fait à chaque exécution.
+
+---
+
+## Preuve d'idempotence
+
+`npm run recette:complete` a été exécutée **deux fois de suite**. Les deux
+passes ont donné le même résultat à la ligne près : même terrain monté et
+démonté, même état final, aucune collision de marquage, aucun résidu.
+
+Puis, après correction des deux derniers défauts d'accessibilité, la recette
+connectée a été rejouée en entier : **150 contrôles, aucun défaut**, terrain
+démonté, production revenue à un seul compte.
+
+## État final mesuré
+
+```
+profils                  = 1     (Rayan Tifouti, second facteur exigé)
+admins_site              = 1
+organisations            = 0
+adhesions                = 0
+professeurs              = 0
+eleves                   = 0
+classes                  = 0
+sessions_temporaires     = 0
+demandes                 = 0
+fichiers_de_recette      = 0
+lots_de_recette          = 0
+donnees_orphelines       = 0
+journal d'audit          = conservé, sans aucun secret
+```
+
+## Ce qui reste à surveiller, sans être un défaut
+
+Douze cibles tactiles se situent entre 24 et 44 px sur les écrans
+d'administration — conformes à WCAG 2.2 AA (critère 2.5.8), en dessous du
+confort visé. Elles sont listées à chaque exécution de la recette connectée,
+sans la faire échouer : les élargir toutes déformerait les écrans, et une
+alerte qu'on apprend à ignorer ne sert plus à rien.
