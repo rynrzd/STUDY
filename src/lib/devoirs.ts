@@ -58,6 +58,38 @@ export interface VersionRemise {
   readonly enRetard: boolean;
   readonly fichier: string | null;
   readonly nomFichier: string | null;
+  /** La référence d'accusé, calculée en base — son sel n'en sort pas. */
+  readonly reference: string;
+  /**
+   * La seule version que le produit sert encore.
+   *
+   * Une copie remplacée garde sa ligne — une copie remise ne s'efface pas —
+   * mais ses octets ne sont plus servis : deux versions téléchargeables, ce
+   * serait deux réponses à « qu'est-ce que j'ai rendu ? ».
+   */
+  readonly estLaDerniere: boolean;
+}
+
+/**
+ * Ce qu'une preuve de remise doit porter pour valoir quelque chose.
+ *
+ * Sept éléments, et ils viennent de cinq tables. Les assembler dans l'écran
+ * aurait demandé cinq allers-retours dont quatre pouvaient échouer en silence,
+ * et une preuve à trous n'est pas une preuve.
+ *
+ * **Ce n'est pas un constat juridique**, et l'écran le dit.
+ */
+export interface PreuveDeRemise {
+  readonly reference: string;
+  readonly devoir: string;
+  readonly matiere: string;
+  readonly eleve: string;
+  readonly classe: string;
+  readonly nomFichier: string;
+  readonly remisLe: string;
+  readonly enRetard: boolean;
+  readonly numero: number;
+  readonly etat: EtatRemise;
 }
 
 /**
@@ -237,10 +269,12 @@ export async function devoirsDeLEleve(jeton: string): Promise<Devoir[]> {
 
 interface LigneVersion {
   id: string;
-  version_number: number;
-  submitted_at: string;
-  late: boolean;
+  numero: number;
+  remis_le: string;
+  en_retard: boolean;
   file_id: string | null;
+  reference: string;
+  est_la_derniere: boolean;
 }
 
 /** La remise d'un élève, avec son historique et sa correction si publiée. */
@@ -261,14 +295,23 @@ export async function maRemise(jeton: string, devoirId: string): Promise<MaRemis
 
   const ligne = copie as unknown as { id: string; state: EtatRemise };
 
-  const { data: versions } = await client
-    .from("submission_versions")
-    .select("id, version_number, submitted_at, late, file_id")
-    .eq("submission_id", ligne.id)
-    .order("version_number", { ascending: false });
+  // `mes_remises` rend la référence avec la version : elle se calcule en base,
+  // où vit son sel, et la recopier ici ferait deux définitions d'une même
+  // empreinte — qui finissent toujours par diverger.
+  const { data: versions, error: refus } = await client.rpc("mes_remises", {
+    p_devoir: devoirId,
+  });
+
+  if (refus !== null) journaliser("devoirs.mes_remises", refus.code);
 
   const listes = (versions ?? []) as unknown as LigneVersion[];
-  const noms = await nomsDeFichiers(client, listes.map((v) => v.file_id));
+
+  // Le nom d'une copie remplacée n'est plus lisible : sa politique ne la sert
+  // plus. L'écran dira « remplacée », pas un nom vide.
+  const noms = await nomsDeFichiers(
+    client,
+    listes.filter((v) => v.est_la_derniere).map((v) => v.file_id),
+  );
 
   const retour = listes.length === 0 ? null : await retourDeLaVersion(client, listes[0]!.id);
 
@@ -276,14 +319,101 @@ export async function maRemise(jeton: string, devoirId: string): Promise<MaRemis
     etat: ligne.state,
     versions: listes.map((version) => ({
       id: version.id,
-      numero: version.version_number,
-      remisLe: version.submitted_at,
-      enRetard: version.late,
-      fichier: version.file_id,
+      numero: version.numero,
+      remisLe: version.remis_le,
+      enRetard: version.en_retard,
+      fichier: version.est_la_derniere ? version.file_id : null,
       nomFichier: version.file_id === null ? null : (noms.get(version.file_id) ?? null),
+      reference: version.reference,
+      estLaDerniere: version.est_la_derniere,
     })),
     retour,
   };
+}
+
+/**
+ * La preuve de remise d'un élève pour un devoir.
+ *
+ * Rend `null` quand rien n'a été remis — et aussi quand l'appelant n'est pas
+ * l'auteur de la copie : la fonction en base ne rend alors aucune ligne, pas
+ * un refus. Un refus aurait appris qu'une copie existe.
+ */
+export async function preuveDeRemise(
+  jeton: string,
+  devoirId: string,
+): Promise<PreuveDeRemise | null> {
+  const { data, error } = await clientUtilisateur(jeton).rpc("preuve_de_remise", {
+    p_devoir: devoirId,
+  });
+
+  if (error !== null) {
+    journaliser("devoirs.preuve", error.code);
+    return null;
+  }
+
+  const ligne = (Array.isArray(data) ? data[0] : null) as
+    | {
+        reference: string;
+        devoir: string;
+        matiere: string;
+        eleve: string;
+        classe: string;
+        nom_fichier: string;
+        remis_le: string;
+        en_retard: boolean;
+        numero: number;
+        etat: EtatRemise;
+      }
+    | null
+    | undefined;
+
+  if (ligne == null) return null;
+
+  return {
+    reference: ligne.reference,
+    devoir: ligne.devoir,
+    matiere: ligne.matiere,
+    eleve: ligne.eleve,
+    classe: ligne.classe,
+    nomFichier: ligne.nom_fichier,
+    remisLe: ligne.remis_le,
+    enRetard: ligne.en_retard,
+    numero: ligne.numero,
+    etat: ligne.etat,
+  };
+}
+
+/**
+ * Les références d'accusé de plusieurs versions, en un seul aller-retour.
+ *
+ * C'est la référence que l'élève cite au téléphone — « j'ai bien rendu,
+ * R-3F1A9C0B ». Le professeur doit pouvoir la retrouver sur sa liste, sinon
+ * l'accusé ne sert qu'à rassurer et à rien d'autre.
+ *
+ * Le calcul reste en base : son sel y vit, et deux définitions d'une même
+ * empreinte finissent toujours par diverger.
+ */
+async function referencesDesVersions(
+  client: ReturnType<typeof clientUtilisateur>,
+  versions: readonly string[],
+): Promise<Map<string, string>> {
+  if (versions.length === 0) return new Map();
+
+  const { data, error } = await client.rpc("references_de_remises", {
+    p_versions: [...versions],
+  });
+
+  if (error !== null) {
+    journaliser("devoirs.references", error.code);
+    return new Map();
+  }
+
+  return new Map(
+    ((data ?? []) as { version_id: string; reference: string }[]).map((l) => [
+      l.version_id,
+      l.reference,
+    ]),
+  );
 }
 
 /** Les noms d'affichage des fichiers, en un seul aller-retour. */
@@ -331,33 +461,61 @@ async function retourDeLaVersion(
 }
 
 /**
+ * Le résultat d'un suivi : la liste, **ou** l'aveu que la lecture a échoué.
+ *
+ * Une liste vide ressemble à « il n'y a personne » et non à « la requête n'a
+ * pas abouti ». Ce dépôt s'est déjà fait prendre trois fois par cette
+ * confusion — un professeur qui ne voyait aucun élève, des questions
+ * d'entraide affichées à personne. L'écran doit pouvoir dire « panne », et il
+ * ne le peut que si la bibliothèque le lui dit.
+ */
+export type ResultatSuivi =
+  | { readonly ok: true; readonly lignes: readonly LigneSuivi[] }
+  | { readonly ok: false; readonly message: string };
+
+const SUIVI_INDISPONIBLE =
+  "La liste des remises n'a pas pu être lue. Ce n'est pas que personne n'a rendu : c'est que la lecture a échoué. Rechargez dans un instant.";
+
+/**
  * Le suivi d'un devoir : un élève par ligne, remis ou non.
  *
  * La liste part des **élèves de la classe**, pas des copies : un élève qui n'a
  * rien rendu doit apparaître, sinon « non remis » se confondrait avec « pas
  * dans la classe ».
  */
-export async function suiviDuDevoir(jeton: string, devoirId: string): Promise<LigneSuivi[]> {
+export async function suiviDuDevoir(jeton: string, devoirId: string): Promise<ResultatSuivi> {
   const client = clientUtilisateur(jeton);
 
-  const { data: leDevoir } = await client
+  const { data: leDevoir, error: refusDevoir } = await client
     .from("assignments")
     .select("teaching_space_id")
     .eq("id", devoirId)
     .maybeSingle();
 
-  if (leDevoir === null) return [];
+  if (refusDevoir !== null) {
+    journaliser("devoirs.suivi.devoir", refusDevoir.code);
+    return { ok: false, message: SUIVI_INDISPONIBLE };
+  }
+
+  // Pas de devoir lisible : ce n'est pas une panne, c'est un devoir qui n'est
+  // pas le sien. La liste vide est alors la bonne réponse.
+  if (leDevoir === null) return { ok: true, lignes: [] };
   const cours = (leDevoir as { teaching_space_id: string }).teaching_space_id;
 
-  const { data: espace } = await client
+  const { data: espace, error: refusEspace } = await client
     .from("teaching_spaces")
     .select("class_id")
     .eq("id", cours)
     .maybeSingle();
 
-  if (espace === null) return [];
+  if (refusEspace !== null) {
+    journaliser("devoirs.suivi.espace", refusEspace.code);
+    return { ok: false, message: SUIVI_INDISPONIBLE };
+  }
+
+  if (espace === null) return { ok: true, lignes: [] };
   const classe = (espace as { class_id: string | null }).class_id;
-  if (classe === null) return [];
+  if (classe === null) return { ok: true, lignes: [] };
 
   const { data: inscrits } = await client
     .from("class_enrollments")
@@ -367,7 +525,8 @@ export async function suiviDuDevoir(jeton: string, devoirId: string): Promise<Li
     .limit(400);
 
   const identifiants = ((inscrits ?? []) as { profile_id: string }[]).map((l) => l.profile_id);
-  if (identifiants.length === 0) return [];
+  // Une classe sans inscrit est une classe vide, pas une panne.
+  if (identifiants.length === 0) return { ok: true, lignes: [] };
 
   const { data: profils } = await client
     .from("profiles")
@@ -392,7 +551,19 @@ export async function suiviDuDevoir(jeton: string, devoirId: string): Promise<Li
     .in("submission_id", [...parEleve.values()].map((c) => c.id))
     .order("version_number", { ascending: false });
 
-  const listes = (versions ?? []) as unknown as (LigneVersion & { submission_id: string })[];
+  // Le professeur lit la table directement : `mes_remises` est bornée à son
+  // appelant, et c'est très bien ainsi. Les colonnes sont donc celles de la
+  // table, pas celles de la fonction.
+  interface LigneVersionProf {
+    id: string;
+    submission_id: string;
+    version_number: number;
+    submitted_at: string;
+    late: boolean;
+    file_id: string | null;
+  }
+
+  const listes = (versions ?? []) as unknown as LigneVersionProf[];
   const noms = await nomsDeFichiers(client, listes.map((v) => v.file_id));
 
   const derniereParCopie = new Map<string, (typeof listes)[number]>();
@@ -403,6 +574,12 @@ export async function suiviDuDevoir(jeton: string, devoirId: string): Promise<Li
       derniereParCopie.set(version.submission_id, version);
     }
   }
+
+  // Les références des dernières versions, en un seul aller-retour.
+  const reference = await referencesDesVersions(
+    client,
+    [...derniereParCopie.values()].map((v) => v.id),
+  );
 
   const lignes: LigneSuivi[] = [];
   for (const profil of (profils ?? []) as { id: string; first_name: string; last_name: string }[]) {
@@ -426,14 +603,21 @@ export async function suiviDuDevoir(jeton: string, devoirId: string): Promise<Li
               fichier: derniere.file_id,
               nomFichier:
                 derniere.file_id === null ? null : (noms.get(derniere.file_id) ?? null),
+              // La référence de l'accusé : c'est elle que l'élève cite au
+              // téléphone quand il affirme avoir rendu.
+              reference: reference.get(derniere.id) ?? "",
+              estLaDerniere: true,
             },
       retour: derniere === undefined ? null : await retourDeLaVersion(client, derniere.id),
     });
   }
 
-  return lignes.sort(
-    (a, b) => a.nom.localeCompare(b.nom, "fr") || a.prenom.localeCompare(b.prenom, "fr"),
-  );
+  return {
+    ok: true,
+    lignes: lignes.sort(
+      (a, b) => a.nom.localeCompare(b.nom, "fr") || a.prenom.localeCompare(b.prenom, "fr"),
+    ),
+  };
 }
 
 /* -------------------------------------------------------------------------- */

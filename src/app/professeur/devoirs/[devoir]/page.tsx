@@ -50,7 +50,7 @@ export default async function PageDevoirProfesseur({
   const leDevoir = await lireDevoir(jeton, identifiant);
   if (leDevoir === null) notFound();
 
-  const [cours, lignes, commune] = await Promise.all([
+  const [cours, suivi, commune] = await Promise.all([
     coursDuProfesseur(jeton),
     suiviDuDevoir(jeton, identifiant),
     correctionCommune(jeton, identifiant),
@@ -122,18 +122,36 @@ export default async function PageDevoirProfesseur({
         />
       </section>
 
-      <SuiviRemises
-        devoir={leDevoir.id}
-        organisation={personne.organizationId ?? ""}
-        mode={leDevoir.mode}
-        lignes={lignes}
-      />
+      {/* Une liste vide ressemble à « personne n'a rendu » et non à « la
+          lecture a échoué ». L'écran doit pouvoir dire la panne, sinon le
+          professeur conclut que sa classe n'a rien fait. */}
+      {suivi.ok ? (
+        <SuiviRemises
+          devoir={leDevoir.id}
+          organisation={personne.organizationId ?? ""}
+          mode={leDevoir.mode}
+          lignes={suivi.lignes}
+        />
+      ) : (
+        <section className="mt-12">
+          <h2 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
+            Remises
+          </h2>
+          <p
+            role="alert"
+            data-testid="suivi-erreur"
+            className="m-0 mt-4 rounded-[var(--radius-carte)] border border-[color:var(--color-erreur)] bg-[color:var(--color-erreur-fond)] p-4 text-[length:var(--text-tableau)]"
+          >
+            {suivi.message}
+          </p>
+        </section>
+      )}
 
       <CorrectionCommune
         devoir={leDevoir.id}
         organisation={personne.organizationId ?? ""}
         correction={commune}
-        nombreEleves={lignes.length}
+        nombreEleves={suivi.ok ? suivi.lignes.length : 0}
       />
     </article>
   );

@@ -22,8 +22,14 @@
   --color-surface-douce: #faf9fa; /* aplats de section, très discrets */
 
   --color-encre: #17171b;         /* texte principal, boutons pleins */
-  --color-encre-faible: #62626a;  /* texte secondaire */
-  --color-encre-tres-faible: #8b8b95;
+  --color-encre-faible: #62626a;  /* texte secondaire — 6,04:1 sur blanc */
+  /* Mesuré, pas estimé. #8b8b95 donnait 3,37:1 sur blanc : au-dessous du
+     4,5:1 qu'exige WCAG 2.2 AA pour du texte normal, et ce gris portait les
+     légendes de l'aperçu, les libellés de pied de page et les petites notes.
+     #686872 tient 4,5:1 sur **tous** les fonds du produit — blanc, surface
+     douce, survol, et jusqu'au rose clair (4,51:1). Un ton qui ne passe que
+     sur blanc se casse le jour où quelqu'un le pose ailleurs. */
+  --color-encre-tres-faible: #686872;
 
   /* Le rose, en trois intensités et pas une de plus. */
   --color-accent: #a43760;        /* petits libellés roses, lisibles */
@@ -33,7 +39,12 @@
   --color-rose-decor: #e9b6c8;    /* filets et repères, jamais du texte */
 
   --color-bordure: #e7e4e7;
-  --color-bordure-forte: #cfcbd2;
+  --color-bordure-forte: #cfcbd2;  /* filets et séparateurs, décoratifs */
+  /* La bordure d'un champ n'est pas décorative : c'est elle qui dit où
+     commence la zone de saisie, et WCAG 1.4.11 lui demande 3:1. #cfcbd2 en
+     donnait 1,60 — un champ qu'on devine plus qu'on ne le voit. Celle-ci
+     tient 3,31:1. */
+  --color-bordure-champ: #8f8c94;
   --color-survol: #f2f0f2;
 
   --color-succes: #216847;
@@ -238,7 +249,9 @@
 
   .bouton-secondaire {
     background: var(--color-surface);
-    border-color: var(--color-bordure-forte);
+    /* Bordure de composant, pas filet decoratif : c est elle qui dit ou le
+       bouton commence. Elle suit donc le meme jeton que les champs. */
+    border-color: var(--color-bordure-champ);
     color: var(--color-encre);
   }
 
@@ -498,7 +511,7 @@
     min-height: var(--spacing-cible);
     padding: 10px 12px;
     background: var(--color-surface);
-    border: 1px solid var(--color-bordure-forte);
+    border: 1px solid var(--color-bordure-champ);
     border-radius: var(--radius-champ);
     font-size: var(--text-corps);
     font-family: inherit;

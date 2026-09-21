@@ -215,15 +215,37 @@ test("fichiers — un enseignant ne lit une piece jointe quune fois disponible",
   t.after(() => db.close());
 
   const fichier = "aaaaaaaa-ffff-4000-8000-000000000002";
-  const chemin = `${ACTEURS.lyceeA}/aaaaaaaa-7778-4000-8000-000000000001/${fichier}`;
+  const version = "aaaaaaaa-7778-4000-8000-000000000002";
+  const chemin = `${ACTEURS.lyceeA}/${version}/${fichier}`;
 
+  // **La forme est celle que le produit écrit**, et c'est tout l'objet de ce
+  // fixture. Il posait auparavant `attached_id = <la version>`, parce que
+  // c'est ce que la politique d'alors attendait. Or `deposerPieceJointe` y
+  // écrit **le devoir** : la version n'existe pas encore au moment du dépôt.
+  //
+  // Le test affirmait donc une vérité sur une forme qui n'arrive jamais, et
+  // c'est exactement pour cela que le défaut a survécu — le professeur
+  // obtenait « introuvable » en production pendant que le test passait au
+  // vert. Le lien réel est `submission_versions.file_id`, posé par
+  // `devoir_remettre` dans la même transaction que la version.
   await db.query(
     `insert into study.files
        (id, organization_id, owner_id, display_name, storage_key, bucket,
         byte_size, attached_kind, attached_id, state)
      values ($1, $2, $3, 'Copie.pdf', $4, 'student-submissions',
-             2048, 'copie', 'aaaaaaaa-7778-4000-8000-000000000001', 'analyse')`,
-    [fichier, ACTEURS.lyceeA, ACTEURS.eleveA1Rayan, chemin],
+             2048, 'copie', $5, 'analyse')`,
+    [fichier, ACTEURS.lyceeA, ACTEURS.eleveA1Lina, chemin, OBJETS.devoirA1],
+  );
+
+  // Le lien se pose **à l'insertion**, jamais après : `submission_versions_immutable`
+  // refuse de toucher une copie remise, et c'est une bonne règle — une version
+  // qu'on peut modifier après coup ne prouve plus rien. On crée donc la version
+  // avec son fichier, exactement comme `devoir_remettre` le fait.
+  await db.query(
+    `insert into study.submission_versions
+       (id, organization_id, submission_id, version_number, body, file_id)
+     values ($1, $2, $3, 1, '{"blocs": []}'::jsonb, $4)`,
+    [version, ACTEURS.lyceeA, "aaaaaaaa-7777-4000-8000-000000000002", fichier],
   );
 
   const pendantAnalyse = await lirePour(

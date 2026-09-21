@@ -229,6 +229,23 @@ export async function connecter(page, base, identite) {
     if (await affiche('[data-testid="totp-valider"]')) {
       // Enrôlement si la clé n'est pas encore connue, simple vérification
       // sinon. La clé n'est lue qu'ici, et ne quitte pas la mémoire.
+      //
+      // **Pourquoi on attend la clé au lieu de regarder si elle est là.**
+      // Le bouton de validation et la clé ne paraissent pas au même instant :
+      // le formulaire est dans le HTML servi, la clé arrive avec le secret
+      // que le serveur vient de générer. Un simple « est-elle présente ? »
+      // lit donc parfois l'écran entre les deux, conclut « aucune clé » et
+      // fait échouer un enrôlement qui se serait très bien passé une seconde
+      // plus tard. La recette est ressortie rouge pour cette seule raison,
+      // sur un produit qui n'avait rien.
+      //
+      // On attend donc explicitement, et l'échec ne se prononce qu'après.
+      if (secretTotp === null) {
+        await page
+          .waitForSelector('[data-testid="cle-totp"]', { timeout: 10_000, state: "attached" })
+          .catch(() => {});
+      }
+
       if (secretTotp === null && (await affiche('[data-testid="cle-totp"]'))) {
         const affichee = await page.locator('[data-testid="cle-totp"]').textContent();
         if (affichee === null || affichee.trim() === "") {

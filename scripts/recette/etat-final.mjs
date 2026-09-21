@@ -16,6 +16,7 @@
 // Ce script ne corrige rien. Il compte, et il dit non.
 // =============================================================================
 
+import { createClient } from "@supabase/supabase-js";
 import pg from "pg";
 import { chargerEnv, titre } from "../_commun.mjs";
 
@@ -51,6 +52,15 @@ const { rows } = await sql.query(`
     (select count(*)::int from study.commercial_requests)                             as demandes,
     (select count(*)::int from study.files where state <> 'supprime')                 as fichiers,
     (select count(*)::int from study.import_batches)                                  as lots,
+    -- Le cycle des devoirs, compté pour lui-même. Un établissement démonté
+    -- dont les copies survivraient serait un établissement à moitié démonté,
+    -- et « organisations = 0 » ne le dirait pas.
+    (select count(*)::int from study.assignments)                                     as devoirs,
+    (select count(*)::int from study.submission_versions)                             as remises,
+    (select count(*)::int from study.feedback)                                        as corrections_individuelles,
+    (select count(*)::int from study.assignment_corrections)                          as corrections_communes,
+    (select count(*)::int from study.reports)                                         as signalements,
+    (select count(*)::int from study.nouveautes)                                      as nouveautes,
     (select count(*)::int from study.audit_events)                                    as journal
 `);
 
@@ -76,6 +86,12 @@ const ATTENDUS = [
   ["demandes", etat.demandes, 0],
   ["fichiers_de_recette", etat.fichiers, 0],
   ["lots_de_recette", etat.lots, 0],
+  ["devoirs_de_recette", etat.devoirs, 0],
+  ["remises_de_recette", etat.remises, 0],
+  ["corrections_individuelles", etat.corrections_individuelles, 0],
+  ["corrections_communes", etat.corrections_communes, 0],
+  ["signalements_de_recette", etat.signalements, 0],
+  ["nouveautes_de_recette", etat.nouveautes, 0],
 ];
 
 let defauts = 0;
@@ -150,6 +166,79 @@ for (const garde of gardes) {
 if (gardes.length < 5) {
   defauts += 1;
   console.log(`  NON  seuls ${gardes.length} garde-fous sur 5 sont presents`);
+}
+
+/* --- Ce que la base ne peut pas voir -------------------------------------- */
+//
+// Deux compteurs du cahier vivent hors de PostgreSQL : les comptes de
+// connexion, qui sont chez le fournisseur d'identité, et les octets, qui sont
+// dans le seau. Les ignorer permettait de déclarer « rien d'autre » en
+// laissant derrière soi un compte de recette capable de se connecter, ou des
+// fichiers que plus aucun écran ne désigne.
+
+const CONFIGURE =
+  typeof process.env.SUPABASE_URL === "string" &&
+  typeof process.env.SUPABASE_SECRET_KEY === "string" &&
+  process.env.SUPABASE_URL !== "" &&
+  process.env.SUPABASE_SECRET_KEY !== "";
+
+if (!CONFIGURE) {
+  defauts += 1;
+  console.log("\n  NON  comptes_auth et objets_orphelins : acces au fournisseur absent");
+} else {
+  const fournisseur = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  /* Les comptes de connexion. */
+  const { data: comptesAuth, error: refusAuth } = await fournisseur.auth.admin.listUsers({
+    page: 1,
+    perPage: 200,
+  });
+
+  if (refusAuth !== null) {
+    defauts += 1;
+    console.log(`\n  NON  comptes_auth illisibles — ${refusAuth.message}`);
+  } else {
+    const nombre = comptesAuth.users.length;
+    const conforme = nombre === 1;
+    if (!conforme) defauts += 1;
+    console.log(
+      `\n  ${conforme ? "ok  " : "NON "} comptes_auth              = ${nombre}` +
+        (conforme ? "" : "   (attendu 1)"),
+    );
+  }
+
+  /* Les objets du seau, comparés aux lignes de la base. */
+  const { rows: cles } = await sql.query("select storage_key from study.files");
+  const connus = new Set(cles.map((ligne) => ligne.storage_key));
+
+  const lister = async (prefixe = "", profondeur = 0) => {
+    if (profondeur > 3) return [];
+    const { data, error } = await fournisseur.storage
+      .from("course-materials")
+      .list(prefixe, { limit: 1000 });
+    if (error !== null || data === null) return [];
+
+    const trouves = [];
+    for (const entree of data) {
+      const chemin = prefixe === "" ? entree.name : `${prefixe}/${entree.name}`;
+      // Un « dossier » n'a pas de métadonnées : c'est ainsi qu'on les distingue.
+      if (entree.id === null) trouves.push(...(await lister(chemin, profondeur + 1)));
+      else trouves.push(chemin);
+    }
+    return trouves;
+  };
+
+  const objets = await lister();
+  const orphelins = objets.filter((chemin) => !connus.has(chemin));
+  const sansOrphelin = orphelins.length === 0;
+  if (!sansOrphelin) defauts += 1;
+
+  console.log(
+    `  ${sansOrphelin ? "ok  " : "NON "} objets_orphelins          = ${orphelins.length}` +
+      (sansOrphelin ? "" : "   (attendu 0, voir verifier:stockage --ramasser)"),
+  );
 }
 
 /* --- Qui est ce compte unique ? -------------------------------------------- */

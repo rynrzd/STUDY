@@ -160,6 +160,7 @@ try {
       ["balisage, SEO et CSP", "verifier:site"],
       ["landing conforme a la reference", "verifier:landing"],
       ["responsive public, clavier et cibles tactiles", "verifier:responsive"],
+      ["contraste WCAG 2.2 AA des pages publiques", "verifier:contraste"],
       ["parcours navigateur publics", "test:navigateur"],
     ]) {
       const resultat = await lancer(nom, [script]);

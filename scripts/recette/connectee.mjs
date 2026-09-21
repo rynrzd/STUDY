@@ -29,6 +29,8 @@ import { scenarioDemande } from "./scenario-demande.mjs";
 import { scenarioResponsive } from "./scenario-responsive.mjs";
 import { scenarioRemises } from "./scenario-remises.mjs";
 import { scenarioModeration } from "./scenario-moderation.mjs";
+import { scenarioRemisesIndividuelles } from "./scenario-remises-individuelles.mjs";
+import { scenarioContraste } from "./scenario-contraste.mjs";
 
 chargerEnv();
 
@@ -159,6 +161,8 @@ try {
     ["§7 formulaire de demonstration", scenarioDemande, { navigateur, base: BASE, sql, verifier }],
     ["§13 devoirs, remises et corrections", scenarioRemises, commun],
     ["§14 correction commune, signalement, nouveautes", scenarioModeration, commun],
+    ["§15 remises et corrections individuelles", scenarioRemisesIndividuelles, commun],
+    ["CONTRASTE_01 contraste des ecrans connectes", scenarioContraste, commun],
     ["§8 responsive connecte et accessibilite", scenarioResponsive, commun],
   ]) {
     try {

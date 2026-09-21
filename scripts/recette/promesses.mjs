@@ -54,12 +54,24 @@ export const PROMESSES = [
   { promesse: "Case « fait »", scenario: "FAIT_01" },
 
   // --- Ramasser et corriger -----------------------------------------------
-  { promesse: "Remise de la copie", scenario: "DEPOT_06" },
-  { promesse: "Remplacement sans perte", scenario: "DEPOT_10" },
-  { promesse: "Remise sur papier", scenario: "DEPOT_12" },
+  //
+  // Chaque promesse pointe vers le contrôle qui la **joue**, pas vers celui qui
+  // s'en approche. « Remise de la copie » tenait auparavant à DEPOT_06, qui
+  // dépose un fichier ; REMISE_03 dépose, vérifie l'aperçu avant l'envoi,
+  // l'écriture en base, l'absence de retard et l'accusé rendu après l'écriture.
+  { promesse: "Remise de la copie", scenario: "REMISE_03" },
+  { promesse: "Remplacement sans perte", scenario: "REMISE_05" },
+  { promesse: "Une seule copie courante", scenario: "REMISE_06" },
+  { promesse: "Remise sur papier", scenario: "PAPIER_01" },
+  { promesse: "Constat du professeur", scenario: "PAPIER_02" },
+  { promesse: "Remise en retard", scenario: "REMISE_09" },
+  { promesse: "Fermeture à l'échéance", scenario: "REMISE_10" },
   { promesse: "Suivi de la classe", scenario: "DEPOT_11" },
-  { promesse: "Correction individuelle", scenario: "CORRECTION_01" },
+  { promesse: "La copie s'ouvre côté professeur", scenario: "REMISE_11" },
+  { promesse: "Correction individuelle", scenario: "CORR_IND_02" },
+  { promesse: "Fichier corrigé", scenario: "CORR_IND_04" },
   { promesse: "Correction pour la classe", scenario: "CORRECTION_05" },
+  { promesse: "Preuve de remise", scenario: "PREUVE_01" },
   { promesse: "Ce qui vous concerne", scenario: "NOUVEAUTE_01" },
 
   // --- Entraide -----------------------------------------------------------
@@ -160,6 +172,7 @@ console.log("\nChaque scénario nommé existe dans les recettes");
 
 const sources = [
   "scripts/recette/scenario-remises.mjs",
+  "scripts/recette/scenario-remises-individuelles.mjs",
   "scripts/recette/scenario-moderation.mjs",
   "scripts/recette/scenario-studio.mjs",
   "scripts/recette/scenario-classe.mjs",

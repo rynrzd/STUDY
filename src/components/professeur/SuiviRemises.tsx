@@ -37,6 +37,8 @@ export interface LigneEleve {
     readonly enRetard: boolean;
     readonly fichier: string | null;
     readonly nomFichier: string | null;
+    readonly reference: string;
+    readonly estLaDerniere: boolean;
   } | null;
   readonly retour: {
     readonly id: string;
@@ -67,7 +69,12 @@ export function SuiviRemises({
 }) {
   const [filtre, setFiltre] = useState<"tous" | "remis" | "non_remis" | "corriges">("tous");
   const [recherche, setRecherche] = useState("");
+  // Trois tris, et ils répondent à trois questions réelles : « où en est la
+  // classe » (nom), « qui n'a rien rendu » (état), « qui a rendu au dernier
+  // moment » (heure). Un tri par note n'existe pas : il n'y a pas de note.
+  const [tri, setTri] = useState<"nom" | "etat" | "heure">("nom");
   const champRecherche = useId();
+  const champTri = useId();
 
   const papier = mode === "papier" || mode === "mixte";
 
@@ -88,6 +95,36 @@ export function SuiviRemises({
     if (recherche.trim() === "") return true;
     const cible = `${ligne.prenom} ${ligne.nom}`.toLowerCase();
     return cible.includes(recherche.trim().toLowerCase());
+  });
+
+  // Le tri porte sur ce qui est déjà filtré, et il est stable : deux élèves à
+  // égalité restent dans l'ordre alphabétique, faute de quoi la liste bouge
+  // entre deux affichages sans que rien n'ait changé.
+  const RANG_ETAT: Record<string, number> = {
+    non_commence: 0,
+    brouillon: 0,
+    remis_en_retard: 1,
+    remis: 2,
+    retour_disponible: 3,
+    a_reprendre: 3,
+  };
+
+  const parNom = (a: LigneEleve, b: LigneEleve) =>
+    a.nom.localeCompare(b.nom, "fr") || a.prenom.localeCompare(b.prenom, "fr");
+
+  const ordonnees = [...visibles].sort((a, b) => {
+    if (tri === "etat") {
+      return (RANG_ETAT[a.etat] ?? 9) - (RANG_ETAT[b.etat] ?? 9) || parNom(a, b);
+    }
+    if (tri === "heure") {
+      // Ceux qui n'ont rien rendu passent en dernier : trier par une heure
+      // qu'ils n'ont pas les placerait arbitrairement au début.
+      const quand = (ligne: LigneEleve) => ligne.derniere?.remisLe ?? "";
+      if (quand(a) === "") return quand(b) === "" ? parNom(a, b) : 1;
+      if (quand(b) === "") return -1;
+      return quand(b).localeCompare(quand(a)) || parNom(a, b);
+    }
+    return parNom(a, b);
   });
 
   return (
@@ -119,6 +156,23 @@ export function SuiviRemises({
       </dl>
 
       <div className="mt-5 flex flex-wrap items-end gap-3 print:hidden">
+        <div className="min-w-[9rem]">
+          <label className="etiquette" htmlFor={champTri}>
+            Trier par
+          </label>
+          <select
+            id={champTri}
+            data-testid="suivi-tri"
+            value={tri}
+            onChange={(evenement) => setTri(evenement.target.value as typeof tri)}
+            className="champ"
+          >
+            <option value="nom">Nom</option>
+            <option value="etat">État</option>
+            <option value="heure">Heure de remise</option>
+          </select>
+        </div>
+
         <div className="min-w-[12rem] flex-1">
           <label className="etiquette" htmlFor={champRecherche}>
             Rechercher un élève
@@ -157,7 +211,7 @@ export function SuiviRemises({
         </div>
       </div>
 
-      {visibles.length === 0 ? (
+      {ordonnees.length === 0 ? (
         <p
           data-testid="suivi-vide"
           className="m-0 mt-5 rounded-[var(--radius-carte)] border border-dashed border-[color:var(--color-bordure-forte)] p-6 text-center text-[color:var(--color-encre-faible)]"
@@ -168,7 +222,7 @@ export function SuiviRemises({
         </p>
       ) : (
         <ul className="m-0 mt-5 list-none space-y-3 p-0">
-          {visibles.map((ligne) => (
+          {ordonnees.map((ligne) => (
             <li key={ligne.eleve}>
               <LigneSuivi
                 ligne={ligne}
@@ -220,6 +274,19 @@ function LigneSuivi({
               : ""}
             {ligne.retour?.publieLe != null ? " — corrigé" : ""}
           </p>
+
+          {/* Le nom du fichier et la référence de l'accusé. C'est cette
+              référence que l'élève cite quand il affirme avoir rendu : sans
+              elle sur cette liste, le professeur n'a rien à recouper. */}
+          {ligne.derniere !== null ? (
+            <p
+              data-testid="suivi-fichier"
+              className="m-0 mt-0.5 truncate text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]"
+            >
+              <span className="font-mono">{ligne.derniere.reference}</span>
+              {ligne.derniere.nomFichier !== null ? ` · ${ligne.derniere.nomFichier}` : ""}
+            </p>
+          ) : null}
         </div>
 
         <div className="flex flex-wrap items-center gap-2 print:hidden">

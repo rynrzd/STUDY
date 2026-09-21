@@ -350,16 +350,19 @@ test("signalement — l identite de celui qui signale ne sort jamais du cercle",
   const parLuiMeme = await lirePour(db, ACTEURS.eleveA1Rayan, "select reporter_id from study.reports");
   assert.equal(parLuiMeme.length, 1);
 
-  // Le moderateur et l'administrateur voient, c'est leur travail — mais
-  // seulement avec un second facteur presente sur la session. Lire qui a
-  // signale qui n'est pas un droit qu'un mot de passe seul doit ouvrir.
-  for (const qui of [ACTEURS.moderateurA, ACTEURS.adminA]) {
-    const sansSecondFacteur = await lirePour(db, qui, "select reporter_id from study.reports");
-    assert.equal(sansSecondFacteur.length, 0, "sans second facteur, la moderation ne voit rien");
+  // L'administrateur voit, c'est son travail — mais seulement avec un second
+  // facteur presente sur la session. Lire qui a signale qui n'est pas un droit
+  // qu'un mot de passe seul doit ouvrir.
+  const sansSecondFacteur = await lirePour(db, ACTEURS.adminA, "select reporter_id from study.reports");
+  assert.equal(sansSecondFacteur.length, 0, "sans second facteur, la moderation ne voit rien");
 
-    const avec = await lirePourAdmin(db, qui, "select reporter_id from study.reports");
-    assert.equal(avec.length, 1, "avec second facteur, la moderation voit le signalement");
-  }
+  const avec = await lirePourAdmin(db, ACTEURS.adminA, "select reporter_id from study.reports");
+  assert.equal(avec.length, 1, "avec second facteur, l administrateur voit le signalement");
+
+  // Le role « moderateur » du jeu de recette, lui, n ouvre plus rien : la
+  // moderation est celle de l administrateur, et une seule regle se verifie.
+  const parLeRoleHerite = await lirePourAdmin(db, ACTEURS.moderateurA, "select reporter_id from study.reports");
+  assert.equal(parLeRoleHerite.length, 0, "un privilege dormant finit par etre accorde par accident");
 
   // L'administrateur de l'autre lycee, jamais, second facteur ou non.
   const parLAutreLycee = await lirePourAdmin(db, ACTEURS.adminB, "select reporter_id from study.reports");
@@ -396,7 +399,7 @@ test("moderation — masquer rend le contenu inaccessible et classe le signaleme
   const second = await signaler(db, ACTEURS.eleveA1Lina, { colonne: "reponse_id", id: reponse });
 
   await db.query("select study.moderer_signalement($1, $2, 'masquer', $3)", [
-    ACTEURS.moderateurA,
+    ACTEURS.adminA,
     premier,
     "Propos visant nommement un autre eleve.",
   ]);
@@ -421,7 +424,7 @@ test("moderation — masquer rend le contenu inaccessible et classe le signaleme
   );
   assert.equal(action.length, 1);
   assert.equal(action[0].decision, "masquer");
-  assert.equal(action[0].moderator_id, ACTEURS.moderateurA);
+  assert.equal(action[0].moderator_id, ACTEURS.adminA);
 });
 
 test("moderation — restaurer remet le contenu en place", async (t) => {

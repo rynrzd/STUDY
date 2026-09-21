@@ -135,30 +135,61 @@ export default async function PageDevoirEleve({
         </h2>
 
         {dejaRemis ? (
-          <ul data-testid="mes-versions" className="m-0 mt-4 list-none space-y-2 p-0">
-            {remise!.versions.map((version) => (
-              <li
-                key={version.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] p-3"
+          <>
+            <ul data-testid="mes-versions" className="m-0 mt-4 list-none space-y-2 p-0">
+              {remise!.versions.map((version) => (
+                <li
+                  key={version.id}
+                  data-testid="ma-version"
+                  data-numero={version.numero}
+                  data-courante={version.estLaDerniere ? "oui" : "non"}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] p-3"
+                >
+                  <span className="min-w-0 text-[length:var(--text-tableau)]">
+                    Version {version.numero} — {instantLisible(version.remisLe)}
+                    {version.enRetard ? (
+                      <span className="ml-2 text-[color:var(--color-erreur)]">en retard</span>
+                    ) : null}
+                    <span className="mt-0.5 block font-mono text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
+                      {version.reference}
+                      {version.nomFichier !== null ? ` · ${version.nomFichier}` : ""}
+                    </span>
+                  </span>
+
+                  {/* Seule la version courante se télécharge. Deux copies
+                      téléchargeables, ce serait deux réponses à « qu'est-ce
+                      que j'ai rendu ? » — et la ligne reste, elle, parce
+                      qu'une copie remise ne s'efface pas. */}
+                  {version.estLaDerniere && version.fichier !== null ? (
+                    <a
+                      href={`/documents/${version.fichier}`}
+                      data-testid="telecharger-ma-copie"
+                      className="bouton bouton-secondaire bouton-compact print:hidden"
+                    >
+                      Télécharger
+                    </a>
+                  ) : (
+                    <span
+                      data-testid="version-remplacee"
+                      className="text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]"
+                    >
+                      Remplacée
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+
+            <p className="m-0 mt-4 print:hidden">
+              <Link
+                href={`/eleve/devoirs/${identifiant}/preuve`}
+                data-testid="voir-preuve"
+                className="bouton bouton-secondaire bouton-compact"
               >
-                <span className="text-[length:var(--text-tableau)]">
-                  Version {version.numero} — {instantLisible(version.remisLe)}
-                  {version.enRetard ? (
-                    <span className="ml-2 text-[color:var(--color-erreur)]">en retard</span>
-                  ) : null}
-                </span>
-                {version.fichier !== null ? (
-                  <a
-                    href={`/documents/${version.fichier}`}
-                    data-testid="telecharger-ma-copie"
-                    className="bouton bouton-secondaire bouton-compact"
-                  >
-                    Télécharger
-                  </a>
-                ) : null}
-              </li>
-            ))}
-          </ul>
+                Ma preuve de remise
+              </Link>
+            </p>
+          </>
         ) : null}
 
         <div className="mt-5">
