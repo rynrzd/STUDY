@@ -53,10 +53,20 @@ export const PROMESSES = [
   { promesse: "Publié avec sa séance", scenario: "DEPOT_02" },
   { promesse: "Case « fait »", scenario: "FAIT_01" },
 
+  // --- Ramasser et corriger -----------------------------------------------
+  { promesse: "Remise de la copie", scenario: "DEPOT_06" },
+  { promesse: "Remplacement sans perte", scenario: "DEPOT_10" },
+  { promesse: "Remise sur papier", scenario: "DEPOT_12" },
+  { promesse: "Suivi de la classe", scenario: "DEPOT_11" },
+  { promesse: "Correction individuelle", scenario: "CORRECTION_01" },
+  { promesse: "Correction pour la classe", scenario: "CORRECTION_05" },
+  { promesse: "Ce qui vous concerne", scenario: "NOUVEAUTE_01" },
+
   // --- Entraide -----------------------------------------------------------
   { promesse: "Questions sur le cours", scenario: "ENTRAIDE_01" },
   { promesse: "Groupes de travail", scenario: null, preuve: "tests RLS E01 et E02 : un groupe réunit les élèves d'un cours, et pas d'autres" },
   { promesse: "Jamais imprimé", scenario: "STUDIO_IMPRESSION" },
+  { promesse: "Signalement", scenario: "MODERATION_07" },
 
   // --- Administrer --------------------------------------------------------
   { promesse: "Import de rentrée", scenario: "IMPORT_01" },

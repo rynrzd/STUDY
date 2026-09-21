@@ -39,11 +39,24 @@ const FAMILLES = [
     ],
   },
   {
+    titre: "Ramasser et corriger",
+    entrees: [
+      ["Remise de la copie", "L'élève dépose son fichier. L'heure retenue est celle du serveur, jamais celle de son téléphone, et un accusé d'enregistrement lui est rendu — ce n'est pas une preuve juridique, et l'écran le dit."],
+      ["Remplacement sans perte", "Rendre une nouvelle version n'efface pas la précédente. Le professeur voit la dernière, l'historique reste."],
+      ["Remise sur papier", "Un devoir rendu en main propre se constate d'un clic, sans zone de dépôt inutile chez l'élève. Chaque changement est journalisé."],
+      ["Suivi de la classe", "La liste part des élèves, pas des copies : celui qui n'a rien rendu apparaît, au lieu de se confondre avec un absent."],
+      ["Correction individuelle", "Un commentaire et un corrigé facultatif, par élève. Le retour naît en brouillon : tant qu'il n'est pas publié, l'élève ne sait même pas qu'il existe."],
+      ["Correction pour la classe", "La même correction écrite une fois, lue par tous ceux à qui le devoir a été donné. Elle se publie séparément des retours individuels, et reste invisible avant."],
+      ["Ce qui vous concerne", "Nouveau devoir, échéance proche, correction publiée, retour sur sa copie. Dans l'application seulement : aucun courriel n'est envoyé à un élève."],
+    ],
+  },
+  {
     titre: "Entraide",
     entrees: [
       ["Questions sur le cours", "Un élève pose une question sur une séance ; ses camarades de la même classe y répondent. Le fil reste dans la classe."],
       ["Groupes de travail", "De deux à six élèves, rattachés à un cours."],
       ["Jamais imprimé", "Les discussions n'apparaissent pas sur le support imprimé : ce qu'on colle dans un cahier, c'est le cours."],
+      ["Signalement", "Un message peut être signalé. Rien n'est retiré automatiquement, et le nombre de signalements ne décide de rien : un responsable de l'établissement tranche, avec un motif écrit et conservé. Le nom de celui qui signale n'est montré ni à l'auteur ni à la classe."],
     ],
   },
   {

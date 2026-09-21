@@ -210,16 +210,22 @@ export async function scenarioModeration({ navigateur, base, terrain, sql, verif
     await eleveA.page.emulateMedia({ media: "print" });
 
     const impression = await eleveA.page.evaluate(() => {
+      // `getComputedStyle` rend le `display` **propre** de l'élément : un enfant
+      // d'un parent `display: none` calcule toujours `block`, et le contrôle
+      // concluait « toujours visible » pour une section pourtant bien masquée.
+      // `getClientRects()` est vide dès qu'un ancêtre masque — c'est ce que
+      // l'œil voit, et c'est ce qu'il faut mesurer.
       const visible = (selecteur) => {
         const element = document.querySelector(selecteur);
-        if (element === null) return false;
-        const style = getComputedStyle(element);
-        return style.display !== "none" && style.visibility !== "hidden";
+        return element !== null && element.getClientRects().length > 0;
       };
       return {
         texte: document.body.innerText,
         telechargement: visible('[data-testid="telecharger-correction-commune"]'),
         remise: visible('[data-testid="remise-formulaire"]'),
+        // Témoin : le titre de la correction, lui, doit rester visible. Sans
+        // lui, le contrôle passerait aussi si la page entière disparaissait.
+        correction: visible('[data-testid="correction-commune"]'),
       };
     });
 
@@ -230,9 +236,10 @@ export async function scenarioModeration({ navigateur, base, terrain, sql, verif
       "CORRECTION_06 — a l impression, le texte de la correction commune reste",
     );
     verifier(
-      !impression.telechargement && !impression.remise,
+      !impression.telechargement && !impression.remise && impression.correction,
       "CORRECTION_06 — a l impression, les boutons et la zone de depot disparaissent",
-      `telechargement ${impression.telechargement}, remise ${impression.remise}`,
+      `telechargement ${impression.telechargement}, remise ${impression.remise},` +
+        ` correction ${impression.correction}`,
     );
 
     /* ==================================================================== */
