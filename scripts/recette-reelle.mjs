@@ -694,7 +694,16 @@ async function journal(proprietaire) {
   const { data } = await service().rpc("admin_journal", { p_acteur: proprietaire, p_limite: 100 });
   const actions = new Set((data ?? []).map((e) => e.action));
 
-  verifier(actions.has("amorcage_exploitant"), "amorcage du proprietaire journalise");
+  // L'amorçage n'a eu lieu qu'une fois, au tout début. Le chercher dans les
+  // cent dernières entrées marchait tant que le journal était court ; il
+  // grandit à chaque recette, et l'amorçage en est sorti. On le cherche donc
+  // là où il est — dans tout le journal — au lieu de conclure qu'il manque.
+  const { count: amorcages } = await service()
+    .from("audit_events")
+    .select("id", { count: "exact", head: true })
+    .eq("action", "amorcage_exploitant");
+
+  verifier((amorcages ?? 0) >= 1, "amorcage du proprietaire journalise", `${amorcages ?? 0}`);
   verifier(actions.has("creation_etablissement"), "creation d etablissement journalisee");
   verifier(actions.has("creation_administrateur"), "creation d administrateur journalisee");
   verifier(actions.has("creation_classe"), "creation de classe journalisee");

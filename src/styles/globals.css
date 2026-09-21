@@ -269,6 +269,21 @@
     font-size: var(--text-tableau);
   }
 
+  /* Au doigt, 36 px ne suffisent pas : on rate le bouton une fois sur trois,
+     et « Se déconnecter » sur un poste partagé est précisément le geste qu'il
+     ne faut pas rater. Les boutons compacts reprennent donc la hauteur
+     confortable sur un petit écran ou sur un pointeur grossier — le texte, lui,
+     ne change pas.
+
+     Les deux conditions sont là parce qu'aucune ne suffit : un téléphone au
+     clavier Bluetooth n'annonce pas de pointeur grossier, et une tablette en
+     paysage n'est pas un petit écran. */
+  @media (max-width: 640px), (pointer: coarse) {
+    .bouton-compact {
+      min-height: 44px;
+    }
+  }
+
   /* La flèche avance au survol : 3 px, jamais plus. */
   .fleche { transition: transform 180ms ease; }
   .bouton:hover .fleche,

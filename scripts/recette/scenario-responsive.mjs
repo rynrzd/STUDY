@@ -99,12 +99,31 @@ async function mesurer(page) {
       }
     }
 
-    /** Un élément interactif hors de l'écran à gauche ou à droite. */
+    /** L'élément est-il dans un conteneur prévu pour défiler ? */
+    const dansUnDefilement = (element) => {
+      let parent = element.parentElement;
+      while (parent !== null && parent !== document.body) {
+        const style = getComputedStyle(parent);
+        if (style.overflowX === "auto" || style.overflowX === "scroll") return true;
+        parent = parent.parentElement;
+      }
+      return false;
+    };
+
+    /**
+     * Un élément interactif hors de l'écran, et hors d'atteinte.
+     *
+     * La barre de navigation défile horizontalement : un onglet qui dépasse y
+     * reste parfaitement atteignable, et le signaler comme « hors écran »
+     * accusait une bonne pratique. Seul ce qui dépasse **sans** pouvoir être
+     * ramené compte.
+     */
     const horsEcran = [];
     for (const element of document.querySelectorAll("a, button")) {
       const boite = element.getBoundingClientRect();
       if (boite.width === 0 || boite.height === 0) continue;
       if (cacheJusquAuFocus(element)) continue;
+      if (dansUnDefilement(element)) continue;
       if (boite.left < -1 || boite.right > largeur + 1) {
         horsEcran.push((element.textContent ?? "").trim().slice(0, 24));
       }

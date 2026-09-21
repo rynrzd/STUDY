@@ -30,10 +30,10 @@ function demandeValide(marque) {
     etablissement: `Lycee de recette ${marque}`,
     commune: "Roubaix",
     effectif: "900",
-    nom: "Claude Martin",
-    fonction: "Proviseur",
-    email: `demande.${marque.toLowerCase()}@exemple.invalid`,
-    telephone: "0320000000",
+    contactNom: "Claude Martin",
+    contactFonction: "Proviseur",
+    contactEmail: `demande.${marque.toLowerCase()}@exemple.invalid`,
+    contactTelephone: "0320000000",
     besoin:
       "Nous cherchons a organiser les devoirs de seconde pour la rentree.",
   };
@@ -109,23 +109,28 @@ export async function scenarioDemande({ navigateur, base, sql, verifier }) {
   try {
     /* --- Les cas qui doivent être refusés ---------------------------------- */
 
+    // Chaque cas dit **quel** message doit apparaître. Sans cela, un refus
+    // obtenu pour une autre raison — un champ que le script remplit mal, un
+    // filtre anti-robot — passe pour une validation réussie. C'est arrivé deux
+    // fois : d'abord le délai de trois secondes, puis des noms de champs faux
+    // qui laissaient trois champs obligatoires vides à chaque tour.
     const casDeRefus = [
-      ["formulaire entierement vide", {}, false],
-      ["etablissement manquant", { etablissement: "" }, true],
-      ["commune manquante", { commune: "" }, true],
-      ["nom du contact manquant", { nom: "" }, true],
-      ["fonction manquante", { fonction: "" }, true],
-      ["adresse manquante", { email: "" }, true],
-      ["besoin manquant", { besoin: "" }, true],
-      ["adresse invalide", { email: "pas-une-adresse" }, true],
-      ["besoin trop court", { besoin: "?" }, true],
-      ["telephone invalide", { telephone: "pas-un-numero" }, true],
-      ["effectif negatif", { effectif: "-40" }, true],
-      ["effectif decimal", { effectif: "12,5" }, true],
-      ["effectif demesure", { effectif: "900000" }, true],
+      ["formulaire entierement vide", {}, false, "Indiquez le nom de l'établissement."],
+      ["etablissement manquant", { etablissement: "" }, true, "Indiquez le nom de l'établissement."],
+      ["commune manquante", { commune: "" }, true, "Indiquez la commune."],
+      ["nom du contact manquant", { contactNom: "" }, true, "Indiquez votre nom."],
+      ["fonction manquante", { contactFonction: "" }, true, "Indiquez votre fonction."],
+      ["adresse manquante", { contactEmail: "" }, true, "adresse professionnelle valide"],
+      ["besoin manquant", { besoin: "" }, true, "Décrivez votre besoin"],
+      ["adresse invalide", { contactEmail: "pas-une-adresse" }, true, "adresse professionnelle valide"],
+      ["besoin trop court", { besoin: "?" }, true, "Décrivez votre besoin"],
+      ["telephone invalide", { contactTelephone: "pas-un-numero" }, true, "numéro de téléphone"],
+      ["effectif negatif", { effectif: "-40" }, true, "nombre d'élèves"],
+      ["effectif decimal", { effectif: "12,5" }, true, "nombre d'élèves"],
+      ["effectif demesure", { effectif: "900000" }, true, "nombre d'élèves"],
     ];
 
-    for (const [libelle, ecart, avecConsentement] of casDeRefus) {
+    for (const [libelle, ecart, avecConsentement, attendu] of casDeRefus) {
       await exigerPage(page, base, "/etablissements", {
         marqueur: '[data-testid="demande-formulaire"]',
       });
@@ -142,17 +147,16 @@ export async function scenarioDemande({ navigateur, base, sql, verifier }) {
       const verdict = await refus(page);
       const apres = await compter();
 
-      // Le champ vide du formulaire entierement vide est signale au champ ;
-      // le reste aussi. Un refus qui ne se manifeste que globalement ne dit
-      // pas a la personne quoi corriger — et pourrait venir d autre chose.
+      const surLeBonChamp = verdict.auChamp.some((texte) => texte.includes(attendu));
+
       verifier(
-        verdict.refuse && apres === avant && verdict.auChamp.length > 0,
+        verdict.refuse && apres === avant && surLeBonChamp,
         `refus : ${libelle}`,
-        verdict.refuse
-          ? verdict.auChamp.length === 0
-            ? `refus global seulement : « ${verdict.global.join(" / ").slice(0, 70)} »`
-            : ""
-          : "aucun message d erreur, et rien n a ete refuse",
+        !verdict.refuse
+          ? "aucun message d erreur, et rien n a ete refuse"
+          : surLeBonChamp
+            ? ""
+            : `refuse, mais pas sur le champ vise — attendu « ${attendu} », obtenu « ${verdict.auChamp.join(" / ").slice(0, 90)} »`,
       );
     }
 

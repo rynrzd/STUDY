@@ -88,10 +88,27 @@ function lancer(nom, arguments_) {
   });
 }
 
-/** La dernière ligne utile d'une sortie, pour un compte-rendu lisible. */
+/**
+ * Ce qu'il faut retenir d'une sortie : d'abord ce qui a échoué.
+ *
+ * Garder seulement la dernière ligne donnait « 2 defaut(s) » sans jamais dire
+ * lesquels : il fallait rejouer la suite à la main pour le savoir. Un rapport
+ * qui oblige à refaire le travail pour être compris n'est pas un rapport.
+ */
 function resume(sortie) {
-  const lignes = sortie.split(/\r?\n/).filter((ligne) => ligne.trim() !== "");
-  return lignes.slice(-1)[0]?.trim().slice(0, 100) ?? "";
+  const lignes = sortie.split(/\r?\n/).map((ligne) => ligne.trim());
+
+  const fautes = lignes.filter(
+    (ligne) => ligne.startsWith("NON ") || ligne.startsWith("ECHEC") || ligne.includes("CRITIQUE"),
+  );
+  if (fautes.length > 0) {
+    const tete = fautes.slice(0, 4).join(" | ");
+    const reste = fautes.length > 4 ? ` (+${fautes.length - 4})` : "";
+    return `${tete}${reste}`.slice(0, 600);
+  }
+
+  const utiles = lignes.filter((ligne) => ligne !== "");
+  return utiles.slice(-1)[0]?.slice(0, 120) ?? "";
 }
 
 /* -------------------------------------------------------------------------- */
