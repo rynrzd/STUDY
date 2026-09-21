@@ -54,6 +54,11 @@ const FORMES = [
   ["acces", "organization_memberships", "profile_id, local_login, roles, account_state"],
   ["administration", "commercial_requests", "id, reference, state"],
   ["documents", "files", "id, display_name, mime_detected, byte_size, state"],
+  ["devoirs", "assignment_corrections", "id, body, file_id, published_at, updated_at"],
+  ["moderation", "reports", "id, reason, detail, state, created_at, fil_id, reponse_id, reporter_id"],
+  ["moderation", "fils_entraide", "id, question, auteur_id, masque_le, teaching_space_id"],
+  ["moderation", "reponses_entraide", "id, texte, auteur_id, masque_le, fil_id"],
+  ["nouveautes", "nouveautes", "id, genre, objet, contexte, created_at, lu_le"],
 ];
 
 const client = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY, {

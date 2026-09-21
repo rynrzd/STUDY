@@ -150,6 +150,7 @@ console.log("\nChaque scénario nommé existe dans les recettes");
 
 const sources = [
   "scripts/recette/scenario-remises.mjs",
+  "scripts/recette/scenario-moderation.mjs",
   "scripts/recette/scenario-studio.mjs",
   "scripts/recette/scenario-classe.mjs",
   "scripts/recette/scenario-import.mjs",

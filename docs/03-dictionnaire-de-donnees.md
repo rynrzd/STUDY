@@ -3,7 +3,7 @@
 > Fichier **généré** par `npm run db:dictionnaire` à partir des migrations.
 > Ne pas le modifier à la main : toute correction se fait dans `supabase/migrations/`.
 
-Schémas `study` (données pédagogiques) et `study_prive` (sessions, jetons, jobs) — 59 tables, 118 politiques RLS.
+Schémas `study` (données pédagogiques) et `study_prive` (sessions, jetons, jobs) — 68 tables, 144 politiques RLS.
 
 Conventions communes :
 
@@ -554,7 +554,47 @@ Conventions communes :
 - `content_versions_org_id_unique`
 - `content_versions_pkey`
 
-**Politiques RLS** : `content_versions_read` (SELECT), `content_versions_write` (ALL)
+**Politiques RLS** : `content_versions_read` (SELECT), `content_versions_studio_read` (SELECT), `content_versions_write` (ALL)
+
+### `study.studio_documents`
+
+| Colonne | Type | Null | Défaut | Note |
+|---|---|---|---|---|
+| `id` | uuid | non | `gen_random_uuid()` |  |
+| `organization_id` | uuid | non | — |  |
+| `owner_id` | uuid | non | — |  |
+| `title` | text | non | — |  |
+| `source_file_id` | uuid | oui | — |  |
+| `state` | etat_document_studio | non | `'importe'::study.etat_document_…` |  |
+| `current_revision_id` | uuid | oui | — |  |
+| `erreur` | text | oui | — |  |
+| `created_at` | timestamptz | non | `now()` |  |
+| `updated_at` | timestamptz | non | `now()` |  |
+| `archived_at` | timestamptz | oui | — |  |
+
+**Contraintes**
+
+- `studio_documents_created_at_not_null` — `NOT NULL created_at`
+- `studio_documents_echec_explique` — `CHECK (((state <> 'echec'::study.etat_document_studio) OR (erreur IS NOT NULL)))`
+- `studio_documents_id_not_null` — `NOT NULL id`
+- `studio_documents_org_id_unique` — `UNIQUE (organization_id, id)`
+- `studio_documents_organization_id_fkey` — `FOREIGN KEY (organization_id) REFERENCES study.organizations(id) ON DELETE RESTRICT`
+- `studio_documents_organization_id_not_null` — `NOT NULL organization_id`
+- `studio_documents_owner_fk` — `FOREIGN KEY (organization_id, owner_id) REFERENCES study.organization_memberships(organization_id, profile_id) ON DELETE RESTRICT`
+- `studio_documents_owner_id_not_null` — `NOT NULL owner_id`
+- `studio_documents_revision_fk` — `FOREIGN KEY (organization_id, current_revision_id) REFERENCES study.content_versions(organization_id, id) ON DELETE SET NULL`
+- `studio_documents_source_fk` — `FOREIGN KEY (organization_id, source_file_id) REFERENCES study.files(organization_id, id) ON DELETE SET NULL`
+- `studio_documents_state_not_null` — `NOT NULL state`
+- `studio_documents_title_not_null` — `NOT NULL title`
+- `studio_documents_titre_present` — `CHECK ((length(btrim(title)) > 0))`
+- `studio_documents_updated_at_not_null` — `NOT NULL updated_at`
+
+**Unicité**
+
+- `studio_documents_org_id_unique`
+- `studio_documents_pkey`
+
+**Politiques RLS** : `studio_documents_owner` (ALL)
 
 ### `study.lessons`
 
@@ -577,6 +617,7 @@ Conventions communes :
 | `created_by` | uuid | non | — |  |
 | `created_at` | timestamptz | non | `now()` |  |
 | `updated_at` | timestamptz | non | `now()` |  |
+| `origin_studio_document` | uuid | oui | — |  |
 
 **Contraintes**
 
@@ -588,6 +629,7 @@ Conventions communes :
 - `lessons_id_not_null` — `NOT NULL id`
 - `lessons_org_id_unique` — `UNIQUE (organization_id, id)`
 - `lessons_organization_id_not_null` — `NOT NULL organization_id`
+- `lessons_origine_studio_fk` — `FOREIGN KEY (organization_id, origin_studio_document) REFERENCES study.studio_documents(organization_id, id) ON DELETE SET NULL`
 - `lessons_published_needs_date` — `CHECK (((state <> 'publiee'::study.lesson_state) OR (published_at IS NOT NULL)))`
 - `lessons_published_needs_version` — `CHECK (((state = 'brouillon'::study.lesson_state) OR (content_version_id IS NOT NULL)))`
 - `lessons_scheduled_needs_date` — `CHECK (((state <> 'programmee'::study.lesson_state) OR (scheduled_for IS NOT NULL)))`
@@ -602,8 +644,63 @@ Conventions communes :
 
 - `lessons_org_id_unique`
 - `lessons_pkey`
+- `lessons_studio_unique`
 
 **Politiques RLS** : `lessons_student_read` (SELECT), `lessons_teacher` (ALL)
+
+### `study.lesson_blocks`
+
+> Contenu d une seance, un bloc par ligne. Reordonnable sans reecrire la seance entiere.
+
+| Colonne | Type | Null | Défaut | Note |
+|---|---|---|---|---|
+| `id` | uuid | non | `gen_random_uuid()` |  |
+| `organization_id` | uuid | non | — |  |
+| `lesson_id` | uuid | non | — |  |
+| `kind` | type_bloc | non | — |  |
+| `position` | integer | non | `0` |  |
+| `contenu` | jsonb | non | `'{}'::jsonb` |  |
+| `file_id` | uuid | oui | — |  |
+| `assignment_id` | uuid | oui | — |  |
+| `created_by` | uuid | non | — |  |
+| `created_at` | timestamptz | non | `now()` |  |
+| `updated_at` | timestamptz | non | `now()` |  |
+
+**Contraintes**
+
+- `lesson_blocks_assignment_fk` — `FOREIGN KEY (organization_id, assignment_id) REFERENCES study.assignments(organization_id, id) ON DELETE SET NULL`
+- `lesson_blocks_contenu_attendu` — `CHECK (
+CASE kind
+    WHEN 'texte'::study.type_bloc THEN (contenu ? 'texte'::text)
+    WHEN 'lien'::study.type_bloc THEN ((contenu ? 'url'::text) AND ((contenu ->> 'url'::text) ~ '^https?://'::text))
+    WHEN 'document'::study.type_bloc THEN (file_id IS NOT NULL)
+    WHEN 'exercice'::study.type_bloc THEN (contenu ? 'consigne'::text)
+    WHEN 'devoir'::study.type_bloc THEN (assignment_id IS NOT NULL)
+    ELSE NULL::boolean
+END)`
+- `lesson_blocks_contenu_not_null` — `NOT NULL contenu`
+- `lesson_blocks_contenu_objet` — `CHECK ((jsonb_typeof(contenu) = 'object'::text))`
+- `lesson_blocks_created_at_not_null` — `NOT NULL created_at`
+- `lesson_blocks_created_by_not_null` — `NOT NULL created_by`
+- `lesson_blocks_file_fk` — `FOREIGN KEY (organization_id, file_id) REFERENCES study.files(organization_id, id) ON DELETE SET NULL`
+- `lesson_blocks_id_not_null` — `NOT NULL id`
+- `lesson_blocks_kind_not_null` — `NOT NULL kind`
+- `lesson_blocks_lesson_fk` — `FOREIGN KEY (organization_id, lesson_id) REFERENCES study.lessons(organization_id, id) ON DELETE CASCADE`
+- `lesson_blocks_lesson_id_not_null` — `NOT NULL lesson_id`
+- `lesson_blocks_org_id_unique` — `UNIQUE (organization_id, id)`
+- `lesson_blocks_organization_id_not_null` — `NOT NULL organization_id`
+- `lesson_blocks_position_not_null` — `NOT NULL "position"`
+- `lesson_blocks_position_positive` — `CHECK (("position" >= 0))`
+- `lesson_blocks_rattachement_coherent` — `CHECK ((((file_id IS NULL) OR (kind = 'document'::study.type_bloc)) AND ((assignment_id IS NULL) OR (kind = 'devoir'::study.type_bloc))))`
+- `lesson_blocks_updated_at_not_null` — `NOT NULL updated_at`
+
+**Unicité**
+
+- `lesson_blocks_devoir_unique`
+- `lesson_blocks_org_id_unique`
+- `lesson_blocks_pkey`
+
+**Politiques RLS** : `lesson_blocks_student_read` (SELECT), `lesson_blocks_teacher` (ALL)
 
 ### `study.lesson_publications`
 
@@ -692,6 +789,7 @@ Conventions communes :
 | `created_by` | uuid | non | — |  |
 | `created_at` | timestamptz | non | `now()` |  |
 | `updated_at` | timestamptz | non | `now()` |  |
+| `archived_at` | timestamptz | oui | — |  |
 
 **Contraintes**
 
@@ -709,7 +807,7 @@ Conventions communes :
 - `assignments_peer_help_allowed_not_null` — `NOT NULL peer_help_allowed`
 - `assignments_space_fk` — `FOREIGN KEY (organization_id, teaching_space_id) REFERENCES study.teaching_spaces(organization_id, id) ON DELETE RESTRICT`
 - `assignments_state_not_null` — `NOT NULL state`
-- `assignments_submission_mode_check` — `CHECK ((submission_mode = ANY (ARRAY['numerique'::text, 'papier'::text, 'mixte'::text])))`
+- `assignments_submission_mode_check` — `CHECK ((submission_mode = ANY (ARRAY['numerique'::text, 'papier'::text, 'mixte'::text, 'aucune'::text])))`
 - `assignments_submission_mode_not_null` — `NOT NULL submission_mode`
 - `assignments_teaching_space_id_not_null` — `NOT NULL teaching_space_id`
 - `assignments_title_not_null` — `NOT NULL title`
@@ -751,6 +849,41 @@ Conventions communes :
 - `assignment_recipients_unique`
 
 **Politiques RLS** : `assignment_recipients_read` (SELECT), `assignment_recipients_write` (ALL)
+
+### `study.assignment_corrections`
+
+| Colonne | Type | Null | Défaut | Note |
+|---|---|---|---|---|
+| `id` | uuid | non | `gen_random_uuid()` |  |
+| `organization_id` | uuid | non | — |  |
+| `assignment_id` | uuid | non | — |  |
+| `body` | text | oui | — |  |
+| `file_id` | uuid | oui | — |  |
+| `published_at` | timestamptz | oui | — |  |
+| `created_by` | uuid | non | — |  |
+| `created_at` | timestamptz | non | `now()` |  |
+| `updated_at` | timestamptz | non | `now()` |  |
+
+**Contraintes**
+
+- `assignment_corrections_assignment_id_not_null` — `NOT NULL assignment_id`
+- `assignment_corrections_created_at_not_null` — `NOT NULL created_at`
+- `assignment_corrections_created_by_not_null` — `NOT NULL created_by`
+- `assignment_corrections_devoir_fk` — `FOREIGN KEY (organization_id, assignment_id) REFERENCES study.assignments(organization_id, id) ON DELETE CASCADE`
+- `assignment_corrections_file_fk` — `FOREIGN KEY (organization_id, file_id) REFERENCES study.files(organization_id, id) ON DELETE RESTRICT`
+- `assignment_corrections_id_not_null` — `NOT NULL id`
+- `assignment_corrections_non_vide` — `CHECK (((length(btrim(COALESCE(body, ''::text))) > 0) OR (file_id IS NOT NULL)))`
+- `assignment_corrections_org_id_unique` — `UNIQUE (organization_id, id)`
+- `assignment_corrections_organization_id_not_null` — `NOT NULL organization_id`
+- `assignment_corrections_updated_at_not_null` — `NOT NULL updated_at`
+
+**Unicité**
+
+- `assignment_corrections_org_id_unique`
+- `assignment_corrections_pkey`
+- `assignment_corrections_une_par_devoir`
+
+**Politiques RLS** : `corrections_communes_eleve` (SELECT), `corrections_communes_professeur` (ALL)
 
 ### `study.submissions`
 
@@ -802,10 +935,12 @@ Conventions communes :
 | `submitted_at` | timestamptz | non | `now()` |  |
 | `late` | boolean | non | `false` |  |
 | `idempotency_key` | text | oui | — |  |
+| `file_id` | uuid | oui | — |  |
 
 **Contraintes**
 
 - `submission_versions_body_not_null` — `NOT NULL body`
+- `submission_versions_file_fk` — `FOREIGN KEY (organization_id, file_id) REFERENCES study.files(organization_id, id) ON DELETE RESTRICT`
 - `submission_versions_id_not_null` — `NOT NULL id`
 - `submission_versions_late_not_null` — `NOT NULL late`
 - `submission_versions_org_id_unique` — `UNIQUE (organization_id, id)`
@@ -839,11 +974,13 @@ Conventions communes :
 | `created_by` | uuid | non | — |  |
 | `created_at` | timestamptz | non | `now()` |  |
 | `updated_at` | timestamptz | non | `now()` |  |
+| `file_id` | uuid | oui | — |  |
 
 **Contraintes**
 
 - `feedback_created_at_not_null` — `NOT NULL created_at`
 - `feedback_created_by_not_null` — `NOT NULL created_by`
+- `feedback_file_fk` — `FOREIGN KEY (organization_id, file_id) REFERENCES study.files(organization_id, id) ON DELETE RESTRICT`
 - `feedback_id_not_null` — `NOT NULL id`
 - `feedback_org_id_unique` — `UNIQUE (organization_id, id)`
 - `feedback_organization_id_not_null` — `NOT NULL organization_id`
@@ -859,7 +996,7 @@ Conventions communes :
 - `feedback_pkey`
 - `feedback_version_key`
 
-**Politiques RLS** : `feedback_student_read` (SELECT), `feedback_teacher` (ALL)
+**Politiques RLS** : `feedback_eleve_lecture` (SELECT), `feedback_student_read` (SELECT), `feedback_teacher` (ALL)
 
 ### `study.annotations`
 
@@ -1106,6 +1243,77 @@ Conventions communes :
 
 ## Entraide et modération
 
+### `study.fils_entraide`
+
+| Colonne | Type | Null | Défaut | Note |
+|---|---|---|---|---|
+| `id` | uuid | non | `gen_random_uuid()` |  |
+| `organization_id` | uuid | non | — |  |
+| `teaching_space_id` | uuid | non | — |  |
+| `lesson_id` | uuid | non | — |  |
+| `block_id` | uuid | oui | — |  |
+| `auteur_id` | uuid | non | — |  |
+| `question` | text | non | — |  |
+| `resolu_le` | timestamptz | oui | — |  |
+| `masque_le` | timestamptz | oui | — |  |
+| `created_at` | timestamptz | non | `now()` |  |
+
+**Contraintes**
+
+- `fils_auteur_fk` — `FOREIGN KEY (organization_id, auteur_id) REFERENCES study.organization_memberships(organization_id, profile_id) ON DELETE RESTRICT`
+- `fils_entraide_auteur_id_not_null` — `NOT NULL auteur_id`
+- `fils_entraide_created_at_not_null` — `NOT NULL created_at`
+- `fils_entraide_id_not_null` — `NOT NULL id`
+- `fils_entraide_lesson_id_not_null` — `NOT NULL lesson_id`
+- `fils_entraide_organization_id_not_null` — `NOT NULL organization_id`
+- `fils_entraide_question_not_null` — `NOT NULL question`
+- `fils_entraide_teaching_space_id_not_null` — `NOT NULL teaching_space_id`
+- `fils_espace_fk` — `FOREIGN KEY (organization_id, teaching_space_id) REFERENCES study.teaching_spaces(organization_id, id) ON DELETE CASCADE`
+- `fils_org_id_unique` — `UNIQUE (organization_id, id)`
+- `fils_question_presente` — `CHECK (((length(btrim(question)) >= 3) AND (length(btrim(question)) <= 1000)))`
+- `fils_seance_fk` — `FOREIGN KEY (organization_id, lesson_id) REFERENCES study.lessons(organization_id, id) ON DELETE CASCADE`
+
+**Unicité**
+
+- `fils_entraide_pkey`
+- `fils_org_id_unique`
+
+**Politiques RLS** : `fils_ecriture` (INSERT), `fils_lecture` (SELECT), `fils_moderation` (UPDATE)
+
+### `study.reponses_entraide`
+
+| Colonne | Type | Null | Défaut | Note |
+|---|---|---|---|---|
+| `id` | uuid | non | `gen_random_uuid()` |  |
+| `organization_id` | uuid | non | — |  |
+| `fil_id` | uuid | non | — |  |
+| `auteur_id` | uuid | non | — |  |
+| `texte` | text | non | — |  |
+| `utile` | boolean | non | `false` |  |
+| `masque_le` | timestamptz | oui | — |  |
+| `created_at` | timestamptz | non | `now()` |  |
+
+**Contraintes**
+
+- `reponses_auteur_fk` — `FOREIGN KEY (organization_id, auteur_id) REFERENCES study.organization_memberships(organization_id, profile_id) ON DELETE RESTRICT`
+- `reponses_entraide_auteur_id_not_null` — `NOT NULL auteur_id`
+- `reponses_entraide_created_at_not_null` — `NOT NULL created_at`
+- `reponses_entraide_fil_id_not_null` — `NOT NULL fil_id`
+- `reponses_entraide_id_not_null` — `NOT NULL id`
+- `reponses_entraide_organization_id_not_null` — `NOT NULL organization_id`
+- `reponses_entraide_texte_not_null` — `NOT NULL texte`
+- `reponses_entraide_utile_not_null` — `NOT NULL utile`
+- `reponses_fil_fk` — `FOREIGN KEY (organization_id, fil_id) REFERENCES study.fils_entraide(organization_id, id) ON DELETE CASCADE`
+- `reponses_org_id_unique` — `UNIQUE (organization_id, id)`
+- `reponses_texte_present` — `CHECK (((length(btrim(texte)) >= 1) AND (length(btrim(texte)) <= 2000)))`
+
+**Unicité**
+
+- `reponses_entraide_pkey`
+- `reponses_org_id_unique`
+
+**Politiques RLS** : `reponses_ecriture` (INSERT), `reponses_lecture` (SELECT), `reponses_moderation` (UPDATE)
+
 ### `study.workgroups`
 
 | Colonne | Type | Null | Défaut | Note |
@@ -1275,11 +1483,31 @@ Conventions communes :
 | `detail` | text | oui | — |  |
 | `state` | report_state | non | `'ouvert'::study.report_state` |  |
 | `created_at` | timestamptz | non | `now()` |  |
+| `fil_id` | uuid | oui | — |  |
+| `reponse_id` | uuid | oui | — |  |
 
 **Contraintes**
 
+- `reports_cible_unique` — `CHECK (((((
+CASE
+    WHEN (message_id IS NOT NULL) THEN 1
+    ELSE 0
+END +
+CASE
+    WHEN (shared_document_id IS NOT NULL) THEN 1
+    ELSE 0
+END) +
+CASE
+    WHEN (fil_id IS NOT NULL) THEN 1
+    ELSE 0
+END) +
+CASE
+    WHEN (reponse_id IS NOT NULL) THEN 1
+    ELSE 0
+END) = 1))`
 - `reports_created_at_not_null` — `NOT NULL created_at`
 - `reports_document_fk` — `FOREIGN KEY (organization_id, shared_document_id) REFERENCES study.shared_documents(organization_id, id) ON DELETE SET NULL`
+- `reports_fil_fk` — `FOREIGN KEY (organization_id, fil_id) REFERENCES study.fils_entraide(organization_id, id) ON DELETE CASCADE`
 - `reports_id_not_null` — `NOT NULL id`
 - `reports_message_fk` — `FOREIGN KEY (organization_id, message_id) REFERENCES study.messages(organization_id, id) ON DELETE SET NULL`
 - `reports_org_id_unique` — `UNIQUE (organization_id, id)`
@@ -1287,16 +1515,19 @@ Conventions communes :
 - `reports_organization_id_not_null` — `NOT NULL organization_id`
 - `reports_reason_check` — `CHECK ((reason = ANY (ARRAY['harcelement'::text, 'contenu_inapproprie'::text, 'hors_sujet'::text, 'autre'::text])))`
 - `reports_reason_not_null` — `NOT NULL reason`
+- `reports_reponse_fk` — `FOREIGN KEY (organization_id, reponse_id) REFERENCES study.reponses_entraide(organization_id, id) ON DELETE CASCADE`
 - `reports_reporter_id_not_null` — `NOT NULL reporter_id`
 - `reports_state_not_null` — `NOT NULL state`
-- `reports_target` — `CHECK (((message_id IS NOT NULL) OR (shared_document_id IS NOT NULL)))`
+- `reports_target` — `CHECK (((message_id IS NOT NULL) OR (shared_document_id IS NOT NULL) OR (fil_id IS NOT NULL) OR (reponse_id IS NOT NULL)))`
 
 **Unicité**
 
 - `reports_org_id_unique`
 - `reports_pkey`
+- `reports_une_fois_par_fil`
+- `reports_une_fois_par_reponse`
 
-**Politiques RLS** : `reports_author` (SELECT), `reports_create` (INSERT), `reports_moderator` (ALL)
+**Politiques RLS** : `reports_auteur_lecture` (SELECT), `reports_moderation` (ALL), `reports_signaler` (INSERT)
 
 ### `study.moderation_actions`
 
@@ -1327,7 +1558,92 @@ Conventions communes :
 
 - `moderation_actions_pkey`
 
-**Politiques RLS** : `moderation_actions_moderator` (ALL)
+**Politiques RLS** : `moderation_actions_moderation` (ALL)
+
+## Suivi de l'élève
+
+### `study.travaux_faits`
+
+| Colonne | Type | Null | Défaut | Note |
+|---|---|---|---|---|
+| `id` | uuid | non | `gen_random_uuid()` |  |
+| `organization_id` | uuid | non | — |  |
+| `assignment_id` | uuid | non | — |  |
+| `profile_id` | uuid | non | — |  |
+| `fait_le` | timestamptz | non | `now()` |  |
+
+**Contraintes**
+
+- `travaux_faits_assignment_id_not_null` — `NOT NULL assignment_id`
+- `travaux_faits_devoir_fk` — `FOREIGN KEY (organization_id, assignment_id) REFERENCES study.assignments(organization_id, id) ON DELETE CASCADE`
+- `travaux_faits_fait_le_not_null` — `NOT NULL fait_le`
+- `travaux_faits_id_not_null` — `NOT NULL id`
+- `travaux_faits_membre_fk` — `FOREIGN KEY (organization_id, profile_id) REFERENCES study.organization_memberships(organization_id, profile_id) ON DELETE CASCADE`
+- `travaux_faits_organization_id_not_null` — `NOT NULL organization_id`
+- `travaux_faits_profile_id_not_null` — `NOT NULL profile_id`
+- `travaux_faits_unique` — `UNIQUE (assignment_id, profile_id)`
+
+**Unicité**
+
+- `travaux_faits_pkey`
+- `travaux_faits_unique`
+
+**Politiques RLS** : `travaux_faits_eleve` (ALL)
+
+### `study.visites`
+
+| Colonne | Type | Null | Défaut | Note |
+|---|---|---|---|---|
+| `profile_id` | uuid | non | — |  |
+| `organization_id` | uuid | non | — |  |
+| `precedente` | timestamptz | oui | — |  |
+| `derniere` | timestamptz | non | `now()` |  |
+
+**Contraintes**
+
+- `visites_derniere_not_null` — `NOT NULL derniere`
+- `visites_organization_id_not_null` — `NOT NULL organization_id`
+- `visites_profile_id_fkey` — `FOREIGN KEY (profile_id) REFERENCES study.profiles(id) ON DELETE CASCADE`
+- `visites_profile_id_not_null` — `NOT NULL profile_id`
+
+**Unicité**
+
+- `visites_pkey`
+
+**Politiques RLS** : `visites_soi` (SELECT)
+
+### `study.nouveautes`
+
+| Colonne | Type | Null | Défaut | Note |
+|---|---|---|---|---|
+| `id` | uuid | non | `gen_random_uuid()` |  |
+| `organization_id` | uuid | non | — |  |
+| `profile_id` | uuid | non | — |  |
+| `genre` | text | non | — |  |
+| `objet` | uuid | non | — |  |
+| `contexte` | jsonb | non | `'{}'::jsonb` |  |
+| `created_at` | timestamptz | non | `now()` |  |
+| `lu_le` | timestamptz | oui | — |  |
+
+**Contraintes**
+
+- `nouveautes_contexte_not_null` — `NOT NULL contexte`
+- `nouveautes_created_at_not_null` — `NOT NULL created_at`
+- `nouveautes_genre_check` — `CHECK ((genre = ANY (ARRAY['devoir_publie'::text, 'echeance_proche'::text, 'correction_publiee'::text, 'retour_individuel'::text, 'devoir_modifie'::text])))`
+- `nouveautes_genre_not_null` — `NOT NULL genre`
+- `nouveautes_id_not_null` — `NOT NULL id`
+- `nouveautes_objet_not_null` — `NOT NULL objet`
+- `nouveautes_organization_id_fkey` — `FOREIGN KEY (organization_id) REFERENCES study.organizations(id) ON DELETE CASCADE`
+- `nouveautes_organization_id_not_null` — `NOT NULL organization_id`
+- `nouveautes_profile_id_fkey` — `FOREIGN KEY (profile_id) REFERENCES study.profiles(id) ON DELETE CASCADE`
+- `nouveautes_profile_id_not_null` — `NOT NULL profile_id`
+
+**Unicité**
+
+- `nouveautes_pkey`
+- `nouveautes_sans_doublon`
+
+**Politiques RLS** : `nouveautes_marquer_lue` (UPDATE), `nouveautes_soi` (SELECT)
 
 ## Exploitation
 
@@ -1361,7 +1677,7 @@ Conventions communes :
 
 **Contraintes**
 
-- `files_attached_kind_check` — `CHECK ((attached_kind = ANY (ARRAY['support_seance'::text, 'consigne_devoir'::text, 'copie'::text, 'message'::text, 'rapport_import'::text, 'fiche_acces'::text])))`
+- `files_attached_kind_check` — `CHECK ((attached_kind = ANY (ARRAY['support_seance'::text, 'consigne_devoir'::text, 'copie'::text, 'correction'::text, 'message'::text, 'rapport_import'::text, 'fiche_acces'::text])))`
 - `files_bucket_check` — `CHECK ((bucket = ANY (ARRAY['course-materials'::text, 'student-submissions'::text, 'import-quarantine'::text, 'generated-exports'::text])))`
 - `files_bucket_not_null` — `NOT NULL bucket`
 - `files_byte_size_check` — `CHECK ((byte_size >= 0))`
@@ -1385,7 +1701,7 @@ Conventions communes :
 - `files_pkey`
 - `files_storage_key_unique`
 
-**Politiques RLS** : `files_owner_insert` (INSERT), `files_owner_read` (SELECT), `files_teacher_read` (SELECT)
+**Politiques RLS** : `files_consigne_eleve` (SELECT), `files_consigne_professeur` (SELECT), `files_correction_commune_eleve` (SELECT), `files_correction_eleve` (SELECT), `files_correction_professeur` (SELECT), `files_owner_insert` (INSERT), `files_owner_read` (SELECT), `files_owner_retirer` (UPDATE), `files_support_student` (SELECT), `files_support_teacher` (SELECT), `files_teacher_read` (SELECT)
 
 ### `study.storage_buckets_attendus`
 
@@ -1434,10 +1750,17 @@ Conventions communes :
 | `finished_at` | timestamptz | oui | — |  |
 | `created_at` | timestamptz | non | `now()` |  |
 | `purge_after` | timestamptz | oui | — |  |
+| `batch_id` | uuid | oui | — |  |
+| `file_name` | text | oui | — |  |
+| `classe_detectee` | text | oui | — |  |
+| `classe_source` | text | oui | — |  |
+| `mapping` | jsonb | oui | — |  |
 
 **Contraintes**
 
 - `import_jobs_academic_year_id_not_null` — `NOT NULL academic_year_id`
+- `import_jobs_batch_fk` — `FOREIGN KEY (organization_id, batch_id) REFERENCES study.import_batches(organization_id, id) ON DELETE CASCADE`
+- `import_jobs_classe_source_check` — `CHECK (((classe_source IS NULL) OR (classe_source = ANY (ARRAY['fichier'::text, 'colonne'::text, 'saisie'::text]))))`
 - `import_jobs_created_at_not_null` — `NOT NULL created_at`
 - `import_jobs_created_by_not_null` — `NOT NULL created_by`
 - `import_jobs_file_fk` — `FOREIGN KEY (organization_id, source_file_id) REFERENCES study.files(organization_id, id) ON DELETE SET NULL`
@@ -1458,9 +1781,44 @@ Conventions communes :
 - `import_jobs_idempotency_key`
 - `import_jobs_org_id_unique`
 - `import_jobs_pkey`
-- `import_jobs_single_active`
 
 **Politiques RLS** : `import_jobs_admin` (ALL), `import_jobs_editeur` (SELECT)
+
+### `study.import_batches`
+
+| Colonne | Type | Null | Défaut | Note |
+|---|---|---|---|---|
+| `id` | uuid | non | `gen_random_uuid()` |  |
+| `organization_id` | uuid | non | — |  |
+| `academic_year_id` | uuid | non | — |  |
+| `kind` | text | non | — |  |
+| `state` | etat_lot | non | `'analyse'::study.etat_lot` |  |
+| `created_by` | uuid | non | — |  |
+| `created_at` | timestamptz | non | `now()` |  |
+| `applied_at` | timestamptz | oui | — |  |
+| `rapport` | jsonb | oui | — |  |
+
+**Contraintes**
+
+- `import_batches_academic_year_id_not_null` — `NOT NULL academic_year_id`
+- `import_batches_created_at_not_null` — `NOT NULL created_at`
+- `import_batches_created_by_not_null` — `NOT NULL created_by`
+- `import_batches_id_not_null` — `NOT NULL id`
+- `import_batches_kind_check` — `CHECK ((kind = ANY (ARRAY['eleves'::text, 'enseignants'::text])))`
+- `import_batches_kind_not_null` — `NOT NULL kind`
+- `import_batches_org_id_unique` — `UNIQUE (organization_id, id)`
+- `import_batches_organization_id_fkey` — `FOREIGN KEY (organization_id) REFERENCES study.organizations(id) ON DELETE RESTRICT`
+- `import_batches_organization_id_not_null` — `NOT NULL organization_id`
+- `import_batches_state_not_null` — `NOT NULL state`
+- `import_batches_year_fk` — `FOREIGN KEY (organization_id, academic_year_id) REFERENCES study.academic_years(organization_id, id) ON DELETE RESTRICT`
+
+**Unicité**
+
+- `import_batches_org_id_unique`
+- `import_batches_pkey`
+- `import_batches_single_active`
+
+**Politiques RLS** : `import_batches_admin` (ALL)
 
 ### `study.import_rows`
 
@@ -1476,9 +1834,11 @@ Conventions communes :
 | `issue_detail` | text | oui | — |  |
 | `matched_profile_id` | uuid | oui | — |  |
 | `applied_at` | timestamptz | oui | — |  |
+| `corrige` | boolean | non | `false` |  |
 
 **Contraintes**
 
+- `import_rows_corrige_not_null` — `NOT NULL corrige`
 - `import_rows_id_not_null` — `NOT NULL id`
 - `import_rows_import_job_id_not_null` — `NOT NULL import_job_id`
 - `import_rows_job_fk` — `FOREIGN KEY (organization_id, import_job_id) REFERENCES study.import_jobs(organization_id, id) ON DELETE CASCADE`
@@ -1594,6 +1954,30 @@ Conventions communes :
 - `support_grants_pkey`
 
 **Politiques RLS** : `support_grants_admin` (UPDATE), `support_grants_editeur_demande` (INSERT), `support_grants_editeur_lecture` (SELECT), `support_grants_visible` (SELECT)
+
+### `study.tentatives_connexion`
+
+> Échecs de connexion récents. Aucun mot de passe, aucun identifiant saisi : seulement le compte visé et la date.
+
+| Colonne | Type | Null | Défaut | Note |
+|---|---|---|---|---|
+| `id` | bigint | non | `nextval('study_prive.tentatives…` |  |
+| `profile_id` | uuid | oui | — |  |
+| `code_saisi` | text | non | — |  |
+| `tentee_le` | timestamptz | non | `now()` |  |
+
+**Contraintes**
+
+- `tentatives_connexion_code_saisi_not_null` — `NOT NULL code_saisi`
+- `tentatives_connexion_id_not_null` — `NOT NULL id`
+- `tentatives_connexion_profile_id_fkey` — `FOREIGN KEY (profile_id) REFERENCES study.profiles(id) ON DELETE CASCADE`
+- `tentatives_connexion_tentee_le_not_null` — `NOT NULL tentee_le`
+
+**Unicité**
+
+- `tentatives_connexion_pkey`
+
+**Politiques RLS** : aucune — table réservée au rôle de service, inaccessible depuis une session utilisateur.
 
 ## Commercial
 
@@ -2092,10 +2476,4 @@ Conventions communes :
 - `outbox_events_pkey`
 
 **Politiques RLS** : aucune — table réservée au rôle de service, inaccessible depuis une session utilisateur.
-
-## Tables non classées
-
-Ces tables existent dans le schéma mais ne figurent dans aucun groupe de ce générateur — signe qu'il faut mettre à jour `tests/db/dictionnaire.mjs` :
-
-- `study.tentatives_connexion`
 

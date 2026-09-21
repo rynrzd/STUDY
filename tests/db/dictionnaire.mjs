@@ -22,14 +22,22 @@ const GROUPES = [
   ["Structure scolaire", ["classes", "teaching_groups", "class_enrollments", "group_memberships",
     "subjects", "teaching_spaces", "teacher_assignments"]],
   ["Pédagogie", ["chapters", "resource_templates", "resource_shares", "content_versions",
-    "lessons", "lesson_publications", "lesson_corrections", "assignments",
-    "assignment_recipients", "submissions", "submission_versions", "feedback",
+    "studio_documents", "lessons", "lesson_blocks", "lesson_publications",
+    "lesson_corrections", "assignments", "assignment_recipients",
+    "assignment_corrections", "submissions", "submission_versions", "feedback",
     "annotations", "personal_notes", "rework_entries", "revision_cards",
     "quizzes", "quiz_answer_keys", "quiz_attempts", "help_signals"]],
-  ["Entraide et modération", ["workgroups", "workgroup_members", "messages", "shared_documents",
-    "document_versions", "reports", "moderation_actions"]],
-  ["Exploitation", ["files", "storage_buckets_attendus", "import_jobs", "import_rows",
-    "notifications", "audit_events", "support_grants"]],
+  // `messages`, `shared_documents` et `document_versions` datent de la migration
+  // 0005 et ne sont utilisées par aucun écran ; `reports` et `moderation_actions`
+  // ont été rouvertes vers `fils_entraide` et `reponses_entraide` par la 0041,
+  // qui sont l'entraide réellement servie.
+  ["Entraide et modération", ["fils_entraide", "reponses_entraide", "workgroups",
+    "workgroup_members", "messages", "shared_documents", "document_versions",
+    "reports", "moderation_actions"]],
+  ["Suivi de l'élève", ["travaux_faits", "visites", "nouveautes"]],
+  ["Exploitation", ["files", "storage_buckets_attendus", "import_jobs", "import_batches",
+    "import_rows", "notifications", "audit_events", "support_grants",
+    "tentatives_connexion"]],
   ["Commercial", ["commercial_requests", "buyers", "quotes", "contracts", "invoice_refs", "payment_events"]],
   // Schéma privé (ch. 36 §3) : ni anon ni authenticated n'y ont le moindre
   // droit. Ces tables n'ont donc aucune politique — c'est voulu, et c'est une

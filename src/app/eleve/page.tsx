@@ -5,6 +5,8 @@ import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { echeanceLisible, seancesDuJour, trierDevoirs } from "@/lib/echeances";
 import { coursDeLEleve, devoirsDeLEleve, seancesPubliees } from "@/lib/espace-eleve";
 import { CaseFaite } from "@/components/app/CaseFaite";
+import { Nouveautes } from "@/components/eleve/Nouveautes";
+import { mesNouveautes } from "@/lib/nouveautes";
 import { classeActive, nouveautes, travauxFaits } from "@/lib/parcours-eleve";
 
 /**
@@ -24,13 +26,14 @@ export default async function PageEleve() {
   const jeton = await jetonAccesDe(personne);
   if (jeton === null) redirect("/connexion");
 
-  const [cours, seances, devoirs, classe, faits, depuis] = await Promise.all([
+  const [cours, seances, devoirs, classe, faits, depuis, mesLignes] = await Promise.all([
     coursDeLEleve(jeton),
     seancesPubliees(jeton, { limite: 40 }),
     devoirsDeLEleve(jeton),
     classeActive(jeton),
     travauxFaits(jeton),
     nouveautes(jeton),
+    mesNouveautes(jeton),
   ]);
 
   const libelles = new Map(cours.map((c) => [c.id, c.libelle] as const));
@@ -91,6 +94,8 @@ export default async function PageEleve() {
           </ul>
         )}
       </section>
+
+      <Nouveautes nouveautes={mesLignes} />
 
       {depuis.length > 0 ? (
         <section aria-labelledby="titre-depuis" className="mt-11">
@@ -241,9 +246,11 @@ export default async function PageEleve() {
  * Aucune autre catégorie n existe, et surtout pas « activité » — un mot qui
  * ne dit rien et qui laisserait passer n importe quoi.
  */
+// Le genre `devoir` a quitté ce digest : un devoir publié est désormais une
+// nouveauté à part entière, avec son état de lecture. Le garder ici le ferait
+// apparaître deux fois, une fois marquable comme lu et une fois non.
 const GENRE: Record<string, string> = {
   seance: "Nouveau cours",
   correction: "Corrigé disponible",
-  devoir: "Nouveau devoir",
   reponse: "Réponse à votre question",
 };

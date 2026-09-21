@@ -28,6 +28,7 @@ import { scenarioFichiers } from "./scenario-fichiers.mjs";
 import { scenarioDemande } from "./scenario-demande.mjs";
 import { scenarioResponsive } from "./scenario-responsive.mjs";
 import { scenarioRemises } from "./scenario-remises.mjs";
+import { scenarioModeration } from "./scenario-moderation.mjs";
 
 chargerEnv();
 
@@ -157,6 +158,7 @@ try {
     ["§6 fichiers et stockage", scenarioFichiers, commun],
     ["§7 formulaire de demonstration", scenarioDemande, { navigateur, base: BASE, sql, verifier }],
     ["§13 devoirs, remises et corrections", scenarioRemises, commun],
+    ["§14 correction commune, signalement, nouveautes", scenarioModeration, commun],
     ["§8 responsive connecte et accessibilite", scenarioResponsive, commun],
   ]) {
     try {

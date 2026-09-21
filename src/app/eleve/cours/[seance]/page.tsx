@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { Entraide } from "@/components/app/Entraide";
 import { VueSeance } from "@/components/seance/VueSeance";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
+import { dejaSignales } from "@/lib/moderation";
 import { filsDeLaSeance } from "@/lib/parcours-eleve";
 import { seanceComplete } from "@/lib/studio";
 
@@ -40,7 +41,10 @@ export default async function PageSeanceEleve({
   // passer : la vérification est ici en plus, pas à la place.
   if (complet === null || complet.seance.state !== "publiee") notFound();
 
-  const fils = await filsDeLaSeance(jeton, id);
+  const [fils, signales] = await Promise.all([
+    filsDeLaSeance(jeton, id),
+    dejaSignales(jeton),
+  ]);
 
   return (
     <>
@@ -65,7 +69,7 @@ export default async function PageSeanceEleve({
           chapitre={complet.chapitre?.label ?? null}
         />
 
-        <Entraide seance={id} fils={fils} moi={personne.profileId} />
+        <Entraide seance={id} fils={fils} moi={personne.profileId} signales={[...signales]} />
       </div>
     </>
   );

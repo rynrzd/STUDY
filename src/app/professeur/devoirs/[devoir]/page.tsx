@@ -4,7 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import { FormulaireDevoir } from "@/components/professeur/FormulaireDevoir";
 import { SuiviRemises } from "@/components/professeur/SuiviRemises";
 import { BasculeDevoir } from "@/components/professeur/BasculeDevoir";
-import { devoir as lireDevoir, suiviDuDevoir } from "@/lib/devoirs";
+import { CorrectionCommune } from "@/components/professeur/CorrectionCommune";
+import { correctionCommune, devoir as lireDevoir, suiviDuDevoir } from "@/lib/devoirs";
 import { instantLisible } from "@/lib/horodatage";
 import { pagePrivee } from "@/lib/metadonnees";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
@@ -49,9 +50,10 @@ export default async function PageDevoirProfesseur({
   const leDevoir = await lireDevoir(jeton, identifiant);
   if (leDevoir === null) notFound();
 
-  const [cours, lignes] = await Promise.all([
+  const [cours, lignes, commune] = await Promise.all([
     coursDuProfesseur(jeton),
     suiviDuDevoir(jeton, identifiant),
+    correctionCommune(jeton, identifiant),
   ]);
 
   const libelle = cours.find((unCours) => unCours.id === leDevoir.cours)?.libelle ?? "Cours";
@@ -125,6 +127,13 @@ export default async function PageDevoirProfesseur({
         organisation={personne.organizationId ?? ""}
         mode={leDevoir.mode}
         lignes={lignes}
+      />
+
+      <CorrectionCommune
+        devoir={leDevoir.id}
+        organisation={personne.organizationId ?? ""}
+        correction={commune}
+        nombreEleves={lignes.length}
       />
     </article>
   );

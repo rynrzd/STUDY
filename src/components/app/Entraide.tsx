@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { demanderDeLAide, repondreAUnCamarade } from "@/app/eleve/actions";
 import { ETAT_ELEVE_INITIAL, type EtatEleve } from "@/app/eleve/etats";
 import type { FilEntraide } from "@/lib/parcours-eleve";
+import { Signaler } from "./Signaler";
 
 /**
  * « Je n'ai pas compris » — cahier V5, §3.5.
@@ -21,11 +22,15 @@ export function Entraide({
   seance,
   fils,
   moi,
+  signales,
 }: {
   seance: string;
   fils: readonly FilEntraide[];
   moi: string;
+  /** Ce que cette personne a déjà signalé : le bouton ne se redonne pas. */
+  signales: readonly string[];
 }) {
+  const dejaSignales = new Set(signales);
   const [ouvert, setOuvert] = useState(false);
   const [etat, poser] = useActionState<EtatEleve, FormData>(demanderDeLAide, ETAT_ELEVE_INITIAL);
 
@@ -107,7 +112,7 @@ export function Entraide({
         <ul className="m-0 mt-5 list-none space-y-4 p-0">
           {fils.map((fil) => (
             <li key={fil.id}>
-              <Fil fil={fil} seance={seance} moi={moi} />
+              <Fil fil={fil} seance={seance} moi={moi} signales={dejaSignales} />
             </li>
           ))}
         </ul>
@@ -116,7 +121,17 @@ export function Entraide({
   );
 }
 
-function Fil({ fil, seance, moi }: { fil: FilEntraide; seance: string; moi: string }) {
+function Fil({
+  fil,
+  seance,
+  moi,
+  signales,
+}: {
+  fil: FilEntraide;
+  seance: string;
+  moi: string;
+  signales: ReadonlySet<string>;
+}) {
   const [etat, envoyer] = useActionState<EtatEleve, FormData>(
     repondreAUnCamarade,
     ETAT_ELEVE_INITIAL,
@@ -137,6 +152,15 @@ function Fil({ fil, seance, moi }: { fil: FilEntraide; seance: string; moi: stri
 
       <p className="m-0 mt-1.5 whitespace-pre-line">{fil.question}</p>
 
+      {fil.auteurId === moi ? null : (
+        <Signaler
+          genre="fil"
+          cible={fil.id}
+          seance={seance}
+          dejaSignale={signales.has(fil.id)}
+        />
+      )}
+
       {fil.reponses.length > 0 ? (
         <ul className="m-0 mt-4 list-none space-y-3 border-t border-[color:var(--color-bordure)] p-0 pt-4">
           {fil.reponses.map((reponse) => (
@@ -150,6 +174,12 @@ function Fil({ fil, seance, moi }: { fil: FilEntraide; seance: string; moi: stri
                 ) : null}
               </p>
               <p className="m-0 mt-0.5 whitespace-pre-line">{reponse.texte}</p>
+              <Signaler
+                genre="reponse"
+                cible={reponse.id}
+                seance={seance}
+                dejaSignale={signales.has(reponse.id)}
+              />
             </li>
           ))}
         </ul>

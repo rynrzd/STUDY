@@ -1,7 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
+import { signaler } from "@/lib/moderation";
+import { marquerLue, toutMarquerLu } from "@/lib/nouveautes";
 import { basculerFait, poserQuestion, repondre } from "@/lib/parcours-eleve";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 
@@ -137,4 +140,120 @@ export async function repondreAUnCamarade(
 
   revalidatePath(`/eleve/cours/${analyse.data.seance}`);
   return { etat: "ok", message: "Votre réponse est publiée." };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Signaler un contenu d'entraide — §7                                         */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Signale un fil ou une réponse.
+ *
+ * Aucun établissement ni aucun cours ne vient du formulaire : seuls
+ * l'identifiant du contenu et le motif. La politique `reports_signaler` relit
+ * le cours du contenu et refuse ce que l'appelant n'aurait pas le droit de
+ * lire — signaler un message d'une autre classe n'est donc pas possible, même
+ * en forgeant la requête.
+ *
+ * Le signalement **ne masque rien**. Ce que l'élève obtient, c'est qu'une
+ * personne regarde ; l'écran ne lui promet pas autre chose.
+ */
+export async function signalerUnContenu(
+  _precedent: EtatEleve,
+  donnees: FormData,
+): Promise<EtatEleve> {
+  const personne = await sessionCourante();
+  if (personne === null || personne.activationRequise) return REFUS;
+  if (personne.organizationId === null) return REFUS;
+
+  const jeton = await jetonAccesDe(personne);
+  if (jeton === null) return REFUS;
+
+  const analyse = z
+    .object({
+      genre: z.enum(["fil", "reponse"]),
+      cible: z.string().uuid(),
+      seance: z.string().uuid(),
+      raison: z.enum(["harcelement", "contenu_inapproprie", "hors_sujet", "autre"]),
+      detail: z.string().trim().max(1000),
+    })
+    .safeParse({
+      genre: donnees.get("genre"),
+      cible: donnees.get("cible"),
+      seance: donnees.get("seance"),
+      raison: donnees.get("raison"),
+      detail: donnees.get("detail") ?? "",
+    });
+
+  if (!analyse.success) return REFUS;
+
+  const resultat = await signaler({
+    jeton,
+    organisation: personne.organizationId,
+    moi: personne.profileId,
+    cible: { genre: analyse.data.genre, id: analyse.data.cible },
+    raison: analyse.data.raison,
+    detail: analyse.data.detail,
+  });
+
+  if (!resultat.ok) {
+    // Avoir déjà signalé n'est pas une erreur de l'élève : on le lui dit
+    // comme une information, pas comme un refus.
+    return { etat: resultat.dejaSignale === true ? "ok" : "erreur", message: resultat.message };
+  }
+
+  revalidatePath(`/eleve/cours/${analyse.data.seance}`);
+
+  return {
+    etat: "ok",
+    message:
+      "Signalement transmis. Un responsable de l'établissement le regardera. Le message reste visible en attendant : rien n'est retiré sans décision.",
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Nouveautés — §9                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Marque une nouveauté lue, puis ouvre le devoir.
+ *
+ * Les deux gestes n'en font qu'un : on ne demande pas à quelqu'un de ranger ce
+ * qu'il vient de lire. Le marquage est borné aux lignes de l'appelant par la
+ * politique `nouveautes_marquer_lue` — un identifiant changé à la main ne rend
+ * pas un refus, il ne touche aucune ligne.
+ *
+ * La redirection a lieu même si le marquage échoue : rater une coche ne doit
+ * pas empêcher d'ouvrir son devoir.
+ */
+export async function lireUneNouveaute(
+  _precedent: EtatEleve,
+  donnees: FormData,
+): Promise<EtatEleve> {
+  const session = await eleveConnecte();
+  if (session === null) return REFUS;
+
+  const analyse = z
+    .object({ nouveaute: z.string().uuid(), devoir: z.string().uuid() })
+    .safeParse({ nouveaute: donnees.get("nouveaute"), devoir: donnees.get("devoir") });
+
+  if (!analyse.success) return REFUS;
+
+  await marquerLue(session.jeton, analyse.data.nouveaute);
+  revalidatePath("/eleve");
+
+  redirect(`/eleve/devoirs/${analyse.data.devoir}`);
+}
+
+/** Marque toutes mes nouveautés lues — pour la rentrée, quand la liste a grossi. */
+export async function toutLire(_precedent: EtatEleve, _donnees: FormData): Promise<EtatEleve> {
+  const session = await eleveConnecte();
+  if (session === null) return REFUS;
+
+  const fait = await toutMarquerLu(session.jeton);
+  revalidatePath("/eleve");
+
+  return fait
+    ? { etat: "ok", message: "Tout est marqué comme lu." }
+    : { etat: "erreur", message: "Le marquage n'a pas abouti." };
 }

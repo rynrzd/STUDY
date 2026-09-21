@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { RemiseCopie } from "@/components/eleve/RemiseCopie";
-import { devoir as lireDevoir, maRemise } from "@/lib/devoirs";
+import { correctionCommune, devoir as lireDevoir, maRemise } from "@/lib/devoirs";
 import { coursDeLEleve } from "@/lib/espace-eleve";
 import { instantLisible, jourLisible } from "@/lib/horodatage";
 import { pagePrivee } from "@/lib/metadonnees";
@@ -56,7 +56,14 @@ export default async function PageDevoirEleve({
     notFound();
   }
 
-  const [cours, remise] = await Promise.all([coursDeLEleve(jeton), maRemise(jeton, identifiant)]);
+  const [cours, remise, commune] = await Promise.all([
+    coursDeLEleve(jeton),
+    maRemise(jeton, identifiant),
+    // Rend `null` avant publication : la politique RLS ne descend une
+    // correction commune que publiée. L'élève n'apprend donc même pas qu'une
+    // correction est en cours d'écriture.
+    correctionCommune(jeton, identifiant),
+  ]);
   const libelle = cours.find((unCours) => unCours.id === leDevoir.cours)?.libelle ?? "Cours";
 
   const attendUnFichier = leDevoir.mode === "numerique" || leDevoir.mode === "mixte";
@@ -182,12 +189,47 @@ export default async function PageDevoirEleve({
         </div>
       </section>
 
-      {/* --------------------------------------------------- Correction -- */}
+      {/* ------------------------------------- Correction de la classe -- */}
+
+      {commune !== null && commune.publieeLe !== null ? (
+        <section className="mt-10" data-testid="correction-commune">
+          <h2 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
+            Correction de la classe
+          </h2>
+          <p className="m-0 mt-1 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
+            Publiée le {jourLisible(commune.publieeLe)} — la même pour tous ceux
+            qui ont eu ce devoir.
+          </p>
+
+          {commune.texte !== "" ? (
+            <p className="m-0 mt-3 whitespace-pre-line" data-testid="correction-commune-texte">
+              {commune.texte}
+            </p>
+          ) : null}
+
+          {commune.fichier !== null ? (
+            <p className="m-0 mt-4 print:hidden">
+              <a
+                href={`/documents/${commune.fichier}`}
+                data-testid="telecharger-correction-commune"
+                className="bouton bouton-secondaire"
+              >
+                Télécharger le corrigé
+              </a>
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
+      {/* ------------------------------------------- Correction de ma copie */}
+      {/* Elle vient après la correction commune : on lit d'abord ce qu'il   */}
+      {/* fallait faire, ensuite ce qu'on a fait. L'ordre inverse oblige à   */}
+      {/* deviner l'attendu depuis un commentaire.                           */}
 
       {remise?.retour !== null && remise?.retour !== undefined && remise.retour.publieLe !== null ? (
         <section className="mt-10" data-testid="correction-recue">
           <h2 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
-            Correction
+            {commune !== null && commune.publieeLe !== null ? "Votre copie" : "Correction"}
           </h2>
           <p className="m-0 mt-1 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
             Publiée le {jourLisible(remise.retour.publieLe)}

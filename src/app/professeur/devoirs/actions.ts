@@ -8,10 +8,12 @@ import {
   creerDevoir,
   devoir as lireDevoir,
   inscrireDestinataires,
+  enregistrerCorrectionCommune,
   enregistrerRetour,
   majDevoir,
   marquerPapier,
   publierDevoir,
+  publierCorrectionCommune,
   publierRetour,
 } from "@/lib/devoirs";
 import { deposerPieceJointe } from "@/lib/documents";
@@ -397,5 +399,127 @@ export async function retirerUneCorrection(
 
   return fait
     ? { etat: "ok", message: "Correction retirée : l'élève ne la voit plus." }
+    : { etat: "erreur", message: "Le retrait a échoué." };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Correction commune — §5.2                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Enregistre la correction adressée à toute la classe.
+ *
+ * Le rattachement du fichier est le **devoir**, pas une version de copie : une
+ * correction commune n'appartient à la copie de personne. C'est aussi ce qui
+ * permet à la politique `files_correction_commune_eleve` de la faire descendre
+ * à chaque destinataire du devoir, et à eux seuls.
+ */
+export async function enregistrerLaCorrectionCommune(
+  _precedent: EtatDevoirAction,
+  donnees: FormData,
+): Promise<EtatDevoirAction> {
+  const session = await professeur();
+  if (session === null) return REFUS;
+
+  const analyse = z
+    .object({
+      devoir: z.string().uuid(),
+      organisation: z.string().uuid(),
+      texte: z.string().trim().max(10000),
+      publier: z.enum(["oui", "non"]),
+    })
+    .safeParse({
+      devoir: donnees.get("devoir"),
+      organisation: donnees.get("organisation"),
+      texte: donnees.get("texte") ?? "",
+      publier: donnees.get("publier") ?? "non",
+    });
+
+  if (!analyse.success) return REFUS;
+
+  // Le cours est relu : un identifiant de devoir changé à la main ne doit pas
+  // suffire à écrire une correction chez quelqu'un d'autre. RLS refuserait de
+  // toute façon, mais un refus explicite vaut mieux qu'un zéro ligne muet.
+  const leDevoir = await lireDevoir(session.jeton, analyse.data.devoir);
+  if (leDevoir === null) return REFUS;
+
+  let fichier: string | null = null;
+  const depose = donnees.get("corrige");
+
+  if (depose instanceof File && depose.size > 0) {
+    const resultat = await deposerPieceJointe({
+      jeton: session.jeton,
+      organisation: analyse.data.organisation,
+      proprietaire: session.personne.profileId,
+      genre: "correction",
+      rattachement: analyse.data.devoir,
+      fichier: depose,
+    });
+
+    if (resultat.etat !== "ok") return { etat: "erreur", message: resultat.message };
+    fichier = resultat.support.fileId;
+  }
+
+  const enregistree = await enregistrerCorrectionCommune({
+    jeton: session.jeton,
+    organisation: analyse.data.organisation,
+    devoir: analyse.data.devoir,
+    auteur: session.personne.profileId,
+    texte: analyse.data.texte,
+    fichier,
+  });
+
+  if (!enregistree.ok) return { etat: "erreur", message: enregistree.message };
+
+  if (analyse.data.publier === "oui") {
+    const publiee = await publierCorrectionCommune(session.jeton, enregistree.id, true);
+    if (!publiee) {
+      return {
+        etat: "erreur",
+        message: "La correction est enregistrée, mais la publication a échoué.",
+      };
+    }
+  }
+
+  revalidatePath(`/professeur/devoirs/${analyse.data.devoir}`);
+  revalidatePath(`/eleve/devoirs/${analyse.data.devoir}`);
+  revalidatePath("/eleve/devoirs");
+  revalidatePath("/eleve");
+
+  return {
+    etat: "ok",
+    message:
+      analyse.data.publier === "oui"
+        ? "Correction commune publiée : toute la classe la voit."
+        : "Correction commune enregistrée en brouillon. Personne ne la voit encore.",
+  };
+}
+
+/** Retire la correction commune de la vue de la classe, sans l'effacer. */
+export async function retirerLaCorrectionCommune(
+  _precedent: EtatDevoirAction,
+  donnees: FormData,
+): Promise<EtatDevoirAction> {
+  const session = await professeur();
+  if (session === null) return REFUS;
+
+  const analyse = z
+    .object({ devoir: z.string().uuid(), correction: z.string().uuid() })
+    .safeParse({ devoir: donnees.get("devoir"), correction: donnees.get("correction") });
+
+  if (!analyse.success) return REFUS;
+
+  const fait = await publierCorrectionCommune(session.jeton, analyse.data.correction, false);
+
+  revalidatePath(`/professeur/devoirs/${analyse.data.devoir}`);
+  revalidatePath(`/eleve/devoirs/${analyse.data.devoir}`);
+  revalidatePath("/eleve/devoirs");
+
+  return fait
+    ? {
+        etat: "ok",
+        message:
+          "Correction commune retirée. Ceux qui l'avaient déjà lue l'ont lue — cela, rien ne le défait.",
+      }
     : { etat: "erreur", message: "Le retrait a échoué." };
 }

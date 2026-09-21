@@ -60,6 +60,23 @@ export interface VersionRemise {
   readonly nomFichier: string | null;
 }
 
+/**
+ * La correction adressée à toute la classe, distincte des retours individuels.
+ *
+ * Un professeur qui commente la même erreur trente fois écrit trente fois la
+ * même chose — ou ne la dit à personne. Elle suit la même règle que le retour
+ * individuel : brouillon d'abord, publication ensuite, et l'élève ne sait même
+ * pas qu'elle existe avant. Les deux sont indépendantes : publier l'une ne
+ * publie pas l'autre.
+ */
+export interface CorrectionCommune {
+  readonly id: string;
+  readonly texte: string;
+  readonly fichier: string | null;
+  readonly publieeLe: string | null;
+  readonly majLe: string;
+}
+
 export interface Retour {
   readonly id: string;
   readonly commentaire: string | null;
@@ -558,7 +575,22 @@ export async function majDevoir(options: {
   remplacementAutorise: boolean;
   politiqueRetard: "accepter_avec_retard" | "fermer";
 }): Promise<boolean> {
-  const { error } = await clientUtilisateur(options.jeton)
+  const client = clientUtilisateur(options.jeton);
+
+  // L'état d'avant, pour savoir s'il faut prévenir la classe. Deux choses
+  // seulement méritent une notification : la date à laquelle il faut rendre,
+  // et ce qu'il faut faire. Un titre corrigé d'une faute de frappe ne doit pas
+  // envoyer trente lignes « ce devoir a changé » — la notification qui arrive
+  // pour rien est celle qu'on apprend à ignorer.
+  const { data: avant } = await client
+    .from("assignments")
+    .select("due_at, instructions")
+    .eq("id", options.devoir)
+    .maybeSingle();
+
+  const precedent = avant as { due_at: string | null; instructions: unknown } | null;
+
+  const { error } = await client
     .from("assignments")
     .update({
       title: options.titre,
@@ -573,6 +605,165 @@ export async function majDevoir(options: {
 
   if (error !== null) {
     journaliser("devoirs.maj", error.code);
+    return false;
+  }
+
+  if (precedent !== null) {
+    const echeanceChangee = (precedent.due_at ?? null) !== (options.echeance ?? null);
+    const consigneChangee = consigneLisible(precedent.instructions).trim() !== options.consigne.trim();
+
+    if (echeanceChangee || consigneChangee) {
+      // L'échec de la notification n'annule pas la modification : le devoir a
+      // bien changé, et le dire à l'élève est important mais second.
+      const { error: refus } = await client.rpc("devoir_signaler_modification", {
+        p_devoir: options.devoir,
+        p_quoi: echeanceChangee
+          ? consigneChangee
+            ? "La date et la consigne ont changé."
+            : "La date à rendre a changé."
+          : "La consigne a changé.",
+      });
+      if (refus !== null) journaliser("devoirs.maj.prevenir", refus.code);
+    }
+  }
+
+  return true;
+}
+
+/* -------------------------------------------------------------------------- */
+/* La correction commune — §5.2                                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * La correction commune d'un devoir, s'il en a une.
+ *
+ * Rend `null` aussi bien quand elle n'existe pas que quand l'appelant n'a pas
+ * le droit de la voir — un élève avant publication, par exemple. C'est
+ * volontaire : un « il existe une correction que vous ne pouvez pas lire »
+ * apprend déjà quelque chose.
+ */
+export async function correctionCommune(
+  jeton: string,
+  devoirId: string,
+): Promise<CorrectionCommune | null> {
+  const { data, error } = await clientUtilisateur(jeton)
+    .from("assignment_corrections")
+    .select("id, body, file_id, published_at, updated_at")
+    .eq("assignment_id", devoirId)
+    .maybeSingle();
+
+  if (error !== null || data === null) {
+    if (error !== null) journaliser("devoirs.correction-commune", error.code);
+    return null;
+  }
+
+  const ligne = data as {
+    id: string;
+    body: string | null;
+    file_id: string | null;
+    published_at: string | null;
+    updated_at: string;
+  };
+
+  return {
+    id: ligne.id,
+    texte: ligne.body ?? "",
+    fichier: ligne.file_id,
+    publieeLe: ligne.published_at,
+    majLe: ligne.updated_at,
+  };
+}
+
+/**
+ * Enregistre ou met à jour la correction commune.
+ *
+ * Une seule par devoir — la base y veille par un index unique. Deux
+ * obligeraient l'élève à choisir laquelle est la bonne.
+ *
+ * Un fichier absent de l'envoi ne retire pas celui qui est déjà là : on ne
+ * remplace une pièce jointe que si l'on en dépose une autre.
+ */
+export async function enregistrerCorrectionCommune(options: {
+  jeton: string;
+  organisation: string;
+  devoir: string;
+  auteur: string;
+  texte: string;
+  fichier: string | null;
+}): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
+  const client = clientUtilisateur(options.jeton);
+  const texte = options.texte.trim();
+
+  if (texte === "" && options.fichier === null) {
+    return {
+      ok: false,
+      message: "Écrivez la correction, ou joignez le corrigé. Une correction vide ne dit rien.",
+    };
+  }
+
+  const { data: existante } = await client
+    .from("assignment_corrections")
+    .select("id")
+    .eq("assignment_id", options.devoir)
+    .maybeSingle();
+
+  if (existante !== null) {
+    const id = (existante as { id: string }).id;
+    const champs: Record<string, unknown> = {
+      body: texte === "" ? null : texte,
+      updated_at: new Date().toISOString(),
+    };
+    if (options.fichier !== null) champs.file_id = options.fichier;
+
+    const { error } = await client.from("assignment_corrections").update(champs).eq("id", id);
+    if (error !== null) {
+      journaliser("devoirs.correction-commune.maj", error.code);
+      return { ok: false, message: "La correction n'a pas pu être enregistrée." };
+    }
+    return { ok: true, id };
+  }
+
+  const { data, error } = await client
+    .from("assignment_corrections")
+    .insert({
+      organization_id: options.organisation,
+      assignment_id: options.devoir,
+      body: texte === "" ? null : texte,
+      file_id: options.fichier,
+      created_by: options.auteur,
+    })
+    .select("id")
+    .single();
+
+  if (error !== null || data === null) {
+    journaliser("devoirs.correction-commune.creer", error?.code);
+    return { ok: false, message: "La correction n'a pas pu être enregistrée." };
+  }
+  return { ok: true, id: (data as { id: string }).id };
+}
+
+/**
+ * Publie la correction commune, ou la retire de la vue de la classe.
+ *
+ * La retirer ne l'efface pas : le professeur qui s'aperçoit d'une erreur la
+ * dépublie, corrige, republie. Les élèves qui l'avaient déjà lue l'ont lue —
+ * rien ne peut défaire cela, et l'écran ne prétend pas le contraire.
+ */
+export async function publierCorrectionCommune(
+  jeton: string,
+  correction: string,
+  publier: boolean,
+): Promise<boolean> {
+  const { error } = await clientUtilisateur(jeton)
+    .from("assignment_corrections")
+    .update({
+      published_at: publier ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", correction);
+
+  if (error !== null) {
+    journaliser("devoirs.correction-commune.publier", error.code);
     return false;
   }
   return true;
