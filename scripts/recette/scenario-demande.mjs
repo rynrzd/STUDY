@@ -55,8 +55,19 @@ async function remplir(page, valeurs) {
 
     const type = await champ.getAttribute("type");
     if (type === "number") {
+      // Un `input[type=number]` **efface** une valeur qu'il ne sait pas lire :
+      // poser « 12,5 » y laisse une chaîne vide, et le formulaire envoie un
+      // champ vide — que le produit accepte, à juste titre, puisque l'effectif
+      // est facultatif.
+      //
+      // Le cas qu'on veut éprouver est celui d'un envoi qui transporte
+      // vraiment « 12,5 » : une soumission sans JavaScript, que le formulaire
+      // accepte par amélioration progressive. On bascule donc le champ en
+      // texte le temps d'y poser la valeur, ce qui reproduit exactement cet
+      // envoi-là.
       await champ.evaluate((element, texte) => {
         const champNatif = element;
+        if (!/^-?\d+$/.test(texte)) champNatif.type = "text";
         champNatif.value = texte;
         champNatif.dispatchEvent(new Event("input", { bubbles: true }));
         champNatif.dispatchEvent(new Event("change", { bubbles: true }));

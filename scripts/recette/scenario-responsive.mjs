@@ -82,6 +82,8 @@ async function mesurer(page) {
 
     /** Les cibles tactiles trop petites, hors liens au fil du texte. */
     const cibles = [];
+    /** Celles qui passent la norme mais restent en dessous du confort visé. */
+    const aSurveiller = [];
     for (const element of document.querySelectorAll("a, button, input[type=checkbox], select")) {
       const boite = element.getBoundingClientRect();
       if (boite.width === 0 || boite.height === 0) continue;
@@ -94,9 +96,18 @@ async function mesurer(page) {
         (parent.innerText ?? "").trim().length > (element.textContent ?? "").trim().length + 10;
       if (auFilDuTexte) continue;
 
-      if (boite.height < 40) {
-        cibles.push(`${element.tagName.toLowerCase()} « ${(element.textContent ?? "").trim().slice(0, 20)} » ${Math.round(boite.height)}px`);
-      }
+      // Deux seuils, et la distinction compte.
+      //
+      // 24 px est le minimum exigé par WCAG 2.2 AA (critère 2.5.8) : en dessous,
+      // c'est un défaut d'accessibilité, et le contrôle échoue.
+      //
+      // 44 px est le confort visé par le cahier. Entre les deux, on signale
+      // sans faire échouer : transformer chaque lien secondaire en bouton de
+      // 44 px déformerait les écrans, et une alerte qu'on apprend à ignorer ne
+      // sert plus à rien.
+      const libelle = `${element.tagName.toLowerCase()} « ${(element.textContent ?? "").trim().slice(0, 20)} » ${Math.round(boite.height)}px`;
+      if (boite.height < 24) cibles.push(libelle);
+      else if (boite.height < 44) aSurveiller.push(libelle);
     }
 
     /** L'élément est-il dans un conteneur prévu pour défiler ? */
@@ -163,6 +174,7 @@ async function mesurer(page) {
       innerWidth: largeur,
       debordant,
       cibles,
+      aSurveiller,
       horsEcran,
       tableauxCoinces,
       champsMuets,
@@ -186,6 +198,10 @@ async function ouvrir(page, base, chemin, marqueur) {
 
 export async function scenarioResponsive({ navigateur, base, terrain, verifier }) {
   console.log("\n§8. Responsive connecte et accessibilite");
+
+  // Les cibles conformes a la norme mais en dessous des 44 px visés : on les
+  // nomme a la fin, sans faire echouer la recette.
+  const confort = new Set();
 
   // Un marqueur par espace : la présence du cadre applicatif prouve qu'on est
   // bien dans l'espace, et pas sur l'écran de connexion.
@@ -268,7 +284,10 @@ export async function scenarioResponsive({ navigateur, base, terrain, verifier }
             fautes.push(`${largeur}px : tableau sans defilement`);
           }
           if (largeur <= 430 && mesure.cibles.length > 0) {
-            fautes.push(`${largeur}px : cible trop petite (${mesure.cibles[0]})`);
+            fautes.push(`${largeur}px : cible sous 24 px (${mesure.cibles[0]})`);
+          }
+          if (largeur <= 430) {
+            for (const cible of mesure.aSurveiller) confort.add(`${chemin} : ${cible}`);
           }
           if (mesure.champsMuets.length > 0) {
             fautes.push(`champ sans intitule (${mesure.champsMuets[0]})`);
@@ -361,6 +380,14 @@ export async function scenarioResponsive({ navigateur, base, terrain, verifier }
     } finally {
       await contexte.close();
     }
+  }
+
+  if (confort.size > 0) {
+    console.log(
+      `  (a surveiller) ${confort.size} cible(s) entre 24 et 44 px : conformes a WCAG 2.2 AA,\n` +
+        "                 en dessous du confort vise par le cahier.",
+    );
+    for (const cible of [...confort].slice(0, 6)) console.log(`                 ${cible}`);
   }
 
   console.log(

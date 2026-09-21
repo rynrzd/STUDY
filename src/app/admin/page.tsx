@@ -125,7 +125,7 @@ export default async function PageAdmin() {
                 </h2>
                 <Link
                   href="/admin/import"
-                  className="text-[length:var(--text-aide)] text-[color:var(--color-accent)]"
+                  className="inline-flex min-h-[44px] items-center text-[length:var(--text-aide)] text-[color:var(--color-accent)]"
                 >
                   Tous les imports
                 </Link>
