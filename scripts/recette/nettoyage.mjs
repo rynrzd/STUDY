@@ -257,6 +257,18 @@ export async function balayer(sql, fournisseur, { trace = () => {} } = {}) {
     "select id, public_code, name from study.organizations where public_code like 'RECETTE%' order by created_at",
   );
 
+  // Les chemins de stockage sont releves **avant** le demontage : une fois les
+  // lignes de `files` supprimees, plus rien ne dit ou sont les octets, et ils
+  // restent dans le seau sans que rien ne les designe.
+  const aRetirerDuStockage = [];
+  for (const etablissement of etablissements) {
+    const { rows } = await sql.query(
+      "select storage_key from study.files where organization_id = $1",
+      [etablissement.id],
+    );
+    for (const ligne of rows) aRetirerDuStockage.push(ligne.storage_key);
+  }
+
   const profils = new Set();
   for (const etablissement of etablissements) {
     const { rows } = await sql.query(
@@ -283,15 +295,27 @@ export async function balayer(sql, fournisseur, { trace = () => {} } = {}) {
   await demonterDemandes(sql, { trace });
 
   let comptes = 0;
+  let objets = 0;
   if (fournisseur !== undefined && fournisseur !== null) {
     for (const profil of profils) {
       const { error } = await fournisseur.auth.admin.deleteUser(profil);
       if (error === null) comptes += 1;
     }
     if (comptes > 0) trace(`    comptes de connexion chez le fournisseur : ${comptes}`);
+
+    // Les octets, enfin. Ils partent en dernier : tant que la base n est pas
+    // nettoyee, un objet retire laisserait une ligne qui le designe sans
+    // pouvoir le servir — l inverse exact de ce qu on veut.
+    if (aRetirerDuStockage.length > 0) {
+      const { error } = await fournisseur.storage
+        .from("course-materials")
+        .remove(aRetirerDuStockage);
+      if (error === null) objets = aRetirerDuStockage.length;
+      trace(`    objets retires du stockage : ${objets}`);
+    }
   }
 
-  return { etablissements: etablissements.length, profils: profils.size, comptes };
+  return { etablissements: etablissements.length, profils: profils.size, comptes, objets };
 }
 
 /**

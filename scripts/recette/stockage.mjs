@@ -34,6 +34,16 @@ exiger(
 
 const BUCKET = "course-materials";
 
+/**
+ * `--ramasser` retire les orphelins confirmes.
+ *
+ * Par defaut le script ne supprime rien : un orphelin peut etre un depot en
+ * cours, et effacer pendant qu on ecrit est la meilleure facon de creer le
+ * probleme qu on cherchait a eviter. Avec cette option, seuls les objets plus
+ * vieux que deux heures et inconnus de la base sont retires.
+ */
+const RAMASSER = process.argv.includes("--ramasser");
+
 /** Les objets d'un dossier, à plat. Le stockage est arborescent, pas la base. */
 async function objets(stockage, prefixe = "", profondeur = 0) {
   if (profondeur > 3) return [];
@@ -112,11 +122,30 @@ try {
   verifier(
     orphelins.length === 0,
     "aucun objet du stockage n est inconnu de la base",
-    orphelins
-      .slice(0, 5)
-      .map((o) => `${o.chemin} (${Math.round(o.octets / 1024)} Ko)`)
-      .join(" ; "),
+    `${orphelins.length} objet(s) orphelin(s)`,
   );
+
+  if (orphelins.length > 0 && RAMASSER) {
+    // Deux heures d anciennete. Un depot dure quelques secondes ; deux heures
+    // est une marge tres large, et assez courte pour que les residus du jour
+    // ne s accumulent pas jusqu au lendemain.
+    const veille = Date.now() - 2 * 60 * 60 * 1000;
+    const surs = orphelins.filter((objet) => Date.parse(objet.cree ?? 0) < veille);
+
+    if (surs.length > 0) {
+      const { error } = await client.storage.from(BUCKET).remove(surs.map((o) => o.chemin));
+      console.log(
+        error === null
+          ? `  ramasse : ${surs.length} orphelin(s) de plus de deux heures retire(s).`
+          : `  NON  le ramassage a echoue — ${error.message}`,
+      );
+      if (error === null) defauts -= 1;
+    } else {
+      console.log("  (rien a ramasser : tous les orphelins ont moins de deux heures)");
+    }
+  } else if (orphelins.length > 0) {
+    console.log("       relancer avec --ramasser pour les retirer.");
+  }
 
   /* --- Les références mortes : en base, absentes du stockage ------------- */
 
