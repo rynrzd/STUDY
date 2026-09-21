@@ -98,12 +98,23 @@ export async function scenarioRemises({ navigateur, base, terrain, sql, verifier
     let vu = await eleveA.page.evaluate(() => document.body.innerText);
     verifier(!vu.includes(marque), "DEPOT_02 — un devoir en brouillon reste invisible");
 
-    // Et son adresse directe ne l'ouvre pas davantage.
-    const direct = await eleveA.page
+    // Et son adresse directe ne livre rien.
+    //
+    // Ce qui compte n'est pas le code HTTP — une frontière « introuvable »
+    // peut répondre 200 en rendant sa page — mais qu'aucun contenu du devoir
+    // n'apparaisse, et qu'aucune zone de dépôt ne s'offre.
+    await eleveA.page
       .goto(`${base}/eleve/devoirs/${devoir.id}`, { waitUntil: "networkidle" })
-      .then((r) => r?.status() ?? 0)
-      .catch(() => 0);
-    verifier(direct === 404, "DEPOT_02 — son adresse directe ne l ouvre pas", `HTTP ${direct}`);
+      .catch(() => null);
+
+    const contenuDirect = await eleveA.page.evaluate(() => document.body.innerText);
+    const zoneOfferte = await eleveA.page.locator('[data-testid="remise-formulaire"]').count();
+
+    verifier(
+      !contenuDirect.includes(`Devoir ${marque}`) && zoneOfferte === 0,
+      "DEPOT_02 — son adresse directe ne livre ni le titre ni la zone de depot",
+      contenuDirect.replace(/[\s]+/g, " ").slice(0, 60),
+    );
 
     /* DEPOT_03 — publication ------------------------------------------------ */
 

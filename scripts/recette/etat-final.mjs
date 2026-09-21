@@ -41,7 +41,13 @@ const { rows } = await sql.query(`
     (select count(*)::int from study.organization_memberships
       where roles && array['eleve']::study.role_type[])                               as eleves,
     (select count(*)::int from study.classes)                                         as classes,
-    (select count(*)::int from study_prive.sessions where revoked_at is null)         as sessions_vivantes,
+    -- Les sessions **de recette** : celles d un compte autre que l exploitant.
+    -- Sa propre session n est pas un residu, et la compter comme tel ferait
+    -- echouer un etat conforme chaque fois qu il se connecte.
+    (select count(*)::int from study_prive.sessions s
+      where s.revoked_at is null
+        and not exists (select 1 from study_prive.editor_staff e
+                         where e.profile_id = s.profile_id))                      as sessions_vivantes,
     (select count(*)::int from study.commercial_requests)                             as demandes,
     (select count(*)::int from study.files where state <> 'supprime')                 as fichiers,
     (select count(*)::int from study.import_batches)                                  as lots,
@@ -116,6 +122,35 @@ if (total === 0) {
 }
 
 console.log(`\n  (conserve) journal d audit     = ${etat.journal} evenement(s) legitimes`);
+
+/* --- Les garde-fous sont-ils tous en place ? ------------------------------- */
+
+// Le nettoyage met trois declencheurs en sommeil le temps d un demontage. Si
+// une recette est interrompue au mauvais moment, ils pourraient rester
+// eteints — et personne ne s en apercevrait avant le premier incident.
+const { rows: gardes } = await sql.query(`
+  select t.tgname, t.tgenabled
+    from pg_trigger t
+    join pg_class c on c.oid = t.tgrelid
+    join pg_namespace n on n.oid = c.relnamespace
+   where not t.tgisinternal and n.nspname = 'study'
+     and t.tgname in ('memberships_guard_last_admin', 'submission_versions_immutable',
+                      'files_freeze_tenant', 'audit_events_immutable',
+                      'audit_events_sans_secret')
+   order by t.tgname
+`);
+
+console.log("");
+for (const garde of gardes) {
+  const actif = garde.tgenabled === "O";
+  if (!actif) defauts += 1;
+  console.log(`  ${actif ? "ok  " : "NON "} declencheur ${garde.tgname}`);
+}
+
+if (gardes.length < 5) {
+  defauts += 1;
+  console.log(`  NON  seuls ${gardes.length} garde-fous sur 5 sont presents`);
+}
 
 /* --- Qui est ce compte unique ? -------------------------------------------- */
 

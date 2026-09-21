@@ -15,16 +15,30 @@
 // désactiver la serrure pour prouver qu'on a la clé. Les traces d'une recette
 // sont la preuve que la recette a eu lieu : elles restent.
 //
-// **On ne neutralise que le garde-fou précis qui gêne.** Supprimer le dernier
-// administrateur d'un établissement est refusé par
-// `memberships_guard_last_admin` — une protection juste, qui n'a simplement
-// pas de sens sur un établissement qu'on démonte en entier. On le met en
-// sommeil nommément, dans la transaction, et il est rétabli avant la fin.
+// **On ne neutralise que les garde-fous précis qui gênent.** Trois, nommés un
+// par un, pour la durée d une transaction : le dernier administrateur d un
+// lycée, l immutabilité d une copie remise, et le gel de l établissement d un
+// fichier. Chacun est une bonne règle que le démontage d un établissement
+// entier rend sans objet. Ils sont rétablis avant la fin — et même si la
+// transaction échoue, sans quoi la production resterait sans ses protections.
 // Aucun réglage global de session, aucune suspension en bloc.
 // =============================================================================
 
 /** Le journal : on le lit, on ne le réécrit jamais. */
 const INTOUCHABLES = new Set(["audit_events"]);
+
+/**
+ * Les garde-fous mis en sommeil le temps d un demontage, nommes un par un.
+ *
+ * La liste est courte et le restera : chaque entree doit pouvoir se justifier
+ * en une phrase. Ce qui n y figure pas reste actif, y compris l immutabilite
+ * du journal d audit.
+ */
+const GARDES_EN_SOMMEIL = [
+  ["study.organization_memberships", "memberships_guard_last_admin"],
+  ["study.submission_versions", "submission_versions_immutable"],
+  ["study.files", "files_freeze_tenant"],
+];
 
 /**
  * Les tables qui portent un `organization_id`, découvertes dans le catalogue.
@@ -62,13 +76,30 @@ export async function demonterEtablissement(sql, organisation, { trace = () => {
   await sql.query("begin");
 
   try {
-    // Le seul garde-fou neutralisé, et il est nommé.
-    await sql.query(
-      "alter table study.organization_memberships disable trigger memberships_guard_last_admin",
-    );
+    // Les garde-fous neutralisés sont **nommés**, un par un, et pour la durée
+    // de cette transaction seulement. Aucun réglage global, aucune suspension
+    // en bloc, et le journal d'audit n'en fait pas partie.
+    //
+    // Chacun est une bonne règle que le démontage d'un établissement entier
+    // rend sans objet :
+    //
+    //   - `memberships_guard_last_admin` refuse de retirer le dernier
+    //     administrateur d'un lycée vivant ;
+    //   - `submission_versions_immutable` refuse d'effacer une copie remise,
+    //     ce qui est exactement ce qu'on veut le reste du temps ;
+    //   - `files_freeze_tenant` interdit de changer l'établissement d'un
+    //     fichier, et bloque aussi sa suppression.
+    for (const [table, garde] of GARDES_EN_SOMMEIL) {
+      await sql.query(`alter table ${table} disable trigger ${garde}`);
+    }
 
+    // Chaque passe retire au moins une couche de dependances. La chaine
+    // s est allongee avec les remises — devoir, copie, version, fichier,
+    // correction — et quatre passes ne suffisaient plus : le nettoyage
+    // echouait a la fin, sur la suppression de l etablissement. On en laisse
+    // largement assez, la boucle s arretant des qu elle ne progresse plus.
     let reste = tables;
-    for (let passe = 0; passe < 4 && reste.length > 0; passe += 1) {
+    for (let passe = 0; passe < 12 && reste.length > 0; passe += 1) {
       const bloquees = [];
 
       for (const { schema, table } of reste) {
@@ -104,9 +135,9 @@ export async function demonterEtablissement(sql, organisation, { trace = () => {
     );
     supprimees.set("study.organizations", organisations);
 
-    await sql.query(
-      "alter table study.organization_memberships enable trigger memberships_guard_last_admin",
-    );
+    for (const [table, garde] of GARDES_EN_SOMMEIL) {
+      await sql.query(`alter table ${table} enable trigger ${garde}`);
+    }
 
     await sql.query("commit");
   } catch (erreur) {
@@ -114,11 +145,12 @@ export async function demonterEtablissement(sql, organisation, { trace = () => {
     throw erreur;
   }
 
-  // Le déclencheur est rétabli même si la transaction a été défaite : sans
-  // cela, un échec de nettoyage laisserait la production sans sa protection.
-  await sql
-    .query("alter table study.organization_memberships enable trigger memberships_guard_last_admin")
-    .catch(() => {});
+  // Les déclencheurs sont rétablis même si la transaction a été défaite : sans
+  // cela, un échec de nettoyage laisserait la production sans ses protections,
+  // et personne ne s en apercevrait avant le premier incident.
+  for (const [table, garde] of GARDES_EN_SOMMEIL) {
+    await sql.query(`alter table ${table} enable trigger ${garde}`).catch(() => {});
+  }
 
   for (const [table, nombre] of supprimees) trace(`    ${table} : ${nombre}`);
   return supprimees;

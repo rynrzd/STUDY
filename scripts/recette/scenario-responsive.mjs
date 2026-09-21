@@ -232,7 +232,7 @@ export async function scenarioResponsive({ navigateur, base, terrain, verifier }
       pages: [
         ["/professeur", "main"],
         ["/professeur/classes", "main"],
-        ["/professeur/devoirs", "main"],
+        ["/professeur/devoirs", '[data-testid="devoir-formulaire"]'],
         ["/studio", '[data-testid="chapitre-nouveau"]'],
       ],
     },
