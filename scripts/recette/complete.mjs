@@ -232,7 +232,12 @@ try {
       select
         (select count(*)::int from study.profiles)                                as profils,
         (select count(*)::int from study.organization_memberships)                as adhesions,
-        (select count(*)::int from study_prive.sessions where revoked_at is null) as sessions,
+        -- Les sessions de recette : celles d un compte autre que l exploitant.
+        -- La sienne n est pas un residu.
+        (select count(*)::int from study_prive.sessions s
+          where s.revoked_at is null
+            and not exists (select 1 from study_prive.editor_staff e
+                             where e.profile_id = s.profile_id))                  as sessions,
         (select count(*)::int from study.commercial_requests)                     as demandes
     `);
 
