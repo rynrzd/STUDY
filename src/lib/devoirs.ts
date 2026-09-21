@@ -718,3 +718,71 @@ export async function publierRetour(
   }
   return true;
 }
+
+/**
+ * Inscrit les destinataires d'un devoir.
+ *
+ * `assignments_student_read` ne montre un devoir qu'à qui en est destinataire
+ * « concerné ». C'est volontaire — un devoir se donne à des personnes, pas à
+ * une salle — mais cela veut dire que la liste doit être écrite, sans quoi le
+ * devoir n'existe pour personne.
+ *
+ * Elle est écrite **à la publication**, pas à la création : entre les deux, un
+ * élève peut arriver ou partir, et c'est la classe du jour où le devoir paraît
+ * qui compte. Les doublons sont ignorés : republier n'inscrit pas deux fois.
+ */
+export async function inscrireDestinataires(options: {
+  jeton: string;
+  organisation: string;
+  cours: string;
+  devoir: string;
+}): Promise<number> {
+  const client = clientUtilisateur(options.jeton);
+
+  const { data: espace } = await client
+    .from("teaching_spaces")
+    .select("class_id, group_id")
+    .eq("id", options.cours)
+    .maybeSingle();
+
+  const cible = espace as { class_id: string | null; group_id: string | null } | null;
+  if (cible === null) return 0;
+
+  const eleves =
+    cible.class_id !== null
+      ? await client
+          .from("class_enrollments")
+          .select("profile_id")
+          .eq("class_id", cible.class_id)
+          .is("ends_on", null)
+      : await client.from("group_memberships").select("profile_id").eq("group_id", cible.group_id!);
+
+  const profils = ((eleves.data ?? []) as { profile_id: string }[]).map((l) => l.profile_id);
+  if (profils.length === 0) return 0;
+
+  // Ceux qui sont déjà inscrits ne le sont pas deux fois : une republication
+  // ne doit rien changer pour un élève qui voyait déjà le devoir.
+  const { data: dejaLa } = await client
+    .from("assignment_recipients")
+    .select("profile_id")
+    .eq("assignment_id", options.devoir);
+
+  const connus = new Set(((dejaLa ?? []) as { profile_id: string }[]).map((l) => l.profile_id));
+  const nouveaux = profils.filter((profil) => !connus.has(profil));
+  if (nouveaux.length === 0) return 0;
+
+  const { error } = await client.from("assignment_recipients").insert(
+    nouveaux.map((profil) => ({
+      organization_id: options.organisation,
+      assignment_id: options.devoir,
+      profile_id: profil,
+      status: "concerne",
+    })),
+  );
+
+  if (error !== null) {
+    journaliser("devoirs.destinataires", error.code);
+    return 0;
+  }
+  return nouveaux.length;
+}

@@ -6,6 +6,8 @@ import { z } from "zod";
 import {
   archiverDevoir,
   creerDevoir,
+  devoir as lireDevoir,
+  inscrireDestinataires,
   enregistrerRetour,
   majDevoir,
   marquerPapier,
@@ -184,6 +186,21 @@ export async function basculerPublication(
     devoir: analyse.data.devoir,
     publier: analyse.data.publier === "oui",
   });
+
+  // Publier, cest aussi designer ceux a qui le devoir sadresse : sans cette
+  // liste, la politique de lecture ne le montre a personne.
+  if (resultat.ok && analyse.data.publier === "oui") {
+    const leDevoir = await lireDevoir(session.jeton, analyse.data.devoir);
+    const organisation = session.personne.organizationId;
+    if (leDevoir !== null && organisation !== null && organisation !== undefined) {
+      await inscrireDestinataires({
+        jeton: session.jeton,
+        organisation,
+        cours: leDevoir.cours,
+        devoir: analyse.data.devoir,
+      });
+    }
+  }
 
   revalidatePath(`/professeur/devoirs/${analyse.data.devoir}`);
   revalidatePath("/professeur/devoirs");
