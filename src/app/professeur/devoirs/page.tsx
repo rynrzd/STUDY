@@ -2,23 +2,34 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { TitreEspace, Vide } from "@/components/app/Cadre";
+import { FormulaireDevoir } from "@/components/professeur/FormulaireDevoir";
+import { devoirsDuProfesseur, type Devoir } from "@/lib/devoirs";
+import { instantLisible } from "@/lib/horodatage";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
-import { coursDuProfesseur } from "@/lib/studio";
-import { devoirsDuProfesseur } from "@/lib/espace-professeur";
-import { echeanceLisible, trierDevoirs } from "@/lib/echeances";
+import { coursDuProfesseur, seancesDuCours } from "@/lib/studio";
 
 export const metadata: Metadata = { title: "Devoirs" };
 
 /**
- * Devoirs donnés — cahier V2, §11.
+ * Devoirs donnés — cahier V5, §2.
  *
- * Un devoir n'existe pas séparément d'une séance : il est créé depuis le Studio,
- * dans un bloc « devoir ». Cette page est donc une vue de lecture — elle
- * rassemble ce qui est éparpillé dans les séances, et renvoie à la séance pour
- * modifier. C'est volontaire : deux endroits pour écrire la même chose, ce sont
- * deux versions qui divergent.
+ * Écran de travail, pas de consultation : le professeur y crée un devoir, le
+ * publie, et suit les remises. C'est un changement de nature par rapport à la
+ * version précédente, qui ne faisait que rassembler les devoirs créés depuis
+ * les séances.
+ *
+ * Les brouillons sont en haut. C'est ce qu'on a commencé et pas fini — donc ce
+ * qu'on risque d'oublier.
  */
 export const dynamic = "force-dynamic";
+
+const ETATS: Record<string, string> = {
+  brouillon: "Brouillon",
+  publie: "Publié",
+  publie_en_retard: "Échéance passée",
+  ferme: "Fermé",
+  archive: "Archivé",
+};
 
 export default async function PageDevoirsProfesseur() {
   const personne = await sessionCourante();
@@ -33,117 +44,114 @@ export default async function PageDevoirsProfesseur() {
   ]);
 
   const libelles = new Map(cours.map((c) => [c.id, c.libelle] as const));
-  const donnes = devoirs.filter((devoir) => devoir.state === "publiee");
-  const { aVenir, passes } = trierDevoirs(donnes);
 
-  if (donnes.length === 0) {
-    return (
-      <>
-        <TitreEspace titre="Devoirs" />
-        <div className="mt-8">
-          <Vide
-            titre="Vous n'avez donné aucun devoir."
-            texte="Un devoir se crée dans le Studio : ouvrez une séance, ajoutez un bloc « devoir », donnez-lui un titre et une date limite. Il apparaîtra ici et dans la liste « À faire » de vos élèves une fois la séance publiée."
-            action={
-              <Link href="/studio" className="bouton bouton-rose">
-                Ouvrir le Studio
-              </Link>
-            }
-          />
-        </div>
-      </>
-    );
-  }
+  // Les séances publiées de chaque cours, pour pouvoir y rattacher un devoir.
+  const seances = (
+    await Promise.all(
+      cours.map(async (unCours) => {
+        const liste = await seancesDuCours(jeton, unCours.id);
+        return liste.map((seance) => ({
+          id: seance.id,
+          titre: seance.title,
+          cours: unCours.id,
+        }));
+      }),
+    )
+  ).flat();
+
+  const rang: Record<string, number> = {
+    brouillon: 0,
+    publie: 1,
+    publie_en_retard: 2,
+    ferme: 3,
+    archive: 4,
+  };
+
+  const tries = [...devoirs].sort(
+    (a, b) =>
+      (rang[a.etat] ?? 9) - (rang[b.etat] ?? 9) ||
+      (a.echeance ?? "").localeCompare(b.echeance ?? ""),
+  );
 
   return (
     <>
       <TitreEspace
         titre="Devoirs"
-        sousTitre={`${donnes.length} devoir${donnes.length > 1 ? "s" : ""} donné${
-          donnes.length > 1 ? "s" : ""
-        }`}
+        sousTitre={
+          devoirs.length === 0
+            ? undefined
+            : `${devoirs.length} devoir${devoirs.length > 1 ? "s" : ""}`
+        }
       />
 
-      <Groupe
-        titre="À venir"
-        vide="Aucun devoir à venir."
-        devoirs={aVenir}
-        libelles={libelles}
-      />
+      {cours.length === 0 ? (
+        <div className="mt-8">
+          <Vide
+            titre="Aucune classe ne vous est affectée."
+            texte="Un devoir se donne à une classe. Demandez à l'administration de votre établissement de vous rattacher à vos cours."
+          />
+        </div>
+      ) : (
+        <>
+          <section className="mt-8 print:hidden">
+            <h2 className="m-0 mb-4 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
+              Donner un devoir
+            </h2>
+            <FormulaireDevoir
+              cours={cours.map((unCours) => ({ id: unCours.id, libelle: unCours.libelle }))}
+              seances={seances}
+            />
+          </section>
 
-      {passes.length > 0 ? (
-        <Groupe titre="Échéance passée" vide="" devoirs={passes} libelles={libelles} />
-      ) : null}
+          <section className="mt-12">
+            <h2 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
+              Mes devoirs
+            </h2>
+
+            {tries.length === 0 ? (
+              <p className="m-0 mt-4 text-[color:var(--color-encre-faible)]">
+                Vous n&apos;avez encore donné aucun devoir.
+              </p>
+            ) : (
+              <ul className="m-0 mt-4 list-none space-y-2 p-0" data-testid="liste-devoirs">
+                {tries.map((devoir) => (
+                  <li key={devoir.id}>
+                    <Lien devoir={devoir} cours={libelles.get(devoir.cours) ?? "Cours"} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      )}
     </>
   );
 }
 
-/* -------------------------------------------------------------------------- */
-
-function Groupe({
-  titre,
-  vide,
-  devoirs,
-  libelles,
-}: {
-  titre: string;
-  vide: string;
-  devoirs: readonly {
-    id: string;
-    title: string;
-    due_at: string | null;
-    lesson_id: string | null;
-    teaching_space_id: string;
-  }[];
-  libelles: Map<string, string>;
-}) {
+function Lien({ devoir, cours }: { devoir: Devoir; cours: string }) {
   return (
-    <section className="mt-9">
-      <h2 className="text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
-        {titre}
-      </h2>
+    <Link
+      href={`/professeur/devoirs/${devoir.id}`}
+      data-testid="devoir-lien"
+      data-devoir={devoir.id}
+      data-etat={devoir.etat}
+      className="flex min-h-[44px] flex-wrap items-center justify-between gap-3 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] p-4 no-underline hover:border-[color:var(--color-bordure-forte)]"
+    >
+      <span className="min-w-0">
+        <span className="block font-semibold">{devoir.titre}</span>
+        <span className="block text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
+          {cours}
+          {devoir.echeance === null ? "" : ` — ${instantLisible(devoir.echeance)}`}
+        </span>
+      </span>
 
-      {devoirs.length === 0 ? (
-        <p className="m-0 mt-3 text-[color:var(--color-encre-faible)]">{vide}</p>
-      ) : (
-        <ul className="m-0 mt-3 list-none p-0">
-          {devoirs.map((devoir) => {
-            const contenu = (
-              <>
-                <span className="min-w-0">
-                  <span className="block truncate font-medium text-[color:var(--color-encre)]">
-                    {devoir.title}
-                  </span>
-                  <span className="mt-0.5 block text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
-                    {libelles.get(devoir.teaching_space_id) ?? "Cours"}
-                  </span>
-                </span>
-                <span className="text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
-                  {echeanceLisible(devoir.due_at)}
-                </span>
-              </>
-            );
-
-            const classes =
-              "flex min-h-[var(--spacing-cible)] flex-wrap items-center justify-between gap-3 border-b border-[color:var(--color-bordure)] px-1 py-3";
-
-            return (
-              <li key={devoir.id}>
-                {devoir.lesson_id === null ? (
-                  <div className={classes}>{contenu}</div>
-                ) : (
-                  <Link
-                    href={`/studio/${devoir.lesson_id}`}
-                    className={`${classes} no-underline transition-colors hover:bg-[color:var(--color-survol)]`}
-                  >
-                    {contenu}
-                  </Link>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </section>
+      <span
+        className={`pastille ${
+          devoir.etat === "brouillon" ? "pastille-brouillon" : "pastille-publie"
+        }`}
+      >
+        {ETATS[devoir.etat] ?? devoir.etat}
+      </span>
+    </Link>
   );
 }
