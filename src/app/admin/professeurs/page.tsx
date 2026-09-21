@@ -210,7 +210,7 @@ export default async function PageProfesseurs({
                       href={`/admin/utilisateurs?etat=professeur&q=${encodeURIComponent(
                         membre.local_login,
                       )}`}
-                      className="text-[color:var(--color-accent)]"
+                      className="inline-flex min-h-[44px] items-center text-[color:var(--color-accent)]"
                     >
                       Gérer l&apos;accès
                     </Link>

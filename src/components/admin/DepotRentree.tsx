@@ -91,6 +91,15 @@ export function DepotRentree({ cible }: { cible: "eleves" | "professeurs" }) {
           name="fichiers"
           type="file"
           multiple
+          /* Le champ est masque et pilote par le bouton voisin : sans intitule
+             explicite, un lecteur d ecran qui l atteint ne sait pas ce que
+             c est. Aucune etiquette visible ne lui correspond, donc on le dit
+             ici. */
+          aria-label={
+            eleves
+              ? "Fichiers d eleves a deposer (.xlsx ou .csv)"
+              : "Fichiers de professeurs a deposer (.xlsx ou .csv)"
+          }
           accept=".csv,.xlsx,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           onChange={(evenement) => ajouter(evenement.target.files)}
           className="sr-only"
