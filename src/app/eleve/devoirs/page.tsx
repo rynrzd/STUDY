@@ -2,21 +2,33 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { TitreEspace, Vide } from "@/components/app/Cadre";
+import { devoirsDeLEleve, type Devoir, type EtatRemise } from "@/lib/devoirs";
+import { coursDeLEleve } from "@/lib/espace-eleve";
+import { instantLisible } from "@/lib/horodatage";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
-import { echeanceLisible, trierDevoirs } from "@/lib/echeances";
-import { coursDeLEleve, devoirsDeLEleve } from "@/lib/espace-eleve";
+import { clientUtilisateur } from "@/lib/supabase-serveur";
 
 export const metadata: Metadata = { title: "À faire" };
 
 /**
- * À faire — cahier V2, §11.
+ * À faire — cahier V5, §3.1.
  *
- * Une seule liste, triée par échéance, sans case à cocher ni pourcentage
- * d'avancement : AvecStudy ne prétend pas savoir ce que l'élève a réellement
- * fait. Afficher « 60 % terminé » serait une statistique inventée, exactement
- * ce que le cahier interdit.
+ * Quatre groupes, dans l'ordre où ils intéressent l'élève : ce qui reste à
+ * faire, ce qui est remis, ce qui est corrigé, ce qui est fermé. Pas de
+ * pourcentage d'avancement ni de série quotidienne — AvecStudy ne prétend pas
+ * savoir ce qu'un élève a réellement compris.
+ *
+ * L'état affiché vient de la base, jamais d'un calcul refait ici : l'écran ne
+ * doit pas pouvoir dire « ouvert » quand le serveur refuse.
  */
 export const dynamic = "force-dynamic";
+
+interface Ligne {
+  readonly devoir: Devoir;
+  readonly cours: string;
+  readonly etat: EtatRemise;
+  readonly corrige: boolean;
+}
 
 export default async function PageDevoirsEleve() {
   const personne = await sessionCourante();
@@ -27,7 +39,79 @@ export default async function PageDevoirsEleve() {
 
   const [cours, devoirs] = await Promise.all([coursDeLEleve(jeton), devoirsDeLEleve(jeton)]);
   const libelles = new Map(cours.map((c) => [c.id, c.libelle] as const));
-  const { aVenir, passes } = trierDevoirs(devoirs);
+
+  // Les états de remise en un seul aller-retour : une requête par devoir
+  // multiplierait les allers-retours sans rien apporter.
+  const client = clientUtilisateur(jeton);
+  const { data: copies } = await client
+    .from("submissions")
+    .select("assignment_id, state")
+    .in(
+      "assignment_id",
+      devoirs.map((d) => d.id),
+    );
+
+  const parDevoir = new Map(
+    ((copies ?? []) as { assignment_id: string; state: EtatRemise }[]).map((c) => [
+      c.assignment_id,
+      c.state,
+    ]),
+  );
+
+  const { data: retours } = await client
+    .from("feedback")
+    .select("submission_version_id, published_at")
+    .not("published_at", "is", null);
+
+  const corriges = new Set(
+    ((retours ?? []) as { submission_version_id: string }[]).map((r) => r.submission_version_id),
+  );
+
+  const { data: versions } = await client
+    .from("submission_versions")
+    .select("id, submission_id")
+    .in("id", [...corriges]);
+
+  const copiesCorrigees = new Set(
+    ((versions ?? []) as { submission_id: string }[]).map((v) => v.submission_id),
+  );
+
+  const { data: sesCopies } = await client.from("submissions").select("id, assignment_id");
+  const devoirsCorriges = new Set(
+    ((sesCopies ?? []) as { id: string; assignment_id: string }[])
+      .filter((c) => copiesCorrigees.has(c.id))
+      .map((c) => c.assignment_id),
+  );
+
+  const lignes: Ligne[] = devoirs.map((devoir) => ({
+    devoir,
+    cours: libelles.get(devoir.cours) ?? "Cours",
+    etat: parDevoir.get(devoir.id) ?? "non_commence",
+    corrige: devoirsCorriges.has(devoir.id),
+  }));
+
+  const remis = (etat: EtatRemise) => etat === "remis" || etat === "remis_en_retard";
+
+  const groupes = [
+    {
+      cle: "a-faire",
+      titre: "À faire",
+      lignes: lignes.filter(
+        (l) => !l.corrige && !remis(l.etat) && l.devoir.etat !== "ferme",
+      ),
+    },
+    {
+      cle: "remis",
+      titre: "Remis, en attente de correction",
+      lignes: lignes.filter((l) => !l.corrige && remis(l.etat)),
+    },
+    { cle: "corriges", titre: "Corrigés", lignes: lignes.filter((l) => l.corrige) },
+    {
+      cle: "fermes",
+      titre: "Fermés",
+      lignes: lignes.filter((l) => !l.corrige && !remis(l.etat) && l.devoir.etat === "ferme"),
+    },
+  ];
 
   if (devoirs.length === 0) {
     return (
@@ -48,88 +132,55 @@ export default async function PageDevoirsEleve() {
     );
   }
 
+  const aFaire = groupes[0]!.lignes.length;
+
   return (
     <>
       <TitreEspace
         titre="À faire"
-        sousTitre={`${aVenir.length} devoir${aVenir.length > 1 ? "s" : ""} à venir`}
+        sousTitre={`${aFaire} devoir${aFaire > 1 ? "s" : ""} à rendre`}
       />
 
-      <Liste titre="À venir" devoirs={aVenir} libelles={libelles} vide="Rien à rendre pour le moment." />
+      {groupes.map((groupe) =>
+        groupe.lignes.length === 0 ? null : (
+          <section key={groupe.cle} className="mt-10" data-testid={`groupe-${groupe.cle}`}>
+            <h2 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
+              {groupe.titre}
+            </h2>
 
-      {passes.length > 0 ? (
-        <Liste titre="Échéance passée" devoirs={passes} libelles={libelles} vide="" />
-      ) : null}
-    </>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-
-function Liste({
-  titre,
-  devoirs,
-  libelles,
-  vide,
-}: {
-  titre: string;
-  devoirs: readonly {
-    id: string;
-    title: string;
-    due_at: string | null;
-    lesson_id: string | null;
-    teaching_space_id: string;
-  }[];
-  libelles: Map<string, string>;
-  vide: string;
-}) {
-  return (
-    <section className="mt-9">
-      <h2 className="text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
-        {titre}
-      </h2>
-
-      {devoirs.length === 0 ? (
-        <p className="m-0 mt-3 text-[color:var(--color-encre-faible)]">{vide}</p>
-      ) : (
-        <ul className="m-0 mt-3 list-none p-0">
-          {devoirs.map((devoir) => {
-            const contenu = (
-              <>
-                <span className="min-w-0">
-                  <span className="block truncate font-medium text-[color:var(--color-encre)]">
-                    {devoir.title}
-                  </span>
-                  <span className="mt-0.5 block text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
-                    {libelles.get(devoir.teaching_space_id) ?? "Cours"}
-                  </span>
-                </span>
-                <span className="text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
-                  {echeanceLisible(devoir.due_at)}
-                </span>
-              </>
-            );
-
-            const classes =
-              "flex min-h-[var(--spacing-cible)] flex-wrap items-center justify-between gap-3 border-b border-[color:var(--color-bordure)] px-1 py-3";
-
-            return (
-              <li key={devoir.id}>
-                {devoir.lesson_id === null ? (
-                  <div className={classes}>{contenu}</div>
-                ) : (
+            <ul className="m-0 mt-4 list-none space-y-2 p-0">
+              {groupe.lignes.map((ligne) => (
+                <li key={ligne.devoir.id}>
                   <Link
-                    href={`/eleve/cours/${devoir.lesson_id}`}
-                    className={`${classes} no-underline transition-colors hover:bg-[color:var(--color-survol)]`}
+                    href={`/eleve/devoirs/${ligne.devoir.id}`}
+                    data-testid="devoir-lien"
+                    data-devoir={ligne.devoir.id}
+                    className="flex min-h-[44px] flex-wrap items-center justify-between gap-3 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] p-4 no-underline hover:border-[color:var(--color-bordure-forte)]"
                   >
-                    {contenu}
+                    <span className="min-w-0">
+                      <span className="block font-semibold">{ligne.devoir.titre}</span>
+                      <span className="block text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
+                        {ligne.cours}
+                        {ligne.devoir.echeance === null
+                          ? ""
+                          : ` — à rendre le ${instantLisible(ligne.devoir.echeance)}`}
+                      </span>
+                    </span>
+
+                    <span className="text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
+                      {ligne.devoir.mode === "papier"
+                        ? "papier"
+                        : ligne.devoir.mode === "aucune"
+                          ? "rien à rendre"
+                          : "fichier"}
+                    </span>
                   </Link>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ),
       )}
-    </section>
+    </>
   );
 }

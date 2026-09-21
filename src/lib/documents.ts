@@ -243,3 +243,141 @@ export async function lireSupport(jeton: string, fileId: string): Promise<Suppor
   };
 }
 
+
+/* -------------------------------------------------------------------------- */
+/* Copies, consignes et corrections                                            */
+/* -------------------------------------------------------------------------- */
+
+/** Les genres de pièce jointe que cette voie accepte. */
+export type GenrePiece = "copie" | "consigne_devoir" | "correction";
+
+/**
+ * Dépose une pièce jointe qui n'est pas un support de séance.
+ *
+ * Les trois phases sont les mêmes que pour un support — réserver, transférer,
+ * finaliser — et pour la même raison : à aucun moment il ne doit exister un
+ * objet dans le stockage que rien ne désigne, ni une ligne en base qui
+ * désigne un objet absent. La première situation remplit le stockage de
+ * fichiers invisibles ; la seconde montre « remis » à un élève qui ne peut
+ * rien retélécharger.
+ *
+ * Ce qui change : le genre et la ressource de rattachement, qui décident
+ * ensuite — par les politiques RLS — de qui pourra ouvrir le fichier. Cette
+ * fonction, elle, n'accorde aucun droit.
+ */
+export async function deposerPieceJointe(options: {
+  jeton: string;
+  organisation: string;
+  proprietaire: string;
+  genre: GenrePiece;
+  rattachement: string;
+  fichier: File;
+}): Promise<ResultatDepot> {
+  if (options.fichier.size === 0) {
+    return { etat: "refus", message: "Ce fichier est vide." };
+  }
+
+  if (options.fichier.size > TAILLE_MAXIMALE_SUPPORT) {
+    return {
+      etat: "refus",
+      message: `Ce fichier dépasse ${Math.round(TAILLE_MAXIMALE_SUPPORT / (1024 * 1024))} Mo.`,
+    };
+  }
+
+  const octets = Buffer.from(await options.fichier.arrayBuffer());
+  const type = reconnaitre(octets, options.fichier.type === "" ? null : options.fichier.type);
+
+  if (type === null) {
+    return {
+      etat: "refus",
+      message: `Ce format n'est pas accepté. Formats possibles : ${FORMATS_ACCEPTES}.`,
+    };
+  }
+
+  const nom = nomLisible(options.fichier.name, type.extension);
+  const empreinte = createHash("sha256").update(octets).digest("hex");
+  const cle = `${options.organisation}/${options.rattachement}/${randomUUID()}`;
+
+  const { data, error } = await clientUtilisateur(options.jeton)
+    .from("files")
+    .insert({
+      organization_id: options.organisation,
+      owner_id: options.proprietaire,
+      display_name: nom,
+      storage_key: cle,
+      bucket: BUCKET_SUPPORTS,
+      mime_declared: options.fichier.type === "" ? null : options.fichier.type,
+      byte_size: 0,
+      taille_annoncee: octets.length,
+      state: "reserve",
+      reserved_by: options.proprietaire,
+      reserved_at: new Date().toISOString(),
+      reservation_expire_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      attached_kind: options.genre,
+      attached_id: options.rattachement,
+    })
+    .select("id")
+    .single();
+
+  if (error !== null || data === null) {
+    console.error(
+      JSON.stringify({ niveau: "erreur", contexte: "pieces.reservation", code: error?.code }),
+    );
+    return { etat: "refus", message: "Le fichier n'a pas pu être enregistré." };
+  }
+
+  const fileId = (data as { id: string }).id;
+  const stockage = clientExploitation("stockage_des_supports").storage.from(BUCKET_SUPPORTS);
+
+  const { error: erreurDepot } = await stockage.upload(cle, octets, {
+    contentType: type.mime,
+    upsert: false,
+  });
+
+  if (erreurDepot !== null) {
+    await abandonner(options.jeton, fileId);
+    console.error(
+      JSON.stringify({ niveau: "erreur", contexte: "pieces.depot", message: erreurDepot.message }),
+    );
+    return { etat: "refus", message: "Le dépôt a échoué. Réessayez dans un instant." };
+  }
+
+  const { error: erreurFinal } = await clientExploitation("stockage_des_supports").rpc(
+    "finaliser_piece_jointe",
+    {
+      p_fichier: fileId,
+      p_mime_detecte: type.mime,
+      p_taille: octets.length,
+      p_sha256: `\\x${empreinte}`,
+    },
+  );
+
+  if (erreurFinal !== null) {
+    // L'objet est retiré du stockage **avant** d'abandonner la ligne : dans
+    // l'autre ordre, un incident entre les deux laisserait un objet que plus
+    // rien ne référence.
+    await stockage.remove([cle]);
+    await abandonner(options.jeton, fileId);
+    console.error(
+      JSON.stringify({ niveau: "erreur", contexte: "pieces.finalisation", code: erreurFinal.code }),
+    );
+    return { etat: "refus", message: "Le fichier n'a pas pu être enregistré." };
+  }
+
+  return { etat: "ok", support: { fileId, nom, taille: octets.length, type } };
+}
+
+/**
+ * Retire un fichier devenu inutile après un remplacement réussi.
+ *
+ * L'ordre est l'inverse du dépôt, et il n'est pas négociable : on ne retire
+ * l'ancienne version **qu'après** que la nouvelle est enregistrée. Supprimer
+ * d'abord laisserait, en cas d'échec, un élève sans aucune copie — alors qu'il
+ * en avait une.
+ *
+ * La ligne passe à « supprimé » plutôt que d'être effacée : la trace du dépôt
+ * demeure, et c'est elle qui permet de répondre à « j'avais bien rendu ».
+ */
+export async function retirerPieceJointe(jeton: string, fileId: string): Promise<void> {
+  await abandonner(jeton, fileId);
+}
