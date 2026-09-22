@@ -87,6 +87,16 @@ export default function PageMentionsLegales() {
               </a>
             )}
           </Ligne>
+          {IDENTITE.contactTelephone === null ? null : (
+            <Ligne terme="Téléphone">
+              <a
+                href={`tel:${IDENTITE.contactTelephone.replace(/\s/g, "")}`}
+                className="text-[color:var(--color-accent)]"
+              >
+                {IDENTITE.contactTelephone}
+              </a>
+            </Ligne>
+          )}
           <Ligne terme="Hébergeur technique">
             {IDENTITE.hebergeur.nom}
             {IDENTITE.hebergeur.raisonSociale === null
@@ -101,16 +111,6 @@ export default function PageMentionsLegales() {
               l&apos;application, il ne l&apos;édite pas.
             </span>
           </Ligne>
-          {IDENTITE.contactTelephone === null ? null : (
-            <Ligne terme="Téléphone">
-              <a
-                href={`tel:${IDENTITE.contactTelephone.replace(/\s/g, "")}`}
-                className="text-[color:var(--color-accent)]"
-              >
-                {IDENTITE.contactTelephone}
-              </a>
-            </Ligne>
-          )}
           <Ligne terme="Adresse du site">{DOMAINE}</Ligne>
         </dl>
       </Section>
