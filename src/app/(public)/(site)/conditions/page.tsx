@@ -44,12 +44,14 @@ export default function PageConditions() {
         <Prose>
           <h2>1. Objet</h2>
           <p>
-            {MARQUE} est un service en ligne édité par {IDENTITE.editeur},{" "}
-            {IDENTITE.formeJuridique}. Il permet à un établissement scolaire
-            d&apos;organiser les séances, les devoirs, les copies, les
-            corrections et l&apos;entraide de ses classes. Il est fourni à
-            l&apos;établissement dans le cadre d&apos;une licence annuelle
-            établie sur devis.
+            {MARQUE} est un nom commercial du service en ligne édité par{" "}
+            {IDENTITE.editeur}, {IDENTITE.formeJuridique}
+            {IDENTITE.siret === null ? "" : ` (SIRET ${IDENTITE.siret})`}. Il
+            permet à un établissement scolaire d&apos;organiser les séances, les
+            devoirs, les copies, les corrections et l&apos;entraide de ses
+            classes. Il est fourni à l&apos;établissement dans le cadre d&apos;une
+            licence annuelle établie sur devis
+            {IDENTITE.regimeTva === null ? "" : ` — ${IDENTITE.regimeTva}`}.
           </p>
 
           <h2>2. Deux principes qui ne changent pas</h2>

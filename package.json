@@ -32,6 +32,7 @@
     "recette:complete": "node scripts/recette/complete.mjs",
     "recette:balai": "node scripts/recette/balai.mjs",
     "revue": "node --conditions=react-server scripts/recette/revue-visuelle.mjs",
+    "verifier:legal": "node --conditions=react-server scripts/recette/legal.mjs",
     "verifier:jetons": "node scripts/recette/jetons.mjs",
     "verifier:contraste": "node scripts/recette/contraste.mjs",
     "verifier:stockage": "node scripts/recette/stockage.mjs",

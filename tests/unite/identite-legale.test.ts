@@ -87,3 +87,69 @@ test("L04 — l editeur et le directeur de publication sont nommes", () => {
   assert.notEqual(IDENTITE.directeurPublication.trim(), "");
   assert.notEqual(IDENTITE.nomCommercial.trim(), "");
 });
+
+test("L05 — le SIRET prolonge le SIREN, il ne le contredit pas", () => {
+  // Un SIRET est le SIREN suivi du numéro d'établissement. Deux numéros qui
+  // divergeraient décriraient deux entreprises — et AvecStudy n'en a qu'une.
+  if (IDENTITE.siren === null || IDENTITE.siret === null) return;
+
+  const siren = IDENTITE.siren.replace(/\s/g, "");
+  const siret = IDENTITE.siret.replace(/\s/g, "");
+
+  assert.equal(siret.slice(0, 9), siren, "le SIRET doit commencer par le SIREN");
+  assert.equal(siret.length, 14);
+});
+
+test("L06 — la mention de TVA n est pas un numero de TVA", () => {
+  // Deux choses différentes, et les confondre trompe un service comptable.
+  // « TVA non applicable, article 293 B » dit qu'aucune TVA ne sera facturée ;
+  // un numéro intracommunautaire dit l'inverse. L'entreprise est en franchise
+  // en base : elle porte la mention, et n'a pas de numéro d'office.
+  if (IDENTITE.regimeTva !== null) {
+    assert.match(
+      IDENTITE.regimeTva,
+      /293\s?B/,
+      "la mention de franchise cite l article 293 B du CGI",
+    );
+    assert.doesNotMatch(
+      IDENTITE.regimeTva,
+      /^FR\d/,
+      "un numero de TVA ne s ecrit pas a la place de la mention de regime",
+    );
+  }
+
+  // Et l'inverse : si un numéro est un jour attribué, il ne remplace pas la
+  // mention — il s'y ajoute.
+  if (IDENTITE.tvaIntracommunautaire !== null) {
+    assert.notEqual(
+      IDENTITE.regimeTva,
+      null,
+      "un numero de TVA n efface pas la mention de regime",
+    );
+  }
+});
+
+test("L07 — le code APE a la forme que l INSEE attribue", () => {
+  if (IDENTITE.codeApe === null) return;
+  assert.match(
+    IDENTITE.codeApe,
+    /^\d{2}\.\d{2}[A-Z]\b/,
+    "un code APE s ecrit quatre chiffres, un point, une lettre",
+  );
+});
+
+test("L08 — AvecStudy est un nom commercial, jamais une societe", () => {
+  // La forme juridique décrit **l'entreprise**, pas le service. Écrire
+  // « AvecStudy SAS » ou « AvecStudy SARL » inventerait une personne morale
+  // qui n'existe pas, et déplacerait la responsabilité vers elle.
+  assert.doesNotMatch(
+    IDENTITE.nomCommercial,
+    /\b(SAS|SARL|SASU|EURL|SA|SCOP)\b/i,
+    "le nom commercial ne porte aucune forme sociale",
+  );
+  assert.match(
+    IDENTITE.formeJuridique,
+    /entrepreneur individuel/i,
+    "l entreprise est une entreprise individuelle",
+  );
+});

@@ -1,18 +1,23 @@
 /**
  * Identité légale de l'éditeur — source unique.
  *
- * Le cahier de finition est catégorique : « Le SIRET ne doit jamais être
- * deviné. » Aucune valeur officielle n'est donc écrite en dur ailleurs que
- * dans ce fichier, et celles qui manquent restent `null`.
+ * Aucune valeur officielle n'est écrite en dur ailleurs que dans ce fichier.
+ * Les pages légales, le pied de page et les documents commerciaux la lisent
+ * ici : une immatriculation recopiée à deux endroits finit par diverger, et
+ * c'est alors la page la moins relue qui ment.
  *
- * Une valeur `null` n'est jamais rendue comme un numéro plausible ni comme un
- * tiret discret : les pages légales affichent explicitement que la mention est
- * en cours de publication. C'est moins joli qu'un faux SIRET, et c'est la seule
- * option honnête — un numéro inventé sur une page de mentions légales est une
- * fausse déclaration.
+ * **Une seule entreprise.** AvecStudy est un **nom commercial**, pas une
+ * société. L'entreprise qui l'exploite est l'entreprise individuelle de Nouh
+ * Tifouti — la même que celle qui exploite Nireo. Il n'existe donc qu'un SIREN
+ * et qu'un SIRET, et présenter AvecStudy comme une personne morale distincte
+ * serait une fausse déclaration.
  *
- * Pour compléter : remplacer les `null` ci-dessous par les valeurs exactes du
- * justificatif INPI/INSEE, puis relancer `npm run legal:verifier`.
+ * **Ce qui manque reste `null`.** Une valeur absente n'est jamais rendue comme
+ * un numéro plausible ni comme un tiret discret : la page le dit. C'est moins
+ * joli qu'un faux SIRET, et c'est la seule option honnête.
+ *
+ * `npm run verifier:legal` relit la page **servie** et compare chaque mention
+ * à ce fichier. Une valeur corrigée ici sans déploiement s'y voit.
  */
 
 export interface IdentiteLegale {
@@ -23,7 +28,24 @@ export interface IdentiteLegale {
   readonly nomCommercial: string;
   readonly siren: string | null;
   readonly siret: string | null;
+  /** Code d'activité principale exercée, tel que l'INSEE l'a attribué. */
+  readonly codeApe: string | null;
+  /**
+   * Le numéro de TVA intracommunautaire, quand il y en a un.
+   *
+   * Une micro-entreprise en franchise en base n'en a pas d'office : elle doit
+   * le demander. Tant qu'il n'est pas attribué, ce champ vaut `null` — et
+   * c'est `regimeTva` qui porte la mention obligatoire.
+   */
   readonly tvaIntracommunautaire: string | null;
+  /**
+   * La mention de régime, obligatoire sur les documents commerciaux.
+   *
+   * Ce n'est pas un numéro et ça ne s'écrit pas à sa place : « TVA non
+   * applicable, article 293 B du CGI » dit qu'aucune TVA n'est facturée, ce
+   * qu'un champ vide laisserait deviner de travers.
+   */
+  readonly regimeTva: string | null;
   readonly adresse: string | null;
   readonly contactEmail: string | null;
   readonly contactTelephone: string | null;
@@ -50,13 +72,21 @@ export const IDENTITE: IdentiteLegale = {
   formeJuridique: "Entrepreneur individuel",
   nomCommercial: "AvecStudy",
 
-  // À renseigner d'après le justificatif INPI/INSEE. Ne jamais deviner.
-  siren: null,
-  siret: null,
+  // Valeurs officielles de l'entreprise individuelle. Un seul établissement,
+  // un seul SIREN : AvecStudy et Nireo sont deux noms commerciaux de la même
+  // entreprise, et non deux sociétés.
+  siren: "979 992 443",
+  siret: "979 992 443 00023",
+  codeApe: "62.01Z — Programmation informatique",
+
+  // Aucun numéro de TVA intracommunautaire : la franchise en base n'en
+  // attribue pas d'office. C'est `regimeTva` qui porte la mention due.
   tvaIntracommunautaire: null,
-  adresse: null,
-  contactEmail: null,
-  contactTelephone: null,
+  regimeTva: "TVA non applicable, article 293 B du Code général des impôts",
+
+  adresse: "1 avenue d'Alsace, 90000 Belfort, France",
+  contactEmail: "nireo.contacte@gmail.com",
+  contactTelephone: "07 81 69 74 77",
 
   directeurPublication: "Nouh Tifouti",
 
@@ -87,11 +117,18 @@ export const IDENTITE: IdentiteLegale = {
   ],
 };
 
-/** Les mentions obligatoires sont-elles complètes ? */
+/**
+ * Les mentions obligatoires sont-elles complètes ?
+ *
+ * `tvaIntracommunautaire` n'en fait volontairement pas partie : une entreprise
+ * en franchise en base n'en a pas, et l'exiger ferait tenir la page pour
+ * incomplète alors qu'elle est exacte. C'est `regimeTva` qui est dû.
+ */
 export function mentionsCompletes(identite: IdentiteLegale = IDENTITE): boolean {
   return (
     identite.siren !== null &&
     identite.siret !== null &&
+    identite.regimeTva !== null &&
     identite.adresse !== null &&
     identite.contactEmail !== null &&
     identite.hebergeur.raisonSociale !== null &&
@@ -104,6 +141,7 @@ export function mentionsManquantes(identite: IdentiteLegale = IDENTITE): string[
   const manquantes: string[] = [];
   if (identite.siren === null) manquantes.push("SIREN");
   if (identite.siret === null) manquantes.push("SIRET");
+  if (identite.regimeTva === null) manquantes.push("régime de TVA");
   if (identite.adresse === null) manquantes.push("adresse professionnelle");
   if (identite.contactEmail === null) manquantes.push("adresse de contact publique");
   if (identite.hebergeur.raisonSociale === null) manquantes.push("raison sociale de l'hébergeur");

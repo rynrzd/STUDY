@@ -20,10 +20,15 @@ export const metadata: Metadata = pagePublique({
 /**
  * Mentions légales.
  *
- * Toutes les valeurs viennent de `identite-legale.ts`. Celles qui ne sont pas
- * encore officiellement établies s'affichent « En cours de publication » : un
- * numéro d'immatriculation inventé sur cette page-ci serait une fausse
- * déclaration, pas une approximation.
+ * Toutes les valeurs viennent de `identite-legale.ts`. Celles qui ne seraient
+ * pas encore officiellement établies s'afficheraient « En cours de
+ * publication » : un numéro d'immatriculation inventé sur cette page-ci serait
+ * une fausse déclaration, pas une approximation.
+ *
+ * **Trois identités, et la page les sépare.** L'entreprise qui édite le
+ * service, le nom commercial sous lequel il est vendu, et l'hébergeur qui le
+ * sert. Les confondre est l'erreur la plus courante des pages légales — et
+ * c'est celle qui laisse croire qu'un nom commercial est une société.
  */
 
 const MANQUANTES = mentionsManquantes();
@@ -35,15 +40,34 @@ export default function PageMentionsLegales() {
 
       <Section>
         <dl className="m-0 max-w-[var(--spacing-lecture)] space-y-6 p-0">
-          <Ligne terme="Éditeur du service">
+          <Ligne terme="Entreprise éditrice">
             {IDENTITE.editeur} — {IDENTITE.formeJuridique}
           </Ligne>
-          <Ligne terme="Nom commercial">{IDENTITE.nomCommercial}</Ligne>
+          <Ligne terme="Nom commercial du service">
+            {IDENTITE.nomCommercial}
+            {/* Sans cette phrase, un lecteur suppose une société : c'est la
+                confusion la plus fréquente sur une page légale, et elle
+                change qui est responsable. */}
+            <span className="mt-1.5 block">
+              {IDENTITE.nomCommercial} est un nom commercial, et non une
+              société. Le service est exploité par l&apos;entreprise
+              individuelle nommée ci-dessus.
+            </span>
+          </Ligne>
           <Ligne terme="Adresse professionnelle">{mention(IDENTITE.adresse)}</Ligne>
           <Ligne terme="SIREN">{mention(IDENTITE.siren)}</Ligne>
           <Ligne terme="SIRET">{mention(IDENTITE.siret)}</Ligne>
-          <Ligne terme="TVA intracommunautaire">
-            {mention(IDENTITE.tvaIntracommunautaire)}
+          <Ligne terme="Code APE">{mention(IDENTITE.codeApe)}</Ligne>
+          <Ligne terme="TVA">
+            {/* La franchise en base n'attribue pas de numéro intracommunautaire.
+                Afficher « en cours de publication » à sa place laisserait croire
+                qu'il en manque un, alors que la mention due est celle-ci. */}
+            {mention(IDENTITE.regimeTva)}
+            {IDENTITE.tvaIntracommunautaire === null ? null : (
+              <span className="mt-1.5 block">
+                Numéro intracommunautaire : {IDENTITE.tvaIntracommunautaire}
+              </span>
+            )}
           </Ligne>
           <Ligne terme="Directeur de la publication">
             {IDENTITE.directeurPublication}
@@ -63,7 +87,7 @@ export default function PageMentionsLegales() {
               </a>
             )}
           </Ligne>
-          <Ligne terme="Hébergeur">
+          <Ligne terme="Hébergeur technique">
             {IDENTITE.hebergeur.nom}
             {IDENTITE.hebergeur.raisonSociale === null
               ? ""
@@ -72,7 +96,21 @@ export default function PageMentionsLegales() {
             {IDENTITE.hebergeur.raisonSociale === null || IDENTITE.hebergeur.adresse === null
               ? " — coordonnées légales complètes en cours de publication"
               : ""}
+            <span className="mt-1.5 block">
+              Prestataire technique distinct de l&apos;éditeur : il héberge
+              l&apos;application, il ne l&apos;édite pas.
+            </span>
           </Ligne>
+          {IDENTITE.contactTelephone === null ? null : (
+            <Ligne terme="Téléphone">
+              <a
+                href={`tel:${IDENTITE.contactTelephone.replace(/\s/g, "")}`}
+                className="text-[color:var(--color-accent)]"
+              >
+                {IDENTITE.contactTelephone}
+              </a>
+            </Ligne>
+          )}
           <Ligne terme="Adresse du site">{DOMAINE}</Ligne>
         </dl>
       </Section>

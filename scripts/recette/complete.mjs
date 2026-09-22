@@ -190,6 +190,7 @@ try {
     for (const [nom, script] of [
       ["balisage, SEO et CSP", "verifier:site"],
       ["landing conforme a la reference", "verifier:landing"],
+      ["mentions legales servies", "verifier:legal"],
       ["responsive public, clavier et cibles tactiles", "verifier:responsive"],
       ["contraste WCAG 2.2 AA des pages publiques", "verifier:contraste"],
       ["parcours navigateur publics", "test:navigateur"],
