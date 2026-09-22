@@ -17,6 +17,8 @@ import {
   delaiApresEchecs,
   messageDeRefus,
   SEUIL_ECHECS,
+  SEUIL_BALAYAGE,
+  seuilApplicable,
   type DepotAuthentification,
   type IdentiteResolue,
   type SessionACreer,
@@ -59,6 +61,8 @@ const chiffrerPourTest = (clair: string) => chiffrer(clair, CLES);
 class DepotDoublure implements DepotAuthentification {
   identite: IdentiteResolue | null = IDENTITE_ACTIVE;
   echecs = 0;
+  /** Cibles distinctes en echec dans l etablissement. Voir ABUSE-02. */
+  balayage = 0;
   sessionsCreees: SessionACreer[] = [];
   echecsEnregistres: Array<{ profileId: string | null; code: string }> = [];
   appelsResolution = 0;
@@ -70,6 +74,10 @@ class DepotDoublure implements DepotAuthentification {
 
   async compterEchecsRecents(): Promise<number> {
     return this.echecs;
+  }
+
+  async compterBalayage(): Promise<number> {
+    return this.balayage;
   }
 
   async enregistrerEchec(profileId: string | null, code: string): Promise<void> {
@@ -357,6 +365,63 @@ test("au-dela du seuil, le fournisseur nest plus sollicite du tout", async () =>
   assert.ok((resultat as { reprendreDansSecondes: number }).reprendreDansSecondes > 0);
   assert.equal(fournisseur.identitesVerifiees.length, 0,
     "AvecStudy ne sert pas d oracle de mots de passe");
+});
+
+/* -------------------------------------------------------------------------- */
+/* ABUSE-02 — le balayage d etablissement (constat F-07)                      */
+/* -------------------------------------------------------------------------- */
+
+test("F-07 — trois essais par compte passaient sous tous les compteurs", () => {
+  // Le pulverisateur de mots de passe n insiste pas : trois essais sur huit
+  // cents comptes. Sans signal d etablissement, chaque compteur reste a trois
+  // et rien ne ralentit jamais. Avec, le seuil tombe a deux.
+  assert.equal(delaiApresEchecs(3, seuilApplicable(0)), 0, "hors balayage, trois essais passent");
+  assert.ok(
+    delaiApresEchecs(3, seuilApplicable(SEUIL_BALAYAGE)) > 0,
+    "pendant un balayage, le troisieme essai attend",
+  );
+});
+
+test("le seuil ne bouge qu a partir du seuil de balayage", () => {
+  assert.equal(seuilApplicable(0), SEUIL_ECHECS);
+  assert.equal(seuilApplicable(SEUIL_BALAYAGE - 1), SEUIL_ECHECS, "une matinee chargee ne compte pas");
+  assert.equal(seuilApplicable(SEUIL_BALAYAGE), 2);
+});
+
+test("un balayage ne ferme jamais l etablissement a qui tape juste", async () => {
+  // Le point le plus important de ce mecanisme, et la raison pour laquelle on
+  // n a pas verrouille : un verrou declenche par un tiers est une arme qu on
+  // lui tend. Ici, une personne dont le mot de passe est bon entre, meme au
+  // milieu d un balayage massif.
+  const depot = new DepotDoublure();
+  depot.balayage = SEUIL_BALAYAGE * 10;
+  depot.echecs = 0;
+  const fournisseur = new FournisseurDoublure();
+
+  const resultat = await tenterConnexion(options(), {
+    depot, fournisseur, chiffrer: chiffrerPourTest,
+  });
+
+  assert.equal(resultat.reussi, true, "le bon mot de passe passe, alerte ou pas");
+});
+
+test("pendant un balayage, le troisieme essai rate attend deja", async () => {
+  const depot = new DepotDoublure();
+  depot.balayage = SEUIL_BALAYAGE;
+  depot.echecs = 2;
+  const fournisseur = new FournisseurDoublure();
+
+  const resultat = await tenterConnexion(options(), {
+    depot, fournisseur, chiffrer: chiffrerPourTest,
+  });
+
+  assert.equal(resultat.reussi, false);
+  assert.equal((resultat as { motif: string }).motif, "trop_de_tentatives");
+  assert.equal(
+    fournisseur.identitesVerifiees.length,
+    0,
+    "et le fournisseur n est toujours pas sollicite",
+  );
 });
 
 /* -------------------------------------------------------------------------- */

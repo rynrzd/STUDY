@@ -6,8 +6,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   estMutation,
-  genererJetonCsrf,
-  jetonsCorrespondent,
   verifierMutation,
   originesAutorisees,
   type RequeteAVerifier,
@@ -23,15 +21,12 @@ import {
 const ORIGINE = "https://study.exemple.test";
 
 function requete(surcharge: Partial<RequeteAVerifier> = {}): RequeteAVerifier {
-  const jeton = "jeton-de-test-suffisamment-long-pour-etre-realiste";
   return {
     methode: "POST",
     origine: ORIGINE,
     referer: null,
     fetchSite: "same-origin",
     fetchMode: "cors",
-    jetonEnvoye: jeton,
-    jetonCookie: jeton,
     ...surcharge,
   };
 }
@@ -46,12 +41,12 @@ test("seules les methodes sans effet echappent au controle", () => {
   assert.ok(estMutation("PATCH"));
 });
 
-test("une mutation legitime passe les trois defenses", () => {
+test("une mutation legitime passe", () => {
   const verdict = verifierMutation(requete(), [ORIGINE]);
   assert.equal(verdict.accepte, true);
 });
 
-test("une mutation venue dun autre site est refusee avant meme le jeton", () => {
+test("une mutation venue dun autre site est refusee d emblee", () => {
   const verdict = verifierMutation(
     requete({ fetchSite: "cross-site", origine: "https://attaquant.test" }),
     [ORIGINE],
@@ -60,7 +55,7 @@ test("une mutation venue dun autre site est refusee avant meme le jeton", () => 
   assert.equal(verdict.motif, "contexte_suspect");
 });
 
-test("une origine etrangere est refusee meme avec un jeton valide", () => {
+test("une origine etrangere est refusee, Fetch Metadata absent ou non", () => {
   const verdict = verifierMutation(
     // Fetch Metadata absent : navigateur ancien, ou en-tete retire.
     requete({ fetchSite: null, origine: "https://attaquant.test" }),
@@ -92,16 +87,29 @@ test("le Referer sert de repli quand Origin manque", () => {
   assert.equal(sansRien.motif, "origine_absente");
 });
 
-test("un jeton absent, vide ou different est refuse", () => {
-  for (const surcharge of [
-    { jetonEnvoye: null },
-    { jetonCookie: null },
-    { jetonEnvoye: "" },
-    { jetonEnvoye: "un-autre-jeton-completement-different" },
-  ]) {
-    const verdict = verifierMutation(requete(surcharge), [ORIGINE]);
-    assert.equal(verdict.accepte, false, JSON.stringify(surcharge));
-  }
+test("F-06 — une requete qui ne presente rien du tout est refusee", () => {
+  // Le cas reproduit en production le 23 septembre 2026 : un POST sans
+  // `Origin` ni `Sec-Fetch-Site` franchissait la barriere (HTTP 200), parce
+  // que le proxy portait sa propre copie, plus indulgente, de cette regle.
+  // La fonction, elle, disait deja non — et personne ne l appelait.
+  const verdict = verifierMutation(
+    requete({ origine: null, referer: null, fetchSite: null, fetchMode: null }),
+    [ORIGINE],
+  );
+  assert.equal(verdict.accepte, false);
+  assert.equal(verdict.motif, "origine_absente");
+});
+
+test("un navigateur qui affirme same-origin est cru, meme sans Origin", () => {
+  // Contrepartie du test precedent, et elle compte autant : certains POST de
+  // formulaire n emportent pas `Origin`. `Sec-Fetch-Site` est pose par le
+  // navigateur lui-meme, hors de portee de la page appelante : refuser ce cas
+  // casserait des envois legitimes sans rien fermer.
+  const verdict = verifierMutation(
+    requete({ origine: null, referer: null, fetchSite: "same-origin", fetchMode: "navigate" }),
+    [ORIGINE],
+  );
+  assert.equal(verdict.accepte, true);
 });
 
 test("SameSite seul ne suffit pas : une navigation de haut niveau est refusee", () => {
@@ -112,15 +120,6 @@ test("SameSite seul ne suffit pas : une navigation de haut niveau est refusee", 
   );
   assert.equal(verdict.accepte, false);
   assert.equal(verdict.motif, "contexte_suspect");
-});
-
-test("la comparaison de jetons ne se laisse pas avoir par une valeur vide", () => {
-  const jeton = genererJetonCsrf();
-  assert.ok(jetonsCorrespondent(jeton, jeton));
-  assert.ok(!jetonsCorrespondent(jeton, null));
-  assert.ok(!jetonsCorrespondent(null, jeton));
-  assert.ok(!jetonsCorrespondent("", ""));
-  assert.ok(!jetonsCorrespondent(jeton, genererJetonCsrf()));
 });
 
 test("aucune origine generique nest acceptee", () => {
@@ -290,8 +289,6 @@ test("une mutation d apercu est acceptee par verifierMutation", () => {
     referer: null,
     fetchSite: "same-origin",
     fetchMode: "cors",
-    jetonEnvoye: "jeton-identique",
-    jetonCookie: "jeton-identique",
   };
 
   assert.equal(verifierMutation(requete, acceptees).accepte, true);
@@ -335,8 +332,6 @@ test("il suffit a lui seul quand APP_ORIGIN manque ou se trompe", () => {
     referer: null,
     fetchSite: "same-origin",
     fetchMode: "cors",
-    jetonEnvoye: "jeton-identique",
-    jetonCookie: "jeton-identique",
   };
 
   assert.equal(verifierMutation(requete, acceptees).accepte, true);
@@ -357,8 +352,6 @@ test("il ne vient jamais de la requete : une origine tierce reste refusee", () =
     referer: null,
     fetchSite: null,
     fetchMode: null,
-    jetonEnvoye: "jeton-identique",
-    jetonCookie: "jeton-identique",
   };
 
   assert.equal(verifierMutation(requete, acceptees).motif, "origine_etrangere");

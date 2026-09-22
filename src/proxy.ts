@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { originesAutorisees } from "./lib/csrf.ts";
+import { originesAutorisees, verifierMutation } from "./lib/csrf.ts";
 
 /**
  * Proxy (ex-middleware) — WEB-02 et WEB-03.
@@ -108,20 +108,31 @@ function politiqueCsp(valeurNonce: string | null, developpement: boolean): strin
   return directives.join("; ");
 }
 
+/**
+ * Le verdict d'origine, rendu par `src/lib/csrf.ts`.
+ *
+ * Il l'était autrefois ici, par une copie plus indulgente de la même règle :
+ * `verifierMutation` était couverte de tests verts et n'était appelée par
+ * personne (audit du 23 septembre 2026, constat F-06). La règle vit maintenant
+ * à un seul endroit, celui qui est éprouvé.
+ */
 function origineAcceptable(requete: NextRequest): boolean {
-  const site = requete.headers.get("sec-fetch-site");
-  if (site !== null && site !== "same-origin" && site !== "none") return false;
-
-  const origine = requete.headers.get("origin");
-  if (origine === null) return true; // Le contrôle fin a lieu côté route.
-
   const acceptees = originesAutorisees(requete.nextUrl.origin);
 
   // Aucune origine déclarée : développement local, où APP_ORIGIN peut manquer.
   // En production elle est exigée au démarrage, ce cas n'y survient pas.
-  if (acceptees.length === 0) return origine === requete.nextUrl.origin;
+  const reference = acceptees.length === 0 ? [requete.nextUrl.origin] : acceptees;
 
-  return acceptees.includes(origine);
+  return verifierMutation(
+    {
+      methode: requete.method,
+      origine: requete.headers.get("origin"),
+      referer: requete.headers.get("referer"),
+      fetchSite: requete.headers.get("sec-fetch-site"),
+      fetchMode: requete.headers.get("sec-fetch-mode"),
+    },
+    reference,
+  ).accepte;
 }
 
 export default function proxy(requete: NextRequest) {

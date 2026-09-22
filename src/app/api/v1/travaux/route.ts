@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { drainer } from "@/lib/travaux";
+import { purgerTentatives } from "@/lib/depot-authentification";
 
 /**
  * Traitement de la file — cahier « Refonte fidèle », T03 et T04.
@@ -50,11 +51,26 @@ export async function POST(requete: Request) {
     return NextResponse.json({ erreur: "refuse" }, { status: 401 });
   }
 
+  // La purge des tentatives de connexion, avant le drain.
+  //
+  // Constat F-09 de l'audit du 23 septembre 2026 : `auth_purger_tentatives`
+  // existait depuis la migration 0015, déclarait une conservation de vingt-
+  // quatre heures — et **personne ne l'appelait**. La production portait des
+  // lignes vieilles de trois jours. Le volume était dérisoire, mais une durée
+  // de conservation écrite quelque part et jamais appliquée nulle part est une
+  // ligne fausse dans un registre de traitement, pas une négligence anodine.
+  //
+  // Elle est ici plutôt que dans la file : c'est une opération unique, brève et
+  // idempotente, et la faire dépendre d'un travail à programmer ajouterait une
+  // pièce qui peut elle-même tomber en panne sans bruit.
+  const purgees = await purgerTentatives();
+
   const bilan = await drainer({ budgetMs: 8_000, nom: "bff" });
 
-  return NextResponse.json(bilan, {
-    headers: { "cache-control": "private, no-store" },
-  });
+  return NextResponse.json(
+    { ...bilan, tentatives_purgees: purgees },
+    { headers: { "cache-control": "private, no-store" } },
+  );
 }
 
 /**

@@ -65,6 +65,14 @@ export interface DepotAuthentification {
   /** Échecs récents pour ce compte, sur la fenêtre de limitation. */
   compterEchecsRecents(profileId: string): Promise<number>;
 
+  /**
+   * Cibles distinctes en échec dans l'établissement, sur la même fenêtre.
+   *
+   * Sert à reconnaître un balayage — beaucoup de comptes, peu d'essais chacun —
+   * là où le compteur par compte ne voit rien. Voir `seuilApplicable`.
+   */
+  compterBalayage(codeEtablissement: string): Promise<number>;
+
   enregistrerEchec(profileId: string | null, codeEtablissement: string): Promise<void>;
 
   creerSession(session: SessionACreer): Promise<string>;
@@ -109,10 +117,44 @@ export type ResultatConnexion = Refus | Succes;
 export const SEUIL_ECHECS = 5;
 export const FENETRE_ECHECS_MINUTES = 15;
 
-export function delaiApresEchecs(echecs: number): number {
-  if (echecs < SEUIL_ECHECS) return 0;
+/**
+ * ABUSE-02 : le balayage d'établissement — constat F-07 du 23 septembre 2026.
+ *
+ * Le compteur par compte ci-dessus ne voit pas l'attaque la plus probable ici.
+ * Un pulvérisateur de mots de passe n'insiste jamais sur un compte : il essaie
+ * trois mots de passe plausibles sur huit cents comptes. Chaque compteur reste
+ * à trois, sous le seuil, et rien ne ralentit. Dans un lycée, où les mots de
+ * passe sont distribués à la rentrée et se ressemblent, c'est le scénario
+ * qu'il faut gêner.
+ *
+ * Trente cibles distinctes en quinze minutes ne sont pas une matinée
+ * difficile : un même élève qui se trompe cinq fois ne compte que pour une
+ * cible, et un lycée entier qui rentre de vacances ne produit pas trente
+ * comptes **différents** en échec dans le même quart d'heure.
+ */
+export const SEUIL_BALAYAGE = 30;
+
+/**
+ * Le seuil par compte réellement appliqué.
+ *
+ * Pendant un balayage, il descend à deux. C'est tout ce qui change — et c'est
+ * délibérément tout ce qui change.
+ *
+ * Ce qu'on a écarté : verrouiller l'établissement. Un verrou déclenché par un
+ * tiers est une arme qu'on lui tend — un balayage volontaire un matin de
+ * rentrée suffirait à empêcher un lycée de se connecter. Ici, rien ne ferme.
+ * Une personne qui tape correctement son mot de passe passe, alerte ou pas ;
+ * celle qui se trompe attend trente secondes au lieu de disposer de cinq
+ * essais. L'attaquant, lui, tombe de cinq essais par compte à deux.
+ */
+export function seuilApplicable(balayage: number): number {
+  return balayage >= SEUIL_BALAYAGE ? 2 : SEUIL_ECHECS;
+}
+
+export function delaiApresEchecs(echecs: number, seuil: number = SEUIL_ECHECS): number {
+  if (echecs < seuil) return 0;
   // 5 → 30 s, 6 → 60 s, 7 → 120 s… plafonné à 15 minutes.
-  const exposant = echecs - SEUIL_ECHECS;
+  const exposant = echecs - seuil;
   return Math.min(30 * 2 ** exposant, 900);
 }
 
@@ -171,8 +213,15 @@ export async function tenterConnexion(
     return REFUS_GENERIQUE;
   }
 
-  const echecs = await depot.compterEchecsRecents(identite.profileId);
-  const delai = delaiApresEchecs(echecs);
+  // Les deux compteurs se lisent ensemble : l'un dit si ce compte-ci est
+  // harcelé, l'autre si l'établissement est balayé. Le second ne refuse rien
+  // par lui-même — il resserre le premier.
+  const [echecs, balayage] = await Promise.all([
+    depot.compterEchecsRecents(identite.profileId),
+    depot.compterBalayage(options.codeEtablissement),
+  ]);
+
+  const delai = delaiApresEchecs(echecs, seuilApplicable(balayage));
   if (delai > 0) {
     return { reussi: false, motif: "trop_de_tentatives", reprendreDansSecondes: delai };
   }

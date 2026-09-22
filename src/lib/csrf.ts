@@ -1,18 +1,39 @@
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-
 /**
  * Protection des mutations — WEB-03 du cahier des charges.
  *
- * Trois défenses indépendantes, parce qu'aucune ne suffit seule :
+ * Trois défenses indépendantes, parce qu'aucune ne suffit seule. Celles-ci sont
+ * **déployées** : chacune se constate sur la production, et la dernière section
+ * de ce commentaire dit comment.
  *
- *  1. `SameSite=Lax` sur le cookie de session. Utile, mais ce n'est pas toute la
- *     défense : elle ne couvre pas les navigations de haut niveau en GET, ni les
- *     navigateurs anciens, ni un sous-domaine compromis.
- *  2. Un jeton CSRF à double dépôt, vérifié à temps constant.
- *  3. La validation de `Origin` et des en-têtes Fetch Metadata.
+ *  1. `SameSite=Lax` sur le cookie de session. Une requête POST partie d'un
+ *     autre site n'emporte donc pas la session : elle s'exécute anonyme. Utile,
+ *     mais ce n'est pas toute la défense — elle ne couvre ni les navigateurs
+ *     anciens, ni un sous-domaine compromis.
+ *  2. `verifierMutation`, appelée par `src/proxy.ts` sur **toute** méthode à
+ *     effet, avant que la requête n'atteigne quoi que ce soit : Fetch Metadata,
+ *     puis `Origin` avec repli sur `Referer`, contre une liste explicite.
+ *  3. La vérification propre à Next sur les actions serveur, qui compare
+ *     l'origine à l'hôte et refuse « Invalid Server Actions request ».
  *
  * Et une règle structurante : **aucune mutation en GET**. Une requête qui
  * change l'état passe par POST, PUT, PATCH ou DELETE, sans exception.
+ *
+ * ---------------------------------------------------------------------------
+ * Ce que ce module ne fait pas, et pourquoi c'est écrit ici
+ * ---------------------------------------------------------------------------
+ *
+ * Il n'y a **pas** de jeton CSRF à double dépôt. Il y en a eu la description,
+ * et même des fonctions testées — mais rien ne les appelait : l'audit du
+ * 23 septembre 2026 a trouvé `verifierMutation` couverte par cinq tests verts
+ * et introuvable dans `src/`. Une défense décrite mais non branchée est pire
+ * que son absence, parce qu'on la compte.
+ *
+ * Deux choses ont été faites plutôt qu'une : la fonction éprouvée est devenue
+ * celle que le proxy appelle, et le jeton — qui aurait demandé un champ caché
+ * dans chaque formulaire et une vérification dans chaque action — a été retiré
+ * au lieu d'être laissé en promesse. Les trois défenses ci-dessus suffisent
+ * pour un navigateur qui respecte `SameSite`, et le risque résiduel est nommé
+ * dans le dossier de sécurité plutôt que masqué par du code mort.
  */
 
 const METHODES_SANS_EFFET = new Set(["GET", "HEAD", "OPTIONS"]);
@@ -21,26 +42,7 @@ export function estMutation(methode: string): boolean {
   return !METHODES_SANS_EFFET.has(methode.toUpperCase());
 }
 
-export function genererJetonCsrf(): string {
-  return randomBytes(32).toString("base64url");
-}
-
-function empreinte(valeur: string): Buffer {
-  return createHash("sha256").update(valeur, "utf8").digest();
-}
-
-/** Comparaison à temps constant de deux jetons présentés sous forme de texte. */
-export function jetonsCorrespondent(a: string | null, b: string | null): boolean {
-  if (!a || !b) return false;
-  return timingSafeEqual(empreinte(a), empreinte(b));
-}
-
-export type RefusCsrf =
-  | "origine_absente"
-  | "origine_etrangere"
-  | "contexte_suspect"
-  | "jeton_absent"
-  | "jeton_invalide";
+export type RefusCsrf = "origine_absente" | "origine_etrangere" | "contexte_suspect";
 
 export interface RequeteAVerifier {
   readonly methode: string;
@@ -50,8 +52,6 @@ export interface RequeteAVerifier {
   readonly fetchSite: string | null;
   /** `Sec-Fetch-Mode` : navigate, cors, no-cors… */
   readonly fetchMode: string | null;
-  readonly jetonEnvoye: string | null;
-  readonly jetonCookie: string | null;
 }
 
 export interface VerdictCsrf {
@@ -81,14 +81,15 @@ export function verifierMutation(
 ): VerdictCsrf {
   if (!estMutation(requete.methode)) return ACCEPTE;
 
-  // 1. Fetch Metadata : un POST déclenché depuis un autre site est refusé avant
-  //    même de regarder le jeton.
-  if (requete.fetchSite !== null) {
-    const site = requete.fetchSite.toLowerCase();
+  // 1. Fetch Metadata : un POST déclenché depuis un autre site est refusé
+  //    d'emblée, sur la foi d'un en-tête que la page appelante ne peut pas
+  //    fabriquer — c'est le navigateur qui le pose.
+  const site = requete.fetchSite === null ? null : requete.fetchSite.toLowerCase();
+  if (site !== null) {
     if (site !== "same-origin" && site !== "none") {
       return refus("contexte_suspect");
     }
-    // `none` correspond à une action lancée par l'utilisateur hors page (barre
+    // `none` correspond à une action lancée par la personne hors page (barre
     // d'adresse). Une mutation ne devrait jamais arriver par ce chemin.
     if (site === "none" && requete.fetchMode === "navigate") {
       return refus("contexte_suspect");
@@ -96,17 +97,25 @@ export function verifierMutation(
   }
 
   // 2. Origin, avec Referer en repli pour les navigateurs qui l'omettent.
-  const origineBrute = requete.origine ?? origineDepuisReferer(requete.referer);
-  if (origineBrute === null) return refus("origine_absente");
-  if (!originesAutorisees.includes(origineBrute)) return refus("origine_etrangere");
-
-  // 3. Jeton à double dépôt.
-  if (!requete.jetonEnvoye || !requete.jetonCookie) return refus("jeton_absent");
-  if (!jetonsCorrespondent(requete.jetonEnvoye, requete.jetonCookie)) {
-    return refus("jeton_invalide");
+  //    `strict-origin-when-cross-origin` garantit qu'un Referer reste présent
+  //    en même origine, et réduit à l'origine seule quand il vient d'ailleurs :
+  //    dans les deux cas, c'est exactement ce qu'on compare.
+  const origine = requete.origine ?? origineDepuisReferer(requete.referer);
+  if (origine !== null) {
+    return originesAutorisees.includes(origine) ? ACCEPTE : refus("origine_etrangere");
   }
 
-  return ACCEPTE;
+  // 3. Aucune origine présentée. Le cas existe pour de bon : une requête sans
+  //    `Origin` **ni** `Sec-Fetch-Site` franchissait la barrière en production
+  //    le 23 septembre 2026 (constat F-06), et Next laisse lui aussi passer une
+  //    action serveur dont l'origine est absente — c'est écrit dans son code.
+  //
+  //    Un navigateur qui a répondu `same-origin` a déjà dit ce qu'il fallait
+  //    savoir ; on ne lui redemande pas une origine qu'il n'envoie pas toujours
+  //    sur un POST de formulaire. Sans cette affirmation, en revanche, rien ne
+  //    distingue la requête d'une requête forgée : on refuse.
+  if (site === "same-origin") return ACCEPTE;
+  return refus("origine_absente");
 }
 
 function origineDepuisReferer(referer: string | null): string | null {

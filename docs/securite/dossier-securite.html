@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>AvecStudy — dossier de sécurité</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  :root { color-scheme: light; }
+  body {
+    font: 10.5pt/1.55 "Iowan Old Style", Georgia, "Times New Roman", serif;
+    color: #16161a; background: #fff; margin: 0;
+  }
+  .doc { page-break-after: always; }
+  .doc:last-child { page-break-after: auto; }
+  h1 { font-size: 20pt; line-height: 1.2; margin: 0 0 1.2em; border-bottom: 2px solid #16161a; padding-bottom: .3em; }
+  h2 { font-size: 13.5pt; margin: 1.8em 0 .6em; page-break-after: avoid; }
+  h3 { font-size: 11.5pt; margin: 1.4em 0 .4em; page-break-after: avoid; }
+  p { margin: 0 0 .75em; orphans: 3; widows: 3; }
+  ul, ol { margin: 0 0 .9em; padding-left: 1.4em; }
+  li { margin-bottom: .3em; }
+  table { border-collapse: collapse; width: 100%; margin: .9em 0 1.3em; font-size: 9pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #c9c9d1; padding: .38em .55em; text-align: left; vertical-align: top; }
+  th { background: #f2f2f5; font-weight: 600; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .88em; background: #f2f2f5; padding: .1em .3em; border-radius: 2px; }
+  pre { background: #f6f6f8; border-left: 3px solid #c9c9d1; padding: .7em .9em; overflow-x: auto; page-break-inside: avoid; }
+  pre code { background: none; padding: 0; font-size: .82em; }
+  blockquote { border-left: 3px solid #b23c17; background: #fdf6f3; margin: 1em 0; padding: .7em 1em; page-break-inside: avoid; }
+  blockquote p:last-child { margin-bottom: 0; }
+  hr { border: none; border-top: 1px solid #d5d5dc; margin: 1.8em 0; }
+  a { color: #16161a; text-decoration: underline; text-underline-offset: 2px; }
+  em { font-style: italic; color: #4a4a54; }
+  .couverture { page-break-after: always; padding-top: 22vh; text-align: center; }
+  .couverture h1 { border: none; font-size: 28pt; margin-bottom: .2em; }
+  .couverture .sous { font-size: 12pt; color: #4a4a54; margin-bottom: 3em; }
+  .couverture .avert { text-align: left; max-width: 34em; margin: 0 auto; font-size: 9.5pt; border: 1px solid #c9c9d1; padding: 1em 1.2em; }
+</style>
+</head>
+<body>
+<div class="couverture">
+  <h1>Dossier de sécurité</h1>
+  <p class="sous">AvecStudy — audit interne du 23 septembre 2026</p>
+  <div class="avert">
+    <p><strong>Audit interne.</strong> Ce dossier a été produit par l'éditeur sur
+    son propre produit, à partir de référentiels publics. Il ne constitue ni une
+    certification, ni une homologation, ni un test d'intrusion indépendant.</p>
+    <p>Nouh Tifouti — entrepreneur individuel — AvecStudy<br>
+    SIREN 979 992 443 · 1 avenue d'Alsace, 90000 Belfort<br>
+    Document généré le 2026-09-22</p>
+  </div>
+</div>
+<section class="doc" id="00-index">
+<h1>Dossier de sécurité AvecStudy</h1>
+<p><strong>Audit interne du 23 septembre 2026.</strong> Dix constats, dix corrections, cinq contrôles permanents nouveaux, et trois points que cet audit n'a pas pu établir — qui portent la mention <strong>NON VÉRIFIÉ</strong> plutôt que « conforme ».</p>
+<blockquote><p><strong>Sur la numérotation.</strong> Le plan demandé fixait deux bornes — <code>01-resume-direction</code> et <code>16-risques-residuels</code>. Les titres intermédiaires ont été composés pour couvrir l'ensemble des sujets demandés ; la correspondance figure ci-dessous. Renommer un fichier est sans conséquence : les renvois internes se font par nom, et il y en a peu.</p></blockquote>
+<h2>Par où commencer</h2>
+<table><thead><tr><th>Vous êtes</th><th>Lisez, dans cet ordre</th></tr></thead><tbody><tr><td><strong>Chef d'établissement</strong></td><td><code>01</code>, puis <code>16</code></td></tr><tr><td><strong>Référent numérique</strong></td><td><code>13</code>, <code>14</code>, <code>09</code>, <code>06</code></td></tr><tr><td><strong>Délégué à la protection des données</strong></td><td><code>07</code>, <code>08</code>, l'annexe de sous-traitance, puis <code>16</code></td></tr><tr><td><strong>Pressé</strong></td><td><code>01</code> seul — trois pages</td></tr></tbody></table>
+<h2>Les documents</h2>
+<table><thead><tr><th>#</th><th>Document</th><th>Ce qu'il traite</th></tr></thead><tbody><tr><td>01</td><td><a href="#01-resume-direction">Résumé pour la direction</a></td><td>Trois pages sans jargon. Le constat principal, les neuf autres, et le risque à peser.</td></tr><tr><td>02</td><td><a href="#02-perimetre-et-methode">Périmètre, méthode, et ce qui n'a pas été vérifié</a></td><td>Ce qui a été audité, comment, et les trois trous assumés.</td></tr><tr><td>03</td><td><a href="#03-architecture-et-donnees">Architecture et circulation des données</a></td><td>Ce que le système est. Qui voit quoi. Le cycle d'une copie.</td></tr><tr><td>04</td><td><a href="#04-modele-de-menace">Modèle de menace</a></td><td>Qui voudrait quoi, avec quels moyens. L'éditeur y figure.</td></tr><tr><td>05</td><td><a href="#05-authentification-et-sessions">Authentification, sessions, abus</a></td><td>Connexion, non-divulgation, limitation des tentatives, second facteur.</td></tr><tr><td>06</td><td><a href="#06-autorisation-et-cloisonnement">Autorisation et cloisonnement</a></td><td>RLS, les deux schémas, les 202 tests, et la leçon la plus coûteuse.</td></tr><tr><td>07</td><td><a href="#07-donnees-personnelles-et-rgpd">Données personnelles</a></td><td>Ce qui est réellement collecté, relevé colonne par colonne. Durées, droits, AIPD.</td></tr><tr><td>08</td><td><a href="#08-hebergement-et-transferts">Hébergement et transferts hors EEE</a></td><td>Où le calcul a lieu, où la base est, et ce qui reste à établir sur pièces.</td></tr><tr><td>09</td><td><a href="#09-securite-web">Sécurité web</a></td><td>OWASP, en-têtes, CSRF, dépôt de fichiers.</td></tr><tr><td>10</td><td><a href="#10-journalisation-et-alertes">Journalisation et alertes</a></td><td>Ce qui est journalisé, ce qui ne l'est jamais, et ce qui n'alerte personne.</td></tr><tr><td>11</td><td><a href="#11-sauvegardes-et-continuite">Sauvegardes, restauration, continuité, réversibilité</a></td><td>Et si tout s'arrête.</td></tr><tr><td>12</td><td><a href="#12-incidents">Incidents : procédure et exercices sur table</a></td><td>Six étapes, dix scénarios joués sur le papier.</td></tr><tr><td>13</td><td><a href="#13-constats-et-corrections">Constats et corrections</a></td><td><strong>Le cœur factuel.</strong> Dix constats, leurs preuves, leurs correctifs.</td></tr><tr><td>14</td><td><a href="#14-controles-permanents">Les contrôles permanents</a></td><td>Ce qui rejoue chaque constat, et comment le lancer.</td></tr><tr><td>15</td><td><a href="#15-questionnaire-etablissement">Questionnaire d'établissement, rempli</a></td><td>Les questions qu'on nous pose, avec les « non » écrits en toutes lettres.</td></tr><tr><td>16</td><td><a href="#16-risques-residuels">Risques résiduels</a></td><td>Ce qui reste après les corrections. Dix risques, dont l'éditeur lui-même.</td></tr><tr><td>—</td><td><a href="#annexe-sous-traitance">Annexe — projet d'accord de sous-traitance</a></td><td><strong>Projet à valider par le DPO et/ou un juriste.</strong></td></tr></tbody></table>
+<h2>Correspondance avec les sujets demandés</h2>
+<table><thead><tr><th>Sujet</th><th>Où</th></tr></thead><tbody><tr><td>Validation des dépôts de fichiers</td><td>09</td></tr><tr><td>Tests web (OWASP)</td><td>09</td></tr><tr><td>Nomenclature logicielle (SBOM)</td><td>09</td></tr><tr><td>Consoles Vercel et Supabase</td><td>02 — <strong>NON VÉRIFIÉ</strong></td></tr><tr><td>Transferts hors EEE</td><td>08, 16 (R-02)</td></tr><tr><td>Conservation et effacement</td><td>07, 13 (F-09)</td></tr><tr><td>Droits des personnes, export élève</td><td>07, 16 (R-08)</td></tr><tr><td>Nécessité d'une AIPD</td><td>07</td></tr><tr><td>Journalisation</td><td>10</td></tr><tr><td>Alertes</td><td>10, 16 (R-09)</td></tr><tr><td>Procédure d'incident et exercices</td><td>12</td></tr><tr><td>Sauvegarde et restauration</td><td>11</td></tr><tr><td>Continuité et réversibilité</td><td>11</td></tr><tr><td>Disponibilité</td><td>11</td></tr><tr><td>Séparation des environnements</td><td>02 — <strong>NON VÉRIFIÉ</strong></td></tr><tr><td>Sécurité du développement</td><td>14</td></tr><tr><td>Sécurité d'exploitation</td><td>10, 11, 12</td></tr><tr><td>Protection des mineurs</td><td>07</td></tr><tr><td>Inventaire des cookies</td><td>05, 09</td></tr><tr><td>Sécurité commerciale</td><td>07, 15</td></tr><tr><td>Questionnaire d'établissement</td><td>15</td></tr><tr><td>Plan d'action de sécurité</td><td>ci-dessous</td></tr><tr><td>Classification des constats</td><td>13</td></tr></tbody></table>
+<h2>Plan d'action</h2>
+<p>Par ordre de priorité. Les quatre premiers points ne demandent que des accès.</p>
+<table><thead><tr><th>#</th><th>Action</th><th>Qui</th><th>Lié à</th></tr></thead><tbody><tr><td>1</td><td>Ouvrir les consoles Vercel et Supabase, vérifier le second facteur, les accès, les variables et la sauvegarde ponctuelle</td><td>Éditeur</td><td>R-03</td></tr><tr><td>2</td><td>Obtenir les accords de traitement des deux fournisseurs et les annexer</td><td>Éditeur + DPO</td><td>R-02</td></tr><tr><td>3</td><td>Jouer l'exercice de restauration de bout en bout, dans un projet jetable, et joindre le compte rendu</td><td>Éditeur</td><td>ch. 11</td></tr><tr><td>4</td><td>Vérifier qu'un déploiement d'aperçu ne pointe pas vers la base de production</td><td>Éditeur</td><td>R-03</td></tr><tr><td>5</td><td>Brancher une sonde de disponibilité externe et une alerte sur le bilan de la tâche planifiée</td><td>Éditeur</td><td>R-09</td></tr><tr><td>6</td><td>Fixer une durée de conservation du journal d'audit, et l'appliquer mécaniquement</td><td>DPO + Éditeur</td><td>R-07</td></tr><tr><td>7</td><td>Construire l'export complet des données d'un élève en une commande</td><td>Éditeur</td><td>R-08</td></tr><tr><td>8</td><td>Permettre à un utilisateur de révoquer ses autres sessions</td><td>Éditeur</td><td>ch. 12, scénario 1</td></tr><tr><td>9</td><td>Inscrire au contrat la réversibilité et l'export de fin d'année</td><td>Établissement + Éditeur</td><td>R-01</td></tr><tr><td>10</td><td>Conduire ou écarter l'AIPD</td><td>DPO de l'établissement</td><td>ch. 07</td></tr></tbody></table>
+<h2>Ce que ce dossier n'écrira jamais</h2>
+<p>« Sécurité totale », « inviolable », « conforme ANSSI », « certifié RGPD », « certifié ISO 27001 », « hébergement souverain », « aucun risque ».</p>
+<p>Aucune de ces phrases ne serait vraie. AvecStudy ne détient aucune certification, aucune qualification, aucune homologation, et n'a fait l'objet d'aucun test d'intrusion indépendant. Un établissement public mérite qu'on lui dise ce qui est plutôt que ce qui rassure.</p>
+</section>
+<section class="doc" id="01-resume-direction">
+<h1>01 — Résumé pour la direction</h1>
+<p><em>Destiné au chef d'établissement, au référent numérique et au délégué à la protection des données. Trois pages, sans jargon. Les pièces sont dans les documents suivants.</em></p>
+<hr>
+<h2>En une phrase</h2>
+<p>AvecStudy a été audité de fond en comble par son éditeur du 23 septembre 2026 : dix défauts ont été trouvés, dix ont été corrigés, et chacun a reçu un test automatique qui empêchera son retour — mais AvecStudy est édité par une seule personne, et c'est le risque que ce dossier vous demande de peser en premier.</p>
+<h2>Ce qu'AvecStudy fait de vos données</h2>
+<p>Les élèves et les professeurs se connectent avec un identifiant remis par l'établissement. Ils déposent des devoirs, des copies, des corrections, des documents de cours. AvecStudy ne demande jamais l'identifiant national élève (INE), ne diffuse aucune publicité, ne revend rien, et n'est jamais payé par les familles.</p>
+<p>Chaque personne ne voit que ce qui la concerne, et cette règle n'est pas un réglage d'affichage : elle est appliquée <strong>dans la base de données elle-même</strong>, par 144 politiques que 202 tests automatiques vérifient à chaque livraison. Un professeur qui n'enseigne pas à une classe ne peut pas lire les copies de cette classe, même en contournant l'écran.</p>
+<h2>Le défaut le plus important que nous avons trouvé</h2>
+<p><strong>Le calcul se faisait aux États-Unis.</strong></p>
+<p>La base de données était bien en Irlande — donc en Europe. Mais les pages étaient <strong>fabriquées</strong> sur un serveur situé à Washington. À chaque affichage, les noms des élèves, les intitulés de classe et le contenu des copies traversaient l'Atlantique.</p>
+<p>Aucune région n'avait été choisie : l'hébergeur avait appliqué son réglage par défaut, et rien dans nos fichiers ne le contredisait. Personne ne s'en était aperçu parce qu'il n'y avait rien à relire — seulement une absence.</p>
+<p>C'est corrigé : le calcul est désormais déclaré à Paris. Un test automatique le vérifie à chaque livraison et refuse toute région hors d'Europe.</p>
+<p><strong>Ce que nous ne pouvons pas encore vous affirmer</strong> : que plus aucune donnée ne quitte l'Europe. Une région d'hébergement est un réglage technique, pas un engagement contractuel. Les sauvegardes, les journaux techniques et l'assistance de nos deux fournisseurs relèvent de leurs propres contrats, qui restent à examiner pièce par pièce. Le document <code>08-hebergement-et-transferts.md</code> dit exactement ce qui est établi et ce qui ne l'est pas.</p>
+<h2>Les neuf autres défauts, en clair</h2>
+<table><thead><tr><th></th><th>Ce qui n'allait pas</th><th>Ce que cela permettait</th><th>Corrigé</th></tr></thead><tbody><tr><td><strong>F-01</strong></td><td>Des fonctions internes de la base restaient appelables sans compte</td><td>Obtenir une référence d'accusé de remise sans être connecté — pas une copie, pas un nom</td><td>oui</td></tr><tr><td><strong>F-07</strong></td><td>Le ralentissement des tentatives de connexion visait chaque compte séparément</td><td>Essayer trois mots de passe sur huit cents comptes sans jamais être ralenti</td><td>oui</td></tr><tr><td><strong>F-06</strong></td><td>Une protection contre les formulaires piégés était écrite mais pas branchée</td><td>Rien d'exploitable avec un navigateur récent, mais la protection n'était pas celle qu'on croyait</td><td>oui</td></tr><tr><td><strong>F-02</strong></td><td>Un compte suspendu gardait ses droits tant que sa session vivait</td><td>Rien en pratique — la suspension coupait déjà les sessions — mais la garantie reposait sur une habitude</td><td>oui</td></tr><tr><td><strong>F-09</strong></td><td>Une durée de conservation de 24 h était écrite et n'était appliquée nulle part</td><td>Trois lignes techniques conservées trois jours au lieu d'un</td><td>oui</td></tr><tr><td><strong>F-10</strong></td><td>Aucune adresse normalisée pour signaler une faille</td><td>Un référent numérique n'avait pas de porte où frapper</td><td>oui</td></tr><tr><td><strong>F-03 / F-04</strong></td><td>Deux tables techniques dérogeaient à la règle commune</td><td>Rien : elles n'étaient atteignables par personne</td><td>oui</td></tr><tr><td><strong>F-05</strong></td><td>Une règle de sécurité du navigateur est assouplie sur douze pages publiques</td><td>Rien : ces pages n'affichent aucun texte saisi par quiconque</td><td>assumé et justifié</td></tr></tbody></table>
+<h2>Ce que nous avons vérifié et qui va bien</h2>
+<ul><li><strong>Aucun mot de passe, aucune clé, aucun secret</strong> dans les 93 versions successives du code, ni dans ce que le navigateur reçoit (6 pages et 13 fichiers de code inspectés intégralement).</li><li><strong>Aucune faille connue</strong> dans les bibliothèques utilisées, toutes sévérités confondues.</li><li><strong>Aucun moyen de se faire passer pour quelqu'un d'autre</strong> : les 46 fonctions internes qui acceptent l'identité d'une personne en paramètre sont réservées au serveur, et aucune n'est atteignable depuis un navigateur.</li><li><strong>Les fichiers déposés sont reconnus sur leur contenu</strong>, pas sur leur nom : un fichier appelé <code>cours.pdf</code> qui n'en est pas un est refusé. Rien n'est ouvert dans le navigateur : tout se télécharge.</li><li><strong>Les journaux ne contiennent jamais</strong> un mot de passe, un jeton, un cookie, une copie ni un nom d'élève — seulement un code d'erreur et un contexte.</li></ul>
+<h2>Ce que nous ne pouvons pas vous dire</h2>
+<p>Trois choses n'ont pas pu être vérifiées faute d'accès aux consoles d'administration de nos deux fournisseurs pendant cet audit : leur configuration exacte, et la séparation stricte entre l'environnement de test et celui de production. Ces trois lignes portent la mention <strong>NON VÉRIFIÉ</strong>, et non « conforme ». Elles sont détaillées dans <code>02-perimetre-et-methode.md</code>.</p>
+<h2>Le risque que nous vous demandons de peser</h2>
+<p>AvecStudy est édité par <strong>une entreprise individuelle — une seule personne</strong>.</p>
+<p>Cela veut dire, concrètement, et il faut que ce soit écrit noir sur blanc :</p>
+<ul><li>il n'y a pas d'équipe de sécurité de garde, pas d'astreinte la nuit, pas de délai de réponse contractuel ;</li><li>une indisponibilité de cette personne — maladie, accident — est une indisponibilité du support ;</li><li>l'audit que vous lisez a été mené par celui-là même qui a écrit le code.</li></ul>
+<p>Ce qui existe en face, et qui est vérifiable : le code est intégralement versionné, la base est restaurable, les données sont exportables, et 202 tests automatiques passent avant chaque livraison. Le document <code>11-sauvegardes-et-continuite.md</code> décrit ce qu'un établissement peut récupérer et comment, si l'éditeur disparaissait.</p>
+<p>Nous n'écrirons pas que le service est « sans risque », ni « inviolable », ni « conforme ANSSI », ni « certifié RGPD ». Aucune de ces phrases ne serait vraie, et un établissement public mérite qu'on lui dise ce qui est plutôt que ce qui rassure.</p>
+<h2>Où aller ensuite</h2>
+<table><thead><tr><th>Vous êtes</th><th>Lisez d'abord</th></tr></thead><tbody><tr><td>Chef d'établissement</td><td>ce document, puis <code>16-risques-residuels.md</code></td></tr><tr><td>Référent numérique</td><td><code>13-constats-et-corrections.md</code> et <code>14-controles-permanents.md</code></td></tr><tr><td>Délégué à la protection des données</td><td><code>07-donnees-personnelles-et-rgpd.md</code>, <code>08-hebergement-et-transferts.md</code>, et l'annexe de sous-traitance</td></tr><tr><td>Toute personne pressée</td><td>le tableau ci-dessus, et la section « le risque que nous vous demandons de peser »</td></tr></tbody></table>
+</section>
+<section class="doc" id="02-perimetre-et-methode">
+<h1>02 — Périmètre, méthode, et ce qui n'a pas été vérifié</h1>
+<h2>Ce que ce dossier est, et ce qu'il n'est pas</h2>
+<p>C'est un <strong>audit interne approfondi</strong>, mené par l'éditeur sur son propre produit, appuyé sur des référentiels publics : OWASP ASVS et le Top 10, les recommandations d'hygiène de l'ANSSI, le RGPD et les référentiels de la CNIL.</p>
+<p>Ce n'est <strong>pas</strong> un audit ANSSI, pas une certification, pas une homologation, pas un test d'intrusion indépendant. AvecStudy ne détient aucune certification ISO 27001, aucune qualification SecNumCloud, aucun label RGPD. Personne d'extérieur n'a relu ce travail.</p>
+<p>Cette distinction n'est pas une formule de prudence. Un audit mené par celui qui a écrit le code trouve bien les défauts d'inattention — cet audit en a trouvé dix — et trouve mal les défauts de conception, parce qu'il les partage. Ce que ce dossier vaut, il le vaut par ses preuves reproductibles, pas par la qualité de son auteur.</p>
+<h2>Ce qui a été audité</h2>
+<ul><li>Le dépôt Git d'AvecStudy, dans son intégralité et sur ses 93 commits.</li><li>La production, <code>https://avecstudy.fr</code>.</li><li>Le projet Supabase d'AvecStudy, au niveau SQL.</li><li>Les déploiements Vercel d'AvecStudy, tels qu'ils répondent sur le réseau.</li><li>Le stockage utilisé par AvecStudy.</li><li>Les comptes synthétiques créés par <code>recette:complete</code>.</li></ul>
+<h2>Ce qui n'a pas été touché, et ne devait pas l'être</h2>
+<p>Aucun système de l'Éducation nationale. Ni ÉCLAT-BFC, ni Pronote, ni EduConnect, ni le site d'un lycée. Aucun tiers contacté. Aucun déni de service, aucune saturation d'API. Aucune donnée réelle d'élève. Aucune tentative de persistance. Aucun fichier sorti des environnements autorisés, pas même synthétique.</p>
+<p>Cette dernière interdiction a eu un effet concret sur un constat : <strong>F-07</strong>, le balayage d'établissement, n'a pas été reproduit offensivement. Pulvériser des mots de passe sur des comptes, même synthétiques, revient à saturer une API. Le constat repose donc sur une preuve structurelle — la signature de <code>auth_compter_echecs</code> ne prend qu'un profil — et non sur une démonstration. Il est dit comme tel dans <code>13-constats-et-corrections.md</code>.</p>
+<h2>Comment les tests offensifs ont été menés</h2>
+<p>Limités, reproductibles, non destructifs.</p>
+<p>Concrètement : la vérification de la barrière d'origine (F-06) tient en <strong>six requêtes HTTP</strong>, vers une page publique, sans déclencher la moindre action serveur. La vérification de la fuite de secrets (§16) lit six pages et treize scripts. La reproduction de F-01 est <strong>un</strong> appel. Rien de ce qui a été joué n'aurait été perceptible dans un journal d'accès comme autre chose qu'un visiteur.</p>
+<p>Chaque test offensif qui a trouvé quelque chose est devenu un <strong>contrôle permanent</strong> : il échouait avant la correction, il doit passer après. Un test qui n'a jamais échoué ne prouve pas grand-chose.</p>
+<h2>Les trois manières dont une vérification a été faite</h2>
+<p>Elles ne se valent pas, et le dossier les distingue partout.</p>
+<p><strong>Joué.</strong> Une requête a été envoyée, une page ouverte, une requête SQL exécutée, et le résultat est retranscrit. C'est le seul niveau qui vaut preuve.</p>
+<p><strong>Structurel.</strong> Le code ou le schéma ne permet pas la chose, et on le montre — une signature de fonction, une politique RLS, une liste de droits. C'est solide quand la lecture est mécanique et non interprétative, et cet audit a rappelé pourquoi il faut s'en méfier autrement : sept tests verts couvraient <code>verifierMutation</code>, et <strong>personne ne l'appelait</strong>.</p>
+<p><strong>Non vérifié.</strong> Personne ne l'a joué. La ligne le dit.</p>
+<h2>Ce qui n'a pas pu être vérifié</h2>
+<p>Trois points, et il faut les lire comme des trous, pas comme des réserves de style.</p>
+<h3>§18 — La configuration de la console Vercel</h3>
+<p><strong>NON VÉRIFIÉ.</strong> Aucun identifiant Vercel n'était disponible dans l'environnement d'audit : ni <code>VERCEL_TOKEN</code>, ni session de CLI, ni répertoire <code>.vercel</code> dans le dépôt.</p>
+<p>Ce qui reste à établir, et qui demande une session connectée :</p>
+<ul><li>qui a accès au projet, avec quel rôle, et si le second facteur est exigé sur chaque compte ;</li><li>quelles variables d'environnement existent, sur quels environnements, et lesquelles sont marquées sensibles ;</li><li>si la protection des déploiements d'aperçu est active ;</li><li>quels journaux sont conservés, et combien de temps.</li></ul>
+<h3>§19 — La configuration de la console Supabase</h3>
+<p><strong>NON VÉRIFIÉ.</strong> L'audit disposait d'une chaîne de connexion à la base, ce qui a permis de tout vérifier au niveau SQL — tables, politiques, fonctions, droits, volumes. Cela ne dit rien des réglages de <strong>projet</strong> :</p>
+<ul><li>la sauvegarde ponctuelle (PITR) : activée ou non, profondeur ;</li><li>les restrictions réseau sur la base ;</li><li>le second facteur sur le compte propriétaire du projet ;</li><li>la rotation et la date des clés de service ;</li><li>la liste des sous-traitants ultérieurs déclarés par le fournisseur.</li></ul>
+<h3>§31 — La séparation des environnements</h3>
+<p><strong>NON VÉRIFIÉ.</strong> Établir qu'un déploiement d'aperçu ne pointe pas vers la base de production demande de lire les variables d'environnement par environnement, dans la console. C'est exactement le genre de point qu'on ne peut pas déduire du dépôt : le code lit <code>SUPABASE_URL</code>, il ne décide pas de sa valeur.</p>
+<p>Ce que le dépôt montre en revanche, et qui est vérifié : le code <strong>prévoit</strong> la distinction (<code>APP_ENV</code>, <code>VERCEL_ENV</code>), et l'exception d'origine accordée aux déploiements d'aperçu est étroite — elle n'accepte que l'origine du déploiement lui-même et disparaît en production.</p>
+<h2>Ce qui a été laissé délibérément en l'état</h2>
+<p>Aucune protection permanente n'a été désactivée pour faciliter l'audit. La production a gardé sa CSP, ses en-têtes, sa limitation de tentatives et ses politiques RLS pendant toute la durée des vérifications.</p>
+<h2>Ce que ce dossier ne contient pas</h2>
+<p>Aucun secret, même partiel, même expiré. Aucun exploit réutilisable : les constats disent le résultat obtenu, pas la manœuvre complète. Aucune donnée personnelle. Aucune URL signée ni adresse de ressource sensible.</p>
+<p>Les contrôles permanents suivent la même règle dans leur propre sortie : <code>verifier:fuites</code> cherche des valeurs de secrets et n'en imprime jamais une, pas même tronquée — il dit le <strong>nom</strong> de la variable et le fichier. Un contrôle de fuite qui imprime ce qu'il a trouvé recopie la fuite dans les journaux de la recette, et les journaux voyagent plus loin que la page.</p>
+<h2>Dates et point de départ</h2>
+<p>Audit mené le 23 septembre 2026. Point de départ : commit <code>ed243bc</code>, arbre propre, <code>main</code> et <code>refonte-v2</code> alignés sur leurs branches distantes. Relevé du schéma avant travaux : 68 tables, 144 politiques, 113 fonctions, 52 déclencheurs, 5 extensions, 14 rôles.</p>
+</section>
+<section class="doc" id="03-architecture-et-donnees">
+<h1>03 — Architecture et circulation des données</h1>
+<p><em>Ce que le système est, en une page, pour qu'un référent numérique puisse juger le reste du dossier.</em></p>
+<h2>Le principe : le navigateur ne parle jamais à la base</h2>
+<pre><code>   Navigateur                  Serveur AvecStudy                Base PostgreSQL
+   (élève, prof,      ──►      (Vercel, région cdg1)    ──►     (Supabase, eu-west-1)
+    administrateur)            détient la session               applique les politiques
+                               applique les droits              de sécurité de ligne
+        ▲                              │
+        └──────────────────────────────┘
+          cookie opaque __Host-, HttpOnly</code></pre>
+<p>C'est le patron dit <strong>BFF</strong> (<em>backend for frontend</em>). Sa conséquence la plus importante : <strong>aucune clé de base de données n'atteint le navigateur</strong>. Le navigateur ne détient qu'un cookie sans contenu, qui n'est qu'une clé vers une ligne de session.</p>
+<p>Vérifié, et pas seulement affirmé : <code>npm run verifier:fuites</code> inspecte intégralement le HTML servi, la charge utile React qu'il contient et chacun des fichiers de code chargés — 6 pages et 13 scripts au 23 septembre 2026. Aucun secret, aucune forme de secret.</p>
+<h2>Les composants</h2>
+<table><thead><tr><th>Composant</th><th>Rôle</th><th>Fournisseur</th></tr></thead><tbody><tr><td>Application web</td><td>Rendu des pages, actions serveur, session</td><td>Vercel, région <code>cdg1</code> (Paris)</td></tr><tr><td>Base de données</td><td>Toutes les données, et <strong>l'application des droits</strong></td><td>Supabase / AWS <code>eu-west-1</code> (Irlande)</td></tr><tr><td>Authentification</td><td>Vérification des mots de passe, second facteur TOTP</td><td>Supabase Auth</td></tr><tr><td>Stockage de fichiers</td><td>Copies déposées, supports de cours</td><td>Supabase Storage</td></tr><tr><td>File de travaux</td><td>Conversion de documents, traitements différés</td><td>Table en base, drainée par une tâche planifiée</td></tr></tbody></table>
+<p>Aucun autre service ne reçoit de donnée. Pas d'outil de mesure d'audience, pas de service de surveillance d'erreurs tiers, pas de police de caractères distante — elles sont auto-hébergées. La politique de sécurité du contenu (<code>connect-src 'self'</code>, <code>font-src 'self'</code>, <code>img-src 'self'</code>) l'interdit techniquement à une page.</p>
+<h2>Deux schémas, une frontière</h2>
+<table><thead><tr><th></th><th><code>study</code></th><th><code>study_prive</code></th></tr></thead><tbody><tr><td>Exposé par l'API</td><td>oui</td><td><strong>jamais</strong></td></tr><tr><td>Droits pour <code>anon</code></td><td>aucun</td><td>aucun</td></tr><tr><td>Droits pour <code>authenticated</code></td><td>par politique de ligne</td><td><strong>aucun</strong></td></tr><tr><td>Contenu</td><td>travail scolaire, identités, structure scolaire</td><td>sessions, alias techniques, tentatives de connexion, file de travaux</td></tr></tbody></table>
+<p>La frontière est vérifiée à chaque recette, directement en base, et non déduite d'une configuration.</p>
+<h2>Qui voit quoi</h2>
+<table><thead><tr><th></th><th>Voit</th><th>Ne voit pas</th></tr></thead><tbody><tr><td><strong>Élève</strong></td><td>Ses devoirs, ses remises, ses corrections, les séances de ses classes, l'entraide de ses groupes</td><td>Le travail des autres élèves, les brouillons de ses professeurs, tout autre établissement</td></tr><tr><td><strong>Professeur</strong></td><td>Les séances et copies des espaces qu'il enseigne</td><td>Les classes qu'il n'enseigne pas — et il perd l'accès <strong>dès que son affectation est retirée</strong></td></tr><tr><td><strong>Administrateur d'établissement</strong></td><td>La structure, les comptes, les accès, les signalements de son lycée</td><td>Le contenu du travail scolaire des élèves</td></tr><tr><td><strong>Éditeur (exploitant)</strong></td><td>Les établissements, le commercial, l'administration</td><td><strong>Le travail des élèves lui est fermé</strong> — il ne peut ni le lire ni y écrire, et quatre tests de la batterie le vérifient</td></tr></tbody></table>
+<p>Cette dernière ligne est le point qu'un établissement doit retenir : l'éditeur d'AvecStudy n'a pas accès aux copies des élèves par les chemins applicatifs.</p>
+<blockquote><p><strong>Réserve d'honnêteté.</strong> Il détient en revanche les accès à l'infrastructure, et donc à la base. Aucune architecture ne peut prétendre le contraire : celui qui exploite une base peut la lire. Ce qui existe en face, c'est la traçabilité des actes applicatifs, le fait que chaque contournement de RLS passe par un motif déclaré et relisible, et — surtout — le fait que ce soit écrit ici.</p></blockquote>
+<h2>Le cycle d'une copie</h2>
+<ol><li>L'élève dépose. La ligne naît <strong>réservée</strong>, jamais servable.</li><li>Le fichier part au stockage, sous un chemin fabriqué côté serveur : trois identifiants, sans extension, jamais le nom d'origine.</li><li>Le type est reconnu <strong>sur les octets</strong>. Un fichier nommé <code>.pdf</code> qui n'en est pas un est refusé.</li><li>Le worker déclare le fichier disponible — lui seul le peut.</li><li>L'élève reçoit une <strong>référence d'accusé de remise</strong>, consultable et imprimable.</li><li>La version est <strong>scellée</strong> : elle ne change plus. Une nouvelle remise crée une nouvelle version, et l'ancienne cesse d'être servie tout en restant à l'historique.</li><li>Le professeur affecté peut l'ouvrir. Personne d'autre.</li></ol>
+<p>Chacune de ces étapes est couverte par au moins un test de la batterie RLS.</p>
+<h2>Ce qui circule hors d'Europe</h2>
+<p>Après la correction du constat F-08 : rien, au niveau des régions déclarées. Le calcul est à Paris, la base en Irlande.</p>
+<p>Ce qui n'est pas établi : la localisation des sauvegardes, des journaux des fournisseurs et des accès de leur support. Voir <code>08-hebergement-et-transferts.md</code> et le risque résiduel R-02.</p>
+<h2>Pour aller plus loin</h2>
+<p>Le dictionnaire de données complet — chaque table, chaque colonne, chaque politique — est dans <code>docs/03-dictionnaire-de-donnees.md</code>, hors de ce dossier de sécurité. Il fait 2 479 lignes et décrit l'état réel du schéma.</p>
+</section>
+<section class="doc" id="04-modele-de-menace">
+<h1>04 — Modèle de menace</h1>
+<p><em>Qui voudrait quoi, avec quels moyens, et ce que le système oppose. Un modèle de menace qui liste des attaquants abstraits ne sert à rien : celui-ci part de ce qui arrive réellement dans un lycée.</em></p>
+<h2>Ce qu'il y a à prendre</h2>
+<p>Par ordre de valeur pour un attaquant, et d'impact pour un élève :</p>
+<ol><li><strong>Le contenu d'une copie et son appréciation.</strong> Ce n'est pas une donnée sensible au sens du RGPD, mais c'est ce qui humilie un adolescent si ça circule dans un groupe de classe.</li><li><strong>Les identifiants d'un compte</strong>, surtout d'un professeur ou d'un administrateur — ils ouvrent les copies des autres.</li><li><strong>Les listes nominatives</strong> : qui est dans quelle classe.</li><li><strong>La disponibilité</strong> elle-même : empêcher une remise la veille d'une échéance.</li></ol>
+<h2>Les attaquants réalistes</h2>
+<h3>A — L'élève curieux ou malveillant</h3>
+<p><strong>De loin le plus probable.</strong> Il est déjà authentifié, il connaît les noms de ses camarades, il a du temps, et il n'a pas besoin de compétences : il suffit souvent de changer un identifiant dans une adresse.</p>
+<p><strong>Ce qu'il tentera</strong> : ouvrir la copie d'un autre, lire un devoir avant publication, voir une correction avant sa diffusion, deviner la référence d'accusé d'un camarade, usurper un compte laissé ouvert.</p>
+<p><strong>Ce qui l'arrête</strong> : l'autorisation vit dans la base, pas dans l'écran. Changer un identifiant dans une adresse ne sert à rien : la politique de ligne ne rend pas la ligne. 202 tests le vérifient sur du vrai PostgreSQL.</p>
+<p><strong>Ce que l'audit a trouvé sur cet axe</strong> : F-01 — la référence d'accusé de remise était calculable par un appel anonyme. Il fallait encore connaître l'identifiant de version, que RLS protège, mais la promesse « non devinable » était affaiblie. Corrigé.</p>
+<h3>B — Le camarade avec un accès physique au poste</h3>
+<p>Un poste du CDI, une session laissée ouverte, un téléphone non verrouillé.</p>
+<p><strong>Ce qui l'arrête</strong> : la session « poste partagé » expire beaucoup plus vite ; le cookie est <code>HttpOnly</code> et opaque, donc ni lisible par un script ni exploitable ailleurs ; un compte administratif prend toujours la fenêtre la plus courte, même sur un appareil personnel.</p>
+<p><strong>Ce qui manque</strong> : un utilisateur ne peut pas révoquer lui-même ses autres sessions. Relevé par l'exercice sur table n° 1.</p>
+<h3>C — L'attaquant opportuniste depuis Internet</h3>
+<p>Il ne vise pas AvecStudy en particulier. Il balaie, il essaie des mots de passe courants, il cherche une API ouverte.</p>
+<p><strong>Ce qui l'arrête</strong> : aucune fonction de base exécutable sans compte (depuis la correction de F-01) ; la limitation de tentatives ; l'absence d'énumération de comptes ; les en-têtes de sécurité ; la barrière d'origine sur toute mutation.</p>
+<p><strong>Ce que l'audit a trouvé</strong> : F-07 — le balayage d'établissement passait sous tous les compteurs. C'est <strong>le</strong> scénario de cet attaquant dans un lycée, où les mots de passe sont distribués à la rentrée et se ressemblent. Corrigé.</p>
+<h3>D — Le professeur ou l'administrateur dont le compte est compromis</h3>
+<p><strong>Ce qui limite</strong> : sans second facteur, un administrateur <strong>ne fait rien</strong> de privilégié — il verrait ses écrans, il ne pourrait ni créer, ni suspendre, ni réinitialiser, ni modérer. Vérifié par les tests T16 et T16b.</p>
+<p><strong>Ce que l'audit a trouvé</strong> : F-02 — un compte suspendu gardait ses rôles tant que sa session vivait. Le risque était déjà fermé par la révocation des sessions, mais reposait sur une habitude. Rendu structurel.</p>
+<h3>E — L'éditeur lui-même</h3>
+<p>Il faut le nommer, parce qu'un modèle de menace qui omet l'exploitant est incomplet.</p>
+<p><strong>Ce qui limite, côté applicatif</strong> : le travail des élèves est fermé à l'exploitant — quatre tests de la batterie le vérifient, en lecture comme en écriture. Tout contournement de RLS passe par <code>clientExploitation(motif)</code>, dont le paramètre est un <strong>type fermé</strong> de huit motifs, chacun commenté et relisible dans un diff.</p>
+<p><strong>Ce qui ne limite pas</strong> : celui qui exploite une base peut la lire. Aucune architecture ne peut prétendre le contraire, et ce dossier ne le prétend pas. Ce qui existe en face, c'est la traçabilité des actes applicatifs et le fait que cette limite soit écrite ici plutôt que tue.</p>
+<h3>F — Le fournisseur d'hébergement</h3>
+<p>Vercel et Supabase peuvent techniquement accéder à l'infrastructure qu'ils opèrent. C'est le sens même de la sous-traitance, et cela se traite par le contrat, pas par le code.</p>
+<p><strong>Ce que l'audit a trouvé sur cet axe</strong> : F-08 — le rendu serveur s'exécutait aux États-Unis, sans que rien ne le déclare. Corrigé. Ce qui reste : la localisation contractuelle des sauvegardes, des journaux et des accès du support, <strong>NON VÉRIFIÉE</strong> (R-02).</p>
+<h2>Ce qui est hors du modèle</h2>
+<p>Ce que ce dossier ne prétend pas couvrir, et qu'il ne faut donc pas croire couvert :</p>
+<ul><li><strong>Un poste d'élève ou de professeur déjà compromis.</strong> Si un logiciel espion est installé sur la machine, AvecStudy n'y peut rien — il verra ce que la personne voit.</li><li><strong>Un attaquant étatique ou une chaîne d'approvisionnement compromise.</strong> Hors de portée d'une structure de cette taille, et le prétendre serait faux.</li><li><strong>Le réseau de l'établissement</strong>, l'ENT, Pronote, EduConnect. Hors périmètre, et le mandat interdisait de les toucher.</li><li><strong>Le déni de service.</strong> Aucune protection spécifique au-delà de ce que l'hébergeur applique par défaut.</li></ul>
+<h2>La menace qui n'est pas un attaquant</h2>
+<p>Elle mérite sa propre section, parce que c'est celle qui s'est réalisée le plus souvent dans l'histoire de ce produit : <strong>l'erreur silencieuse</strong>.</p>
+<p>Trois exemples réels, tous trouvés par des contrôles et aucun par un attaquant :</p>
+<ul><li>une politique de sécurité du contenu qui empêchait <strong>tous</strong> les scripts de se charger en production — sans la moindre erreur côté serveur ;</li><li>deux variables de couleur qui n'existaient pas : ni la compilation, ni le typage, ni les tests ne le voient — seulement l'écran ;</li><li>une fonction de sécurité couverte par sept tests verts, que <strong>personne n'appelait</strong>.</li></ul>
+<p>C'est pourquoi les contrôles de ce dossier lisent <strong>ce qui est servi</strong>, et non ce qui est écrit. Et pourquoi chacun doit avoir été vu rouge avant d'être cru vert.</p>
+</section>
+<section class="doc" id="05-authentification-et-sessions">
+<h1>05 — Authentification, sessions, abus</h1>
+<h2>Comment on se connecte</h2>
+<p>Un code d'établissement, un identifiant local remis par le lycée, un mot de passe. Pas d'adresse électronique pour les élèves, pas d'inscription libre, pas de fédération d'identité.</p>
+<p>Derrière, l'identité technique passée au fournisseur d'authentification est un <strong>alias opaque</strong>. Un test vérifie qu'il ne contient ni nom ni classe : le fournisseur ne sait donc pas qui est qui.</p>
+<h2>L'ordre des opérations, et pourquoi il est ce qu'il est</h2>
+<p>C'est la partie du code où l'ordre <strong>est</strong> la sécurité.</p>
+<ol><li><strong>Résoudre l'identifiant.</strong> S'il est inconnu, on vérifie quand même un secret contre une identité factice, puis on renvoie le refus générique. Sans cela, un identifiant inconnu répondrait plus vite qu'un identifiant réel, et le service deviendrait un annuaire.</li><li><strong>Appliquer la limitation de tentatives</strong>, <em>avant</em> de parler au fournisseur. Autrement, le service se transforme en oracle de mots de passe : même bridé, il répondrait « ce mot de passe est bon » à volume illimité.</li><li><strong>Vérifier le secret.</strong></li><li><strong>Seulement ensuite</strong>, regarder l'état du compte. Un compte suspendu et un mot de passe faux produisent exactement le même refus, avec le même vocabulaire.</li></ol>
+<p>Quatre tests d'unité vérifient qu'un identifiant inconnu, un mot de passe faux, un compte suspendu et une adhésion terminée sont <strong>indiscernables</strong> vus du navigateur.</p>
+<h2>Limitation des tentatives</h2>
+<h3>Par compte</h3>
+<p>Cinq échecs en quinze minutes, puis une temporisation qui double : 30 s, 60 s, 120 s… plafonnée à quinze minutes. Une connexion réussie efface l'ardoise — sinon cinq erreurs de frappe en début de matinée puniraient encore l'élève à midi.</p>
+<p><strong>Pourquoi pas par adresse IP</strong> : huit cents élèves d'un lycée sortent par la même adresse publique. Bloquer sur l'IP reviendrait à fermer l'établissement à la première erreur de frappe de la salle 204.</p>
+<p>En cas de panne de lecture du compteur, on suppose qu'il y a eu des échecs : mieux vaut ralentir une personne légitime que d'ouvrir un compte au forçage.</p>
+<h3>Par établissement — ajouté par cet audit</h3>
+<p>Le compteur par compte ne voit pas l'attaque la plus probable ici. Un pulvérisateur de mots de passe essaie trois mots de passe plausibles sur huit cents comptes : chaque compteur reste à trois, sous le seuil, et rien ne ralentit jamais.</p>
+<p>Au-delà de <strong>trente cibles distinctes</strong> en échec dans un établissement sur quinze minutes, le seuil par compte descend de cinq à <strong>deux</strong>.</p>
+<p>Trois précisions importantes :</p>
+<ul><li><strong>Cibles distinctes</strong>, pas tentatives : mille échecs sur un seul compte sont un compte oublié, et c'est l'autre compteur qui s'en occupe.</li><li><strong>Rien ne se verrouille.</strong> Une personne dont le mot de passe est bon entre, alerte ou pas — un test le vérifie explicitement. Un verrou déclenché par un tiers serait une arme qu'on lui tend : il suffirait d'un balayage volontaire un matin de rentrée pour empêcher un lycée entier de se connecter.</li><li><strong>Le doute penche dans l'autre sens</strong> que pour le compteur par compte : si la lecture échoue, on suppose qu'il n'y a pas de balayage. Supposer l'inverse transformerait une panne technique en gêne pour huit cents personnes.</li></ul>
+<p>Voir le constat F-07 : la donnée était collectée depuis la migration 0015 « pour repérer un balayage », et rien ne la relisait.</p>
+<p><strong>Ce que cela ne fait pas</strong> : prévenir quelqu'un. Le balayage est ralenti, il n'est pas signalé. Voir R-09.</p>
+<h2>Sessions</h2>
+<p>Le cookie est <strong>opaque</strong> : <code>__Host-avecstudy_session</code>, une valeur sans contenu, qui n'est qu'une clé vers une ligne de <code>study_prive.sessions</code>.</p>
+<table><thead><tr><th>Attribut</th><th>Valeur</th><th>Effet</th></tr></thead><tbody><tr><td>Préfixe <code>__Host-</code></td><td></td><td>Le navigateur refuse le cookie s'il n'est pas servi en HTTPS depuis le domaine exact. Un sous-domaine compromis ne peut pas en poser un.</td></tr><tr><td><code>HttpOnly</code></td><td>oui</td><td>Inaccessible au JavaScript de la page.</td></tr><tr><td><code>Secure</code></td><td>en production</td><td>Jamais transmis en clair.</td></tr><tr><td><code>SameSite</code></td><td><code>Lax</code></td><td>Une requête partie d'un autre site n'emporte pas la session.</td></tr><tr><td><code>path</code></td><td><code>/</code></td><td></td></tr></tbody></table>
+<p>Conséquences pratiques : un cookie volé ne révèle rien par lui-même, et il se <strong>révoque</strong> — ce qu'un jeton auto-porteur ne permet pas.</p>
+<h3>Durées</h3>
+<p>Deux échéances par session : une par <strong>inactivité</strong>, une <strong>absolue</strong>. Un compte portant un rôle administratif prend toujours la fenêtre la plus courte, même sur un appareil personnel. Un poste partagé expire beaucoup plus vite qu'un appareil personnel.</p>
+<h3>Relecture à chaque requête</h3>
+<p>La session est relue en base à chaque requête. C'est ce qui permet qu'une habilitation retirée ferme l'espace <strong>à la requête suivante</strong>, sans attendre une expiration.</p>
+<p>L'audit y a trouvé un défaut (F-02) : la lecture prenait les rôles de l'adhésion sans regarder son état. Une session vivante d'un compte suspendu gardait donc ses écrans. Le risque était déjà fermé — les deux chemins de suspension révoquent les sessions — mais la garantie reposait sur le fait que chaque futur chemin y pense. La lecture applique désormais la même règle que la connexion.</p>
+<p><code>a_activer</code> reste admis, sans quoi une personne qui vient de recevoir ses accès ne pourrait plus atteindre son propre écran d'activation.</p>
+<h2>Second facteur</h2>
+<p>TOTP, par le fournisseur d'authentification. Le niveau d'assurance de la session (<code>aal1</code> / <code>aal2</code>) est enregistré <strong>par session</strong>, pas par compte : se connecter sur un nouvel appareil ne donne pas d'emblée les droits d'administration.</p>
+<p>Il est exigé pour tout acte d'administration. Voir <code>06-autorisation-et-cloisonnement.md</code> pour la couche qui l'applique réellement en production.</p>
+<h3>Un défaut de produit trouvé en route</h3>
+<p>L'écran d'enrôlement régénère le secret à chaque affichage — c'est voulu : les facteurs non vérifiés sont retirés avant d'en créer un nouveau. Mais sa branche d'erreur n'affichait <strong>ni la clé, ni le formulaire, ni aucun moyen de recommencer</strong>. Une personne qui tombait dessus était bloquée sans recours.</p>
+<p>Corrigé : la branche d'erreur porte désormais un bouton « Réessayer ». Ce n'est pas un défaut de sécurité, c'est un défaut d'accès — et l'un empêche l'autre d'être utilisé.</p>
+<h2>Mots de passe</h2>
+<p>Vérifiés par le fournisseur d'identité, jamais stockés par AvecStudy. Le changement de mot de passe passe par l'alias technique — le fournisseur ne connaît pas les identifiants locaux.</p>
+<p>Un mot de passe temporaire est généré à la remise des accès, avec obligation de changement au premier usage. Tant que cette obligation n'est pas levée, <strong>aucune donnée pédagogique n'est accessible</strong> — vérifié par le test T07 de la batterie RLS. Et un compte non activé ne peut pas lever l'obligation lui-même (T07b).</p>
+<h2>Journalisation de l'authentification</h2>
+<p>Ce qui est enregistré en cas d'échec : le compte visé s'il existe, le code d'établissement saisi, la date. <strong>Rien d'autre</strong> — ni le mot de passe, ni l'identifiant saisi, ni l'adresse IP.</p>
+<p>Conservation : vingt-quatre heures. Cette durée était déclarée dans la base depuis la migration 0015 et n'était appliquée nulle part (F-09) ; la purge est désormais appelée par la tâche planifiée.</p>
+<p>Les 44 appels de journalisation de l'application ont été relus un par un : aucun ne transporte un mot de passe, un secret, un jeton, un cookie ni un contenu.</p>
+</section>
+<section class="doc" id="06-autorisation-et-cloisonnement">
+<h1>06 — Autorisation et cloisonnement</h1>
+<p><em>Qui voit quoi, et pourquoi on peut le croire.</em></p>
+<h2>La règle qui gouverne tout</h2>
+<p><strong>L'autorisation est appliquée dans la base de données, pas dans l'écran.</strong></p>
+<p>Un menu caché ne protège pas une ressource. Une vérification faite dans le composant React protège l'affichage, pas la donnée : il suffit d'appeler l'adresse directement. AvecStudy place donc la décision au plus près de la donnée — dans PostgreSQL, par la sécurité au niveau des lignes (RLS).</p>
+<p>Au 23 septembre 2026 : <strong>68 tables, 144 politiques</strong>, et <strong>toutes</strong> les tables des deux schémas portent RLS, <code>FORCE</code> compris — y compris pour le propriétaire. Vérifié à chaque recette par <code>verifier:privileges</code>.</p>
+<h2>Les deux schémas</h2>
+<table><thead><tr><th></th><th><code>study</code></th><th><code>study_prive</code></th></tr></thead><tbody><tr><td>Exposé par PostgREST</td><td>oui</td><td><strong>jamais</strong></td></tr><tr><td>Droits accordés à <code>anon</code></td><td>aucun</td><td>aucun</td></tr><tr><td>Droits accordés à <code>authenticated</code></td><td>par politique</td><td><strong>aucun</strong></td></tr><tr><td>Ce qu'on y trouve</td><td>le travail scolaire, les identités, la structure</td><td>sessions, alias techniques, tentatives de connexion, file de travaux</td></tr></tbody></table>
+<p>Le cloisonnement est vérifié directement en base, et non déduit de la configuration : <code>verifier:privileges</code> interroge <code>information_schema.role_table_grants</code> et échoue si <code>study_prive</code> accorde quoi que ce soit à <code>anon</code>, <code>authenticated</code> ou <code>PUBLIC</code>.</p>
+<h2>Les deux clients, et la seule différence qui compte</h2>
+<pre><code>clientUtilisateur(jeton)   →  applique RLS. C'est la personne qui agit.
+clientExploitation(motif)  →  contourne RLS. C'est le serveur qui agit.</code></pre>
+<p>Le second est celui qui peut tout. Il est donc encadré par un mécanisme simple et efficace : <strong>son paramètre <code>motif</code> est un type fermé</strong>. On ne peut pas l'appeler sans déclarer pourquoi, et la liste des motifs admis tient en huit entrées, chacune commentée :</p>
+<pre><code>demande_commerciale_publique · amorcage_proprietaire ·
+administration_des_comptes · stockage_des_supports · duplication_de_seance ·
+tache_planifiee · purge_des_tentatives · moderation_des_signalements</code></pre>
+<p>Un usage abusif se repère en cherchant les appels — <code>grep clientExploitation</code> suffit — sans avoir à relire les fonctions. Ajouter un motif est un geste délibéré, visible dans un diff.</p>
+<h2>Le constat le plus rassurant de cet audit</h2>
+<p>Une fonction <code>SECURITY DEFINER</code> s'exécute avec les droits de son propriétaire. Si une telle fonction accepte <strong>en paramètre</strong> l'identité de la personne pour qui elle agit, et qu'elle est appelable depuis un navigateur, alors n'importe qui peut se faire passer pour n'importe qui.</p>
+<p>L'audit a cherché exactement ce motif : les 80 fonctions privilégiées des deux schémas, croisées avec celles qui acceptent un paramètre d'identité (<code>p_profile</code>, <code>p_eleve</code>, <code>p_acteur</code>, <code>p_moderateur</code>, <code>p_auteur</code>…).</p>
+<p><strong>Résultat : toutes sont réservées à <code>service_role</code>. Aucune n'est atteignable depuis une session navigateur.</strong> Il n'existe donc aucun chemin d'usurpation d'identité depuis un navigateur.</p>
+<p>Ce n'est pas un constat ponctuel : <code>verifier:privileges</code> le rejoue à chaque recette et échoue si une nouvelle fonction apparaît dans ce cas.</p>
+<p>Toutes fixent par ailleurs leur <code>search_path</code>, vérifié au même endroit — sans quoi une fonction privilégiée peut être détournée en plaçant un objet homonyme dans un schéma que l'appelant contrôle.</p>
+<h2>Ce que les 202 tests vérifient</h2>
+<p>Ils tournent sur <strong>PostgreSQL 17 réel</strong>, en WebAssembly, avec les vraies migrations rejouées depuis zéro à chaque exécution. Ce ne sont pas des simulations : ce sont les politiques du produit, évaluées par le moteur du produit.</p>
+<p>Quelques exemples de ce qu'ils établissent :</p>
+<ul><li>un enseignant ne lit pas les copies d'une classe qu'il n'enseigne pas ;</li><li>retirer une affectation <strong>coupe</strong> l'accès de l'enseignant à la séance suivante ;</li><li>un élève ne voit pas un devoir en brouillon ;</li><li>une copie rendue est immuable, et une clé d'idempotence bloque le double clic ;</li><li>une version de contenu scellée ne change plus rétroactivement ;</li><li>l'exploitant voit les deux lycées, <strong>et le travail des élèves lui reste fermé</strong> — il ne peut ni le lire ni y écrire ;</li><li>sans second facteur, un administrateur ne fait rien de privilégié ;</li><li>deux workers ne prennent jamais le même travail ;</li><li>l'alias technique d'un élève ne contient ni nom ni classe.</li></ul>
+<h2>La leçon la plus coûteuse de cet audit</h2>
+<p>Tous ces tests cherchaient des <strong>fuites</strong>. Aucun ne vérifiait qu'un chemin <strong>légitime</strong> fonctionnait.</p>
+<p>Résultat : en production, un professeur ne pouvait pas ouvrir la copie d'un de ses propres élèves, alors que l'intégralité de la batterie d'isolation passait au vert. Le défaut a été corrigé par la migration <code>0042</code>, et un test de chemin légitime a été ajouté.</p>
+<p>Pire encore : un test échouait à voir le problème parce qu'il encodait l'<strong>attente de la politique</strong> plutôt que le <strong>comportement du produit</strong> — il construisait une ligne dans une forme que le produit ne crée jamais. Un test qui passe pour une mauvaise raison est pire que pas de test, parce qu'on le compte.</p>
+<p>C'est de ce constat que vient la règle appliquée depuis : un contrôle doit avoir été <strong>vu rouge</strong> avant d'être cru vert.</p>
+<h2>Droits d'exécution des fonctions</h2>
+<p>C'est le sujet du constat F-01, et il mérite d'être compris parce qu'il est contre-intuitif.</p>
+<p>PostgreSQL accorde <code>EXECUTE</code> à <code>PUBLIC</code> sur <strong>toute</strong> fonction créée. Accorder ensuite le droit à <code>authenticated</code> <strong>ne retire rien à personne</strong>. Une fonction nouvelle est donc ouverte au monde entier par défaut, et le reste jusqu'à ce que quelqu'un y pense.</p>
+<p>Trente fonctions étaient dans ce cas. La migration <code>0043</code> révoque tout, accorde explicitement à <code>service_role</code>, puis rouvre à <code>authenticated</code> — nommément.</p>
+<p>Et la liste de ce qu'il faut rouvrir <strong>ne se dresse pas à l'œil</strong> : une politique RLS, un déclencheur, une valeur par défaut s'évaluent avec les droits de celui qui écrit la ligne, et les fonctions <code>security invoker</code> propagent l'exigence à ce qu'elles appellent. C'est une fermeture transitive, que <code>verifier:privileges</code> calcule désormais à partir de 934 expressions de schéma.</p>
+<h2>Le second facteur</h2>
+<p>Tout acte d'administration l'exige : créer une classe, réinitialiser un accès, suspendre un compte, modérer un signalement, toucher à la facturation.</p>
+<p>La garantie est appliquée à deux endroits, et il faut savoir lequel compte vraiment :</p>
+<ul><li><strong>en base</strong>, par une condition sur le niveau d'assurance de la session — mais la variable de session correspondante n'est pas positionnée par PostgREST en production, si bien que cette couche ne mord que dans les tests ;</li><li><strong>dans l'application</strong>, par le garde <code>assuranceSuffisante</code> — et <strong>c'est celle qui protège réellement la production</strong>.</li></ul>
+<p>Cette asymétrie est écrite ici plutôt que passée sous silence : un dossier qui compterait deux couches là où une seule agit compterait faux.</p>
+<h2>Modération</h2>
+<p>Le modérateur unique est <strong>l'administrateur d'établissement</strong> — quelqu'un du lycée, pas l'éditeur. C'est un choix : la modération d'un contenu d'élève est un acte éducatif, pas un acte d'exploitation.</p>
+<p>Il ne voit pas l'entraide en général — RLS ne la lui montre pas, et c'est voulu. Il voit ce qui a été <strong>signalé</strong>, dans son propre établissement, par un accès borné aux contenus visés, déclaré sous le motif <code>moderation_des_signalements</code>. Et il lui faut son second facteur.</p>
+</section>
+<section class="doc" id="07-donnees-personnelles-et-rgpd">
+<h1>07 — Données personnelles</h1>
+<p><em>Destiné au délégué à la protection des données. Ce document décrit ce qui est <strong>réellement</strong> dans la base au 23 septembre 2026, relevé colonne par colonne, et non ce que la documentation annonce.</em></p>
+<blockquote><p>Ce document n'est pas un avis juridique. Il décrit un état technique vérifié. La qualification juridique des traitements, les bases légales retenues et l'annexe de sous-traitance relèvent du DPO de l'établissement et, le cas échéant, d'un juriste.</p></blockquote>
+<h2>Qui est quoi</h2>
+<p>L'<strong>établissement</strong> décide pourquoi et comment les données sont traitées : il choisit d'utiliser AvecStudy, il y inscrit ses élèves, il définit ses classes. Il est <strong>responsable de traitement</strong>.</p>
+<p>AvecStudy — Nouh Tifouti, entrepreneur individuel — traite ces données pour le compte de l'établissement et selon ses instructions. Il est <strong>sous-traitant</strong> au sens de l'article 28 du RGPD.</p>
+<p>Deux fournisseurs interviennent à leur tour, et sont donc <strong>sous-traitants ultérieurs</strong> : Vercel (hébergement de l'application) et Supabase (base de données, authentification, stockage de fichiers). Voir <code>annexe-sous-traitance.md</code> et <code>08-hebergement-et-transferts.md</code>.</p>
+<h2>Ce qui est collecté, relevé dans le schéma</h2>
+<h3>Sur une personne</h3>
+<table><thead><tr><th>Donnée</th><th>Où</th><th>Remarque</th></tr></thead><tbody><tr><td>Prénom, nom</td><td><code>study.profiles</code></td><td></td></tr><tr><td>Adresse électronique professionnelle</td><td><code>study.profiles</code></td><td>Renseignée pour les personnels ; un élève n'en a pas besoin pour se connecter.</td></tr><tr><td>Identifiant local</td><td><code>study.organization_memberships</code>, <code>study_prive.auth_aliases</code></td><td>Remis par l'établissement. Unique dans le lycée.</td></tr><tr><td>Rôles, état du compte, état de l'adhésion</td><td><code>study.organization_memberships</code></td><td></td></tr><tr><td>Alias technique</td><td><code>study_prive.auth_aliases</code></td><td>Identifiant opaque vers le fournisseur d'authentification. Un test vérifie qu'il ne contient <strong>ni nom ni classe</strong>.</td></tr><tr><td>Classe, groupe, matière, affectation</td><td><code>class_enrollments</code>, <code>group_memberships</code>, <code>teacher_assignments</code></td><td></td></tr></tbody></table>
+<h3>Ce qui n'est <strong>pas</strong> collecté</h3>
+<p>Vérifié dans le schéma, pas seulement affirmé :</p>
+<ul><li><strong>Aucune colonne ne peut porter un INE.</strong> Recherche sur l'ensemble des colonnes des deux schémas : aucun résultat.</li><li>Pas de date de naissance, pas d'adresse postale, pas de numéro de téléphone d'élève ou de famille, pas de photographie.</li><li>Pas de donnée de santé, pas de donnée dite sensible au sens de l'article 9.</li><li>Pas de traceur publicitaire, pas d'outil de mesure d'audience tiers, pas de réseau social intégré.</li></ul>
+<p>Les seules coordonnées téléphoniques présentes sont celles d'un contact <strong>commercial</strong> d'établissement (<code>study.commercial_requests</code>), saisies par une personne adulte qui demande une démonstration. Ce sont des données professionnelles, pas des données d'élève.</p>
+<h3>Sur le travail scolaire</h3>
+<p>C'est le cœur du service, et c'est aussi la catégorie la plus sensible en pratique, même si elle n'est pas « sensible » au sens de l'article 9 : une copie rendue, un commentaire d'enseignant, une note personnelle disent beaucoup d'un adolescent.</p>
+<table><thead><tr><th>Donnée</th><th>Où</th></tr></thead><tbody><tr><td>Copies rendues et leurs versions successives</td><td><code>submissions</code>, <code>submission_versions</code></td></tr><tr><td>Brouillons non rendus</td><td><code>submissions.draft_body</code></td></tr><tr><td>Corrections et appréciations individuelles</td><td><code>lesson_corrections</code>, <code>feedback</code></td></tr><tr><td>Correction commune d'un devoir</td><td><code>assignment_corrections</code></td></tr><tr><td>Contenu des séances et documents déposés</td><td><code>lesson_blocks</code>, <code>content_versions</code>, <code>files</code></td></tr><tr><td>Questions et réponses d'entraide</td><td><code>reponses_entraide</code></td></tr><tr><td>Notes personnelles</td><td><code>personal_notes</code></td></tr><tr><td>Messages</td><td><code>messages</code></td></tr><tr><td>Signalements de contenu</td><td><code>reports</code></td></tr></tbody></table>
+<h3>Données techniques</h3>
+<table><thead><tr><th>Donnée</th><th>Où</th><th>Conservation</th></tr></thead><tbody><tr><td>Sessions ouvertes (empreinte du cookie, appareil, dates)</td><td><code>study_prive.sessions</code></td><td>Expiration par inactivité et expiration absolue ; révocation immédiate à la déconnexion et à toute suspension.</td></tr><tr><td>Échecs de connexion (compte visé, code d'établissement saisi, date)</td><td><code>study_prive.tentatives_connexion</code></td><td><strong>24 heures.</strong> Voir ci-dessous.</td></tr><tr><td>Journal d'audit des actes d'administration</td><td><code>study.audit_events</code></td><td>Conservé. Voir ci-dessous.</td></tr></tbody></table>
+<p>Le cookie de session est <strong>opaque</strong> : il ne contient aucune information, pas même chiffrée. C'est une clé vers une ligne de base, rien d'autre. Un cookie volé ne révèle donc rien par lui-même, et se révoque.</p>
+<h2>Durées de conservation</h2>
+<p>Il faut distinguer trois cas, parce qu'ils n'ont pas la même solidité.</p>
+<p><strong>Appliquée mécaniquement.</strong> Les tentatives de connexion : vingt-quatre heures. Cette durée était écrite dans la base depuis la migration 0015 et <strong>n'était appliquée nulle part</strong> — c'est le constat F-09 de cet audit. La purge est maintenant appelée par la tâche planifiée, et son bilan indique le nombre de lignes supprimées. Les sessions expirent, elles, par construction.</p>
+<p><strong>Décidée par l'établissement.</strong> Le travail scolaire suit l'année scolaire et les décisions du lycée. AvecStudy ne supprime rien de sa propre initiative : ce serait s'arroger une décision qui appartient au responsable de traitement.</p>
+<p><strong>Volontairement non purgée.</strong> Le journal d'audit. Il enregistre qui a réinitialisé un accès, qui a suspendu un compte, qui a modéré un contenu. Le purger reviendrait à effacer la trace des actes d'administration — c'est-à-dire exactement ce qu'un journal sert à empêcher. Sa croissance est lente (environ 1 190 lignes, 552 ko au 23 septembre 2026) et surveillée.</p>
+<blockquote><p><strong>Point à trancher avec le DPO.</strong> Une durée de conservation doit être <strong>déterminée</strong>, y compris pour un journal. « Conservé » n'est pas une durée. Il faut fixer une borne — trois ans, cinq ans, la durée de scolarité plus un an — et l'appliquer. C'est porté aux risques résiduels.</p></blockquote>
+<h2>Droits des personnes</h2>
+<p>L'établissement est l'interlocuteur des élèves et des familles. AvecStudy l'outille.</p>
+<table><thead><tr><th>Droit</th><th>Ce qui existe aujourd'hui</th></tr></thead><tbody><tr><td>Accès</td><td>Un élève voit dans son espace l'ensemble de ce qui le concerne : devoirs, remises, corrections, preuves de remise. Un administrateur d'établissement dispose d'un export des accès.</td></tr><tr><td>Rectification</td><td>Les données d'identité proviennent de l'établissement et se corrigent par lui (écrans d'administration, import de rentrée).</td></tr><tr><td>Effacement</td><td>Sur décision de l'établissement. Les suppressions passent par les écrans d'administration ; le journal d'audit en garde la trace.</td></tr><tr><td>Portabilité</td><td>Export au format tableur des accès et des listes. <strong>Point ouvert</strong> : il n'existe pas aujourd'hui d'export complet, en un geste, de l'ensemble des données d'un élève — copies comprises.</td></tr><tr><td>Opposition, limitation</td><td>À traiter par l'établissement au cas par cas.</td></tr></tbody></table>
+<blockquote><p><strong>Point ouvert, à inscrire au plan d'action.</strong> L'export complet des données d'un élève n'existe pas sous forme d'une commande unique. Les données sont toutes accessibles et exportables, mais l'opération demande aujourd'hui une intervention de l'éditeur. Pour un délai d'un mois, c'est tenable ; ce n'est pas satisfaisant.</p></blockquote>
+<h2>Minimisation, en pratique</h2>
+<p>Trois choix concrets, vérifiables :</p>
+<ol><li><strong>Pas d'INE</strong>, alors que c'est l'identifiant scolaire évident. Il a été écarté parce qu'il suit un élève toute sa scolarité et au-delà : en cas de fuite, il corrèle des bases entre elles. L'identifiant local, lui, ne vaut que dans un lycée et une année.</li><li><strong>L'alias technique ne porte ni nom ni classe.</strong> Le fournisseur d'authentification ne sait donc pas qui est qui.</li><li><strong>Les élèves n'ont pas d'adresse électronique</strong> dans le système. Le service fonctionne sans, ce qui évite d'en collecter une.</li></ol>
+<h2>Ce qui est journalisé, et ce qui ne l'est jamais</h2>
+<p>Les journaux techniques ne contiennent <strong>jamais</strong> : un mot de passe, un secret de second facteur, un jeton, un cookie, le contenu d'une copie, un INE, une URL signée, un nom de fichier, ni le texte d'un commentaire.</p>
+<p>Vérifié : les 44 appels de journalisation de l'application ont été relus un par un. Ils écrivent un objet JSON structuré portant un <strong>contexte</strong> et un <strong>code d'erreur</strong>. Aucun ne déverse un objet d'erreur entier — la forme qui, en pratique, recopie tout dans les journaux.</p>
+<p>Le journal d'<strong>audit</strong>, lui, est fonctionnel et distinct : il enregistre l'acte d'administration, son auteur et sa cible. C'est une trace voulue, décrite dans <code>docs/14-journal-audit.md</code>.</p>
+<h2>Mineurs</h2>
+<p>Les utilisateurs sont majoritairement mineurs. Trois conséquences assumées :</p>
+<ul><li><strong>Aucune publicité, aucun profilage, aucune revente.</strong> Le modèle économique est l'abonnement payé par l'établissement ; les familles ne paient rien et ne sont pas sollicitées.</li><li><strong>Aucun compte créé par l'élève.</strong> Les accès sont remis par l'établissement ; il n'y a ni inscription libre, ni collecte de consentement à des fins commerciales.</li><li><strong>Modération.</strong> Les contenus d'entraide peuvent être signalés, et la modération est réservée à l'administrateur d'établissement — quelqu'un du lycée, pas l'éditeur. Voir <code>docs/17-correction-commune-signalement-nouveautes.md</code>.</li></ul>
+<h2>Analyse d'impact (AIPD)</h2>
+<p>Le traitement porte sur des données de <strong>mineurs</strong>, à <strong>grande échelle</strong> à l'échelle d'un établissement, dans un contexte où les personnes ne peuvent pas s'y soustraire facilement. Ces éléments, pris ensemble, pointent vers la nécessité d'une analyse d'impact.</p>
+<blockquote><p><strong>Recommandation, et elle engage l'établissement.</strong> Nous recommandons que le DPO de l'établissement conduise une AIPD avant le déploiement, ou vérifie que le traitement entre dans un cadre déjà couvert par une analyse existante de l'établissement ou du rectorat. AvecStudy fournira toute pièce technique nécessaire. Ce dossier n'en tient pas lieu.</p></blockquote>
+</section>
+<section class="doc" id="08-hebergement-et-transferts">
+<h1>08 — Hébergement et transferts hors de l'Espace économique européen</h1>
+<h2>Ce qui est établi, et comment</h2>
+<p>Tout ce qui suit a été <strong>mesuré</strong> le 23 septembre 2026, pas déduit d'un nom de région dans un fichier de configuration.</p>
+<h3>Où le calcul a lieu</h3>
+<p>Chaque réponse de Vercel porte un en-tête <code>X-Vercel-Id</code> de la forme <code>&lt;point d'entrée&gt;::&lt;région de calcul&gt;::&lt;identifiant&gt;</code>. Quand la page est servie depuis le cache, il n'y a pas de région de calcul et le second segment est absent.</p>
+<table><thead><tr><th>Chemin</th><th>Avant l'audit</th><th>Après correction</th></tr></thead><tbody><tr><td><code>/connexion</code></td><td><code>cdg1::iad1</code> — <strong>calcul à Washington</strong></td><td><code>cdg1</code> déclaré</td></tr><tr><td><code>/eleve</code></td><td><code>cdg1::iad1</code></td><td><code>cdg1</code> déclaré</td></tr><tr><td><code>/professeur</code></td><td><code>cdg1::iad1</code></td><td><code>cdg1</code> déclaré</td></tr><tr><td><code>/</code>, <code>/offre</code>, <code>/mentions-legales</code>, <code>/securite</code></td><td><code>cdg1</code> seul — page prérendue, aucun calcul</td><td>inchangé</td></tr></tbody></table>
+<p><strong>Cause</strong> : aucune région n'était déclarée. Ni dans <code>vercel.json</code>, ni dans le code, ni par un <code>preferredRegion</code> sur une route. L'hébergeur appliquait donc son défaut. C'est le constat F-08, le plus grave de cet audit.</p>
+<p><strong>Correction</strong> : <code>vercel.json</code> déclare <code>&quot;regions&quot;: [&quot;cdg1&quot;]</code> — Paris. Le contrôle <code>npm run verifier:hebergement</code> le vérifie à chaque recette et refuse toute région hors EEE.</p>
+<h3>Où la base se trouve</h3>
+<p>Hôte du connecteur : <code>aws-1-eu-west-1.pooler.supabase.com</code>. Région AWS <code>eu-west-1</code> — Irlande.</p>
+<h3>Ce que cela change concrètement</h3>
+<p>Le rendu serveur est l'endroit par où tout passe : il reçoit le cookie de session, le formulaire de connexion, et compose les pages qui portent les noms des élèves et le contenu des copies. Tant qu'il s'exécutait à Washington, ces données faisaient l'aller-retour à chaque affichage, alors même que la base ne quittait pas l'Europe.</p>
+<p>C'est corrigé. Mais cela ne suffit pas à répondre à la question que pose un DPO.</p>
+<hr>
+<h2>Ce qui n'est <strong>pas</strong> établi — NON VÉRIFIÉ</h2>
+<blockquote><p>Nous n'écrirons pas « aucune donnée ne quitte l'Europe ». Cette phrase demande une preuve contractuelle complète, et nous ne l'avons pas.</p></blockquote>
+<p>Une région d'hébergement est un <strong>réglage technique</strong>. Elle dit où une fonction s'exécute et où une base réside. Elle ne dit rien de :</p>
+<ul><li>où les <strong>sauvegardes</strong> sont écrites et répliquées ;</li><li>où les <strong>journaux techniques</strong> du fournisseur sont conservés, et combien de temps ;</li><li>depuis où le <strong>support</strong> du fournisseur peut accéder à l'infrastructure ;</li><li>quels <strong>sous-traitants ultérieurs</strong> chaque fournisseur emploie, et où ;</li><li>quel mécanisme de transfert s'applique — clauses contractuelles types, décision d'adéquation, mesures supplémentaires.</li></ul>
+<p>Aucun de ces points ne se lit dans un en-tête HTTP. Tous se lisent dans des documents contractuels.</p>
+<h3>Pourquoi ces documents ne sont pas résumés ici</h3>
+<p>Le mandat de cet audit interdit de contacter un tiers, et nous avons choisi de ne pas paraphraser les documents juridiques de Vercel et de Supabase. Deux raisons, et la seconde compte davantage :</p>
+<ol><li>Ces documents évoluent, et un résumé daté dans un dossier technique se périme sans prévenir.</li><li><strong>Un DPO doit lire le contrat, pas le résumé qu'en fait le sous-traitant.</strong> Un éditeur qui résume l'engagement de son propre fournisseur au bénéfice de son client se place exactement là où il ne faut pas.</li></ol>
+<h3>Ce qui doit être obtenu, et ce que chaque pièce doit établir</h3>
+<table><thead><tr><th>Pièce</th><th>Auprès de</th><th>Ce qu'elle doit établir</th></tr></thead><tbody><tr><td>Accord de traitement des données (DPA)</td><td>Vercel</td><td>Les rôles, les clauses contractuelles types applicables, la liste des sous-traitants ultérieurs, les régions de traitement et de sauvegarde.</td></tr><tr><td>Accord de traitement des données (DPA)</td><td>Supabase</td><td>Idem, plus la localisation des sauvegardes et la politique d'accès du support.</td></tr><tr><td>Liste des sous-traitants ultérieurs</td><td>les deux</td><td>Nom, rôle, pays. Et le mécanisme de notification en cas d'ajout.</td></tr><tr><td>Engagement de région</td><td>les deux</td><td>Que le réglage de région est un <strong>engagement</strong>, et pas une préférence que l'infrastructure peut outrepasser en cas d'incident.</td></tr><tr><td>Politique de notification de violation</td><td>les deux</td><td>Le délai dans lequel l'éditeur est prévenu, condition de son propre délai de 72 heures.</td></tr></tbody></table>
+<p><strong>Tant que ces pièces ne sont pas au dossier, la ligne « transferts hors EEE » porte la mention NON VÉRIFIÉ</strong>, et non « conforme ».</p>
+<h3>Ce que nous pouvons affirmer dès maintenant</h3>
+<ul><li>Le calcul est déclaré à Paris et un contrôle automatique le vérifie.</li><li>La base est en Irlande.</li><li>AvecStudy lui-même ne transmet aucune donnée d'élève à un tiers : aucun traceur, aucune mesure d'audience, aucune police de caractères distante — les polices sont auto-hébergées, et la politique de sécurité du contenu (<code>connect-src 'self'</code>, <code>font-src 'self'</code>, <code>img-src 'self'</code>) interdit techniquement à une page d'appeler un domaine extérieur.</li></ul>
+<p>Ce dernier point est vérifiable en une ligne : l'en-tête <code>Content-Security-Policy</code> servi par la production n'autorise aucun hôte tiers.</p>
+<hr>
+<h2>Autres fournisseurs</h2>
+<p>Aucun autre service ne reçoit de donnée d'élève. Pas d'outil d'analyse, pas de service de messagerie transactionnelle en production, pas de service de surveillance d'erreurs tiers, pas de CDN d'images externe.</p>
+<p>C'est un choix, et il a un coût : l'absence de surveillance d'erreurs tierce est aussi une faiblesse, traitée dans <code>10-journalisation-et-alertes.md</code>.</p>
+<hr>
+<h2>Résumé pour le registre</h2>
+<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>Responsable de traitement</td><td>L'établissement</td></tr><tr><td>Sous-traitant</td><td>Nouh Tifouti, entrepreneur individuel — AvecStudy</td></tr><tr><td>Sous-traitants ultérieurs</td><td>Vercel (hébergement applicatif), Supabase (base, authentification, stockage)</td></tr><tr><td>Région de calcul</td><td><code>cdg1</code> — Paris, déclarée et contrôlée automatiquement</td></tr><tr><td>Région de la base</td><td><code>eu-west-1</code> — Irlande</td></tr><tr><td>Transferts hors EEE</td><td><strong>NON VÉRIFIÉ</strong> — dépend des pièces contractuelles listées ci-dessus</td></tr><tr><td>Destinataires tiers</td><td>Aucun</td></tr></tbody></table>
+</section>
+<section class="doc" id="09-securite-web">
+<h1>09 — Sécurité web</h1>
+<p><em>Ce que l'application oppose aux attaques classiques du web, éprouvé sur la production le 23 septembre 2026. La grille suit le Top 10 de l'OWASP, sans s'y enfermer.</em></p>
+<h2>En-têtes servis par la production</h2>
+<p>Relevé sur <code>https://avecstudy.fr/connexion</code> :</p>
+<table><thead><tr><th>En-tête</th><th>Valeur</th><th>Ce que cela ferme</th></tr></thead><tbody><tr><td><code>Content-Security-Policy</code></td><td><code>default-src 'self'</code> ; <code>script-src 'self' 'nonce-…' 'strict-dynamic'</code> ; <code>object-src 'none'</code> ; <code>base-uri 'self'</code> ; <code>form-action 'self'</code> ; <code>frame-ancestors 'none'</code> ; <code>connect-src 'self'</code> ; <code>font-src 'self'</code> ; <code>upgrade-insecure-requests</code></td><td>L'exécution d'un script injecté, l'exfiltration vers un domaine tiers, la réécriture de la base des URL, le détournement d'un formulaire.</td></tr><tr><td><code>Strict-Transport-Security</code></td><td><code>max-age=31536000; includeSubDomains</code></td><td>La première requête en clair, pour un an.</td></tr><tr><td><code>X-Frame-Options</code></td><td><code>DENY</code></td><td>L'encadrement de la page dans un site tiers. Doublé par <code>frame-ancestors 'none'</code>.</td></tr><tr><td><code>X-Content-Type-Options</code></td><td><code>nosniff</code></td><td>La réinterprétation d'un fichier servi.</td></tr><tr><td><code>Cross-Origin-Opener-Policy</code></td><td><code>same-origin</code></td><td>Le maintien d'une référence à la fenêtre depuis un autre site.</td></tr><tr><td><code>Cross-Origin-Resource-Policy</code></td><td><code>same-origin</code></td><td>L'inclusion de ressources depuis un autre site.</td></tr><tr><td><code>Referrer-Policy</code></td><td><code>strict-origin-when-cross-origin</code></td><td>La fuite d'un chemin complet vers un tiers.</td></tr><tr><td><code>Permissions-Policy</code></td><td>caméra, micro, géolocalisation, paiement, USB et cohortes publicitaires désactivés</td><td>L'accès aux capteurs, même par un script légitime.</td></tr></tbody></table>
+<p>Le nonce est <strong>régénéré à chaque réponse</strong>. Le détail de la mécanique — et le piège qui a coûté une panne silencieuse en production — est commenté dans <code>src/proxy.ts</code> : Next relit la directive <code>script-src</code> de l'en-tête <strong>de la requête</strong> pour connaître le nonce, et sans cela, avec <code>'strict-dynamic'</code>, plus aucun script de l'application ne se charge.</p>
+<p><strong>Limite connue</strong> : <code>style-src 'unsafe-inline'</code> s'applique à toute l'application ; et douze pages de vitrine prérendues reçoivent <code>script-src 'unsafe-inline'</code> faute de pouvoir porter un nonce. Voir F-05 et R-04.</p>
+<h2>A01 — Contrôle d'accès défaillant</h2>
+<p>Traité entièrement dans <code>06-autorisation-et-cloisonnement.md</code>. L'essentiel : l'autorisation est appliquée <strong>dans la base</strong>, par 144 politiques, et 202 tests la vérifient sur du vrai PostgreSQL. Cacher un menu ne protège pas une ressource, et le proxy ne décide d'aucune autorisation — il ne lit même pas la session.</p>
+<p><strong>Ce que l'audit a trouvé sur cet axe</strong> : F-01, des fonctions exécutables sans compte. Corrigé.</p>
+<h2>A02 — Défaillances cryptographiques</h2>
+<ul><li>Le cookie de session est <strong>opaque</strong> : une clé vers une ligne de base, sans contenu, même chiffré. Un cookie volé ne révèle rien et se révoque.</li><li>Il porte le préfixe <code>__Host-</code>, <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite=Lax</code>, <code>path=/</code>. Le préfixe <code>__Host-</code> fait que le navigateur <strong>refuse</strong> le cookie s'il n'est pas servi en HTTPS depuis le domaine exact : un sous-domaine compromis ne peut pas en poser un.</li><li>Les jetons du fournisseur d'identité sont chiffrés au repos, avec une version de clé enregistrée à côté — la rotation est donc possible sans casser les sessions vivantes.</li><li>Les comparaisons de secrets se font à temps constant (<code>timingSafeEqual</code>), y compris celle du secret de la tâche planifiée : une comparaison naïve fuit la longueur du préfixe correct, et un secret se devine caractère par caractère quand on a la patience.</li></ul>
+<h2>A03 — Injection</h2>
+<p>Aucune requête SQL n'est construite par concaténation. L'application parle à la base par PostgREST et par des fonctions à paramètres. Les entrées sont validées par des schémas <code>zod</code> avant d'atteindre quoi que ce soit.</p>
+<p>Les fonctions de la base fixent toutes leur <code>search_path</code>, ce que <code>verifier:privileges</code> vérifie à chaque recette : sans cela, une fonction <code>security definer</code> peut être détournée en plaçant un objet homonyme dans un schéma que l'appelant contrôle.</p>
+<p><strong>Injection de contenu (XSS)</strong> : React échappe par défaut, la CSP à nonce arrête ce qui passerait, et les noms de fichiers affichés sont assainis. Le téléchargement passe par <code>Content-Disposition: attachment</code> avec un nom percent-encodé — ce qui ferme aussi l'injection d'en-tête par un nom de fichier contenant un retour à la ligne.</p>
+<h2>A04 — Conception non sécurisée</h2>
+<p>Deux choix de conception qui font plus que n'importe quel contrôle :</p>
+<ol><li><strong>Le patron BFF.</strong> Le navigateur ne parle jamais à la base. Il parle au serveur d'AvecStudy, qui détient la session et applique les droits. Aucune clé de base n'atteint le navigateur — ce que <code>verifier:fuites</code> vérifie sur ce qui est réellement servi.</li><li><strong>Deux schémas.</strong> <code>study</code> est exposé ; <code>study_prive</code> ne l'est jamais et n'accorde aucun droit à <code>anon</code> ni à <code>authenticated</code>. Sessions, alias techniques et tentatives de connexion y vivent.</li></ol>
+<h2>A05 — Mauvaise configuration</h2>
+<p>C'est l'axe sur lequel l'audit a trouvé le plus.</p>
+<table><thead><tr><th>Constat</th><th>État</th></tr></thead><tbody><tr><td>F-08 — aucune région de calcul déclarée, rendu aux États-Unis</td><td>corrigé, contrôle permanent</td></tr><tr><td>F-01 — <code>EXECUTE</code> jamais retiré à <code>PUBLIC</code></td><td>corrigé, contrôle permanent</td></tr><tr><td>F-03 / F-04 — deux tables hors de la règle RLS commune</td><td>corrigés</td></tr></tbody></table>
+<p>Et ce qui reste <strong>NON VÉRIFIÉ</strong> : la configuration des deux consoles d'hébergement, faute d'accès. Voir <code>02-perimetre-et-methode.md</code>.</p>
+<h2>A06 — Composants vulnérables</h2>
+<p><code>npm audit</code> au 23 septembre 2026 :</p>
+<pre><code>{&quot;info&quot;:0,&quot;low&quot;:0,&quot;moderate&quot;:0,&quot;high&quot;:0,&quot;critical&quot;:0,&quot;total&quot;:0}</code></pre>
+<p>Aucune vulnérabilité connue, toutes sévérités confondues. Les dépendances sont peu nombreuses et toutes épinglées ; l'inventaire figure dans <code>package-lock.json</code>, qui fait office de nomenclature logicielle (SBOM) au format natif de l'écosystème.</p>
+<h2>A07 — Identification et authentification</h2>
+<p>Traité dans <code>05-authentification-et-sessions.md</code>. Les points saillants :</p>
+<ul><li><strong>Aucune énumération de comptes.</strong> Un identifiant inconnu et un mot de passe faux produisent le même refus, avec le même vocabulaire — et un identifiant inconnu déclenche quand même une vérification, pour ne pas répondre plus vite. Un compte suspendu produit le même refus encore.</li><li><strong>Limitation des tentatives</strong> par compte, et désormais détection du balayage d'établissement (F-07).</li><li><strong>Second facteur</strong> obligatoire pour tout acte d'administration.</li></ul>
+<h2>A08 — Intégrité des données et du logiciel</h2>
+<ul><li>Les copies rendues sont <strong>immuables</strong> : une version scellée ne change plus, et une clé d'idempotence bloque le double clic. Vérifié par les tests T09 et T10.</li><li><code>verifier:deploiement</code> établit que le code servi est bien celui du dépôt.</li><li>Les migrations sont appliquées dans l'ordre et vérifiées ; la batterie RLS reconstruit une base entière à partir de zéro à chaque exécution, ce qui prouve que la suite de migrations est rejouable.</li></ul>
+<h2>A09 — Journalisation et supervision</h2>
+<p>La journalisation est propre ; la supervision n'existe pas. Voir <code>10-journalisation-et-alertes.md</code> et le risque résiduel R-09.</p>
+<h2>A10 — Falsification de requête côté serveur (SSRF)</h2>
+<p>L'application n'effectue aucune requête sortante vers une URL fournie par un utilisateur. Elle ne va chercher que ses propres services. La CSP interdit par ailleurs à une page d'appeler un hôte tiers.</p>
+<hr>
+<h2>CSRF — traité à part, parce que l'audit y a trouvé quelque chose</h2>
+<p>Trois défenses, et ce sont bien <strong>celles qui sont déployées</strong> — le module en annonçait une quatrième qui n'était branchée nulle part (F-06).</p>
+<ol><li><strong><code>SameSite=Lax</code></strong> sur le cookie de session. Une requête POST partie d'un autre site n'emporte pas la session : elle s'exécute anonyme.</li><li><strong>La barrière du proxy</strong>, appliquée à toute méthode à effet, avant que la requête n'atteigne quoi que ce soit : Fetch Metadata d'abord, puis <code>Origin</code> avec repli sur <code>Referer</code>, contre une liste explicite qui ne contient jamais <code>*</code>.</li><li><strong>La vérification propre à Next</strong> sur les actions serveur, qui compare l'origine à l'hôte.</li></ol>
+<p>Les webhooks et la file de travaux sont exemptés de la barrière : ils ne sont jamais appelés depuis une page et s'authentifient par signature ou par secret. C'est écrit dans le proxy, pas implicite.</p>
+<p>Six cas rejoués en permanence par <code>npm run verifier:origine</code>. Avant correction, deux échouaient.</p>
+<hr>
+<h2>Dépôt de fichiers</h2>
+<table><thead><tr><th>Règle</th><th>Comment elle est appliquée</th></tr></thead><tbody><tr><td>Le type est décidé sur les <strong>octets</strong></td><td>Signature lue sur les douze premiers octets. Un fichier nommé <code>cours.pdf</code> qui commence par <code>&lt;script&gt;</code> est un fichier HTML, et il est refusé.</td></tr><tr><td>L'en-tête envoyé par le navigateur ne peut <strong>jamais faire accepter</strong> un fichier</td><td>Il ne sert qu'à départager <code>.docx</code> et <code>.pptx</code>, qui partagent la même signature ZIP. Faute de départage, on refuse.</td></tr><tr><td>Six formats seulement</td><td>PDF, PNG, JPEG, WebP, Word, PowerPoint. Chaque format de plus est un analyseur de plus dans le navigateur des élèves.</td></tr><tr><td>20 Mo maximum</td><td>Vérifié <strong>avant</strong> de lire le fichier en mémoire.</td></tr><tr><td>Le chemin de stockage est fabriqué côté serveur</td><td>Trois identifiants, sans extension, jamais le nom d'origine — qui contiendrait des accents, parfois un nom d'élève, et permettrait de deviner l'adresse d'un autre fichier.</td></tr><tr><td>Rien n'est servi en ligne</td><td>Route dédiée, <code>Content-Disposition: attachment</code>. Un PDF piégé s'ouvre dans le lecteur de la personne, pas dans l'origine de l'application.</td></tr><tr><td>Un fichier n'est servable qu'une fois déclaré tel</td><td>La ligne naît en état <code>reserve</code> ; seul le worker peut la déclarer disponible. Vérifié par la batterie RLS.</td></tr></tbody></table>
+<p><strong>Ce qui n'est pas fait, et qui est écrit dans le code plutôt que dissimulé</strong> : aucun moteur antivirus n'est raccordé. Voir R-06.</p>
+<hr>
+<h2>Ce qui a été joué sur la production, et rien de plus</h2>
+<p>L'ensemble des vérifications offensives de ce chapitre tient en <strong>une vingtaine de requêtes HTTP</strong> : six pour la barrière d'origine, une pour la fonction exécutable sans compte, une par page et par script pour la recherche de fuites, quelques-unes pour les en-têtes et les régions.</p>
+<p>Aucune action serveur déclenchée, aucune donnée écrite, aucune saturation.</p>
+</section>
+<section class="doc" id="10-journalisation-et-alertes">
+<h1>10 — Journalisation et alertes</h1>
+<p><em>Ce chapitre est celui où AvecStudy est le plus inégal : la journalisation est propre, la supervision n'existe pas. Les deux sont dites ici avec la même franchise.</em></p>
+<h2>Deux journaux, qu'il ne faut pas confondre</h2>
+<h3>Le journal d'audit — fonctionnel, conservé, consultable</h3>
+<p><code>study.audit_events</code> enregistre les <strong>actes d'administration</strong> : qui a réinitialisé un accès, qui a suspendu un compte, qui a modéré un signalement, qui a créé une classe. L'auteur, la cible, la date, la nature de l'acte.</p>
+<p>Il est consultable depuis l'espace d'administration de l'établissement. Il est vérifié à chaque recette (<code>verifier:journal</code>) : un acte qui ne laisserait pas de trace ferait échouer la recette.</p>
+<p><strong>Il n'est volontairement pas purgé.</strong> Effacer la trace des actes d'administration reviendrait à annuler l'objet même d'un journal. Sa croissance est lente — environ 1 190 lignes et 552 ko au 23 septembre 2026 — et surveillée.</p>
+<blockquote><p><strong>Réserve.</strong> « Conservé » n'est pas une durée, et le RGPD en demande une <strong>déterminée</strong>. Une borne doit être fixée avec le DPO de l'établissement et appliquée mécaniquement. Porté aux risques résiduels (R-07).</p></blockquote>
+<h3>Le journal technique — éphémère, chez l'hébergeur</h3>
+<p>Les erreurs d'exécution partent sur la sortie d'erreur et sont collectées par l'hébergeur. Elles servent au diagnostic, pas à la traçabilité.</p>
+<h2>Ce que les journaux techniques ne contiennent jamais</h2>
+<p>La liste est fermée et elle a été <strong>vérifiée</strong>, pas seulement décidée :</p>
+<p>mot de passe · secret de second facteur · jeton · cookie · contenu d'une copie · INE · URL signée · nom de fichier · texte d'un commentaire · adresse électronique · nom d'élève.</p>
+<h3>Comment cela a été vérifié</h3>
+<p>Les <strong>44</strong> appels de journalisation de <code>src/</code> ont été relus un par un.</p>
+<ul><li>Tous écrivent un objet JSON structuré portant un <strong>contexte</strong> et un <strong>code d'erreur</strong>. Exemple de forme réelle : <code>{&quot;niveau&quot;:&quot;erreur&quot;,&quot;contexte&quot;:&quot;auth.lecture_session&quot;,&quot;code&quot;:&quot;42501&quot;}</code>.</li><li><strong>Aucun ne déverse un objet d'erreur entier.</strong> C'est la forme qui, en pratique, recopie tout dans les journaux : <code>console.error(erreur)</code> embarque le message, la requête et parfois les paramètres. Les six occurrences ressemblantes sont des clauses <code>catch</code>, pas des journalisations.</li><li>Un seul appel touche un sujet sensible — le changement de mot de passe — et il n'écrit qu'un libellé de contexte et un statut HTTP.</li></ul>
+<p>Les scripts de recette suivent la même règle dans leur propre sortie : <code>verifier:fuites</code> cherche des valeurs de secrets et n'en imprime <strong>jamais</strong> une, pas même tronquée. Il dit le nom de la variable et le fichier. Un contrôle de fuite qui imprime ce qu'il a trouvé recopie la fuite dans les journaux de la recette, et les journaux voyagent plus loin que la page.</p>
+<h2>Ce qui manque — et c'est le manque le plus structurant après cet audit</h2>
+<p><strong>Personne n'est prévenu automatiquement de quoi que ce soit.</strong></p>
+<p>Concrètement, aucune alerte n'existe pour :</p>
+<table><thead><tr><th>Événement</th><th>Ce qui se passe aujourd'hui</th></tr></thead><tbody><tr><td>Le taux d'erreur monte</td><td>Rien. On s'en aperçoit en regardant.</td></tr><tr><td>La file de travaux cesse d'avancer</td><td>Rien. Un import reste en attente.</td></tr><tr><td>Un balayage de connexion est détecté</td><td>Le seuil par compte descend — et <strong>personne n'est averti</strong>.</td></tr><tr><td>Une restauration serait nécessaire</td><td>Rien.</td></tr><tr><td>Un certificat, une clé, une échéance approche</td><td>Rien, sauf pour le <code>security.txt</code>, dont l'échéance est contrôlée à la recette.</td></tr><tr><td>Le site est indisponible</td><td>Rien.</td></tr></tbody></table>
+<h3>Pourquoi aucun service de surveillance tiers n'est branché</h3>
+<p>C'est un choix, et il se défend : un service de surveillance d'erreurs reçoit des traces d'exécution, lesquelles contiennent régulièrement des fragments de données — un identifiant, un extrait de requête, parfois davantage. Le brancher reviendrait à ajouter un destinataire aux données d'élèves, et à devoir le déclarer comme sous-traitant ultérieur.</p>
+<p><strong>Mais le revers est réel</strong>, et il ne doit pas être présenté comme une vertu : un service qui ne prévient personne est un service dont les incidents durent aussi longtemps que le délai avant que quelqu'un regarde. Pour une structure d'une personne (R-01), ce délai peut être un week-end.</p>
+<h3>Ce qui est recommandé, sans être fait</h3>
+<p>Par ordre de valeur décroissante, et sans prétendre que c'est en place :</p>
+<ol><li><strong>Une sonde de disponibilité externe</strong> sur <code>/</code> et sur <code>/connexion</code>, qui alerte par message. C'est le moins coûteux et le plus utile.</li><li><strong>Une alerte sur le bilan de la tâche planifiée</strong> : elle rend déjà le nombre de travaux traités et de tentatives purgées ; il suffirait de la faire crier quand la file stagne.</li><li><strong>Une alerte sur le compteur de balayage</strong>, qui existe désormais en base et qu'il suffirait de lire.</li><li>Un agrégateur de journaux hébergé en Europe, si la question des sous-traitants est traitée.</li></ol>
+<p>Ces quatre points sont le plan d'action de ce chapitre. Ils ne sont pas faits, et ce dossier ne prétend pas qu'ils le sont.</p>
+<h2>Traçabilité côté établissement</h2>
+<p>Ce qu'un établissement peut établir aujourd'hui, sans l'éditeur :</p>
+<ul><li>qui a réinitialisé un accès, quand, et pour quel compte ;</li><li>qui a suspendu ou réactivé un compte ;</li><li>qui a modéré quel signalement ;</li><li>quelles classes et quels comptes ont été créés par un import de rentrée, avec le rapport de l'import.</li></ul>
+<p>Ce qu'il ne peut pas établir : les connexions réussies ne sont pas individuellement journalisées de manière consultable. Les sessions actives sont visibles, les échecs récents sont conservés vingt-quatre heures, mais il n'existe pas d'historique « untel s'est connecté tel jour ».</p>
+<p>C'est délibéré — un historique de connexion d'élèves est un fichier de présence en puissance, et ce n'est pas ce qu'un outil pédagogique doit produire. Mais si un établissement en avait besoin pour une enquête, il ne l'aurait pas.</p>
+</section>
+<section class="doc" id="11-sauvegardes-et-continuite">
+<h1>11 — Sauvegardes, restauration, continuité, réversibilité</h1>
+<p><em>Le chapitre qui répond à la question qu'un chef d'établissement pose en dernier, et qui est souvent la plus importante : et si tout s'arrête ?</em></p>
+<h2>Sauvegardes</h2>
+<p>Les sauvegardes de la base sont assurées par Supabase, au niveau du projet.</p>
+<blockquote><p><strong>NON VÉRIFIÉ.</strong> L'audit n'a pas pu établir si la sauvegarde ponctuelle (<em>point-in-time recovery</em>) est activée, ni sa profondeur, ni la fréquence des instantanés, ni où les sauvegardes sont écrites. Ces réglages vivent dans la console Supabase, à laquelle l'environnement d'audit n'avait pas accès.</p>
+<p><strong>À établir en priorité</strong>, et à inscrire dans ce document : — la sauvegarde ponctuelle est-elle active, et sur quelle profondeur ; — à quelle fréquence un instantané complet est pris ; — combien de temps les sauvegardes sont conservées ; — dans quelle région elles sont écrites et répliquées (voir aussi R-02).</p></blockquote>
+<p><strong>Le stockage de fichiers</strong> (copies déposées, supports de cours) suit sa propre politique de sauvegarde chez le fournisseur, distincte de celle de la base. Même réserve.</p>
+<h2>Restauration — l'exercice, et sa limite</h2>
+<p><strong>Une tâche « sauvegarde réussie » ne prouve rien.</strong> Le seul fait qui compte est qu'une base restaurée soit exploitable, et cela ne se déduit pas d'un journal de tâche.</p>
+<p>AvecStudy outille l'exercice : <code>npm run restauration:test</code>, pointé sur une base <strong>restaurée dans un projet séparé</strong>, vérifie que ce qui en sort est cohérent et produit un compte rendu horodaté. Ce qu'il contrôle :</p>
+<ul><li>le schéma est complet — au moins 50 tables dans <code>study</code> ;</li><li>le schéma privé existe et reste fermé ;</li><li><strong>RLS est active partout</strong> — aucune table de <code>study</code> sans politique de ligne ;</li><li>les politiques ne se sont pas perdues à la restauration — au moins 90 ;</li><li>les copies remises sont lisibles ;</li><li>aucune inscription orpheline : chaque inscription pointe vers une classe qui existe.</li></ul>
+<p>Le troisième point est celui qui justifie l'exercice à lui seul : une restauration qui rendrait les données <strong>sans</strong> leurs politiques de ligne serait pire qu'une perte de données. Le script le regarde explicitement.</p>
+<blockquote><p><strong>Limite, écrite noir sur blanc.</strong> Ce script <strong>ne restaure pas</strong> — la restauration dépend de la console de l'hébergeur. Il vérifie une base déjà restaurée. L'exercice complet suppose donc une étape manuelle qui n'a pas été jouée pendant cet audit, faute d'accès à la console, et parce que restaurer par-dessus la production aurait été destructeur.</p>
+<p><strong>L'exercice reste à jouer de bout en bout</strong>, dans un projet jetable, et son compte rendu à joindre ici.</p></blockquote>
+<h2>Continuité de service</h2>
+<p>Ce qui existe :</p>
+<ul><li>une page de maintenance servie statiquement ;</li><li>des déploiements atomiques : une mise en production qui échoue ne remplace pas la précédente ;</li><li>un retour arrière possible sur le déploiement précédent, immédiat.</li></ul>
+<p>Ce qui n'existe pas, et il faut le dire :</p>
+<ul><li><strong>aucun engagement de disponibilité.</strong> AvecStudy ne promet pas de taux de service, parce qu'il n'a pas les moyens de le tenir contractuellement ;</li><li><strong>aucune supervision automatique</strong> (voir R-09) : une indisponibilité est constatée quand quelqu'un regarde ;</li><li><strong>aucune astreinte</strong> (voir R-01).</li></ul>
+<p>Pour un usage scolaire, cela veut dire concrètement : une panne un dimanche soir peut durer jusqu'au lundi matin. Un établissement doit en tenir compte dans la place qu'il donne à l'outil — et ne pas en faire le seul canal d'un devoir dont l'échéance tombe un dimanche.</p>
+<h2>Réversibilité — ce qu'un établissement récupère, et comment</h2>
+<p>C'est la partie qui doit tenir <strong>sans</strong> l'éditeur, puisque R-01 dit qu'il est une seule personne.</p>
+<h3>Ce qui est récupérable aujourd'hui, par l'établissement lui-même</h3>
+<table><thead><tr><th>Quoi</th><th>Comment</th></tr></thead><tbody><tr><td>La liste des accès (comptes, identifiants locaux, classes)</td><td>Export tableur depuis l'espace d'administration</td></tr><tr><td>Les classes, groupes, affectations</td><td>Écrans d'administration, export</td></tr><tr><td>Les documents déposés</td><td>Téléchargement depuis les séances</td></tr></tbody></table>
+<h3>Ce qui demande aujourd'hui l'éditeur</h3>
+<table><thead><tr><th>Quoi</th><th>Pourquoi</th></tr></thead><tbody><tr><td>Un export complet des copies et corrections d'une classe ou d'un élève</td><td>Il n'existe pas de commande unique (voir R-08)</td></tr><tr><td>Un instantané complet de la base</td><td>Console de l'hébergeur</td></tr></tbody></table>
+<h3>Ce qui garantit qu'un tiers pourrait reprendre</h3>
+<ul><li><strong>Le code est intégralement versionné</strong>, sur 93 commits, poussé sur un dépôt distant. Aucune partie du produit ne vit uniquement sur une machine.</li><li><strong>Le schéma est reconstructible à partir de zéro</strong> : la batterie RLS rejoue les 44 migrations à chaque exécution, sur une base neuve. Ce n'est pas une promesse, c'est un fait vérifié plusieurs fois par jour.</li><li><strong>Les décisions sont écrites dans le code</strong>, à l'endroit où elles s'appliquent, avec leur raison. C'est le seul transfert de connaissance réaliste pour une structure de cette taille, et c'est délibéré.</li><li><strong>La base est du PostgreSQL standard.</strong> Pas de service propriétaire, pas de format fermé : un instantané <code>pg_dump</code> se remonte n'importe où.</li></ul>
+<h3>Ce qu'un établissement devrait exiger contractuellement</h3>
+<p>Ce dossier ne peut pas créer une obligation à la place d'un contrat. Ce qu'il peut faire, c'est nommer ce qu'il serait raisonnable d'y inscrire :</p>
+<ol><li><strong>Un export complet des données de l'établissement à la demande</strong>, dans un format ouvert, sous un délai fixé.</li><li><strong>Un export automatique de fin d'année scolaire</strong>, déposé à l'établissement sans qu'il ait à le demander.</li><li><strong>Une clause de réversibilité</strong> : en cas de cessation d'activité de l'éditeur, la remise de l'instantané des données et l'aide à la reprise, dans un délai fixé.</li><li><strong>Un séquestre du code</strong>, si l'établissement le juge nécessaire.</li></ol>
+<p>Les points 1 et 2 sont réalisables sans difficulté technique et devraient être le plan d'action immédiat de ce chapitre. Les points 3 et 4 relèvent de la négociation contractuelle.</p>
+<h2>Ce que ce chapitre ne dit pas</h2>
+<p>Il ne dit pas que les données sont en sécurité en toutes circonstances. Il dit ce qui est outillé, ce qui est vérifié, ce qui reste manuel et ce qui n'a pas été joué. La ligne la plus importante de ce document est celle qui porte la mention <strong>NON VÉRIFIÉ</strong> sur les sauvegardes : tant qu'elle y figure, la question « que se passe-t-il si la base est perdue ? » n'a pas de réponse établie.</p>
+</section>
+<section class="doc" id="12-incidents">
+<h1>12 — Incidents : procédure et exercices sur table</h1>
+<blockquote><p><strong>Avertissement liminaire.</strong> Ce document ne décrit <strong>aucune équipe qui n'existe pas</strong>. AvecStudy est édité par une seule personne. Il n'y a ni cellule de crise, ni astreinte, ni rotation, ni délai de réponse contractuel. Ce qui suit est la procédure que cette personne applique, et elle est écrite pour que quelqu'un d'autre puisse l'appliquer à sa place.</p></blockquote>
+<h2>Qui fait quoi</h2>
+<table><thead><tr><th>Rôle</th><th>Qui</th><th>En pratique</th></tr></thead><tbody><tr><td>Détection</td><td>L'établissement, un utilisateur, l'éditeur, ou un signalement via <code>security.txt</code></td><td>Il n'y a <strong>pas</strong> de détection automatique. Voir R-09.</td></tr><tr><td>Qualification et traitement</td><td>L'éditeur</td><td>Nouh Tifouti</td></tr><tr><td>Notification à l'établissement</td><td>L'éditeur</td><td>Sans délai, dès qualification</td></tr><tr><td>Notification à la CNIL</td><td><strong>L'établissement</strong>, responsable de traitement</td><td>Sous 72 heures, à partir du moment où il a connaissance</td></tr><tr><td>Information des personnes</td><td>L'établissement</td><td>Si le risque est élevé</td></tr></tbody></table>
+<p>Le point qui compte, et qui est souvent mal compris : <strong>AvecStudy ne notifie pas la CNIL</strong>. Il est sous-traitant. Son obligation est de prévenir l'établissement « dans les meilleurs délais », ce qui conditionne la capacité de l'établissement à tenir ses 72 heures.</p>
+<h2>Les six étapes</h2>
+<ol><li><strong>Consigner.</strong> Date et heure de la découverte, comment on l'a su, ce qu'on a observé — avant toute action, parce qu'agir efface des traces.</li><li><strong>Contenir.</strong> Arrêter l'écoulement : révoquer les sessions, changer un secret, retirer un droit, basculer en maintenance. La contention prime sur le diagnostic.</li><li><strong>Qualifier.</strong> Quelles données, combien de personnes, quel établissement, quelle fenêtre de temps. Une qualification honnête vaut mieux qu'une qualification rassurante.</li><li><strong>Prévenir l'établissement.</strong> Même incomplet. Un premier message qui dit « il s'est passé ceci, je ne sais pas encore l'étendue » est utile ; un message parfait trois jours plus tard ne l'est pas.</li><li><strong>Corriger, puis vérifier.</strong> La correction n'est acquise que lorsqu'un contrôle qui échouait passe.</li><li><strong>Écrire.</strong> Un compte rendu, et <strong>un contrôle permanent</strong> qui empêche le retour. C'est la règle appliquée aux dix constats de cet audit.</li></ol>
+<h2>Si un secret est découvert compromis</h2>
+<p>La procédure est fixe, et l'ordre compte :</p>
+<ol><li><strong>Ne pas l'afficher</strong> — ni dans un message, ni dans un ticket, ni dans un compte rendu. Donner son <strong>type</strong> et son <strong>emplacement</strong>.</li><li><strong>Le considérer compromis</strong>, même si le doute subsiste. Un secret dont on n'est pas sûr est un secret compromis.</li><li><strong>Le faire tourner</strong> immédiatement.</li><li><strong>Vérifier les usages</strong> : qui l'utilisait, quels déploiements le portent, quelles machines le détiennent.</li><li><strong>Supprimer les traces</strong> : historique de commandes, fichiers temporaires, journaux de recette, variables d'environnement locales.</li><li><strong>Retester</strong> : <code>verifier:fuites</code> sur ce qui est servi, et un balayage de l'historique Git.</li></ol>
+<h2>Dix exercices sur table</h2>
+<p><em>Joués sur le papier, pas sur la production. L'objet est de savoir à l'avance ce qu'on ferait, parce que la partie coûteuse d'un incident est l'hésitation.</em></p>
+<h3>1. Un cookie de session est volé sur un poste du CDI</h3>
+<p><strong>Ce qui limite déjà</strong> : le cookie est opaque — il ne révèle rien — et il expire par inactivité, avec une fenêtre courte sur un poste partagé.</p>
+<p><strong>Action</strong> : révoquer les sessions du profil (<code>auth_revoquer_sessions_profil</code>). Effet à la requête suivante, puisque la session est relue à chaque fois.</p>
+<p><strong>À améliorer</strong> : un élève ne peut pas révoquer lui-même ses autres sessions depuis son espace. C'est un manque.</p>
+<h3>2. Un professeur laisse sa session ouverte sur un poste partagé</h3>
+<p><strong>Action immédiate</strong> : l'administrateur suspend puis réactive le compte — les deux chemins de suspension révoquent les sessions.</p>
+<p><strong>Prévention existante</strong> : une session déclarée « poste partagé » expire beaucoup plus vite. Encore faut-il que la personne l'ait déclarée à la connexion.</p>
+<h3>3. Un mot de passe d'administrateur est deviné</h3>
+<p><strong>Ce qui limite déjà</strong> : sans second facteur, un administrateur ne fait <strong>rien</strong> de privilégié — vérifié par les tests T16 et T16b. Il verrait ses écrans, il ne pourrait ni créer, ni suspendre, ni réinitialiser, ni modérer.</p>
+<p><strong>Action</strong> : réinitialiser l'accès, vérifier le journal d'audit sur la période, s'assurer qu'aucun second facteur n'a été enrôlé entre-temps.</p>
+<h3>4. Un balayage de mots de passe vise un lycée entier</h3>
+<p><strong>Ce qui limite désormais</strong> : au-delà de trente cibles distinctes en quinze minutes, le seuil par compte tombe de cinq à deux (F-07). L'attaquant passe de cinq essais par compte à deux.</p>
+<p><strong>Ce qui ne se passe pas</strong> : personne n'est prévenu (R-09). C'est le trou le plus net de ce scénario.</p>
+<p><strong>Action, si on l'apprend</strong> : lire <code>study.auth_balayage_etablissement(code, 60)</code> pour mesurer, et décider avec l'établissement d'une réinitialisation groupée si des comptes ont cédé.</p>
+<h3>5. La clé de service de la base fuite</h3>
+<p><strong>Gravité maximale</strong> : cette clé contourne RLS.</p>
+<p><strong>Action</strong> : la faire tourner dans la console du fournisseur, redéployer, puis appliquer la procédure « secret compromis » en entier. Vérifier ensuite le journal d'audit et les volumes de tables pour repérer une extraction massive.</p>
+<p><strong>Ce qui limite déjà</strong> : la clé n'atteint jamais le navigateur — <code>verifier:fuites</code> le vérifie sur ce qui est réellement servi, et le balayage des 93 commits n'a trouvé aucun secret.</p>
+<h3>6. Un professeur dépose par erreur un fichier contenant des données d'un</h3>
+<p>autre établissement</p>
+<p><strong>Action</strong> : retirer le fichier, qui passe à l'état non servable ; vérifier dans le journal qui l'a téléchargé ; prévenir les deux établissements concernés.</p>
+<p><strong>Ce qui limite</strong> : un fichier n'est lisible que par les destinataires du devoir ou de la séance, et jamais servi en ligne.</p>
+<h3>7. Un élève publie un contenu inapproprié dans l'entraide</h3>
+<p><strong>Action</strong> : signalement par n'importe quel élève ou professeur ; modération par l'administrateur d'établissement, qui est <strong>du lycée</strong> et pas l'éditeur. Trace au journal d'audit.</p>
+<p><strong>Ce n'est pas un incident de sécurité</strong> — c'est un incident éducatif, et il est traité par l'établissement. C'est exactement pourquoi le modérateur n'est pas l'éditeur.</p>
+<h3>8. La base est indisponible</h3>
+<p><strong>Action</strong> : bascule en page de maintenance, constat chez le fournisseur, information de l'établissement.</p>
+<p><strong>Ce qui manque</strong> : personne n'est prévenu automatiquement. Le délai de détection est le délai avant que quelqu'un regarde.</p>
+<h3>9. Une mise en production casse la connexion</h3>
+<p><strong>C'est arrivé</strong>, et deux fois plutôt qu'une : une politique de sécurité du contenu qui empêchait tous les scripts de se charger, et une révocation de droits qui aurait empêché la création de classes.</p>
+<p><strong>Ce qui l'attrape aujourd'hui</strong> : la recette complète avant mise en production, et <code>verifier:deploiement</code> après. La seconde panne a été prise par la batterie RLS <strong>avant</strong> la production — c'est le cas nominal.</p>
+<p><strong>Action si cela passe quand même</strong> : retour arrière sur le déploiement précédent, immédiat, puis diagnostic à froid.</p>
+<h3>10. L'éditeur est indisponible durablement</h3>
+<p><strong>C'est le scénario que ce dossier ne peut pas résoudre</strong>, et il faut le dire plutôt que de l'habiller.</p>
+<p>Ce qui existe : le code est intégralement versionné et poussé sur un dépôt distant ; le schéma se reconstruit de zéro ; la base est du PostgreSQL standard, donc reprenable ; les décisions sont écrites dans le code.</p>
+<p>Ce qui manque : une clause de réversibilité contractuelle et un export automatique de fin d'année. Ce sont les deux demandes que <code>11-sauvegardes-et-continuite.md</code> recommande à l'établissement d'inscrire au contrat.</p>
+<h2>Ce que ces exercices ont fait apparaître</h2>
+<p>Trois manques, qui ne sont pas des constats de vulnérabilité mais des trous dans la capacité à réagir :</p>
+<ol><li><strong>Aucune alerte automatique</strong>, dans huit scénarios sur dix (R-09).</li><li><strong>Un utilisateur ne peut pas révoquer ses propres autres sessions</strong> (scénario 1).</li><li><strong>Aucune clause de réversibilité</strong> n'existe aujourd'hui (scénario 10).</li></ol>
+<p>Ils sont portés au plan d'action et aux risques résiduels plutôt que corrigés dans l'urgence : les deux premiers demandent du travail produit, le troisième une décision contractuelle qui n'appartient pas à l'éditeur seul.</p>
+</section>
+<section class="doc" id="13-constats-et-corrections">
+<h1>13 — Constats et corrections</h1>
+<p>Audit interne du 23 septembre 2026. Dix constats, du plus grave au moins grave. Chacun porte sa preuve, sa correction et le contrôle permanent qui l'empêche de revenir.</p>
+<p>Aucun exploit réutilisable ne figure ici, aucun secret, aucune donnée personnelle. Les reproductions décrites sont celles d'un appel HTTP ou d'une requête SQL banale : ce qui compte est le <strong>résultat obtenu</strong>, pas la recette.</p>
+<h2>Comment lire la gravité</h2>
+<table><thead><tr><th>Niveau</th><th>Ce que cela veut dire ici</th></tr></thead><tbody><tr><td><strong>Élevé</strong></td><td>Une promesse faite à l'établissement est fausse, ou une donnée d'élève est traitée autrement qu'annoncé. Aucune autre couche ne rattrape.</td></tr><tr><td><strong>Moyen</strong></td><td>Une défense manque ou ne couvre pas le cas le plus probable. Une autre couche limite l'effet, mais on ne peut pas s'y reposer.</td></tr><tr><td><strong>Faible</strong></td><td>Le risque est réel mais borné : une couche voisine tient, ou l'exploitation demande des conditions qu'on ne rencontre pas.</td></tr><tr><td><strong>Observation</strong></td><td>Rien n'est cassé. Un choix mérite d'être écrit et surveillé, sans quoi il redeviendra une question au prochain audit.</td></tr></tbody></table>
+<hr>
+<h2>F-08 — Élevé — Le rendu serveur s'exécutait aux États-Unis</h2>
+<h3>Le constat</h3>
+<p>La base de données est en Irlande. Le <strong>calcul</strong>, lui, avait lieu à Washington.</p>
+<pre><code>X-Vercel-Id: cdg1::iad1::…
+             ^^^^  ^^^^
+             Paris  Washington (us-east-1)</code></pre>
+<p>Le premier segment est le point de présence qui reçoit la requête — Paris. Le second est la région où la <strong>fonction serveur s'est exécutée</strong>. Mesuré le 23 septembre 2026 sur trois chemins rendus à la demande :</p>
+<table><thead><tr><th>Chemin</th><th>Région de calcul</th></tr></thead><tbody><tr><td><code>/connexion</code></td><td><code>iad1</code></td></tr><tr><td><code>/eleve</code></td><td><code>iad1</code></td></tr><tr><td><code>/professeur</code></td><td><code>iad1</code></td></tr><tr><td><code>/</code>, <code>/offre</code>, <code>/mentions-legales</code></td><td>aucune — pages prérendues servies depuis le cache de <code>cdg1</code></td></tr></tbody></table>
+<p>Base de données : <code>aws-1-eu-west-1</code> — Irlande.</p>
+<h3>Pourquoi c'est le constat le plus important de cet audit</h3>
+<p>Le rendu serveur est l'endroit où passe <strong>tout</strong>. Il reçoit le cookie de session, le formulaire de connexion avec son mot de passe, et il compose les pages qui portent les noms des élèves, les intitulés de classe, le contenu des copies. Dire à un lycée « la base est en Europe » et ne pas dire « et le traitement, non » n'est pas une imprécision : c'est la partie de la phrase que le lycée voulait entendre.</p>
+<h3>La cause</h3>
+<p>Aucune région n'était déclarée. Ni dans <code>vercel.json</code>, ni dans le code, ni par un <code>preferredRegion</code> sur une route. L'hébergeur a donc appliqué son défaut. Ce n'est pas une erreur de configuration : c'est une configuration absente, et c'est pire, parce qu'il n'y a rien à relire pour s'en apercevoir.</p>
+<h3>La correction</h3>
+<p><code>vercel.json</code> déclare <code>&quot;regions&quot;: [&quot;cdg1&quot;]</code>. Paris est aussi plus proche de la base irlandaise que Washington ne l'était : la latence baisse, ce n'est pas un compromis.</p>
+<h3>Le contrôle permanent</h3>
+<p><code>npm run verifier:hebergement</code> relit l'en-tête à chaque recette, sur trois pages rendues à la demande, et refuse toute région hors EEE. Il vérifie aussi que l'hôte de la base nomme une région admise.</p>
+<p>Ce contrôle dit <strong>une</strong> chose et il le dit dans son propre commentaire : la région n'a pas rebasculé. Il ne dit pas où les données se trouvent en droit — voir <code>08-hebergement-et-transferts.md</code>, et la question ouverte qui y figure.</p>
+<hr>
+<h2>F-01 — Moyen — <code>EXECUTE</code> n'avait jamais été retiré à <code>PUBLIC</code></h2>
+<h3>Le constat</h3>
+<p>PostgreSQL accorde <code>EXECUTE</code> à <code>PUBLIC</code> sur toute fonction créée. Accorder ensuite le droit à <code>authenticated</code> <strong>ne retire rien à personne</strong>. Trente fonctions des schémas <code>study</code> et <code>study_prive</code> restaient donc appelables par un visiteur anonyme, via PostgREST, sans compte.</p>
+<p>La plupart sont sauvées par la couche suivante : elles lisent des tables sur lesquelles <code>anon</code> n'a aucun droit, et répondent 401. La défense en profondeur a tenu.</p>
+<p><strong>Sauf une.</strong> <code>study.remise_reference</code> ne lit aucune table : c'est une empreinte du numéro de version et d'un sel. Un appel anonyme rendait donc une référence d'accusé de remise valable. Reproduit en production : HTTP 200, une référence de la forme <code>R-XXXXXXXX</code>.</p>
+<h3>Pourquoi c'est « moyen » et pas plus</h3>
+<p>Ce n'est pas une fuite de données. Encore faut-il connaître l'identifiant de version, que RLS protège. C'est l'affaiblissement d'une promesse : la référence est présentée à l'élève comme non devinable, et cessait de l'être pour qui obtiendrait un identifiant par ailleurs.</p>
+<h3>La correction</h3>
+<p>Migration <code>0043</code>. Un bloc révoque <code>EXECUTE</code> à <code>public</code> et à <code>anon</code> sur <strong>toute</strong> fonction non-déclencheur des deux schémas, accorde explicitement à <code>service_role</code>, puis rouvre à <code>authenticated</code> — nommément, à partir de listes écrites.</p>
+<h3>Ce que la correction a appris</h3>
+<p>Elle a cassé la batterie RLS deux fois, et les deux fois pour la même raison profonde : <strong>la liste des fonctions à rouvrir ne se dresse pas à l'œil</strong>.</p>
+<ol><li>Une politique RLS, un déclencheur, une valeur par défaut, une contrainte s'évaluent avec les droits de <strong>celui qui écrit la ligne</strong>. <code>classes_set_code</code> appelle <code>normalize_code</code> : sans ce droit, un administrateur ne crée plus de classe.</li><li><code>normalize_code</code> est <code>security invoker</code> — elle n'apporte donc aucun privilège, et ce qu'elle appelle à son tour, <code>unaccent_fallback</code>, est demandé à l'appelant lui aussi. La chaîne ne s'arrête qu'au premier <code>security definer</code>.</li></ol>
+<p>C'est une <strong>fermeture transitive</strong>, pas une liste. <code>verifier:privileges</code> la calcule désormais à chaque recette, à partir de 934 expressions de schéma, et refuse tout écart — dans les deux sens.</p>
+<p>Aucune de ces deux pannes n'aurait produit la moindre erreur au déploiement. Elles seraient apparues à la première création de classe de l'année.</p>
+<hr>
+<h2>F-07 — Moyen — Aucune détection du balayage d'établissement</h2>
+<h3>Le constat</h3>
+<p>La limitation des tentatives vise le compte : cinq échecs en quinze minutes, puis une temporisation qui double. Le choix de ne pas viser l'adresse IP est <strong>juste</strong>, et il était déjà écrit dans le code — huit cents élèves d'un lycée sortent par la même adresse publique, et les bloquer par l'IP reviendrait à fermer l'établissement à la première erreur de frappe de la salle 204.</p>
+<p>Mais un compteur par compte ne voit pas l'attaque la plus probable ici. Un pulvérisateur de mots de passe n'insiste pas sur un compte : il essaie trois mots de passe plausibles — une date de naissance, le nom du lycée, la valeur distribuée à la rentrée — sur huit cents comptes. Chaque compteur reste à trois, sous le seuil de cinq, et <strong>rien ne ralentit jamais</strong>.</p>
+<p>Dans un lycée, où les mots de passe sont remis en début d'année et se ressemblent, c'est le scénario qu'il fallait gêner.</p>
+<h3>Ce qui rend ce constat particulier</h3>
+<p>La donnée était <strong>déjà collectée</strong>. Le commentaire de <code>study_prive.tentatives_connexion</code> dit, depuis la migration 0015, que les tentatives sur un identifiant inconnu sont enregistrées « pour repérer un balayage ». Le code d'établissement est écrit à chaque échec. Rien ne l'a jamais relu. L'intention avait été notée ; la lecture n'avait pas été bâtie.</p>
+<p>Aucun test offensif n'a été mené sur ce point : pulvériser des mots de passe, même sur des comptes synthétiques, revient à saturer une API, ce que le mandat interdit. Le constat est <strong>structurel et il se lit dans la signature</strong> : <code>auth_compter_echecs(p_profile, p_fenetre_minutes)</code> ne prend que le profil.</p>
+<h3>La correction</h3>
+<p>Migration <code>0044</code> : <code>study.auth_balayage_etablissement(p_code, p_fenetre)</code> compte les <strong>cibles distinctes</strong> en échec — un compte harcelé mille fois ne compte que pour une, c'est l'autre compteur qui s'en occupe.</p>
+<p>Au-delà de trente cibles distinctes en quinze minutes, le seuil par compte descend de cinq à deux.</p>
+<h3>Ce qui a été délibérément écarté</h3>
+<p><strong>Verrouiller l'établissement.</strong> Un verrou déclenché par un tiers est une arme qu'on lui tend : il suffirait d'un balayage volontaire un matin de rentrée pour empêcher un lycée entier de se connecter.</p>
+<p>Ici, rien ne ferme. Une personne dont le mot de passe est bon entre, alerte ou pas — c'est ce que vérifie le test <code>un balayage ne ferme jamais l'etablissement a qui tape juste</code>. Celle qui se trompe attend trente secondes au lieu de disposer de cinq essais. L'attaquant, lui, tombe de cinq essais par compte à deux.</p>
+<p>Le doute penche aussi du bon côté : si la lecture du compteur d'établissement échoue, on suppose qu'il n'y a <strong>pas</strong> de balayage. Supposer l'inverse transformerait une panne technique en gêne pour huit cents personnes, alors que le compteur par compte, lui, continue de protéger chaque compte séparément.</p>
+<hr>
+<h2>F-06 — Faible — La barrière d'origine se franchissait les mains vides</h2>
+<h3>Le constat</h3>
+<p>Six requêtes POST vers la production, le 23 septembre 2026. Aucune n'a déclenché d'action serveur : un POST vers l'URL d'une page ne porte pas l'en-tête que Next exige pour exécuter quoi que ce soit. Ce qui est mesuré est <strong>uniquement</strong> le verdict de la barrière, en amont.</p>
+<table><thead><tr><th>Ce que la requête présentait</th><th>Réponse</th><th>Attendu</th></tr></thead><tbody><tr><td>Origine propre + <code>Sec-Fetch-Site: same-origin</code></td><td>200</td><td>passe</td></tr><tr><td>Origine étrangère + <code>cross-site</code></td><td>403</td><td>refusée</td></tr><tr><td>Origine étrangère, sans Fetch Metadata</td><td>403</td><td>refusée</td></tr><tr><td>Sans <code>Origin</code>, <code>Sec-Fetch-Site: cross-site</code></td><td>403</td><td>refusée</td></tr><tr><td><strong>Sans <code>Origin</code> ni <code>Sec-Fetch-Site</code></strong></td><td><strong>200</strong></td><td>refusée</td></tr><tr><td><strong>Sans <code>Origin</code>, <code>Referer</code> étranger</strong></td><td><strong>200</strong></td><td>refusée</td></tr></tbody></table>
+<h3>La cause, et c'est elle qui mérite d'être lue</h3>
+<p><code>src/lib/csrf.ts</code> exportait <code>verifierMutation</code>, couverte par sept tests verts. Cette fonction refusait correctement les deux derniers cas.</p>
+<p><strong>Personne ne l'appelait.</strong> Le proxy portait sa propre copie de la règle, plus indulgente d'un cas, écrite à côté. Les tests d'unité ne pouvaient pas le voir : ils éprouvaient la fonction, pas le chemin.</p>
+<p>Le module documentait par ailleurs « trois défenses indépendantes », dont un jeton CSRF à double dépôt. Ce jeton n'a jamais été branché : <code>NOM_COOKIE_CSRF</code>, <code>genererJetonCsrf</code> et <code>jetonsCorrespondent</code> n'étaient référencés que par leurs propres tests. Une défense décrite mais non branchée est pire que son absence, parce qu'on la compte.</p>
+<h3>Pourquoi « faible »</h3>
+<p><code>SameSite=Lax</code> prive une requête venue d'un autre site de la session : elle s'exécute anonyme. Exploiter ce cas demanderait un navigateur qui n'envoie ni <code>Origin</code> ni <code>Sec-Fetch-Site</code> <strong>et</strong> ignore <code>SameSite</code> — c'est-à-dire un navigateur d'avant 2020.</p>
+<h3>La correction</h3>
+<p>Deux choses plutôt qu'une.</p>
+<ol><li>La fonction éprouvée est devenue celle que le proxy appelle. Elle refuse désormais une mutation qui ne présente ni origine ni <code>Referer</code> utilisable — sauf si le navigateur a lui-même affirmé <code>same-origin</code>, ce qu'une page tierce ne peut pas fabriquer, et ce qui évite de casser les envois de formulaire qui n'emportent pas <code>Origin</code>.</li><li>Le jeton a été <strong>retiré</strong> plutôt que laissé en promesse, et le commentaire du module décrit maintenant les trois défenses réellement déployées : <code>SameSite=Lax</code>, la barrière du proxy, et la vérification d'origine propre à Next sur les actions serveur.</li></ol>
+<h3>Le contrôle permanent</h3>
+<p><code>npm run verifier:origine</code> rejoue les six cas ci-dessus sur ce qui est réellement servi. Il échouait sur deux lignes avant la correction ; il doit maintenant passer sur les six.</p>
+<hr>
+<h2>F-02 — Faible — Une adhésion suspendue rendait encore ses rôles</h2>
+<p><code>study.auth_lire_session</code> joignait <code>organization_memberships</code> sans filtrer sur l'état. Une session vivante d'un compte suspendu gardait donc ses rôles — donc ses écrans.</p>
+<p>Le risque était déjà fermé : les deux chemins de suspension révoquent les sessions du profil. Mais la garantie reposait alors sur le fait que <strong>chaque futur chemin y pense</strong> — un traitement de fin d'année, un import qui désactive. Une règle qu'il faut se rappeler d'appliquer finit par être oubliée.</p>
+<p><strong>Correction</strong> (migration <code>0043</code>) : la lecture de session applique désormais la même règle que la connexion — adhésion <code>active</code>, état <code>actif</code> ou <code>a_activer</code>. <code>a_activer</code> reste admis, sans quoi une personne qui vient de recevoir ses accès ne pourrait plus atteindre son propre écran d'activation. La révocation explicite reste en place : celle-ci ne la remplace pas, elle fait que l'oublier ne suffise plus.</p>
+<hr>
+<h2>F-09 — Faible — Une durée de conservation écrite et jamais appliquée</h2>
+<p><code>study.auth_purger_tentatives()</code> existe depuis la migration 0015. Elle supprime les tentatives de connexion de plus de vingt-quatre heures. <strong>Rien ne l'appelait</strong> — ni la tâche planifiée, ni un script, ni la file de travaux.</p>
+<p>Relevé en production : trois lignes, toutes datées du 20 septembre, donc au-delà de la durée déclarée.</p>
+<p>Le volume est dérisoire et le contenu maigre — un identifiant de compte, un code d'établissement, une date, jamais un mot de passe ni un identifiant saisi. Mais une durée de conservation écrite quelque part et appliquée nulle part est une <strong>ligne fausse dans un registre de traitement</strong>, pas une négligence anodine. C'est la forme de constat qu'un DPO relève en premier.</p>
+<p><strong>Correction</strong> : la route de la tâche planifiée appelle la purge avant de drainer la file, et rend le nombre de lignes supprimées dans son bilan. Elle est placée là plutôt que dans la file parce qu'elle est unique, brève et idempotente : en faire un travail à programmer ajouterait une pièce qui peut elle-même tomber en panne sans bruit.</p>
+<hr>
+<h2>F-10 — Faible — Aucun point de contact pour signaler une faille</h2>
+<p><code>https://avecstudy.fr/.well-known/security.txt</code> répondait 404.</p>
+<p>Un référent numérique qui trouve quelque chose n'avait aucune porte normalisée, et surtout aucune phrase lui disant qu'il ne risquait rien à écrire. C'est le genre de manque qui ne produit pas d'incident — il produit des silences.</p>
+<p><strong>Correction</strong> : un <code>security.txt</code> conforme à la RFC 9116, avec les deux adresses de contact, la politique publiée, les langues, et une échéance.</p>
+<p>Ce qu'il promet est volontairement modeste, parce qu'AvecStudy est édité par une entreprise individuelle : un accusé de réception sous cinq jours ouvrés, et l'engagement de ne pas poursuivre un signalement de bonne foi. Il n'annonce ni équipe de garde, ni prime, ni délai contractuel — ce serait faux.</p>
+<p><strong>Contrôle permanent</strong> : <code>verifier:legal</code> relit le fichier servi, vérifie que l'adresse correspond à <code>identite-legale.ts</code>, et <strong>prévient soixante jours avant l'échéance</strong>. Un point de contact périmé est pire que pas de point de contact.</p>
+<hr>
+<h2>F-03 et F-04 — Faibles — Deux tables hors de la règle commune</h2>
+<p><code>study_prive.tentatives_connexion</code> n'avait pas RLS ; <code>study_prive.auth_aliases</code> l'avait sans <code>FORCE</code>.</p>
+<p>Ni l'une ni l'autre n'est atteignable : <code>study_prive</code> n'accorde aucun droit à <code>anon</code> ni à <code>authenticated</code>, ce que <code>verifier:privileges</code> vérifie séparément.</p>
+<p>Elles sont corrigées quand même (migration <code>0043</code>) pour une raison qui n'est pas technique : <strong>une exception se raisonne à chaque audit, alors qu'une règle uniforme se lit une fois</strong>. Le prochain relecteur n'aura pas à refaire le raisonnement.</p>
+<hr>
+<h2>F-05 — Observation — <code>unsafe-inline</code> sur les pages de vitrine</h2>
+<p>Les douze pages publiques prérendues reçoivent <code>script-src 'self' 'unsafe-inline'</code> au lieu de la politique à nonce.</p>
+<p>Ce n'est pas un relâchement de confort : une page écrite une fois au build ne peut pas porter un nonce régénéré à chaque requête, et lui en promettre un dans l'en-tête revient à bloquer tous ses scripts.</p>
+<p>Le raisonnement qui le rend acceptable est vérifiable page par page : ce que la CSP arrête, c'est l'exécution d'un script <strong>injecté</strong>, et pour qu'un script soit injecté il faut une entrée. Ces douze pages n'en ont aucune — elles n'affichent que du texte écrit dans le dépôt, jamais une donnée venue d'un élève, d'un professeur ou d'un fichier déposé. Tout ce qui rend du contenu saisi par quelqu'un vit dans l'application connectée, rendue à la demande, qui garde la politique stricte.</p>
+<p>La liste est <strong>exacte, jamais par préfixe</strong> : une future page privée sous un chemin voisin n'héritera pas de la politique relâchée, et une nouvelle page de vitrine oubliée dans la liste recevra la politique stricte — donc cassera visiblement à la recette.</p>
+<p><strong>Ce qui reste à faire</strong> : <code>style-src 'unsafe-inline'</code> s'applique, lui, à toute l'application. Next injecte des styles en ligne et il n'y a pas d'échappatoire propre aujourd'hui. C'est une limite connue, portée aux risques résiduels (<code>16-risques-residuels.md</code>), pas un point réglé.</p>
+<hr>
+<h2>Récapitulatif</h2>
+<table><thead><tr><th>Id</th><th>Gravité</th><th>Constat</th><th>Correction</th><th>Contrôle permanent</th></tr></thead><tbody><tr><td>F-08</td><td>Élevé</td><td>Rendu serveur exécuté à Washington</td><td><code>vercel.json</code> → <code>cdg1</code></td><td><code>verifier:hebergement</code></td></tr><tr><td>F-01</td><td>Moyen</td><td><code>EXECUTE</code> ouvert à <code>PUBLIC</code> ; référence d'accusé rendue à un anonyme</td><td>migration <code>0043</code></td><td><code>verifier:privileges</code> (fermeture transitive)</td></tr><tr><td>F-07</td><td>Moyen</td><td>Aucune détection du balayage d'établissement</td><td>migration <code>0044</code> + seuil adaptatif</td><td>4 tests d'unité ABUSE-02</td></tr><tr><td>F-06</td><td>Faible</td><td>Barrière d'origine franchie les mains vides ; fonction testée non branchée</td><td>proxy branché sur <code>verifierMutation</code></td><td><code>verifier:origine</code> (6 cas)</td></tr><tr><td>F-02</td><td>Faible</td><td>Rôles rendus pour une adhésion suspendue</td><td>migration <code>0043</code></td><td>batterie RLS</td></tr><tr><td>F-09</td><td>Faible</td><td>Rétention de 24 h déclarée, jamais appliquée</td><td>purge dans la tâche planifiée</td><td>bilan de la tâche</td></tr><tr><td>F-10</td><td>Faible</td><td>Aucun <code>security.txt</code></td><td>fichier RFC 9116</td><td><code>verifier:legal</code> (+ alerte à 60 jours)</td></tr><tr><td>F-03</td><td>Faible</td><td><code>tentatives_connexion</code> sans RLS</td><td>migration <code>0043</code></td><td><code>verifier:privileges</code></td></tr><tr><td>F-04</td><td>Faible</td><td><code>auth_aliases</code> sans <code>FORCE</code></td><td>migration <code>0043</code></td><td><code>verifier:privileges</code></td></tr><tr><td>F-05</td><td>Observation</td><td><code>unsafe-inline</code> sur douze pages prérendues</td><td>liste exacte, justifiée page par page</td><td><code>verifier:site</code></td></tr></tbody></table>
+<h2>Ce que cet audit n'a pas pu établir</h2>
+<p>Trois points sont marqués <strong>NON VÉRIFIÉ</strong>, et le resteront tant que personne ne les aura joués. Ils sont détaillés dans <code>02-perimetre-et-methode.md</code>.</p>
+<ul><li>La configuration de la console Vercel (§18) — aucun identifiant n'était disponible dans l'environnement d'audit.</li><li>La configuration de la console Supabase (§19) — l'accès à la base a permis de tout vérifier au niveau SQL, pas les réglages de projet.</li><li>La séparation des environnements (§31) — établir qu'un déploiement d'aperçu ne pointe pas vers la base de production demande de lire les variables d'environnement de la console.</li></ul>
+<p>Une table vide ou une migration ancienne ne prouvent pas qu'une protection existe. Ces trois lignes disent « non vérifié » plutôt que « conforme ».</p>
+</section>
+<section class="doc" id="14-controles-permanents">
+<h1>14 — Les contrôles permanents</h1>
+<p><em>Destiné au référent numérique. Chaque constat de cet audit a laissé derrière lui un contrôle qui le rejoue. Ce document dit lesquels, ce qu'ils prouvent, et comment les lancer.</em></p>
+<h2>Le principe qui gouverne tout ce chapitre</h2>
+<p><strong>Un test qui n'a jamais échoué ne prouve pas grand-chose.</strong></p>
+<p>Cet audit l'a vérifié trois fois, et de manière embarrassante :</p>
+<ul><li><code>verifierMutation</code> était couverte par sept tests verts, et <strong>personne ne l'appelait</strong> (F-06) ;</li><li>le professeur ne pouvait pas ouvrir la copie d'un élève en production alors que tous les tests d'isolation passaient — ils cherchaient tous des fuites, aucun ne vérifiait le chemin légitime ;</li><li>deux variables de couleur CSS n'existaient pas, ce qui ne casse ni la compilation, ni le typage, ni les tests : seulement l'écran.</li></ul>
+<p>Tous les contrôles listés ici ont donc été <strong>vus rouges avant d'être vus verts</strong>. Celui qui n'a pas ce parcours est signalé comme tel.</p>
+<h2>Le contrôle d'ensemble</h2>
+<pre><code>npm run recette:complete</code></pre>
+<p>Enchaîne la totalité. C'est ce qui doit passer avant toute mise en production.</p>
+<h2>Contrôles issus de cet audit</h2>
+<h3><code>npm run verifier:privileges</code></h3>
+<p><strong>Ce qu'il prouve.</strong> Qu'aucune fonction de la base n'est exécutable sans compte, que ce qu'une session navigateur peut exécuter correspond exactement à un registre écrit, et — c'est la partie nouvelle et la plus utile — que <strong>le registre couvre tout ce que le schéma exige</strong>.</p>
+<p>Ce dernier point est une <strong>fermeture transitive</strong>, calculée à partir de 934 expressions de schéma : politiques RLS, déclencheurs, valeurs par défaut, contraintes, index, vues. Elle suit les appels à travers les fonctions <code>security invoker</code> et ne s'arrête qu'au premier <code>security definer</code>.</p>
+<p><strong>Pourquoi il fallait le calculer et non le lister.</strong> La correction du constat F-01 a cassé la batterie RLS deux fois de suite : d'abord <code>normalize_code</code>, appelée par trois déclencheurs ; puis <code>unaccent_fallback</code>, que <code>normalize_code</code> appelle à son tour. Aucune des deux pannes n'aurait produit la moindre erreur au déploiement — elles seraient apparues à la première création de classe de l'année scolaire.</p>
+<p><strong>Rouge avant, vert après</strong> : oui, deux fois.</p>
+<h3><code>npm run verifier:origine</code></h3>
+<p><strong>Ce qu'il prouve.</strong> Que la barrière anti-CSRF du proxy se comporte comme la règle le dit, sur ce qui est réellement servi. Six requêtes, six verdicts attendus.</p>
+<p><strong>Ce qu'il ne fait pas.</strong> Il ne déclenche aucune action serveur : un POST vers l'URL d'une page ne porte pas l'en-tête que Next exige. Ce qui est mesuré est uniquement le verdict de la barrière, ce qui est précisément l'objet.</p>
+<p><strong>Rouge avant, vert après</strong> : oui — deux cas sur six échouaient.</p>
+<h3><code>npm run verifier:hebergement</code></h3>
+<p><strong>Ce qu'il prouve.</strong> Que le rendu serveur s'exécute dans une région de l'EEE, et que l'hôte de la base en nomme une aussi.</p>
+<p><strong>Ce qu'il ne prouve pas</strong>, et il le dit lui-même dans son en-tête : la localisation <strong>juridique</strong> des données. Un code de région est un nom donné par un fournisseur. Les sauvegardes, les journaux et l'assistance relèvent de documents contractuels — voir <code>08-hebergement-et-transferts.md</code>.</p>
+<p><strong>Rouge avant, vert après</strong> : oui — les trois pages dynamiques étaient en <code>iad1</code>.</p>
+<h3><code>npm run verifier:fuites</code></h3>
+<p><strong>Ce qu'il prouve.</strong> Qu'aucun secret ne se trouve dans ce que le navigateur reçoit — le HTML, la charge utile React qui y est incluse, et chacun des fichiers de code chargés.</p>
+<p><strong>Pourquoi lire ce qui est servi plutôt que le code.</strong> Un secret ne fuite presque jamais par une ligne écrite exprès. Il fuite parce qu'un composant serveur a passé un objet entier en accessoire à un composant client, et que l'objet s'est retrouvé sérialisé dans la page. Rien n'échoue, rien ne s'affiche. Ni la compilation, ni le typage, ni les tests d'unité ne voient ce chemin.</p>
+<p><strong>Ce qu'il n'imprime jamais</strong> : aucune valeur, même partielle, même trouvée. Il dit le nom de la variable et le fichier. Un contrôle de fuite qui imprime ce qu'il a trouvé recopie la fuite dans les journaux de la recette.</p>
+<p><strong>Il dit aussi ce qu'il ne peut pas chercher</strong> : les variables absentes de l'environnement où il tourne sont nommées dans sa sortie, pour que personne ne prenne le contrôle pour plus large qu'il n'est.</p>
+<p><strong>Rouge avant, vert après</strong> : non — il est vert depuis sa création. 6 pages et 13 scripts inspectés intégralement, aucun secret.</p>
+<h3><code>npm run verifier:legal</code></h3>
+<p>Existait déjà pour les mentions légales. L'audit y a ajouté le contrôle du <strong>point de contact de sécurité</strong> (<code>/.well-known/security.txt</code>) : présence, correspondance de l'adresse avec <code>identite-legale.ts</code>, et <strong>alerte soixante jours avant l'échéance</strong>.</p>
+<p>Un point de contact périmé est pire que pas de point de contact, et la RFC 9116 impose une date d'expiration précisément pour cette raison.</p>
+<p><strong>Rouge avant, vert après</strong> : oui — le fichier répondait 404.</p>
+<h2>Contrôles antérieurs, toujours en vigueur</h2>
+<table><thead><tr><th>Commande</th><th>Ce qu'elle prouve</th></tr></thead><tbody><tr><td><code>npm run test:rls</code></td><td>202 tests sur PostgreSQL réel : l'isolation entre établissements, entre classes, entre élèves, et les chemins légitimes.</td></tr><tr><td><code>npm run test:unite</code></td><td>164 tests : authentification, non-divulgation, limitation des tentatives, chiffrement, formats de fichiers, identité légale.</td></tr><tr><td><code>npm run test:navigateur</code></td><td>Parcours publics joués dans un vrai navigateur.</td></tr><tr><td><code>npm run verifier:site</code></td><td>Balisage, référencement, en-têtes de sécurité, politique de sécurité du contenu.</td></tr><tr><td><code>npm run verifier:requetes</code></td><td>Les formes de requête que l'application émet.</td></tr><tr><td><code>npm run verifier:stockage</code></td><td>L'état du stockage : aucun objet orphelin, aucun bucket public.</td></tr><tr><td><code>npm run verifier:journal</code></td><td>Le journal d'audit contient bien ce qu'il doit contenir.</td></tr><tr><td><code>npm run verifier:contraste</code></td><td>Contraste WCAG 2.2 AA mesuré sur les pages rendues.</td></tr><tr><td><code>npm run verifier:jetons</code></td><td>Aucune variable de couleur fantôme.</td></tr><tr><td><code>npm run verifier:etat-final</code></td><td>Après recette : il ne reste que le compte de l'éditeur, aucune donnée temporaire.</td></tr><tr><td><code>npm run verifier:deploiement</code></td><td>Le code servi est bien celui du dépôt.</td></tr><tr><td><code>npm run restauration:test</code></td><td>Restauration d'une sauvegarde — voir <code>11-sauvegardes-et-continuite.md</code>.</td></tr></tbody></table>
+<h2>Ce que les contrôles ne couvrent pas</h2>
+<p>Il faut le dire aussi clairement que le reste.</p>
+<ul><li><strong>La console des fournisseurs.</strong> Aucun contrôle automatique ne lit les réglages Vercel ou Supabase : ils demandent des identifiants que l'environnement de recette n'a pas, et qu'il ne devrait pas avoir.</li><li><strong>La séparation des environnements.</strong> Même raison.</li><li><strong>PostgREST.</strong> Les tests RLS tournent sur PostgreSQL en WASM, qui n'inclut pas PostgREST. L'isolation est donc vérifiée au niveau du moteur, ce qui est le niveau le plus fort — mais la couche HTTP qui l'expose n'est éprouvée que par les scénarios navigateur. C'est un angle mort connu, porté aux risques résiduels.</li><li><strong>L'exhaustivité.</strong> 202 tests RLS couvrent les chemins qu'on a su imaginer. Ils ne prouvent pas qu'il n'en existe pas d'autres.</li></ul>
+<h2>Fréquence</h2>
+<table><thead><tr><th>Quand</th><th>Quoi</th></tr></thead><tbody><tr><td>À chaque commit</td><td><code>typecheck</code>, <code>lint</code>, <code>test:unite</code></td></tr><tr><td>Avant chaque mise en production</td><td><code>recette:complete</code> en entier</td></tr><tr><td>Après chaque mise en production</td><td><code>verifier:deploiement</code>, puis <code>verifier:origine</code>, <code>verifier:hebergement</code>, <code>verifier:fuites</code>, <code>verifier:legal</code> contre la production</td></tr><tr><td>À chaque rentrée scolaire</td><td>la recette complète, plus une relecture de ce dossier</td></tr></tbody></table>
+</section>
+<section class="doc" id="15-questionnaire-etablissement">
+<h1>15 — Questionnaire d'établissement, rempli</h1>
+<p><em>Les questions qu'un référent numérique ou un DPO pose avant de déployer un outil, avec les réponses d'AvecStudy au 23 septembre 2026. Une réponse « non » ou « non vérifié » est aussi utile qu'un « oui » : ce document sert à décider, pas à convaincre.</em></p>
+<h2>Identité de l'éditeur</h2>
+<table><thead><tr><th>Question</th><th>Réponse</th></tr></thead><tbody><tr><td>Qui édite le service ?</td><td>Nouh Tifouti, entrepreneur individuel — micro-entreprise. Nom commercial : AvecStudy.</td></tr><tr><td>SIREN / SIRET</td><td>979 992 443 / 979 992 443 00023</td></tr><tr><td>Adresse</td><td>1 avenue d'Alsace, 90000 Belfort, France</td></tr><tr><td>Code APE</td><td>62.01Z — Programmation informatique</td></tr><tr><td>TVA</td><td>TVA non applicable, article 293 B du Code général des impôts</td></tr><tr><td>Directeur de publication</td><td>Nouh Tifouti</td></tr><tr><td>Contact</td><td>nireo.contacte@gmail.com — 07 81 69 74 77</td></tr><tr><td>AvecStudy est-il une société ?</td><td><strong>Non.</strong> C'est un nom commercial, pas une personne morale. La responsabilité est celle de l'entreprise individuelle.</td></tr><tr><td>Combien de personnes travaillent sur le produit ?</td><td><strong>Une.</strong> Voir R-01, que nous vous demandons de peser en premier.</td></tr></tbody></table>
+<h2>Données</h2>
+<table><thead><tr><th>Question</th><th>Réponse</th></tr></thead><tbody><tr><td>Quelles données d'élèves sont collectées ?</td><td>Prénom, nom, identifiant local remis par le lycée, classe, groupes. Et le travail scolaire : copies, corrections, documents, entraide.</td></tr><tr><td>L'INE est-il collecté ?</td><td><strong>Non.</strong> Vérifié : aucune colonne des deux schémas ne peut en porter un.</td></tr><tr><td>Date de naissance, adresse, téléphone, photo ?</td><td><strong>Non</strong>, pour les élèves.</td></tr><tr><td>Adresse électronique d'élève ?</td><td><strong>Non.</strong> Un test de la batterie le vérifie en permanence.</td></tr><tr><td>Données de santé ou dites sensibles ?</td><td><strong>Non.</strong></td></tr><tr><td>Y a-t-il de la publicité ou du profilage ?</td><td><strong>Non</strong>, et le modèle économique l'exclut : l'abonnement est payé par l'établissement, les familles ne paient rien.</td></tr><tr><td>Les données sont-elles revendues ou partagées ?</td><td><strong>Non.</strong> Aucun destinataire tiers.</td></tr><tr><td>Qui est responsable de traitement ?</td><td><strong>L'établissement.</strong> AvecStudy est sous-traitant (article 28).</td></tr></tbody></table>
+<h2>Hébergement</h2>
+<table><thead><tr><th>Question</th><th>Réponse</th></tr></thead><tbody><tr><td>Où la base est-elle hébergée ?</td><td>Supabase, AWS <code>eu-west-1</code> — Irlande.</td></tr><tr><td>Où le traitement a-t-il lieu ?</td><td>Vercel, région <code>cdg1</code> — Paris, <strong>déclarée depuis le 23 septembre 2026</strong>. Auparavant, l'hébergeur appliquait son défaut et le rendu s'exécutait à Washington (constat F-08).</td></tr><tr><td>Est-ce un hébergement souverain ?</td><td><strong>Non.</strong> Les deux fournisseurs sont américains. Nous n'écrirons pas « souverain » sans preuve, et il n'y en a pas.</td></tr><tr><td>Est-ce un hébergeur de données de santé (HDS) ?</td><td>Non, et ce n'est pas requis : aucune donnée de santé n'est traitée.</td></tr><tr><td>Des données quittent-elles l'EEE ?</td><td><strong>NON VÉRIFIÉ.</strong> Les régions sont européennes et un contrôle automatique le vérifie. Les sauvegardes, journaux et accès du support relèvent des contrats des fournisseurs, qui restent à examiner. Voir <code>08-hebergement-et-transferts.md</code>.</td></tr><tr><td>Qui sont les sous-traitants ultérieurs ?</td><td>Vercel (hébergement applicatif) et Supabase (base, authentification, stockage). Leurs propres sous-traitants figurent dans leurs contrats, à obtenir.</td></tr></tbody></table>
+<h2>Sécurité technique</h2>
+<table><thead><tr><th>Question</th><th>Réponse</th></tr></thead><tbody><tr><td>Les échanges sont-ils chiffrés ?</td><td>Oui, HTTPS obligatoire, HSTS un an avec sous-domaines.</td></tr><tr><td>Le cloisonnement entre établissements est-il vérifié ?</td><td>Oui. Il est appliqué <strong>dans la base</strong>, par 144 politiques, et vérifié par 202 tests sur du vrai PostgreSQL à chaque livraison.</td></tr><tr><td>Un professeur peut-il voir les copies d'une classe qu'il n'enseigne pas ?</td><td>Non. Et retirer une affectation coupe l'accès à la requête suivante.</td></tr><tr><td>L'éditeur peut-il lire les copies des élèves ?</td><td><strong>Pas par les chemins applicatifs</strong> — quatre tests le vérifient. Il détient en revanche les accès à l'infrastructure, comme tout exploitant de base ; cette limite est écrite dans <code>04-modele-de-menace.md</code>.</td></tr><tr><td>Le second facteur est-il disponible ?</td><td>Oui, TOTP. Il est <strong>obligatoire</strong> pour tout acte d'administration.</td></tr><tr><td>Les mots de passe sont-ils stockés par AvecStudy ?</td><td>Non. Ils sont vérifiés par le fournisseur d'authentification.</td></tr><tr><td>Y a-t-il une limitation des tentatives ?</td><td>Oui, par compte, et depuis cet audit une détection du balayage d'établissement.</td></tr><tr><td>Les fichiers déposés sont-ils analysés par un antivirus ?</td><td><strong>Non.</strong> C'est écrit dans le code plutôt que dissimulé. Le type est en revanche reconnu sur les octets, six formats seulement sont acceptés, et rien n'est servi en ligne. Voir R-06.</td></tr><tr><td>Y a-t-il eu un test d'intrusion indépendant ?</td><td><strong>Non.</strong> Ce dossier est un audit <strong>interne</strong>. Aucune certification, aucune homologation, aucune qualification.</td></tr></tbody></table>
+<h2>Exploitation</h2>
+<table><thead><tr><th>Question</th><th>Réponse</th></tr></thead><tbody><tr><td>Y a-t-il un engagement de disponibilité ?</td><td><strong>Non.</strong> Nous ne promettons pas de taux de service, faute de pouvoir le tenir.</td></tr><tr><td>Y a-t-il une astreinte ?</td><td><strong>Non.</strong> Une panne un dimanche soir peut durer jusqu'au lundi.</td></tr><tr><td>Y a-t-il une supervision automatique ?</td><td><strong>Non.</strong> C'est le manque le plus structurant après cet audit (R-09).</td></tr><tr><td>Les sauvegardes sont-elles testées ?</td><td>L'exercice est <strong>outillé</strong> (<code>npm run restauration:test</code>, qui vérifie qu'une base restaurée garde ses politiques de ligne). L'exercice de bout en bout <strong>reste à jouer</strong>, et les réglages de sauvegarde sont <strong>NON VÉRIFIÉS</strong> faute d'accès à la console.</td></tr><tr><td>Combien de temps les données sont-elles conservées ?</td><td>Le travail scolaire : selon la décision de l'établissement. Les tentatives de connexion : 24 h. Le journal d'audit : conservé, <strong>sans durée déterminée</strong> — à fixer avec votre DPO (R-07).</td></tr></tbody></table>
+<h2>Droits des personnes</h2>
+<table><thead><tr><th>Question</th><th>Réponse</th></tr></thead><tbody><tr><td>Un élève peut-il accéder à ses données ?</td><td>Oui, dans son espace : devoirs, remises, corrections, preuves de remise.</td></tr><tr><td>Un export complet des données d'un élève est-il possible ?</td><td>Oui, <strong>mais pas en un geste</strong> : l'opération demande aujourd'hui une intervention de l'éditeur (R-08).</td></tr><tr><td>Comment se fait un effacement ?</td><td>Sur décision de l'établissement, par les écrans d'administration. Le journal d'audit en garde la trace.</td></tr><tr><td>Qui répond aux demandes des familles ?</td><td><strong>L'établissement</strong>, responsable de traitement. AvecStudy l'outille.</td></tr></tbody></table>
+<h2>Réversibilité</h2>
+<table><thead><tr><th>Question</th><th>Réponse</th></tr></thead><tbody><tr><td>Que récupérons-nous si nous arrêtons ?</td><td>Les accès, la structure et les documents s'exportent déjà par vos écrans. Un instantané complet demande l'éditeur.</td></tr><tr><td>Et si l'éditeur cesse son activité ?</td><td>Le code est intégralement versionné sur un dépôt distant, le schéma se reconstruit de zéro, la base est du PostgreSQL standard. <strong>Aucune clause de réversibilité n'existe aujourd'hui</strong> — nous recommandons de l'inscrire au contrat. Voir <code>11-sauvegardes-et-continuite.md</code>.</td></tr></tbody></table>
+<h2>Conformité</h2>
+<table><thead><tr><th>Question</th><th>Réponse</th></tr></thead><tbody><tr><td>Une AIPD est-elle nécessaire ?</td><td>Le traitement porte sur des mineurs, à grande échelle à l'échelle d'un établissement, sans possibilité réelle de s'y soustraire. <strong>Nous recommandons que votre DPO conduise une AIPD</strong>, ou vérifie que le traitement entre dans un cadre existant. Ce dossier n'en tient pas lieu.</td></tr><tr><td>Un contrat de sous-traitance est-il prêt ?</td><td>Un <strong>projet</strong> d'annexe figure au dossier. Il est marqué « projet à valider par le DPO et/ou un juriste » et n'est pas un avis juridique.</td></tr><tr><td>Êtes-vous certifié ISO 27001 ?</td><td><strong>Non.</strong></td></tr><tr><td>Êtes-vous « conforme ANSSI » ?</td><td><strong>Non</strong>, et cette expression n'a pas de sens sans qualification formelle. L'audit s'appuie sur les recommandations publiques de l'ANSSI, ce qui est autre chose.</td></tr><tr><td>Êtes-vous « certifié RGPD » ?</td><td><strong>Non.</strong> Aucune certification RGPD n'existe pour ce service.</td></tr><tr><td>Avez-vous un point de contact pour signaler une faille ?</td><td>Oui, depuis cet audit : <code>https://avecstudy.fr/.well-known/security.txt</code>. Accusé de réception sous cinq jours ouvrés, et engagement de ne pas poursuivre un signalement de bonne foi.</td></tr></tbody></table>
+<h2>Les trois questions que nous vous invitons à nous reposer dans six mois</h2>
+<ol><li>La configuration des consoles Vercel et Supabase a-t-elle été vérifiée, et le second facteur y est-il exigé ? <em>(R-03)</em></li><li>Les pièces contractuelles sur les transferts hors EEE sont-elles au dossier ? <em>(R-02)</em></li><li>L'exercice de restauration a-t-il été joué de bout en bout, et son compte rendu joint ? <em>(chapitre 11)</em></li></ol>
+<p>Tant que ces trois réponses sont « pas encore », ce dossier reste incomplet, et il le dit.</p>
+</section>
+<section class="doc" id="16-risques-residuels">
+<h1>16 — Risques résiduels</h1>
+<p><em>Ce qui reste après les corrections. Rien n'est minimisé ici : un risque résiduel qu'on n'écrit pas est un risque qu'on découvre au mauvais moment.</em></p>
+<p>Nous n'écrirons ni « sécurité totale », ni « inviolable », ni « aucun risque ». Ce document existe parce que ces phrases seraient fausses.</p>
+<hr>
+<h2>R-01 — L'éditeur est une seule personne</h2>
+<p><strong>C'est le risque principal, devant tous les risques techniques de ce dossier.</strong></p>
+<p>AvecStudy est édité par une entreprise individuelle. Nouh Tifouti écrit le code, exploite l'infrastructure, répond au support et a mené l'audit que vous lisez.</p>
+<p>Conséquences, sans atténuation :</p>
+<ul><li><strong>Pas d'astreinte.</strong> Un incident un dimanche soir attend le lundi matin. Il n'y a pas de rotation, pas de second niveau, pas de délai de réponse contractuel — et annoncer le contraire serait un mensonge vérifiable.</li><li><strong>Indisponibilité de la personne = indisponibilité du support.</strong> Une maladie, un accident, et il n'y a personne derrière.</li><li><strong>Pas de séparation des tâches.</strong> Celui qui écrit le code le déploie et détient les accès à la production. Aucune revue par un pair n'est structurelle.</li><li><strong>L'audit est auto-administré.</strong> Un auditeur qui a écrit le code trouve bien les défauts d'inattention — celui-ci en a trouvé dix — et trouve mal les défauts de conception, parce qu'il les partage.</li></ul>
+<p><strong>Ce qui existe en face</strong>, et qui est vérifiable :</p>
+<ul><li>le code est intégralement versionné, sur 93 commits, et poussé sur un dépôt distant ;</li><li>la base est restaurable et l'exercice de restauration est outillé ;</li><li>les données sont exportables par l'établissement lui-même ;</li><li>366 tests automatiques passent avant chaque livraison, et ils constituent une forme de mémoire qui ne dépend pas d'une personne ;</li><li>chaque décision non évidente est écrite dans le code, à l'endroit où elle s'applique, avec la raison — ce qui est le seul transfert de connaissance réaliste pour une structure de cette taille.</li></ul>
+<p><strong>Ce que l'établissement doit faire de ce risque</strong> : le peser explicitement, comme il pèserait la solidité de n'importe quel fournisseur unique, et prévoir une clause de réversibilité. Voir <code>11-sauvegardes-et-continuite.md</code>.</p>
+<hr>
+<h2>R-02 — Les transferts hors EEE ne sont pas contractuellement établis</h2>
+<p>Le calcul est désormais déclaré à Paris, la base est en Irlande, et un contrôle automatique le vérifie. Cela ne suffit pas à affirmer qu'aucune donnée ne quitte l'Europe.</p>
+<p>Restent à établir sur pièces : la localisation des sauvegardes, celle des journaux des fournisseurs, les accès du support, la liste des sous-traitants ultérieurs et le mécanisme de transfert applicable.</p>
+<p><strong>Tant que ces pièces ne sont pas au dossier, la ligne reste NON VÉRIFIÉE.</strong> Voir <code>08-hebergement-et-transferts.md</code>, qui liste chaque document à obtenir et ce qu'il doit établir.</p>
+<hr>
+<h2>R-03 — Trois configurations n'ont pas pu être vérifiées</h2>
+<p>La console Vercel, la console Supabase, et la séparation entre l'environnement d'aperçu et la production. Aucun identifiant n'était disponible dans l'environnement d'audit.</p>
+<p>Ce ne sont pas des réserves de style. Tant que personne ne les a ouvertes, on ne sait pas si le second facteur est exigé sur les comptes d'administration de ces deux consoles — ce qui, en cas de compromission, donnerait accès à tout.</p>
+<p><strong>À jouer en priorité</strong>, et la liste précise de ce qu'il faut regarder est dans <code>02-perimetre-et-methode.md</code>.</p>
+<hr>
+<h2>R-04 — <code>style-src 'unsafe-inline'</code> s'applique à toute l'application</h2>
+<p>La politique de sécurité du contenu est stricte sur les scripts : nonce et <code>'strict-dynamic'</code> partout, sauf sur douze pages de vitrine prérendues qui n'affichent aucun texte saisi par quiconque (constat F-05, justifié page par page).</p>
+<p>Les <strong>styles</strong>, eux, gardent <code>'unsafe-inline'</code> sur l'ensemble du site. Next injecte des styles en ligne et il n'existe pas aujourd'hui d'échappatoire propre.</p>
+<p><strong>Ce que cela ouvre</strong> : une injection de style permet l'exfiltration de données par sélecteurs d'attribut dans certaines configurations. C'est une attaque étroite, qui suppose déjà une injection — donc déjà un échec de la couche précédente. Mais la couche n'est pas là.</p>
+<p><strong>À réévaluer</strong> à chaque montée de version majeure de Next.</p>
+<hr>
+<h2>R-05 — Les tests RLS ne passent pas par PostgREST</h2>
+<p>Les 202 tests d'isolation tournent sur PostgreSQL 17 en WASM. C'est du vrai PostgreSQL, avec les vraies politiques, et c'est le niveau le plus fort auquel on puisse vérifier une isolation.</p>
+<p>Ce qui manque : PostgREST, la couche HTTP qui expose la base. Sa configuration — schémas exposés, rôles, agrégats autorisés, profondeur des jointures — n'est éprouvée que par les scénarios navigateur, qui suivent les chemins légitimes.</p>
+<p><strong>Conséquence</strong> : une mauvaise configuration de PostgREST qui exposerait un schéma ou un rôle non prévu ne serait pas prise par la batterie. Le cloisonnement des deux schémas est en revanche vérifié directement en base (<code>verifier:privileges</code>, section 5) : <code>study_prive</code> n'accorde rien à <code>anon</code> ni à <code>authenticated</code>.</p>
+<hr>
+<h2>R-06 — Aucun antivirus sur les fichiers déposés</h2>
+<p>C'est écrit dans le code, à l'endroit où les fichiers sont reçus, plutôt que dissimulé : <strong>aucun moteur antivirus n'est raccordé</strong>, et la colonne <code>scan_result</code> le consigne au lieu de laisser croire à une analyse qui n'a pas eu lieu.</p>
+<p>Le modèle de confiance retenu : le fichier est déposé par un enseignant identifié de l'établissement et rendu à ses propres élèves.</p>
+<p>Ce qui limite le risque, et qui est vérifié :</p>
+<ul><li>le type est reconnu <strong>sur les octets</strong>, jamais sur le nom ou sur l'en-tête envoyé par le navigateur ;</li><li>six formats seulement sont acceptés ;</li><li>le chemin de stockage est fabriqué côté serveur — jamais le nom d'origine ;</li><li><strong>rien n'est servi en ligne</strong> : tout passe par une route avec <code>Content-Disposition: attachment</code>, donc un PDF piégé s'ouvre dans le lecteur de la personne, pas dans l'origine de l'application.</li></ul>
+<p><strong>Ce qui reste</strong> : un document bureautique piégé transmis d'un poste enseignant compromis vers ses élèves. Le service ne le détecterait pas.</p>
+<hr>
+<h2>R-07 — Le journal d'audit n'a pas de durée de conservation déterminée</h2>
+<p>Il n'est volontairement pas purgé : effacer la trace des actes d'administration reviendrait à annuler l'objet même d'un journal. Sa croissance est lente et surveillée.</p>
+<p>Mais « conservé » n'est pas une durée, et le RGPD demande une durée <strong>déterminée</strong>. Il faut fixer une borne avec le DPO de l'établissement — durée de scolarité plus un an, trois ans, cinq ans — et l'appliquer mécaniquement, comme la purge des tentatives de connexion l'est désormais.</p>
+<hr>
+<h2>R-08 — Pas d'export complet des données d'un élève en un geste</h2>
+<p>Toutes les données d'un élève sont accessibles et exportables, mais rassembler l'ensemble — identité, inscriptions, remises, corrections, notes — demande aujourd'hui une intervention de l'éditeur.</p>
+<p>Pour un délai légal d'un mois, c'est tenable. Ce n'est pas satisfaisant, et c'est d'autant moins satisfaisant que R-01 rappelle que cette intervention dépend d'une seule personne.</p>
+<hr>
+<h2>R-09 — Pas de supervision ni d'alerte automatique</h2>
+<p>Aucun service de surveillance d'erreurs tiers n'est branché, par choix : cela éviterait d'envoyer des traces d'exécution — qui peuvent contenir des fragments de données — à un destinataire de plus.</p>
+<p>Le revers est net : <strong>personne n'est prévenu automatiquement</strong> si le taux d'erreur monte, si la file de travaux cesse d'avancer, ou si un balayage de connexion est détecté. Le nouveau compteur de balayage (F-07) <strong>ralentit</strong> l'attaque ; il ne <strong>prévient</strong> personne.</p>
+<p>C'est le manque le plus structurant qui reste après cet audit. Voir <code>10-journalisation-et-alertes.md</code>.</p>
+<hr>
+<h2>R-10 — La tâche planifiée ne s'exécute qu'une fois par jour</h2>
+<p><code>vercel.json</code> programme le drain de la file à 3 h du matin. Un travail qui échoue n'est donc réessayé que le lendemain — et c'est aussi la fréquence à laquelle la purge des tentatives de connexion s'exécute.</p>
+<p>L'effet sur la sécurité est faible (la fenêtre de rétention devient de fait 24 h + un cycle). L'effet sur le service, lui, est réel : une conversion de document qui échoue le matin attend la nuit.</p>
+<hr>
+<h2>Ce qui a été corrigé et n'est donc plus ici</h2>
+<p>Les dix constats F-01 à F-10 sont corrigés et couverts par des contrôles permanents. Voir <code>13-constats-et-corrections.md</code>. Ils ne figurent pas dans les risques résiduels, sauf pour la part que ces contrôles ne couvrent pas — R-02 pour la question contractuelle, R-04 pour les styles.</p>
+<h2>Synthèse</h2>
+<table><thead><tr><th>Id</th><th>Risque</th><th>Portée</th><th>Qui peut agir</th></tr></thead><tbody><tr><td>R-01</td><td>Éditeur à une seule personne</td><td>Structurelle</td><td>L'établissement, par une clause de réversibilité</td></tr><tr><td>R-02</td><td>Transferts hors EEE non établis</td><td>Juridique</td><td>DPO + éditeur, sur pièces</td></tr><tr><td>R-03</td><td>Trois configurations non vérifiées</td><td>Technique</td><td>Éditeur, dès l'accès aux consoles</td></tr><tr><td>R-04</td><td><code>style-src 'unsafe-inline'</code></td><td>Technique</td><td>Éditeur, à la prochaine version majeure</td></tr><tr><td>R-05</td><td>PostgREST hors batterie</td><td>Technique</td><td>Éditeur</td></tr><tr><td>R-06</td><td>Pas d'antivirus</td><td>Assumée</td><td>Éditeur, si un établissement l'exige</td></tr><tr><td>R-07</td><td>Journal sans durée déterminée</td><td>Juridique</td><td>DPO + éditeur</td></tr><tr><td>R-08</td><td>Pas d'export complet en un geste</td><td>Fonctionnelle</td><td>Éditeur</td></tr><tr><td>R-09</td><td>Pas de supervision</td><td>Technique</td><td>Éditeur</td></tr><tr><td>R-10</td><td>Tâche planifiée quotidienne</td><td>Fonctionnelle</td><td>Éditeur (dépend du plan d'hébergement)</td></tr></tbody></table>
+</section>
+<section class="doc" id="annexe-sous-traitance">
+<h1>Annexe — Projet d'accord de sous-traitance (article 28 du RGPD)</h1>
+<blockquote><h2>PROJET — À VALIDER PAR LE DPO ET/OU UN JURISTE</h2>
+<p><strong>Ce document n'est pas un avis juridique et n'a pas valeur contractuelle en l'état.</strong> Il est rédigé par l'éditeur, qui n'est pas juriste, pour servir de point de départ à une discussion. Chaque clause doit être relue, amendée ou écartée par le délégué à la protection des données de l'établissement et, le cas échéant, par un conseil juridique.</p>
+<p>Plusieurs champs sont <strong>délibérément laissés ouverts</strong> : ce sont des décisions qui appartiennent au responsable de traitement, pas au sous-traitant.</p></blockquote>
+<hr>
+<h2>1. Les parties</h2>
+<p><strong>Responsable de traitement</strong> : l'établissement scolaire, ci-après « l'Établissement ».</p>
+<p><strong>Sous-traitant</strong> : Nouh Tifouti, entrepreneur individuel, exerçant sous le nom commercial AvecStudy, 1 avenue d'Alsace, 90000 Belfort — SIREN 979 992 443, SIRET 979 992 443 00023. Ci-après « l'Éditeur ».</p>
+<h2>2. Objet et durée</h2>
+<p>L'Éditeur traite des données à caractère personnel pour le compte de l'Établissement, aux seules fins de fournir la plateforme pédagogique AvecStudy.</p>
+<p>Durée : celle de l'abonnement, augmentée de la période de réversibilité prévue à l'article 10.</p>
+<h2>3. Nature des traitements</h2>
+<p>Collecte, enregistrement, organisation, conservation, consultation, modification, extraction et effacement des données décrites à l'article 4, aux fins de :</p>
+<ul><li>gérer les comptes et les accès remis par l'Établissement ;</li><li>permettre le dépôt, la correction et la restitution du travail scolaire ;</li><li>permettre l'entraide entre élèves d'un même groupe, et sa modération par l'Établissement ;</li><li>assurer la sécurité du service et la traçabilité des actes d'administration.</li></ul>
+<h2>4. Catégories de données et de personnes</h2>
+<p><strong>Personnes concernées</strong> : élèves (majoritairement mineurs), enseignants, personnels d'administration de l'Établissement.</p>
+<p><strong>Catégories de données</strong> :</p>
+<table><thead><tr><th>Catégorie</th><th>Contenu</th></tr></thead><tbody><tr><td>Identité</td><td>Prénom, nom, identifiant local remis par l'Établissement</td></tr><tr><td>Coordonnées</td><td>Adresse électronique professionnelle (personnels uniquement)</td></tr><tr><td>Rattachement scolaire</td><td>Classe, groupes, matières, affectations</td></tr><tr><td>Travail scolaire</td><td>Copies, versions, brouillons, corrections, appréciations, documents, contributions d'entraide, notes personnelles</td></tr><tr><td>Données techniques</td><td>Sessions, échecs de connexion, journal d'audit</td></tr></tbody></table>
+<p><strong>Ne sont pas collectés</strong> : l'INE, la date de naissance, l'adresse postale, le téléphone d'un élève ou d'une famille, la photographie, aucune donnée relevant de l'article 9 du RGPD.</p>
+<h2>5. Instructions</h2>
+<p>L'Éditeur ne traite les données que sur instruction documentée de l'Établissement. L'utilisation du service, la création des comptes et l'inscription des élèves valent instruction.</p>
+<p>L'Éditeur informe l'Établissement s'il estime qu'une instruction constitue une violation du RGPD.</p>
+<p>L'Éditeur <strong>ne traite les données à aucune fin propre</strong>. En particulier : pas de publicité, pas de profilage, pas de revente, pas de réutilisation pour l'entraînement d'un modèle, pas de statistique nominative.</p>
+<h2>6. Confidentialité et sécurité</h2>
+<p>L'Éditeur est la seule personne ayant accès à l'infrastructure. Il s'engage à la confidentialité.</p>
+<p>Les mesures techniques sont décrites dans le présent dossier de sécurité, qui fait partie intégrante de l'annexe :</p>
+<ul><li>cloisonnement appliqué dans la base de données (144 politiques de sécurité de ligne), vérifié par 202 tests automatiques avant chaque livraison ;</li><li>chiffrement des échanges (HTTPS obligatoire, HSTS) ;</li><li>cookie de session opaque, <code>HttpOnly</code>, <code>Secure</code>, préfixe <code>__Host-</code> ;</li><li>second facteur obligatoire pour tout acte d'administration ;</li><li>limitation des tentatives de connexion, par compte et par établissement ;</li><li>journal d'audit des actes d'administration ;</li><li>audit interne documenté et contrôles permanents rejoués à chaque livraison.</li></ul>
+<blockquote><p><strong>À compléter par l'Établissement et l'Éditeur</strong> : les mesures que l'Établissement souhaite voir ajoutées, et le calendrier associé. Les manques connus sont listés dans <code>16-risques-residuels.md</code> et ne sont pas dissimulés.</p></blockquote>
+<h2>7. Sous-traitants ultérieurs</h2>
+<p>L'Éditeur recourt aux sous-traitants ultérieurs suivants :</p>
+<table><thead><tr><th>Sous-traitant</th><th>Rôle</th><th>Région déclarée</th></tr></thead><tbody><tr><td>Vercel</td><td>Hébergement de l'application, exécution du rendu serveur</td><td><code>cdg1</code> — Paris</td></tr><tr><td>Supabase</td><td>Base de données, authentification, stockage de fichiers</td><td>AWS <code>eu-west-1</code> — Irlande</td></tr></tbody></table>
+<p>L'Éditeur informe l'Établissement de tout changement envisagé, et l'Établissement peut s'y opposer.</p>
+<blockquote><p><strong>Point ouvert, à traiter avant signature.</strong> La localisation des <strong>sauvegardes</strong>, des <strong>journaux</strong> de ces fournisseurs et des accès de leur <strong>support</strong> n'est pas établie à ce jour. Les accords de traitement de Vercel et de Supabase doivent être obtenus et annexés. Tant qu'ils ne le sont pas, la mention « aucune donnée ne quitte l'EEE » <strong>ne peut pas figurer au contrat</strong>. Voir <code>08-hebergement-et-transferts.md</code>.</p></blockquote>
+<h2>8. Droits des personnes</h2>
+<p>L'Établissement répond aux demandes d'exercice de droits. L'Éditeur l'assiste :</p>
+<ul><li><strong>accès</strong> : chaque personne voit dans son espace ce qui la concerne ;</li><li><strong>rectification</strong> : par les écrans d'administration de l'Établissement ;</li><li><strong>effacement</strong> : sur demande de l'Établissement ;</li><li><strong>portabilité</strong> : export des accès et des listes au format tableur ; export complet des données d'un élève <strong>sur demande à l'Éditeur</strong>, sous un délai à fixer.</li></ul>
+<blockquote><p><strong>À fixer</strong> : le délai de réponse de l'Éditeur à une demande d'assistance. Nous proposons <strong>dix jours ouvrés</strong>, ce qui laisse à l'Établissement la marge nécessaire pour tenir son propre délai d'un mois.</p></blockquote>
+<h2>9. Violation de données</h2>
+<p>L'Éditeur notifie l'Établissement <strong>dans les meilleurs délais</strong> après en avoir pris connaissance, et au plus tard <strong>sous 24 heures</strong>, en lui transmettant :</p>
+<ul><li>la nature de la violation, les catégories et le nombre approximatif de personnes concernées ;</li><li>les conséquences probables ;</li><li>les mesures prises ou proposées.</li></ul>
+<p>L'Éditeur ne notifie pas la CNIL : cette obligation incombe à l'Établissement, responsable de traitement, sous 72 heures.</p>
+<blockquote><p><strong>À noter, et c'est une limite réelle.</strong> Le délai de 24 heures court à partir du moment où l'Éditeur <strong>a connaissance</strong> de la violation. Aucune supervision automatique n'existe aujourd'hui (voir R-09) : une violation peut donc n'être découverte qu'après un délai qui dépend de l'attention humaine. Cette limite doit être connue de l'Établissement avant signature.</p></blockquote>
+<h2>10. Sort des données en fin de contrat</h2>
+<p>Au terme du contrat, au choix de l'Établissement :</p>
+<ul><li><strong>restitution</strong> des données dans un format ouvert et exploitable, puis suppression chez l'Éditeur et ses sous-traitants ultérieurs ;</li><li>ou <strong>suppression</strong> directe, avec attestation.</li></ul>
+<blockquote><p><strong>À fixer</strong> : le délai de restitution, le délai de suppression, le format exact, et la durée pendant laquelle les sauvegardes des fournisseurs peuvent encore contenir des données après suppression — ce dernier point dépend des contrats à obtenir (article 7).</p></blockquote>
+<blockquote><p><strong>Clause recommandée par l'Éditeur lui-même, et que nous invitons l'Établissement à exiger</strong> : une <strong>clause de réversibilité en cas de cessation d'activité</strong>. AvecStudy est édité par une seule personne ; c'est le risque R-01 du dossier de sécurité, et il serait malhonnête de faire signer cette annexe sans le nommer ici. Nous proposons que le contrat prévoie la remise d'un instantané complet des données de l'Établissement dans un délai fixé, et un export automatique de fin d'année scolaire.</p></blockquote>
+<h2>11. Audit</h2>
+<p>L'Établissement peut demander à l'Éditeur toute information nécessaire pour démontrer le respect de l'article 28, et faire réaliser un audit.</p>
+<p>L'Éditeur met à disposition, sans demande préalable : le présent dossier de sécurité, les résultats des contrôles permanents, et la liste des constats d'audit avec leur état de correction.</p>
+<blockquote><p><strong>Précision d'honnêteté.</strong> Le dossier de sécurité joint est un audit <strong>interne</strong>, mené par l'Éditeur sur son propre produit. Il n'a fait l'objet d'aucune revue indépendante, d'aucune certification et d'aucune homologation. L'Établissement reste libre de faire réaliser un audit par un tiers à ses frais, et l'Éditeur s'engage à y coopérer.</p></blockquote>
+<hr>
+<h2>Ce que ce projet ne règle pas</h2>
+<p>Pour que la discussion parte du bon endroit, voici ce qui reste ouvert :</p>
+<ol><li>Les accords de traitement de Vercel et Supabase, à obtenir et annexer.</li><li>La durée de conservation du journal d'audit, à déterminer.</li><li>Les délais de réponse, de restitution et de suppression, à fixer.</li><li>La clause de réversibilité en cas de cessation d'activité.</li><li>La nécessité d'une analyse d'impact (AIPD), à trancher par le DPO.</li></ol>
+<blockquote><p><strong>Rappel final : PROJET — À VALIDER PAR LE DPO ET/OU UN JURISTE.</strong></p></blockquote>
+</section>
+</body>
+</html>

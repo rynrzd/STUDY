@@ -1,0 +1,31 @@
+# Signaler une faille de sécurité sur AvecStudy
+#
+# Format normalisé par la RFC 9116. Un référent numérique d'établissement, un
+# élève curieux ou un chercheur qui trouve quelque chose doit pouvoir joindre
+# quelqu'un sans avoir à deviner où écrire — et sans se demander s'il risque
+# quelque chose en le faisant.
+
+Contact: mailto:nireo.contacte@gmail.com
+Contact: https://avecstudy.fr/contact
+
+# La date au-delà de laquelle ce fichier ne doit plus être cru. La RFC l'exige,
+# et pour une bonne raison : un point de contact périmé est pire que pas de
+# point de contact du tout. Le contrôle `npm run verifier:securite-txt` prévient
+# soixante jours avant l'échéance.
+Expires: 2027-09-23T00:00:00.000Z
+
+Preferred-Languages: fr, en
+
+Policy: https://avecstudy.fr/securite
+
+# Ce qui est attendu d'un signalement, et ce qui est promis en retour.
+#
+# AvecStudy est édité par une entreprise individuelle. Il n'y a pas d'équipe de
+# sécurité de garde, pas de prime au signalement, et pas de délai de réponse
+# contractuel : annoncer le contraire serait faux. Ce qui est promis est plus
+# modeste et tenable — un accusé de réception sous cinq jours ouvrés, et le
+# fait de ne jamais poursuivre quelqu'un qui aura signalé de bonne foi, sans
+# avoir dégradé le service ni consulté les données d'un élève réel.
+#
+# Merci de ne pas tester les systèmes de l'Éducation nationale, l'ENT de
+# l'établissement, ni aucun service tiers : ils ne nous appartiennent pas.

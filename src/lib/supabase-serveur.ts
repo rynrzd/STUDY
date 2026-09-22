@@ -67,6 +67,9 @@ export type MotifPrivilegie =
   | "stockage_des_supports"
   | "duplication_de_seance"
   | "tache_planifiee"
+  // La purge des tentatives de connexion. `study_prive` n accorde rien a un
+  // role de session : l entretien de cette table ne peut passer que par la.
+  | "purge_des_tentatives"
   // Le moderateur n assiste pas au cours et ne l enseigne pas : RLS ne lui
   // montre donc rien de l entraide, et c est voulu. Il doit pourtant voir ce
   // qui a ete signale, sans quoi il tranche a l aveugle. La lecture est bornee

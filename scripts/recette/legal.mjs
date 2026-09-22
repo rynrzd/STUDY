@@ -199,6 +199,69 @@ for (const [chemin, attendus] of [
   );
 }
 
+/* --- Le point de contact pour signaler une faille (RFC 9116) -------------- */
+
+/**
+ * Pourquoi ce contrôle est ici plutôt qu'ailleurs.
+ *
+ * `security.txt` est une mention publiée, au même titre que l'adresse de
+ * l'éditeur : elle dit à qui écrire, elle doit correspondre à la source, et
+ * elle se périme. L'audit du 23 septembre 2026 l'a trouvée absente — un
+ * référent numérique qui voulait signaler quelque chose n'avait aucune porte
+ * normalisée (constat F-10).
+ *
+ * L'échéance est la partie qui se retourne contre nous si personne ne la
+ * regarde : un point de contact périmé est pire que pas de point de contact.
+ * D'où l'avertissement soixante jours avant, qui laisse le temps d'agir.
+ */
+console.log("\n/.well-known/security.txt");
+
+const JOURS_AVANT_ALERTE = 60;
+
+try {
+  const reponse = await fetch(`${BASE}/.well-known/security.txt`, { redirect: "follow" });
+
+  if (!reponse.ok) {
+    defauts += 1;
+    console.log(`  NON  le fichier n est pas servi (HTTP ${reponse.status})`);
+  } else {
+    const texte = await reponse.text();
+
+    verifier(
+      IDENTITE.contactEmail === null || texte.includes(IDENTITE.contactEmail),
+      "l adresse de contact est celle de l editeur",
+      "elle differe de identite-legale.ts",
+    );
+
+    const echeance = /^Expires:\s*(\S+)/mi.exec(texte);
+    if (echeance === null) {
+      defauts += 1;
+      // La RFC l'exige, et les outils qui lisent ce fichier ignorent un
+      // fichier sans échéance plutôt que de lui faire confiance.
+      console.log("  NON  aucune ligne « Expires », pourtant obligatoire");
+    } else {
+      const date = new Date(echeance[1]);
+      const jours = Math.round((date.getTime() - Date.now()) / 86_400_000);
+
+      if (Number.isNaN(date.getTime())) {
+        defauts += 1;
+        console.log("  NON  la date d echeance est illisible");
+      } else if (jours <= 0) {
+        defauts += 1;
+        console.log(`  NON  le point de contact est perime depuis ${-jours} jour(s)`);
+      } else if (jours <= JOURS_AVANT_ALERTE) {
+        defauts += 1;
+        console.log(`  NON  le point de contact expire dans ${jours} jour(s) — a repousser`);
+      } else {
+        console.log(`  ok   valable encore ${jours} jour(s)`);
+      }
+    }
+  }
+} catch (erreur) {
+  defauts += 1;
+  console.log(`  NON  le fichier n a pas pu etre lu — ${erreur.message}`);
+}
+
 console.log("\n" + "-".repeat(72));
 console.log(
   defauts === 0

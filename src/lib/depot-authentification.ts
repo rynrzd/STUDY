@@ -70,6 +70,25 @@ export class DepotSupabase implements DepotAuthentification {
     return typeof data === "number" ? data : 0;
   }
 
+  async compterBalayage(codeEtablissement: string): Promise<number> {
+    const { data, error } = await this.client().rpc("auth_balayage_etablissement", {
+      p_code: codeEtablissement,
+      p_fenetre_minutes: FENETRE_ECHECS_MINUTES,
+    });
+
+    if (error !== null) {
+      journaliser("comptage_balayage", error.code);
+      // Le doute penche ici dans l'autre sens que pour le compteur par compte,
+      // et c'est voulu. Supposer un balayage abaisserait le seuil de tout
+      // l'établissement sur une simple panne de lecture : une erreur technique
+      // deviendrait une gêne pour huit cents personnes. Le compteur par compte,
+      // lui, continue de protéger chaque compte séparément.
+      return 0;
+    }
+
+    return typeof data === "number" ? data : 0;
+  }
+
   async enregistrerEchec(profileId: string | null, codeEtablissement: string): Promise<void> {
     const { error } = await this.client().rpc("auth_enregistrer_echec", {
       p_profile: profileId,
@@ -232,4 +251,33 @@ function journaliser(contexte: string, code: string | undefined): void {
   console.error(
     JSON.stringify({ niveau: "erreur", contexte: `auth.${contexte}`, code: code ?? "inconnu" }),
   );
+}
+
+/**
+ * Purge les tentatives de connexion au-dela de la duree de conservation.
+ *
+ * Volontairement hors de `DepotSupabase` : ce n'est pas une operation de
+ * connexion mais d'entretien, et elle est appelee par la tache planifiee, pas
+ * par un parcours d'utilisateur. La duree — vingt-quatre heures — est fixee
+ * dans `study.auth_purger_tentatives`, pour qu'il n'y ait qu'un seul endroit
+ * ou elle soit ecrite.
+ *
+ * Constat F-09 du 23 septembre 2026 : cette fonction existait depuis la
+ * migration 0015 et n'etait appelee de nulle part.
+ *
+ * @returns le nombre de lignes supprimees, ou `null` si la purge a echoue —
+ *   auquel cas l'appelant continue : un entretien rate ne doit pas empecher la
+ *   file de travaux de tourner.
+ */
+export async function purgerTentatives(): Promise<number | null> {
+  const { data, error } = await clientExploitation("purge_des_tentatives").rpc(
+    "auth_purger_tentatives",
+  );
+
+  if (error !== null) {
+    journaliser("purge_tentatives", error.code);
+    return null;
+  }
+
+  return typeof data === "number" ? data : null;
 }
