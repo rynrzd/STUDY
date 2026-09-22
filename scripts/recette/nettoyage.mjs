@@ -303,6 +303,10 @@ export async function balayer(sql, fournisseur, { trace = () => {} } = {}) {
     }
     if (comptes > 0) trace(`    comptes de connexion chez le fournisseur : ${comptes}`);
 
+    // Et ceux que plus aucune ligne ne désigne : sans cette passe, un compte
+    // resté d'une exécution interrompue n'est plus jamais atteignable.
+    comptes += await demonterComptesOrphelins(sql, fournisseur, { trace });
+
     // Les octets, enfin. Ils partent en dernier : tant que la base n est pas
     // nettoyee, un objet retire laisserait une ligne qui le designe sans
     // pouvoir le servir — l inverse exact de ce qu on veut.
@@ -325,6 +329,67 @@ export async function balayer(sql, fournisseur, { trace = () => {} } = {}) {
  * RFC 2606 et ne peut appartenir à personne. Aucun lycée réel ne dépose une
  * demande depuis une adresse qui n'existe pas.
  */
+/**
+ * Les comptes de connexion que plus rien ne rattache à la base.
+ *
+ * **Pourquoi le balai ne les voyait pas.** Il relève les profils à partir des
+ * adhésions d'un établissement de recette, puis demande au fournisseur de
+ * supprimer ces comptes-là. Un compte dont la ligne `profiles` a déjà disparu
+ * — parce qu'une exécution s'est interrompue entre les deux écritures, ou
+ * qu'un démontage précédent a nettoyé la base sans finir chez le fournisseur —
+ * n'est dans aucune liste. Il devient invisible, et le reste.
+ *
+ * Trois en sont restés une nuit entière, et `comptes_auth = 1` ne le disait
+ * pas : personne ne le comptait.
+ *
+ * **Comment ils sont reconnus, et pas autrement.** Un compte est orphelin
+ * quand il réunit trois conditions, toutes structurelles :
+ *
+ *   1. aucune ligne dans `study.profiles` ne porte son identifiant ;
+ *   2. il n'est pas personnel de l'éditeur (`study_prive.editor_staff`) ;
+ *   3. il a plus de deux heures.
+ *
+ * Jamais par un prénom, jamais par un rôle, jamais par un nom d'adresse. Un
+ * compte en cours de création est protégé par la troisième condition, et
+ * l'exploitant par les deux premières — il a un profil **et** il est éditeur.
+ *
+ * Le délai joue le même rôle que pour les octets du seau : la provision d'un
+ * vrai lycée écrit le compte puis le profil, et supprimer entre les deux
+ * créerait exactement le problème qu'on cherche à éviter.
+ */
+export async function demonterComptesOrphelins(sql, fournisseur, { trace = () => {} } = {}) {
+  if (fournisseur === undefined || fournisseur === null) return 0;
+
+  const { data, error } = await fournisseur.auth.admin.listUsers({ page: 1, perPage: 200 });
+  if (error !== null || data === null) {
+    trace("    (comptes de connexion illisibles : rien n est supprime)");
+    return 0;
+  }
+
+  const { rows: connus } = await sql.query("select id from study.profiles");
+  const { rows: exploitants } = await sql.query("select profile_id from study_prive.editor_staff");
+
+  const avecProfil = new Set(connus.map((ligne) => ligne.id));
+  const duSite = new Set(exploitants.map((ligne) => ligne.profile_id));
+
+  const VEILLE = Date.now() - 2 * 60 * 60 * 1000;
+  let retires = 0;
+
+  for (const compte of data.users) {
+    if (avecProfil.has(compte.id)) continue;
+    if (duSite.has(compte.id)) continue;
+
+    const cree = Date.parse(compte.created_at ?? "");
+    if (!Number.isFinite(cree) || cree > VEILLE) continue;
+
+    const { error: refus } = await fournisseur.auth.admin.deleteUser(compte.id);
+    if (refus === null) retires += 1;
+  }
+
+  if (retires > 0) trace(`    comptes de connexion orphelins retires : ${retires}`);
+  return retires;
+}
+
 export async function demonterDemandes(sql, { trace = () => {} } = {}) {
   const { rowCount } = await sql.query(
     "delete from study.commercial_requests where contact_email like '%@exemple.invalid'",
