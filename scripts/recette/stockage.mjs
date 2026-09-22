@@ -128,11 +128,34 @@ try {
   });
   const recents = sansLigne.length - orphelins.length;
 
+  // **On ramasse avant de juger.**
+  //
+  // L'ordre inverse produisait un rapport qui se contredisait dans la même
+  // ligne : l'étape ressortait « ok » — le ramassage ayant réussi — tout en
+  // citant le « NON » imprimé une seconde plus tôt. Un rapport qui se
+  // contredit est un rapport qu'on cesse de lire.
+  let retires = 0;
+  let ramassageEchoue = null;
+
+  if (orphelins.length > 0 && RAMASSER) {
+    const { error } = await client.storage.from(BUCKET).remove(orphelins.map((o) => o.chemin));
+    if (error === null) retires = orphelins.length;
+    else ramassageEchoue = error.message;
+  }
+
+  const restants = orphelins.length - retires;
+
   verifier(
-    orphelins.length === 0,
+    restants === 0,
     "aucun objet du stockage n est inconnu de la base",
-    `${orphelins.length} objet(s) orphelin(s) de plus de deux heures`,
+    `${restants} objet(s) orphelin(s) de plus de deux heures`,
   );
+
+  if (retires > 0) console.log(`       ramasse : ${retires} orphelin(s) retire(s).`);
+  if (ramassageEchoue !== null) console.log(`       le ramassage a echoue — ${ramassageEchoue}`);
+  if (restants > 0 && !RAMASSER) {
+    console.log("       relancer avec --ramasser pour les retirer.");
+  }
 
   if (recents > 0) {
     // Ni un défaut ni un silence : les trois temps du dépôt — réserver,
@@ -142,18 +165,6 @@ try {
       `  note ${recents} objet(s) de moins de deux heures sans ligne : un depot en cours` +
         " n est pas un orphelin.",
     );
-  }
-
-  if (orphelins.length > 0 && RAMASSER) {
-    const { error } = await client.storage.from(BUCKET).remove(orphelins.map((o) => o.chemin));
-    console.log(
-      error === null
-        ? `  ramasse : ${orphelins.length} orphelin(s) retire(s).`
-        : `  NON  le ramassage a echoue — ${error.message}`,
-    );
-    if (error === null) defauts -= 1;
-  } else if (orphelins.length > 0) {
-    console.log("       relancer avec --ramasser pour les retirer.");
   }
 
   /* --- Les références mortes : en base, absentes du stockage ------------- */
