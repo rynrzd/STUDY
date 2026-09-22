@@ -263,6 +263,21 @@ export async function connecter(page, base, identite) {
       continue;
     }
 
+    // **La préparation a échoué : on réessaie au lieu de conclure.**
+    //
+    // `preparerEnrolement` appelle le fournisseur d'identité, et cet appel peut
+    // échouer — un ralentissement, une limite de débit atteinte après beaucoup
+    // d'enrôlements dans la journée. L'écran n'a alors ni clé ni formulaire.
+    //
+    // La boucle sortait sans rien reconnaître, et le message final parlait de
+    // « clé non présentée » : une phrase exacte et inutile, puisqu'elle décrit
+    // le symptôme et non la cause. Rechargée, la page relance la préparation.
+    if (await affiche('[data-testid="second-facteur-erreur"]')) {
+      await page.waitForTimeout(1500);
+      await exigerPage(page, base, "/second-facteur", {}).catch(() => {});
+      continue;
+    }
+
     if (await affiche('[data-testid="totp-valider"]')) {
       // Enrôlement si la clé n'est pas encore connue, simple vérification
       // sinon. La clé n'est lue qu'ici, et ne quitte pas la mémoire.
@@ -310,13 +325,13 @@ export async function connecter(page, base, identite) {
       // oublie la clé : le tour suivant relira celle que le serveur vient
       // d'afficher, et le mot « réessayer » retrouve son sens.
       if (await affiche('[data-testid="totp-valider"]')) {
-        const plaintes = await page
-          .locator('[role="alert"]')
-          .allInnerTexts()
-          .catch(() => []);
-
-        if (plaintes.join(" ").trim() !== "") {
+        // Une nouvelle clé à l'écran est la **preuve** que le secret a tourné :
+        // le code qu'on tient ne vaut plus rien. C'est le seul signe sûr, et
+        // il vaut mieux que « il y a une alerte » — un écran de réussite en
+        // porte une aussi.
+        if (await affiche('[data-testid="cle-totp"]')) {
           secretTotp = null;
+          await noterLaCle();
         }
       }
 

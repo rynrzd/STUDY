@@ -45,6 +45,13 @@ export default async function PageSecondFacteur() {
   // code. Son identifiant est relu, jamais conserve.
   const facteurConnu = etape === "a_verifier" ? await facteurVerifieDe(personne) : null;
 
+  // La préparation a échoué chez le fournisseur d'identité. L'écran n'a alors
+  // ni clé ni formulaire — et c'est un état qu'il faut pouvoir nommer : sans
+  // repère, un parcours automatisé conclut « aucune clé présentée » là où la
+  // vraie phrase est « la clé n'a pas pu être fabriquée ».
+  //
+  // La personne, elle, a besoin d'un moyen de réessayer qui ne suppose pas
+  // qu'elle sache recharger une page.
   if (enrolement !== null && "erreur" in enrolement) {
     return (
       <div className="contenu-site py-16">
@@ -53,9 +60,19 @@ export default async function PageSecondFacteur() {
         </h1>
         <p
           role="alert"
+          data-testid="second-facteur-erreur"
           className="m-0 mt-6 max-w-[60ch] rounded-[var(--radius-carte)] border border-[color:var(--color-erreur)] bg-[color:var(--color-erreur-fond)] p-4 text-[color:var(--color-erreur)]"
         >
           {enrolement.erreur}
+        </p>
+        <p className="m-0 mt-6">
+          <a
+            href="/second-facteur"
+            data-testid="second-facteur-reessayer"
+            className="bouton bouton-secondaire"
+          >
+            Réessayer
+          </a>
         </p>
       </div>
     );

@@ -109,7 +109,14 @@ function resume(sortie) {
   const lignes = sortie.split(/\r?\n/).map((ligne) => ligne.trim());
 
   const fautes = lignes.filter(
-    (ligne) => ligne.startsWith("NON ") || ligne.startsWith("ECHEC") || ligne.includes("CRITIQUE"),
+    (ligne) =>
+      ligne.startsWith("NON ") ||
+      ligne.startsWith("ECHEC") ||
+      // Un scenario qui s interrompt ne dit pas « NON » : il dit pourquoi il n a
+      // pas pu se jouer, et c est exactement ce qu il faut remonter. Sans lui,
+      // le rapport se contentait de « 1 defaut(s) » — le nombre sans le nom.
+      ligne.startsWith("INTERROMPU") ||
+      ligne.includes("CRITIQUE"),
   );
   if (fautes.length > 0) {
     const tete = fautes.slice(0, 4).join(" | ");
