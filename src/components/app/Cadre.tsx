@@ -69,7 +69,10 @@ export function Cadre({
         <nav aria-label="Navigation de l'espace" className="border-t border-[color:var(--color-bordure)]">
           <ul className="contenu-app m-0 flex list-none gap-1 overflow-x-auto p-0 py-1.5">
             {liens.map((lien) => (
-              <li key={lien.href}>
+              // `shrink-0` : un élément flex rétrécit sinon sous la taille de
+              // son contenu, et le libellé se coupe en plein milieu — « Mes /
+              // cours ». La barre est faite pour défiler, pas pour se plier.
+              <li key={lien.href} className="shrink-0">
                 <LienNav href={lien.href}>{lien.libelle}</LienNav>
               </li>
             ))}

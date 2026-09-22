@@ -128,6 +128,7 @@ export default async function PageUtilisateurs({
                   <Link
                     href={adresse(option.cle, classeChoisie, cherche)}
                     aria-current={active ? "page" : undefined}
+                    aria-label={`N'afficher que : ${option.libelle}`}
                     className={`inline-flex min-h-9 items-center rounded-full border px-3.5 text-[length:var(--text-tableau)] no-underline ${
                       active
                         ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)] font-semibold text-[color:var(--color-accent)]"

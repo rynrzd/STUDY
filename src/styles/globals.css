@@ -653,6 +653,10 @@
     font-weight: 500;
     color: var(--color-encre-faible);
     text-decoration: none;
+    /* Un libellé d onglet ne se coupe pas en deux : « Mes cours » devenait
+       « Mes / cours » sur un telephone, et le dernier onglet etait tronque au
+       bord. La barre est faite pour defiler, pas pour se plier. */
+    white-space: nowrap;
     transition: background-color 160ms ease, color 160ms ease;
   }
 

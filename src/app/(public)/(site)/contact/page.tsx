@@ -54,7 +54,7 @@ export default function PageContact() {
         <div className="grid gap-5 md:grid-cols-2">
           {CAS.map((cas, index) => (
             <Reveler key={cas.titre} delai={(index % 2) * 70}>
-              <Carte titre={cas.titre} className="h-full">
+              <Carte titre={cas.titre} niveau={2} className="h-full">
                 <p>{cas.texte}</p>
               </Carte>
             </Reveler>

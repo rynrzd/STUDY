@@ -34,8 +34,14 @@ export const metadata: Metadata = pagePublique({
  * d'export ne part dans le paquet public (P01).
  */
 export default function PageAccueil() {
+  // `main` n'est pas décoratif ici. La page d'accueil vit hors du groupe
+  // `(site)`, qui en fournit un à toutes les autres pages publiques : sans
+  // lui, le lien d'évitement de l'en-tête — « Aller au contenu », ancré sur
+  // `#contenu` — ne menait nulle part, précisément sur la page la plus
+  // visitée. Un lien d'évitement cassé est pire qu'aucun : il fait perdre un
+  // temps que le clavier n'a pas.
   return (
-    <>
+    <main id="contenu">
       {/* -- L02 — Hero ---------------------------------------------------- */}
       <section className="relative z-10 pt-14 pb-0 sm:pt-20">
         <div className="contenu-site grid min-w-0 items-center gap-8 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-14">
@@ -249,6 +255,6 @@ export default function PageAccueil() {
           </div>
         </section>
       </div>
-    </>
+    </main>
   );
 }

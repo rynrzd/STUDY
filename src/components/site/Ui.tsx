@@ -103,18 +103,31 @@ export function Carte({
   children,
   className = "",
   survol = false,
+  niveau = 3,
 }: {
   titre?: string;
   children: React.ReactNode;
   className?: string;
   survol?: boolean;
+  /**
+   * Le niveau du titre, quand la carte n'est pas imbriquée sous une section.
+   *
+   * Une carte posée directement sous le `h1` d'une page doit porter un `h2` :
+   * sauter de h1 à h3 fait perdre une marche à qui parcourt le plan au lecteur
+   * d'écran, sans qu'il sache s'il a manqué une section.
+   *
+   * L'apparence ne change pas : le style vient de la classe, pas de la balise.
+   */
+  niveau?: 2 | 3;
 }) {
+  const Titre = niveau === 2 ? "h2" : "h3";
+
   return (
     <article className={`carte ${survol ? "carte-survol" : ""} p-6 md:p-7 ${className}`}>
       {titre ? (
-        <h3 className="text-[length:var(--text-h3)] leading-[var(--text-h3--line-height)]">
+        <Titre className="text-[length:var(--text-h3)] leading-[var(--text-h3--line-height)]">
           {titre}
-        </h3>
+        </Titre>
       ) : null}
       <div
         className={`${titre ? "mt-3" : ""} text-[color:var(--color-encre-faible)] [&>p]:m-0 [&>p+p]:mt-3`}

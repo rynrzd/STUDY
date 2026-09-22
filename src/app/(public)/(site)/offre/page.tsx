@@ -90,7 +90,7 @@ export default function PageOffre() {
       <Section fond="doux">
         <div className="grid gap-5 md:grid-cols-2">
           <Reveler>
-            <Carte titre="Compris dans la licence" className="h-full">
+            <Carte titre="Compris dans la licence" niveau={2} className="h-full">
               <ul className="m-0 list-none space-y-2.5 p-0">
                 {INCLUS.map((element) => (
                   <li key={element} className="flex gap-2.5">
@@ -106,7 +106,7 @@ export default function PageOffre() {
           </Reveler>
 
           <Reveler delai={90}>
-            <Carte titre="Ce qu'il n'y a pas" className="h-full">
+            <Carte titre="Ce qu'il n'y a pas" niveau={2} className="h-full">
               <ul className="m-0 list-none space-y-2.5 p-0">
                 {NON_INCLUS.map((element) => (
                   <li key={element} className="flex gap-2.5">
