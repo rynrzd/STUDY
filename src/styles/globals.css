@@ -33,6 +33,12 @@
 
   /* Le rose, en trois intensités et pas une de plus. */
   --color-accent: #a43760;        /* petits libellés roses, lisibles */
+  /* Ce qui s'écrit **sur** l'accent. Le jeton manquait, et une pastille
+     l'appelait tout de même : la couleur ne résolvant à rien, le texte
+     héritait de l'encre — 2,8:1 sur le rose, au-dessous du 4,5:1 exigé.
+     Un nom de variable qui n'existe pas ne casse rien à la compilation ; il
+     casse la lisibilité, en silence. Le blanc donne 6,38:1. */
+  --color-sur-accent: #ffffff;
   --color-accent-fonce: #832c4d;  /* survol et focus */
   --color-rose-clair: #f8e3eb;    /* bandes et fonds roses */
   --color-surlignage: #f7dfeb;    /* le trait rose sous le hero */

@@ -195,7 +195,7 @@ export default async function PageDevoirEleve({
         <div className="mt-5">
           {attendUnFichier ? (
             leDevoir.etat === "ferme" ? (
-              <p className="m-0 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-fond-doux)] p-4 text-[length:var(--text-tableau)]">
+              <p className="m-0 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-4 text-[length:var(--text-tableau)]">
                 La remise est fermée : l&apos;échéance est passée et ce devoir
                 n&apos;accepte pas les retards.
               </p>
@@ -210,7 +210,7 @@ export default async function PageDevoirEleve({
           ) : (
             <p
               data-testid="remise-sans-fichier"
-              className="m-0 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-fond-doux)] p-4 text-[length:var(--text-tableau)]"
+              className="m-0 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-4 text-[length:var(--text-tableau)]"
             >
               {leDevoir.mode === "papier"
                 ? "Ce devoir est à rendre sur papier. Votre professeur notera ici qu'il l'a reçu."

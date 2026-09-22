@@ -84,7 +84,7 @@ export function Signaler({
     <form
       action={envoyer}
       data-testid="signalement-formulaire"
-      className="mt-3 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-fond-doux)] p-4"
+      className="mt-3 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-4"
     >
       <input type="hidden" name="genre" value={genre} />
       <input type="hidden" name="cible" value={cible} />

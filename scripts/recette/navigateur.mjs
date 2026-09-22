@@ -202,8 +202,45 @@ export async function connecter(page, base, identite) {
   // facteur. On boucle donc sur « quel écran ai-je devant moi » au lieu de
   // dérouler une séquence fixe — et l'on repasse par `/app`, qui résout les
   // redirections côté serveur, plutôt que de lire un écran en plein transit.
+  /**
+   * Note la clé si l'écran la présente, à cet instant précis.
+   *
+   * Elle n'est affichée qu'une fois, et le produit le dit à la personne :
+   * « cette clé ne sera plus affichée ».
+   */
+  const noterLaCle = async () => {
+    if (secretTotp !== null) return;
+    if ((await page.locator('[data-testid="cle-totp"]').count()) === 0) return;
+
+    const affichee = await page
+      .locator('[data-testid="cle-totp"]')
+      .textContent()
+      .catch(() => null);
+
+    if (affichee !== null && affichee.trim() !== "") {
+      secretTotp = affichee.replace(/\s/g, "");
+    }
+  };
+
   for (let etape = 0; etape < 4; etape += 1) {
-    await exigerPage(page, base, "/app", {}).catch(() => {});
+    // **On ne navigue pas si l'écran attendu est déjà là.**
+    //
+    // `preparerEnrolement` retire les facteurs non vérifiés avant d'en créer un
+    // nouveau : chaque affichage de l'écran d'enrôlement **révoque donc le
+    // secret précédent**. C'est la bonne règle — une clé abandonnée ne doit pas
+    // rester valable — mais elle rend fatale toute navigation entre le moment
+    // où l'on lit la clé et celui où l'on envoie le code : le serveur en tient
+    // déjà une autre, et il refuse, indéfiniment.
+    //
+    // Repasser par `/app` reste utile quand on ne reconnaît pas l'écran
+    // courant : c'est lui qui résout les redirections côté serveur. Mais il ne
+    // faut y retourner que dans ce cas-là.
+    const dejaSurUnEcranConnu =
+      (await page.locator('#nouveau, [data-testid="totp-valider"]').count()) > 0;
+
+    if (!dejaSurUnEcranConnu) {
+      await exigerPage(page, base, "/app", {}).catch(() => {});
+    }
     await attendreStabilisation(page);
 
     // On attend qu'un écran **connu** soit là avant de décider. Sans cela, la
@@ -245,14 +282,8 @@ export async function connecter(page, base, identite) {
           .waitForSelector('[data-testid="cle-totp"]', { timeout: 10_000, state: "attached" })
           .catch(() => {});
       }
+      await noterLaCle();
 
-      if (secretTotp === null && (await affiche('[data-testid="cle-totp"]'))) {
-        const affichee = await page.locator('[data-testid="cle-totp"]').textContent();
-        if (affichee === null || affichee.trim() === "") {
-          throw new Error("second facteur : aucune cle presentee a l enrolement");
-        }
-        secretTotp = affichee.replace(/\s/g, "");
-      }
       if (secretTotp === null) {
         throw new Error("second facteur : un code est demande, sans cle connue ni presentee");
       }

@@ -112,7 +112,7 @@ function Fiche({ signalement }: { signalement: Signalement }) {
           {signalement.cible === "fil" ? "Une question" : "Une réponse"} · {signalement.cours} ·
           signalé le {instantLisible(signalement.signaleLe)}
         </p>
-        <span className="rounded-full bg-[color:var(--color-fond-doux)] px-2.5 py-0.5 text-[0.7rem] font-semibold">
+        <span className="rounded-full bg-[color:var(--color-surface-douce)] px-2.5 py-0.5 text-[0.7rem] font-semibold">
           {ETATS[signalement.etat] ?? signalement.etat}
         </span>
       </div>

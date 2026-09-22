@@ -35,18 +35,25 @@ const PLANCHER = 10;
 export async function scenarioContraste({ navigateur, base, terrain, verifier }) {
   console.log("\nCONTRASTE_01. Contraste des ecrans connectes");
 
+  // **Un contexte par rôle, et non deux onglets d'un même contexte.** Les
+  // cookies sont partagés à l'intérieur d'un contexte : la seconde connexion
+  // écrasait la première, et la page qui croyait ouvrir `/connexion` se
+  // retrouvait sur `/eleve` — déjà connectée sous une autre identité.
+  //
   // `reducedMotion` : les blocs qui apparaissent au défilement restent sinon à
   // `opacity: 0`, et un élément transparent est exclu de la mesure — à juste
   // titre. Le composant respecte ce réglage et ne masque plus rien.
-  const contexte = await navigateur.newContext({
-    viewport: { width: 1280, height: 900 },
-    reducedMotion: "reduce",
-  });
-
+  const contextes = [];
   const vues = new Map();
 
   try {
     for (const cle of ["eleveA", "professeur"]) {
+      const contexte = await navigateur.newContext({
+        viewport: { width: 1280, height: 900 },
+        reducedMotion: "reduce",
+      });
+      contextes.push(contexte);
+
       const page = await contexte.newPage();
       const compte = terrain.comptes[cle];
       const session = await connecter(page, base, {
@@ -63,9 +70,27 @@ export async function scenarioContraste({ navigateur, base, terrain, verifier })
 
     for (const [cle, adresse] of ECRANS) {
       const page = vues.get(cle);
-      await exigerPage(page, base, adresse, {});
 
-      const resultat = await page.evaluate(sondeContraste);
+      // **Une page lente ne doit pas annuler les autres mesures.**
+      //
+      // Un écran connecté peut démarrer à froid — `/professeur/classes` a mis
+      // deux secondes là où ses voisines en mettent une demie, et une fois
+      // trente. Laisser l'exception remonter faisait perdre les quatre écrans
+      // suivants, et la recette ne disait plus rien de leur contraste : ni
+      // qu'il était bon, ni qu'il était mauvais.
+      //
+      // Chaque écran est donc mesuré pour lui-même. Celui qui n'a pas répondu
+      // est compté en échec, nommément, et les autres sont mesurés quand même.
+      let resultat;
+      try {
+        await exigerPage(page, base, adresse, {});
+        resultat = await page.evaluate(sondeContraste);
+      } catch (erreur) {
+        echecs += 1;
+        verifier(false, `CONTRASTE_01 — ${adresse} n a pas repondu`, erreur.message.split("\n")[0]);
+        continue;
+      }
+
       mesures += resultat.mesures;
 
       if (resultat.mesures < PLANCHER) {
@@ -103,6 +128,6 @@ export async function scenarioContraste({ navigateur, base, terrain, verifier })
       `${mesures} element(s) mesure(s), ${echecs} echec(s)`,
     );
   } finally {
-    await contexte.close().catch(() => {});
+    for (const contexte of contextes) await contexte.close().catch(() => {});
   }
 }

@@ -58,7 +58,7 @@ export function RemiseCopie({
 
   if (dejaRemis && !remplacement) {
     return (
-      <p className="m-0 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-fond-doux)] p-4 text-[length:var(--text-tableau)]">
+      <p className="m-0 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-4 text-[length:var(--text-tableau)]">
         Votre copie est remise. Ce devoir n&apos;autorise pas de la remplacer.
       </p>
     );

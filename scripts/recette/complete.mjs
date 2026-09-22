@@ -124,6 +124,7 @@ try {
   for (const [nom, script] of [
     ["types", "typecheck"],
     ["style", "lint"],
+    ["jetons de design", "verifier:jetons"],
     ["tests unitaires", "test:unite"],
     ["tests RLS sur PostgreSQL reel", "test:rls"],
   ]) {

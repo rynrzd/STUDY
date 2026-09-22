@@ -47,7 +47,11 @@ export function CaseFaite({
         className={`flex min-h-[var(--spacing-cible)] items-center gap-2 rounded-[var(--radius-champ)] border px-3 py-2 text-[length:var(--text-aide)] transition-colors ${
           coche
             ? "border-[color:var(--color-succes)] bg-[color:var(--color-succes-fond)] text-[color:var(--color-succes)]"
-            : "border-[color:var(--color-bordure)] text-[color:var(--color-encre-faible)] hover:border-[color:var(--color-encre-faible)]"
+            : // Une case à cocher est un composant, pas un filet : WCAG 1.4.11
+              // lui demande 3:1. `--color-bordure` en donnait 1,26 — la case se
+              // devinait plus qu'elle ne se voyait, et c'est justement celle
+              // que l'élève doit trouver pour barrer son travail.
+              "border-[color:var(--color-bordure-champ)] text-[color:var(--color-encre-faible)] hover:border-[color:var(--color-encre-faible)]"
         }`}
       >
         <span

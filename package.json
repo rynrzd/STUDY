@@ -31,6 +31,7 @@
     "recette:connectee": "node --conditions=react-server scripts/recette/connectee.mjs",
     "recette:complete": "node scripts/recette/complete.mjs",
     "recette:balai": "node scripts/recette/balai.mjs",
+    "verifier:jetons": "node scripts/recette/jetons.mjs",
     "verifier:contraste": "node scripts/recette/contraste.mjs",
     "verifier:stockage": "node scripts/recette/stockage.mjs",
     "verifier:promesses": "node scripts/recette/promesses.mjs",
