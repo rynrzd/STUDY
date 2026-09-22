@@ -222,7 +222,7 @@ export async function connecter(page, base, identite) {
     }
   };
 
-  for (let etape = 0; etape < 4; etape += 1) {
+  for (let etape = 0; etape < 8; etape += 1) {
     // **On ne navigue pas si l'écran attendu est déjà là.**
     //
     // `preparerEnrolement` retire les facteurs non vérifiés avant d'en créer un
@@ -296,6 +296,30 @@ export async function connecter(page, base, identite) {
         await continuer.click();
         await page.waitForLoadState("networkidle").catch(() => {});
       }
+
+      // **Le code a-t-il été accepté ?**
+      //
+      // `preparerEnrolement` retire les facteurs non vérifiés avant d'en créer
+      // un nouveau. Un code refusé — une fenêtre qui roule, une horloge qui
+      // dérive de quelques secondes — fait donc **rotater le secret** : la clé
+      // qu'on tient ne vaut plus rien, et la rejouer échoue indéfiniment. La
+      // boucle s'épuisait alors en répétant un code périmé, et concluait que
+      // l'enrôlement n'avait pas eu lieu.
+      //
+      // On ne suppose donc pas que le premier code passe. S'il est refusé, on
+      // oublie la clé : le tour suivant relira celle que le serveur vient
+      // d'afficher, et le mot « réessayer » retrouve son sens.
+      if (await affiche('[data-testid="totp-valider"]')) {
+        const plaintes = await page
+          .locator('[role="alert"]')
+          .allInnerTexts()
+          .catch(() => []);
+
+        if (plaintes.join(" ").trim() !== "") {
+          secretTotp = null;
+        }
+      }
+
       continue;
     }
 
