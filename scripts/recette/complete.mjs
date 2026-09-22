@@ -94,7 +94,17 @@ function lancer(nom, arguments_) {
  * Garder seulement la dernière ligne donnait « 2 defaut(s) » sans jamais dire
  * lesquels : il fallait rejouer la suite à la main pour le savoir. Un rapport
  * qui oblige à refaire le travail pour être compris n'est pas un rapport.
+ *
+ * Deuxième version, pour la même raison. Une étape s'est terminée sur
+ * « Node.js v24.15.0 » — la dernière ligne d'un plantage, c'est-à-dire la
+ * seule qui n'apprenne rien. Un processus qui meurt en assertion ou en
+ * exception n'écrit ni « NON » ni « CRITIQUE » : il écrit une trace, et cette
+ * trace commence bien avant sa dernière ligne. On la cherche donc
+ * explicitement.
  */
+const SIGNES_DE_PLANTAGE =
+  /^(Assertion failed|[A-Za-z]*Error:|\s*at |node:internal|Aborted|Segmentation fault|FATAL)/;
+
 function resume(sortie) {
   const lignes = sortie.split(/\r?\n/).map((ligne) => ligne.trim());
 
@@ -105,6 +115,19 @@ function resume(sortie) {
     const tete = fautes.slice(0, 4).join(" | ");
     const reste = fautes.length > 4 ? ` (+${fautes.length - 4})` : "";
     return `${tete}${reste}`.slice(0, 600);
+  }
+
+  // Un plantage : on rend la première ligne qui le nomme, et le contexte qui
+  // la précède. « Node.js v24.15.0 » est la fin de la trace, pas son début.
+  const plantage = lignes.findIndex((ligne) => SIGNES_DE_PLANTAGE.test(ligne));
+  if (plantage >= 0) {
+    const avant = lignes
+      .slice(Math.max(0, plantage - 2), plantage)
+      .filter((ligne) => ligne !== "");
+    const trace = lignes
+      .slice(plantage, plantage + 4)
+      .filter((ligne) => ligne !== "");
+    return [...avant, ...trace].join(" | ").slice(0, 600);
   }
 
   const utiles = lignes.filter((ligne) => ligne !== "");

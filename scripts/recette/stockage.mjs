@@ -109,40 +109,49 @@ try {
 
   /* --- Les orphelins : dans le stockage, inconnus de la base ------------- */
 
-  // Un dépôt en cours n'est pas un orphelin : on laisse passer ce qui est
-  // récent, le temps que les trois phases du dépôt se terminent.
-  const recent = Date.now() - 20 * 60 * 1000;
+  // **Une seule règle, et la même partout : deux heures.**
+  //
+  // Ce script signalait comme défaut ce qu'il refusait ensuite de ramasser :
+  // un objet de vingt minutes faisait échouer la vérification, et
+  // `--ramasser` le laissait en place. La recette ressortait CRITIQUE sur une
+  // situation qu'aucune option ne pouvait résoudre — il fallait attendre.
+  //
+  // Le seuil de deux heures vaut pour les deux décisions. Un dépôt dure
+  // quelques secondes ; deux heures est une marge très large, et assez courte
+  // pour que les résidus du jour ne s'accumulent pas jusqu'au lendemain.
+  const veille = Date.now() - 2 * 60 * 60 * 1000;
 
-  const orphelins = dansLeStockage.filter((objet) => {
-    if (cles.has(objet.chemin)) return false;
-    const age = objet.cree === null ? 0 : Date.parse(objet.cree);
-    return age < recent;
+  const sansLigne = dansLeStockage.filter((objet) => !cles.has(objet.chemin));
+  const orphelins = sansLigne.filter((objet) => {
+    const cree = Date.parse(objet.cree ?? "");
+    return !Number.isFinite(cree) || cree <= veille;
   });
+  const recents = sansLigne.length - orphelins.length;
 
   verifier(
     orphelins.length === 0,
     "aucun objet du stockage n est inconnu de la base",
-    `${orphelins.length} objet(s) orphelin(s)`,
+    `${orphelins.length} objet(s) orphelin(s) de plus de deux heures`,
   );
 
-  if (orphelins.length > 0 && RAMASSER) {
-    // Deux heures d anciennete. Un depot dure quelques secondes ; deux heures
-    // est une marge tres large, et assez courte pour que les residus du jour
-    // ne s accumulent pas jusqu au lendemain.
-    const veille = Date.now() - 2 * 60 * 60 * 1000;
-    const surs = orphelins.filter((objet) => Date.parse(objet.cree ?? 0) < veille);
+  if (recents > 0) {
+    // Ni un défaut ni un silence : les trois temps du dépôt — réserver,
+    // transférer, finaliser — laissent une fenêtre où les octets existent
+    // avant la ligne. Le dire, sans en faire un échec.
+    console.log(
+      `  note ${recents} objet(s) de moins de deux heures sans ligne : un depot en cours` +
+        " n est pas un orphelin.",
+    );
+  }
 
-    if (surs.length > 0) {
-      const { error } = await client.storage.from(BUCKET).remove(surs.map((o) => o.chemin));
-      console.log(
-        error === null
-          ? `  ramasse : ${surs.length} orphelin(s) de plus de deux heures retire(s).`
-          : `  NON  le ramassage a echoue — ${error.message}`,
-      );
-      if (error === null) defauts -= 1;
-    } else {
-      console.log("  (rien a ramasser : tous les orphelins ont moins de deux heures)");
-    }
+  if (orphelins.length > 0 && RAMASSER) {
+    const { error } = await client.storage.from(BUCKET).remove(orphelins.map((o) => o.chemin));
+    console.log(
+      error === null
+        ? `  ramasse : ${orphelins.length} orphelin(s) retire(s).`
+        : `  NON  le ramassage a echoue — ${error.message}`,
+    );
+    if (error === null) defauts -= 1;
   } else if (orphelins.length > 0) {
     console.log("       relancer avec --ramasser pour les retirer.");
   }

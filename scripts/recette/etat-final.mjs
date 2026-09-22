@@ -225,20 +225,47 @@ if (!CONFIGURE) {
       const chemin = prefixe === "" ? entree.name : `${prefixe}/${entree.name}`;
       // Un « dossier » n'a pas de métadonnées : c'est ainsi qu'on les distingue.
       if (entree.id === null) trouves.push(...(await lister(chemin, profondeur + 1)));
-      else trouves.push(chemin);
+      else trouves.push({ chemin, cree: entree.created_at ?? null });
     }
     return trouves;
   };
 
   const objets = await lister();
-  const orphelins = objets.filter((chemin) => !connus.has(chemin));
-  const sansOrphelin = orphelins.length === 0;
+  const orphelins = objets.filter((objet) => !connus.has(objet.chemin));
+
+  // **La même règle que `verifier:stockage`, et pour la même raison.**
+  //
+  // Un objet de moins de deux heures qu'aucune ligne ne désigne peut être un
+  // dépôt en cours : les trois temps du dépôt — réserver, transférer,
+  // finaliser — laissent une fenêtre où les octets existent avant la ligne.
+  // Le compter comme une fuite ferait échouer un état parfaitement conforme
+  // chaque fois qu'un élève rend une copie pendant la vérification.
+  //
+  // Les deux scripts disaient auparavant des choses différentes du même
+  // objet : l'un le tolérait, l'autre le déclarait CRITIQUE. Deux règles pour
+  // une même question, c'est une de trop — et c'est celle qui parle le plus
+  // fort qu'on finit par ignorer.
+  const VEILLE = Date.now() - 2 * 60 * 60 * 1000;
+  const murs = orphelins.filter((objet) => {
+    const cree = Date.parse(objet.cree ?? "");
+    return !Number.isFinite(cree) || cree <= VEILLE;
+  });
+  const recents = orphelins.length - murs.length;
+
+  const sansOrphelin = murs.length === 0;
   if (!sansOrphelin) defauts += 1;
 
   console.log(
-    `  ${sansOrphelin ? "ok  " : "NON "} objets_orphelins          = ${orphelins.length}` +
+    `  ${sansOrphelin ? "ok  " : "NON "} objets_orphelins          = ${murs.length}` +
       (sansOrphelin ? "" : "   (attendu 0, voir verifier:stockage --ramasser)"),
   );
+
+  if (recents > 0) {
+    console.log(
+      `       note ${recents} objet(s) de moins de deux heures sans ligne :` +
+        " un depot en cours n est pas un orphelin.",
+    );
+  }
 }
 
 /* --- Qui est ce compte unique ? -------------------------------------------- */
