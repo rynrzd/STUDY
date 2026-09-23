@@ -70,7 +70,7 @@ exactement ce qui est établi et ce qui ne l'est pas.
 
 ## Ce que nous avons vérifié et qui va bien
 
-- **Aucun mot de passe, aucune clé, aucun secret** dans les 93 versions
+- **Aucun mot de passe, aucune clé, aucun secret** dans les 100 versions
   successives du code, ni dans ce que le navigateur reçoit (6 pages et 13
   fichiers de code inspectés intégralement).
 - **Aucune faille connue** dans les bibliothèques utilisées, toutes sévérités

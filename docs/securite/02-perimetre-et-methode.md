@@ -151,6 +151,30 @@ même tronquée — il dit le **nom** de la variable et le fichier. Un contrôle
 fuite qui imprime ce qu'il a trouvé recopie la fuite dans les journaux de la
 recette, et les journaux voyagent plus loin que la page.
 
+## Un piège de méthode, rencontré à la fin de l'audit
+
+Le balayage de l'historique Git cherche des **formes** de secret : l'en-tête
+d'un jeton JWT, le préfixe d'une clé secrète, une URL de base portant un mot de
+passe.
+
+Relancé après les corrections, il a signalé sept correspondances là où il n'en
+trouvait aucune au départ. Vérification faite, les sept étaient dans un seul
+fichier — `scripts/recette/fuites.mjs` — et c'étaient **les motifs de détection
+eux-mêmes**, écrits dans les commentaires et les expressions régulières du
+détecteur de fuites ajouté par cet audit.
+
+Aucun secret, donc. Mais il faut le dire pour deux raisons.
+
+D'abord parce qu'un compteur qui passe de zéro à sept sans explication est
+précisément ce qui use un contrôle : au bout de quelques fausses alertes,
+personne ne le relit. Le compteur `secrets_dans_git` vaut toujours **0**, et la
+ligne brute vaut 7 — les deux sont vraies, et il faut savoir pourquoi.
+
+Ensuite parce que c'est le genre de vérification qu'on est tenté d'écarter d'un
+geste : « ah, c'est sûrement mon propre scanner ». C'est sûrement le cas neuf
+fois sur dix, et la dixième est un vrai secret. Chaque correspondance a donc été
+ouverte et lue, une par une, avant d'être écartée.
+
 ## Dates et point de départ
 
 Audit mené le 23 septembre 2026. Point de départ : commit `ed243bc`, arbre
