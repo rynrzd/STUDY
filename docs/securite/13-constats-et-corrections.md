@@ -14,26 +14,65 @@ Il faut distinguer « corrigé » de « déployé », et ce document ne les conf
 pas. Une correction écrite et testée qui n'est pas en production ne protège
 personne.
 
-**Vérifié en production, contrôle au vert :**
+Les migrations `0043` et `0044` ont été appliquées à la base de production le
+23 septembre 2026, après une sauvegarde logique vérifiée (68 tables, 1 343
+lignes, 113 définitions de fonctions, l'état complet des privilèges et un
+retour arrière engendré — 71 fichiers, empreintes SHA-256 recalculées).
 
-| Constat | Contrôle qui l'établit | Résultat |
+**Les dix constats sont corrigés et vérifiés en production :**
+
+| Constat | Contrôle qui l'établit | Preuve |
 |---|---|---|
-| F-08 — région de calcul | `verifier:hebergement` | `/connexion`, `/eleve`, `/professeur` en `cdg1` (Paris) |
-| F-06 — barrière d'origine | `verifier:origine` | 6 cas sur 6 |
-| F-10 — point de contact | `verifier:legal` | fichier servi, adresse conforme, valable 365 jours |
-| F-09 — purge des tentatives | déployée dans la tâche planifiée | s'exécutera au prochain passage |
-| F-05 — `unsafe-inline` | `verifier:site` | liste exacte, inchangée |
+| F-01 | `verifier:rpc-anonyme` | Cinq fonctions répondaient **HTTP 200** à un appel anonyme ; elles répondent **401**. |
+| F-01 | `verifier:privileges` | « aucune fonction n'est exécutable sans compte » |
+| F-02 | `verifier:session-suspendue` | Joué sur la base réelle : adhésion suspendue et adhésion terminée ne rendent **aucun rôle** ; un compte actif garde le sien. |
+| F-03 | `verifier:privileges` | `tentatives_connexion` : RLS activée **et** forcée. |
+| F-04 | `verifier:privileges` | `auth_aliases` : RLS activée **et** forcée. |
+| F-05 | `verifier:site` | Liste exacte, inchangée, justifiée page par page. |
+| F-06 | `verifier:origine` | 6 cas sur 6. |
+| F-07 | migration `0044` + 4 tests ABUSE-02 | `auth_balayage_etablissement` présente ; seuil adaptatif. |
+| F-08 | `verifier:hebergement` | `/connexion`, `/eleve`, `/professeur` en `cdg1` (Paris) ; base en `eu-west-1`. |
+| F-09 | `verifier:purge` | La tâche a purgé la ligne de 48 h, **gardé** celle d'une heure, et applique bien 24 heures. |
+| F-10 | `verifier:legal` | Fichier servi, adresse conforme, valable 365 jours. |
 
-**Écrit, testé sur base neuve, mais pas encore appliqué en production :**
+### Le détail de la fermeture de F-01
 
-| Constat | Ce qui l'attend |
-|---|---|
-| F-01, F-02, F-03, F-04 | Les migrations `0043` et `0044`, validées par les 202 tests RLS rejoués depuis zéro, restent à appliquer sur la base de production. |
-| F-07 | Idem — la migration `0044` porte le compteur de balayage. Le code applicatif est déployé et se comporte, en l'absence de la fonction, comme s'il n'y avait pas de balayage : la limitation par compte continue de s'appliquer normalement. |
+Mesurée là où elle se voit : par HTTP, sans aucune session, avec la seule clé
+publiable que porte n'importe quel navigateur.
 
-Tant que ces deux migrations ne sont pas appliquées, `verifier:privileges`
-signale quatre écarts en production — ce sont exactement F-01, F-03 et F-04. Le
-contrôle dit la vérité ; c'est son rôle.
+| Fonction | Avant | Après |
+|---|---|---|
+| `remise_reference` | **200** | 401 |
+| `code_de_classe` | **200** | 401 |
+| `normalize_code` | **200** | 401 |
+| `session_mfa_verifiee` | **200** | 401 |
+| `current_user_id` | **200** | 401 |
+| `mes_remises`, `preuve_de_remise`, `mes_nouveautes`, `eleve_nouveautes`, `references_de_remises`, `devoir_etat`, `peut_moderer` | 401 / 404 | 401 / 404 |
+
+Cinq, et non une seule comme l'audit l'avait d'abord établi. La plus gênante
+n'est pas `remise_reference` mais **`session_mfa_verifiee`** : le prédicat qui
+décide si un second facteur a été vérifié était interrogeable depuis
+l'extérieur, sans compte.
+
+### Ce que la révocation n'a pas fermé
+
+Une révocation générale peut fermer un écran aussi sûrement qu'elle ferme une
+faille. Trois contrôles distincts l'excluent :
+
+- `verifier:privileges` : « chaque fonction exigée par le schéma est
+  exécutable » — fermeture transitive calculée sur **935 expressions de
+  schéma**, 19 fonctions dans la fermeture ;
+- les **202 tests RLS** rejoués sur une base reconstruite depuis zéro avec les
+  deux migrations ;
+- la **recette connectée** jouée sur la production avec des comptes
+  synthétiques, dans les trois espaces.
+
+### Ce qui reste NON VÉRIFIÉ
+
+Les consoles Vercel et Supabase, et la séparation des environnements. Aucun
+identifiant n'était disponible pendant cet audit. Voir
+`02-perimetre-et-methode.md` pour la liste exacte de ce qu'il faut ouvrir, et le
+rapport final pour les contrôles manuels à réaliser.
 
 ## Comment lire la gravité
 

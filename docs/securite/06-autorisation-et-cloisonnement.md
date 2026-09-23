@@ -58,7 +58,7 @@ Si une telle fonction accepte **en paramètre** l'identité de la personne pour
 qui elle agit, et qu'elle est appelable depuis un navigateur, alors n'importe
 qui peut se faire passer pour n'importe qui.
 
-L'audit a cherché exactement ce motif : les 80 fonctions privilégiées des deux
+L'audit a cherché exactement ce motif : les 81 fonctions privilégiées des deux
 schémas, croisées avec celles qui acceptent un paramètre d'identité
 (`p_profile`, `p_eleve`, `p_acteur`, `p_moderateur`, `p_auteur`…).
 
@@ -121,14 +121,27 @@ ensuite le droit à `authenticated` **ne retire rien à personne**. Une fonction
 nouvelle est donc ouverte au monde entier par défaut, et le reste jusqu'à ce que
 quelqu'un y pense.
 
-Trente fonctions étaient dans ce cas. La migration `0043` révoque tout, accorde
-explicitement à `service_role`, puis rouvre à `authenticated` — nommément.
+Vingt fonctions n'avaient **aucune liste de droits explicite** — donc le défaut
+de PostgreSQL, donc `EXECUTE` à `PUBLIC`. La migration `0043` révoque tout,
+accorde explicitement à `service_role`, puis rouvre à `authenticated` —
+nommément.
 
 Et la liste de ce qu'il faut rouvrir **ne se dresse pas à l'œil** : une politique
 RLS, un déclencheur, une valeur par défaut s'évaluent avec les droits de celui
 qui écrit la ligne, et les fonctions `security invoker` propagent l'exigence à
 ce qu'elles appellent. C'est une fermeture transitive, que `verifier:privileges`
-calcule désormais à partir de 934 expressions de schéma.
+calcule désormais à partir de 935 expressions de schéma.
+
+**État après application, relevé sur la production le 23 septembre 2026 :**
+
+| | |
+|---|---|
+| Fonctions exécutables par `anon` | **0** |
+| Fonctions ouvertes à `authenticated` hors registre | **0** |
+| Fonctions exigées par le schéma et non exécutables | **0** |
+| Tables portant RLS | **68 sur 68** |
+| Tables en `FORCE` | **68 sur 68** |
+| Fonctions acceptant une identité en paramètre, ouvertes au navigateur | **0 sur 46** |
 
 ## Le second facteur
 

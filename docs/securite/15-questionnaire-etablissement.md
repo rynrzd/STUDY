@@ -64,7 +64,8 @@ pas à convaincre.*
 | Y a-t-il un engagement de disponibilité ? | **Non.** Nous ne promettons pas de taux de service, faute de pouvoir le tenir. |
 | Y a-t-il une astreinte ? | **Non.** Une panne un dimanche soir peut durer jusqu'au lundi. |
 | Y a-t-il une supervision automatique ? | **Non.** C'est le manque le plus structurant après cet audit (R-09). |
-| Les sauvegardes sont-elles testées ? | L'exercice est **outillé** (`npm run restauration:test`, qui vérifie qu'une base restaurée garde ses politiques de ligne). L'exercice de bout en bout **reste à jouer**, et les réglages de sauvegarde sont **NON VÉRIFIÉS** faute d'accès à la console. |
+| Les sauvegardes sont-elles testées ? | Une **sauvegarde logique vérifiée** est produite et contrôlée par `npm run sauvegarde` — données, définitions de fonctions, état des privilèges, empreintes SHA-256 recalculées. L'exercice de **restauration** de bout en bout est outillé (`npm run restauration:test`) mais **reste à jouer**, et les réglages de sauvegarde de l'hébergeur (PITR, profondeur, région) sont **NON VÉRIFIÉS** faute d'accès à la console. |
+| Y a-t-il une certification, un audit indépendant, une conformité attestée ? | **Ni l'un, ni l'autre, ni la troisième.** Ce sont trois choses distinctes : voir le tableau en tête de `02-perimetre-et-methode.md`. Ce dossier est un audit **interne**. |
 | Combien de temps les données sont-elles conservées ? | Le travail scolaire : selon la décision de l'établissement. Les tentatives de connexion : 24 h. Le journal d'audit : conservé, **sans durée déterminée** — à fixer avec votre DPO (R-07). |
 
 ## Droits des personnes

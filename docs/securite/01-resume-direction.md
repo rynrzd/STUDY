@@ -8,10 +8,15 @@ documents suivants.*
 
 ## En une phrase
 
-AvecStudy a été audité de fond en comble par son éditeur du 23 septembre 2026 :
-dix défauts ont été trouvés, dix ont été corrigés, et chacun a reçu un test
-automatique qui empêchera son retour — mais AvecStudy est édité par une seule
-personne, et c'est le risque que ce dossier vous demande de peser en premier.
+AvecStudy a été audité de fond en comble par son éditeur le 23 septembre 2026 :
+dix défauts ont été trouvés, **dix ont été corrigés et vérifiés sur le service
+en ligne**, et chacun a reçu un test automatique qui empêchera son retour — mais
+AvecStudy est édité par une seule personne, et c'est le risque que ce dossier
+vous demande de peser en premier.
+
+Deux réglages d'hébergement n'ont pas pu être contrôlés faute d'accès aux
+consoles de nos fournisseurs pendant l'audit. Ils portent la mention **NON
+VÉRIFIÉ**, pas « conforme ».
 
 ## Ce qu'AvecStudy fait de vos données
 
@@ -54,7 +59,7 @@ exactement ce qui est établi et ce qui ne l'est pas.
 
 | | Ce qui n'allait pas | Ce que cela permettait | Corrigé |
 |---|---|---|---|
-| **F-01** | Des fonctions internes de la base restaient appelables sans compte | Obtenir une référence d'accusé de remise sans être connecté — pas une copie, pas un nom | oui |
+| **F-01** | **Cinq** fonctions internes de la base restaient appelables sans aucun compte | Obtenir une référence d'accusé de remise sans être connecté — pas une copie, pas un nom. Et interroger le mécanisme qui décide si un second facteur a été vérifié | oui |
 | **F-07** | Le ralentissement des tentatives de connexion visait chaque compte séparément | Essayer trois mots de passe sur huit cents comptes sans jamais être ralenti | oui |
 | **F-06** | Une protection contre les formulaires piégés était écrite mais pas branchée | Rien d'exploitable avec un navigateur récent, mais la protection n'était pas celle qu'on croyait | oui |
 | **F-02** | Un compte suspendu gardait ses droits tant que sa session vivait | Rien en pratique — la suspension coupait déjà les sessions — mais la garantie reposait sur une habitude | oui |

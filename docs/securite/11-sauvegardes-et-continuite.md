@@ -22,6 +22,33 @@ Les sauvegardes de la base sont assurées par Supabase, au niveau du projet.
 politique de sauvegarde chez le fournisseur, distincte de celle de la base. Même
 réserve.
 
+### Ce qui existe en propre, et qui ne remplace rien
+
+`npm run sauvegarde` produit une **sauvegarde logique** de la production, écrite
+pendant l'audit du 23 septembre 2026 parce qu'il fallait pouvoir revenir en
+arrière après deux migrations, et pouvoir **prouver** qu'on le pourrait.
+
+Elle capture trois choses, et la troisième est la moins évidente :
+
+- **les données** — chaque ligne de chaque table des deux schémas ;
+- **les définitions** — le texte exact de chaque fonction, tel que PostgreSQL le
+  rend, ce qui permet de remettre une fonction dans son état d'avant ;
+- **l'état des privilèges** — listes de contrôle d'accès, drapeaux RLS,
+  politiques, droits de table. C'est précisément ce qu'un `pg_dump --data-only`
+  ne rendrait pas, et c'est ce que la migration `0043` modifiait.
+
+Un `retour-arriere.sql` en est engendré. Il n'est **jamais exécuté
+automatiquement** : c'est une pièce à relire.
+
+La vérification (`npm run sauvegarde -- --verifier <dossier>`) recalcule les
+empreintes SHA-256 du manifeste et confronte les comptes de lignes à la base
+vivante. Relevé avant migration : **71 fichiers sur 71 intacts, 68 tables au
+même compte**.
+
+> **Ce que cela ne remplace pas.** Une restauration ponctuelle rejoue le journal
+> des transactions et rend la base à la seconde près. Rien de ce qui précède
+> n'en tient lieu, et la réserve **NON VÉRIFIÉ** ci-dessus reste entière.
+
 ## Restauration — l'exercice, et sa limite
 
 **Une tâche « sauvegarde réussie » ne prouve rien.** Le seul fait qui compte est

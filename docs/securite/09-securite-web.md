@@ -93,8 +93,8 @@ C'est l'axe sur lequel l'audit a trouvé le plus.
 | Constat | État |
 |---|---|
 | F-08 — aucune région de calcul déclarée, rendu aux États-Unis | corrigé, contrôle permanent |
-| F-01 — `EXECUTE` jamais retiré à `PUBLIC` | corrigé, contrôle permanent |
-| F-03 / F-04 — deux tables hors de la règle RLS commune | corrigés |
+| F-01 — `EXECUTE` jamais retiré à `PUBLIC` | corrigé et vérifié en production : 0 fonction exécutable par `anon` |
+| F-03 / F-04 — deux tables hors de la règle RLS commune | corrigés et vérifiés : 68 tables sur 68 en RLS et FORCE |
 
 Et ce qui reste **NON VÉRIFIÉ** : la configuration des deux consoles
 d'hébergement, faute d'accès. Voir `02-perimetre-et-methode.md`.

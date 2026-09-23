@@ -70,10 +70,29 @@ l'environnement d'audit.
 
 Ce ne sont pas des réserves de style. Tant que personne ne les a ouvertes, on ne
 sait pas si le second facteur est exigé sur les comptes d'administration de ces
-deux consoles — ce qui, en cas de compromission, donnerait accès à tout.
+deux consoles — ce qui, en cas de compromission, **donnerait accès à tout** : ce
+sont les seuls accès qui contournent l'intégralité de ce dossier.
+
+C'est aujourd'hui, après la correction des dix constats, le risque **technique**
+le plus élevé qui reste. Il n'a pas été corrigé parce qu'il n'a pas pu être
+regardé.
 
 **À jouer en priorité**, et la liste précise de ce qu'il faut regarder est dans
-`02-perimetre-et-methode.md`.
+`02-perimetre-et-methode.md` et dans le rapport final.
+
+### R-03 bis — La sauvegarde de plateforme n'est pas établie
+
+Même cause, conséquence distincte, et elle mérite sa ligne : **on ne sait pas si
+la restauration ponctuelle (PITR) est active**, sur quelle profondeur, ni où les
+sauvegardes sont écrites.
+
+Une sauvegarde logique vérifiée existe désormais (`npm run sauvegarde`, voir le
+chapitre 11) et elle a servi avant les migrations du 23 septembre 2026. Elle ne
+remplace pas une restauration ponctuelle : elle est produite à la demande, pas
+en continu.
+
+Tant que ce point n'est pas établi, la question « que se passe-t-il si la base
+est perdue ? » n'a pas de réponse.
 
 ---
 
@@ -205,7 +224,8 @@ pour la question contractuelle, R-04 pour les styles.
 |---|---|---|---|
 | R-01 | Éditeur à une seule personne | Structurelle | L'établissement, par une clause de réversibilité |
 | R-02 | Transferts hors EEE non établis | Juridique | DPO + éditeur, sur pièces |
-| R-03 | Trois configurations non vérifiées | Technique | Éditeur, dès l'accès aux consoles |
+| R-03 | Trois configurations non vérifiées — **le risque technique le plus élevé qui reste** | Technique | Éditeur, dès l'accès aux consoles |
+| R-03 bis | Sauvegarde de plateforme (PITR) non établie | Technique | Éditeur, dès l'accès à la console Supabase |
 | R-04 | `style-src 'unsafe-inline'` | Technique | Éditeur, à la prochaine version majeure |
 | R-05 | PostgREST hors batterie | Technique | Éditeur |
 | R-06 | Pas d'antivirus | Assumée | Éditeur, si un établissement l'exige |

@@ -60,6 +60,74 @@ contrôle est fait d'attraper — une protection écrite que rien n'appelle —
 appliqué à lui-même. Il est désormais câblé dans la section « Contre la base de
 production ».
 
+### `npm run verifier:rpc-anonyme`
+
+**Ce qu'il prouve.** Qu'aucune fonction de la base ne répond à un appel venu
+d'un navigateur **sans aucune session**, avec la seule clé publiable.
+
+**Pourquoi il ne double pas le précédent.** `verifier:privileges` lit
+`has_function_privilege` — les droits tels que PostgreSQL les enregistre. Un
+attaquant, lui, ne voit pas une table de droits : il voit une adresse HTTP, et
+entre les deux il y a PostgREST, sa configuration, les schémas qu'il expose et
+le rôle qu'il endosse sans jeton. Un droit correctement révoqué en base et une
+fonction malgré tout joignable ne se distingueraient pas dans le premier.
+
+**Ce qu'il n'imprime jamais** : le corps d'une réponse. Si une fonction
+répondait, imprimer ce qu'elle rend recopierait la fuite dans les journaux.
+
+**Rouge avant, vert après** : oui — **cinq** fonctions répondaient 200, et non
+une seule comme l'audit l'avait d'abord établi.
+
+### `npm run verifier:session-suspendue`
+
+**Ce qu'il prouve.** Qu'une session vivante d'un compte suspendu ne rend plus
+aucun rôle (F-02), et — c'est le cas qui compte le plus — qu'un compte **actif**
+garde les siens.
+
+Il s'exécute sur la base réelle, dans une transaction annulée : rien ne
+survit, et il le vérifie avant de rendre la main. Quatre cas, dont le compte
+« à activer », sans quoi une personne qui vient de recevoir ses accès ne
+pourrait plus atteindre son propre écran d'activation.
+
+**Pourquoi le témoin positif est indispensable.** Un contrôle qui ne vérifierait
+que le refus passerait au vert sur une fonction cassée qui ne rend jamais rien.
+
+**Rouge avant, vert après** : la batterie RLS l'établissait déjà sur base
+neuve ; celui-ci vérifie la fonction **réellement déployée**.
+
+### `npm run verifier:purge`
+
+**Ce qu'il prouve.** Que la conservation de vingt-quatre heures est
+**appliquée**, et pas seulement écrite (F-09).
+
+**Pourquoi il produit lui-même la situation.** Une table vide ne prouve rien :
+elle ressemble autant à « la purge fonctionne » qu'à « personne ne s'est trompé
+de mot de passe depuis longtemps ». Le contrôle pose donc une ligne de 48 heures
+et une d'une heure, appelle la tâche planifiée avec son secret comme l'hébergeur
+le fait chaque nuit, puis vérifie que la vieille a disparu **et que la récente
+est toujours là**.
+
+Ce dernier point est le témoin : une purge qui viderait la table entière
+passerait au vert, et une limitation de tentatives dont l'ardoise s'efface en
+permanence ne limite plus rien.
+
+**Rouge avant, vert après** : oui — rien n'appelait la purge.
+
+### `npm run sauvegarde`
+
+**Ce qu'il produit.** Une sauvegarde logique de la production : chaque ligne de
+chaque table, le texte exact de chaque fonction, et l'état des privilèges —
+listes de contrôle d'accès, drapeaux RLS, politiques, droits de table. Plus un
+`retour-arriere.sql` engendré depuis cet état.
+
+**Ce qu'il vérifie** (`-- --verifier <dossier>`) : les empreintes SHA-256 du
+manifeste, et la confrontation des comptes de lignes à la base vivante. Un
+fichier écrit n'est pas une sauvegarde tant que personne n'a relu ce qu'il
+contient.
+
+**Ce qu'il n'est pas**, et le script le dit dans son en-tête : une restauration
+ponctuelle de plateforme. L'état du PITR chez l'hébergeur reste **NON VÉRIFIÉ**.
+
 ### `npm run verifier:origine`
 
 **Ce qu'il prouve.** Que la barrière anti-CSRF du proxy se comporte comme la

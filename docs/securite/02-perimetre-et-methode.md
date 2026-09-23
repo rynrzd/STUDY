@@ -1,15 +1,34 @@
 # 02 — Périmètre, méthode, et ce qui n'a pas été vérifié
 
+## Quatre choses différentes, qu'on confond souvent
+
+Ces quatre mots reviennent dans les appels d'offres et dans les questionnaires
+d'établissement, et ils ne désignent pas la même chose. Ce dossier appartient à
+la première catégorie, et à elle seule.
+
+| | Ce que c'est | Qui l'établit | AvecStudy |
+|---|---|---|---|
+| **Audit interne** | Un examen du produit par ceux qui le font, appuyé sur des référentiels publics. Sa valeur tient à ses preuves reproductibles, pas à la qualité de son auteur. | L'éditeur lui-même | **C'est ce document.** |
+| **Audit indépendant** | Le même travail, mené par un tiers qui n'a pas écrit le code et n'a rien à défendre. Test d'intrusion, revue de code, audit d'architecture. | Un prestataire extérieur, mandaté | **Aucun.** Personne d'extérieur n'a relu ce travail. |
+| **Certification** | Une attestation délivrée par un organisme accrédité, après examen, selon un référentiel normalisé — ISO 27001, SecNumCloud, HDS, label CNIL. Elle se vérifie dans un registre public. | Un organisme certificateur | **Aucune.** Ni ISO 27001, ni SecNumCloud, ni HDS, ni label RGPD. |
+| **Conformité réglementaire** | Le respect d'une obligation légale — le RGPD, par exemple. Elle ne se « certifie » pas : elle se démontre, en continu, et c'est le **responsable de traitement** qui en répond. | L'établissement, avec son DPO | **Ce dossier fournit des pièces techniques.** Il ne conclut pas à la conformité, et il n'en a pas le pouvoir. |
+
+Trois conséquences pratiques, qu'il vaut mieux lire maintenant que découvrir
+plus tard :
+
+- Personne ne peut écrire « AvecStudy est certifié RGPD » : **cette
+  certification n'existe pas**, pour aucun éditeur.
+- « Conforme ANSSI » ne veut rien dire sans qualification formelle. Cet audit
+  s'appuie sur les recommandations publiques de l'ANSSI, ce qui est autre chose,
+  et ne donne droit à aucune mention.
+- La conformité du **traitement** est celle de l'établissement. Un dossier de
+  sous-traitant, aussi fourni soit-il, ne la remplace pas — il l'alimente.
+
 ## Ce que ce dossier est, et ce qu'il n'est pas
 
 C'est un **audit interne approfondi**, mené par l'éditeur sur son propre
 produit, appuyé sur des référentiels publics : OWASP ASVS et le Top 10, les
 recommandations d'hygiène de l'ANSSI, le RGPD et les référentiels de la CNIL.
-
-Ce n'est **pas** un audit ANSSI, pas une certification, pas une homologation,
-pas un test d'intrusion indépendant. AvecStudy ne détient aucune certification
-ISO 27001, aucune qualification SecNumCloud, aucun label RGPD. Personne
-d'extérieur n'a relu ce travail.
 
 Cette distinction n'est pas une formule de prudence. Un audit mené par celui qui
 a écrit le code trouve bien les défauts d'inattention — cet audit en a trouvé

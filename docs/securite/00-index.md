@@ -12,16 +12,22 @@ contrôles permanents nouveaux, et trois points que cet audit n'a pas pu établi
 
 ## État d'application
 
-Sept constats sur dix sont **déployés et vérifiés en production**. Trois
-attendent l'application de deux migrations de base de données, écrites et
-validées par les 202 tests rejoués depuis zéro :
+**Les dix constats sont corrigés et vérifiés en production.** Les migrations
+`0043` et `0044` ont été appliquées le 23 septembre 2026, après une sauvegarde
+logique vérifiée, et chaque fermeture est établie par un contrôle qui échouait
+avant.
 
-```
-CONFIRMER_PRODUCTION=oui npm run migrations:appliquer
-```
+La preuve la plus nette : cinq fonctions de la base répondaient **HTTP 200** à
+un appel anonyme — dont `session_mfa_verifiee`, le prédicat qui décide si un
+second facteur a été vérifié. Elles répondent toutes **401**.
 
-Le détail — ce qui est vérifié, ce qui attend, et ce qui se passe entre-temps —
-figure en tête de [13-constats-et-corrections.md](13-constats-et-corrections.md).
+**Ce qui reste ouvert**, et qui n'est pas de l'ordre du défaut mais de l'ordre
+du non-vérifié : la configuration des consoles Vercel et Supabase, et la
+séparation des environnements. Elles portent la mention **NON VÉRIFIÉ** tant
+que personne ne les a ouvertes.
+
+Le détail figure en tête de
+[13-constats-et-corrections.md](13-constats-et-corrections.md).
 
 ## Par où commencer
 
