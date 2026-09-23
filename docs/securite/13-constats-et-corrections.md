@@ -8,6 +8,33 @@ Aucun exploit réutilisable ne figure ici, aucun secret, aucune donnée
 personnelle. Les reproductions décrites sont celles d'un appel HTTP ou d'une
 requête SQL banale : ce qui compte est le **résultat obtenu**, pas la recette.
 
+## État d'application au 23 septembre 2026
+
+Il faut distinguer « corrigé » de « déployé », et ce document ne les confond
+pas. Une correction écrite et testée qui n'est pas en production ne protège
+personne.
+
+**Vérifié en production, contrôle au vert :**
+
+| Constat | Contrôle qui l'établit | Résultat |
+|---|---|---|
+| F-08 — région de calcul | `verifier:hebergement` | `/connexion`, `/eleve`, `/professeur` en `cdg1` (Paris) |
+| F-06 — barrière d'origine | `verifier:origine` | 6 cas sur 6 |
+| F-10 — point de contact | `verifier:legal` | fichier servi, adresse conforme, valable 365 jours |
+| F-09 — purge des tentatives | déployée dans la tâche planifiée | s'exécutera au prochain passage |
+| F-05 — `unsafe-inline` | `verifier:site` | liste exacte, inchangée |
+
+**Écrit, testé sur base neuve, mais pas encore appliqué en production :**
+
+| Constat | Ce qui l'attend |
+|---|---|
+| F-01, F-02, F-03, F-04 | Les migrations `0043` et `0044`, validées par les 202 tests RLS rejoués depuis zéro, restent à appliquer sur la base de production. |
+| F-07 | Idem — la migration `0044` porte le compteur de balayage. Le code applicatif est déployé et se comporte, en l'absence de la fonction, comme s'il n'y avait pas de balayage : la limitation par compte continue de s'appliquer normalement. |
+
+Tant que ces deux migrations ne sont pas appliquées, `verifier:privileges`
+signale quatre écarts en production — ce sont exactement F-01, F-03 et F-04. Le
+contrôle dit la vérité ; c'est son rôle.
+
 ## Comment lire la gravité
 
 | Niveau | Ce que cela veut dire ici |

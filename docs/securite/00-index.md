@@ -10,6 +10,19 @@ contrôles permanents nouveaux, et trois points que cet audit n'a pas pu établi
 > correspondance figure ci-dessous. Renommer un fichier est sans conséquence :
 > les renvois internes se font par nom, et il y en a peu.
 
+## État d'application
+
+Sept constats sur dix sont **déployés et vérifiés en production**. Trois
+attendent l'application de deux migrations de base de données, écrites et
+validées par les 202 tests rejoués depuis zéro :
+
+```
+CONFIRMER_PRODUCTION=oui npm run migrations:appliquer
+```
+
+Le détail — ce qui est vérifié, ce qui attend, et ce qui se passe entre-temps —
+figure en tête de [13-constats-et-corrections.md](13-constats-et-corrections.md).
+
 ## Par où commencer
 
 | Vous êtes | Lisez, dans cet ordre |

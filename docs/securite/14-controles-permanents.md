@@ -52,6 +52,14 @@ l'année scolaire.
 
 **Rouge avant, vert après** : oui, deux fois.
 
+**Et une troisième fois, contre lui-même.** La première exécution complète de la
+recette après cet audit a révélé que `verifier:privileges` **n'était pas appelé
+par la batterie**. Il existait, il passait quand on le lançait à la main, et
+`recette:complete` ne le lançait jamais. C'est précisément le défaut que ce
+contrôle est fait d'attraper — une protection écrite que rien n'appelle —
+appliqué à lui-même. Il est désormais câblé dans la section « Contre la base de
+production ».
+
 ### `npm run verifier:origine`
 
 **Ce qu'il prouve.** Que la barrière anti-CSRF du proxy se comporte comme la

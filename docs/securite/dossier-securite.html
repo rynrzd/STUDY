@@ -45,13 +45,17 @@
     certification, ni une homologation, ni un test d'intrusion indépendant.</p>
     <p>Nouh Tifouti — entrepreneur individuel — AvecStudy<br>
     SIREN 979 992 443 · 1 avenue d'Alsace, 90000 Belfort<br>
-    Document généré le 2026-09-22</p>
+    Document généré le 2026-09-23</p>
   </div>
 </div>
 <section class="doc" id="00-index">
 <h1>Dossier de sécurité AvecStudy</h1>
 <p><strong>Audit interne du 23 septembre 2026.</strong> Dix constats, dix corrections, cinq contrôles permanents nouveaux, et trois points que cet audit n'a pas pu établir — qui portent la mention <strong>NON VÉRIFIÉ</strong> plutôt que « conforme ».</p>
 <blockquote><p><strong>Sur la numérotation.</strong> Le plan demandé fixait deux bornes — <code>01-resume-direction</code> et <code>16-risques-residuels</code>. Les titres intermédiaires ont été composés pour couvrir l'ensemble des sujets demandés ; la correspondance figure ci-dessous. Renommer un fichier est sans conséquence : les renvois internes se font par nom, et il y en a peu.</p></blockquote>
+<h2>État d'application</h2>
+<p>Sept constats sur dix sont <strong>déployés et vérifiés en production</strong>. Trois attendent l'application de deux migrations de base de données, écrites et validées par les 202 tests rejoués depuis zéro :</p>
+<pre><code>CONFIRMER_PRODUCTION=oui npm run migrations:appliquer</code></pre>
+<p>Le détail — ce qui est vérifié, ce qui attend, et ce qui se passe entre-temps — figure en tête de <a href="#13-constats-et-corrections">13-constats-et-corrections.md</a>.</p>
 <h2>Par où commencer</h2>
 <table><thead><tr><th>Vous êtes</th><th>Lisez, dans cet ordre</th></tr></thead><tbody><tr><td><strong>Chef d'établissement</strong></td><td><code>01</code>, puis <code>16</code></td></tr><tr><td><strong>Référent numérique</strong></td><td><code>13</code>, <code>14</code>, <code>09</code>, <code>06</code></td></tr><tr><td><strong>Délégué à la protection des données</strong></td><td><code>07</code>, <code>08</code>, l'annexe de sous-traitance, puis <code>16</code></td></tr><tr><td><strong>Pressé</strong></td><td><code>01</code> seul — trois pages</td></tr></tbody></table>
 <h2>Les documents</h2>
@@ -561,6 +565,13 @@ tache_planifiee · purge_des_tentatives · moderation_des_signalements</code></p
 <h1>13 — Constats et corrections</h1>
 <p>Audit interne du 23 septembre 2026. Dix constats, du plus grave au moins grave. Chacun porte sa preuve, sa correction et le contrôle permanent qui l'empêche de revenir.</p>
 <p>Aucun exploit réutilisable ne figure ici, aucun secret, aucune donnée personnelle. Les reproductions décrites sont celles d'un appel HTTP ou d'une requête SQL banale : ce qui compte est le <strong>résultat obtenu</strong>, pas la recette.</p>
+<h2>État d'application au 23 septembre 2026</h2>
+<p>Il faut distinguer « corrigé » de « déployé », et ce document ne les confond pas. Une correction écrite et testée qui n'est pas en production ne protège personne.</p>
+<p><strong>Vérifié en production, contrôle au vert :</strong></p>
+<table><thead><tr><th>Constat</th><th>Contrôle qui l'établit</th><th>Résultat</th></tr></thead><tbody><tr><td>F-08 — région de calcul</td><td><code>verifier:hebergement</code></td><td><code>/connexion</code>, <code>/eleve</code>, <code>/professeur</code> en <code>cdg1</code> (Paris)</td></tr><tr><td>F-06 — barrière d'origine</td><td><code>verifier:origine</code></td><td>6 cas sur 6</td></tr><tr><td>F-10 — point de contact</td><td><code>verifier:legal</code></td><td>fichier servi, adresse conforme, valable 365 jours</td></tr><tr><td>F-09 — purge des tentatives</td><td>déployée dans la tâche planifiée</td><td>s'exécutera au prochain passage</td></tr><tr><td>F-05 — <code>unsafe-inline</code></td><td><code>verifier:site</code></td><td>liste exacte, inchangée</td></tr></tbody></table>
+<p><strong>Écrit, testé sur base neuve, mais pas encore appliqué en production :</strong></p>
+<table><thead><tr><th>Constat</th><th>Ce qui l'attend</th></tr></thead><tbody><tr><td>F-01, F-02, F-03, F-04</td><td>Les migrations <code>0043</code> et <code>0044</code>, validées par les 202 tests RLS rejoués depuis zéro, restent à appliquer sur la base de production.</td></tr><tr><td>F-07</td><td>Idem — la migration <code>0044</code> porte le compteur de balayage. Le code applicatif est déployé et se comporte, en l'absence de la fonction, comme s'il n'y avait pas de balayage : la limitation par compte continue de s'appliquer normalement.</td></tr></tbody></table>
+<p>Tant que ces deux migrations ne sont pas appliquées, <code>verifier:privileges</code> signale quatre écarts en production — ce sont exactement F-01, F-03 et F-04. Le contrôle dit la vérité ; c'est son rôle.</p>
 <h2>Comment lire la gravité</h2>
 <table><thead><tr><th>Niveau</th><th>Ce que cela veut dire ici</th></tr></thead><tbody><tr><td><strong>Élevé</strong></td><td>Une promesse faite à l'établissement est fausse, ou une donnée d'élève est traitée autrement qu'annoncé. Aucune autre couche ne rattrape.</td></tr><tr><td><strong>Moyen</strong></td><td>Une défense manque ou ne couvre pas le cas le plus probable. Une autre couche limite l'effet, mais on ne peut pas s'y reposer.</td></tr><tr><td><strong>Faible</strong></td><td>Le risque est réel mais borné : une couche voisine tient, ou l'exploitation demande des conditions qu'on ne rencontre pas.</td></tr><tr><td><strong>Observation</strong></td><td>Rien n'est cassé. Un choix mérite d'être écrit et surveillé, sans quoi il redeviendra une question au prochain audit.</td></tr></tbody></table>
 <hr>
@@ -684,6 +695,7 @@ tache_planifiee · purge_des_tentatives · moderation_des_signalements</code></p
 <p>Ce dernier point est une <strong>fermeture transitive</strong>, calculée à partir de 934 expressions de schéma : politiques RLS, déclencheurs, valeurs par défaut, contraintes, index, vues. Elle suit les appels à travers les fonctions <code>security invoker</code> et ne s'arrête qu'au premier <code>security definer</code>.</p>
 <p><strong>Pourquoi il fallait le calculer et non le lister.</strong> La correction du constat F-01 a cassé la batterie RLS deux fois de suite : d'abord <code>normalize_code</code>, appelée par trois déclencheurs ; puis <code>unaccent_fallback</code>, que <code>normalize_code</code> appelle à son tour. Aucune des deux pannes n'aurait produit la moindre erreur au déploiement — elles seraient apparues à la première création de classe de l'année scolaire.</p>
 <p><strong>Rouge avant, vert après</strong> : oui, deux fois.</p>
+<p><strong>Et une troisième fois, contre lui-même.</strong> La première exécution complète de la recette après cet audit a révélé que <code>verifier:privileges</code> <strong>n'était pas appelé par la batterie</strong>. Il existait, il passait quand on le lançait à la main, et <code>recette:complete</code> ne le lançait jamais. C'est précisément le défaut que ce contrôle est fait d'attraper — une protection écrite que rien n'appelle — appliqué à lui-même. Il est désormais câblé dans la section « Contre la base de production ».</p>
 <h3><code>npm run verifier:origine</code></h3>
 <p><strong>Ce qu'il prouve.</strong> Que la barrière anti-CSRF du proxy se comporte comme la règle le dit, sur ce qui est réellement servi. Six requêtes, six verdicts attendus.</p>
 <p><strong>Ce qu'il ne fait pas.</strong> Il ne déclenche aucune action serveur : un POST vers l'URL d'une page ne porte pas l'en-tête que Next exige. Ce qui est mesuré est uniquement le verdict de la barrière, ce qui est précisément l'objet.</p>

@@ -172,6 +172,19 @@ try {
   );
   if (/CRITIQUE/.test(reelle.sortie)) critique = true;
 
+  // Les privilèges d'exécution et RLS, tenus par un registre.
+  //
+  // Sa place est ici plutôt que dans la section suivante : il interroge la
+  // base, pas le site. L'audit du 23 septembre 2026 a découvert que ce contrôle
+  // existait depuis une semaine sans être appelé par la batterie — exactement
+  // le défaut qu'il est fait pour attraper, appliqué à lui-même.
+  const privileges = await lancer("privileges d execution et RLS", ["verifier:privileges"]);
+  noter(
+    "aucune fonction ouverte sans compte, RLS partout",
+    privileges.code === 0 ? "ok" : "echec",
+    resume(privileges.sortie),
+  );
+
   console.log("\n3. Contre le site deploye");
 
   if (CIBLE === "") {
