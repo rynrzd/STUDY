@@ -185,6 +185,17 @@ try {
     resume(privileges.sortie),
   );
 
+  // Et le meme sujet vu du reseau. `verifier:privileges` lit les droits ;
+  // celui-ci appelle les fonctions sans aucune session, avec la cle publiable
+  // que porte n importe quel navigateur. Un droit revoque en base et une
+  // fonction malgre tout joignable ne se distingueraient pas dans le premier.
+  const anonyme = await lancer("appels anonymes", ["verifier:rpc-anonyme"]);
+  noter(
+    "aucune fonction ne repond sans compte",
+    anonyme.code === 0 ? "ok" : "echec",
+    resume(anonyme.sortie),
+  );
+
   console.log("\n3. Contre le site deploye");
 
   if (CIBLE === "") {

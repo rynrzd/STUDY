@@ -27,3 +27,7 @@ sauvegarde-*.json
 
 # Empreinte du dernier deploiement observe, propre a la machine
 .deploiement-servi
+
+# Sauvegardes logiques de la production : elles portent des donnees reelles
+# et ne doivent jamais etre versionnees.
+sauvegardes/
