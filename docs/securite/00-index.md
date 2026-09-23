@@ -1,8 +1,9 @@
 # Dossier de sécurité AvecStudy
 
-**Audit interne du 23 septembre 2026.** Dix constats, dix corrections, cinq
-contrôles permanents nouveaux, et trois points que cet audit n'a pas pu établir
-— qui portent la mention **NON VÉRIFIÉ** plutôt que « conforme ».
+**Audit interne du 23 septembre 2026.** Dix constats, dix corrections vérifiées
+en production, huit contrôles permanents nouveaux — et trois points que cet
+audit n'a pas pu établir, qui portent la mention **NON VÉRIFIÉ** plutôt que
+« conforme ».
 
 > **Sur la numérotation.** Le plan demandé fixait deux bornes —
 > `01-resume-direction` et `16-risques-residuels`. Les titres intermédiaires
@@ -58,6 +59,7 @@ Le détail figure en tête de
 | 14 | [Les contrôles permanents](14-controles-permanents.md) | Ce qui rejoue chaque constat, et comment le lancer. |
 | 15 | [Questionnaire d'établissement, rempli](15-questionnaire-etablissement.md) | Les questions qu'on nous pose, avec les « non » écrits en toutes lettres. |
 | 16 | [Risques résiduels](16-risques-residuels.md) | Ce qui reste après les corrections. Dix risques, dont l'éditeur lui-même. |
+| — | [Annexe — contrôles manuels à faire en console](annexe-controles-manuels.md) | Ce que l'audit n'a pas pu vérifier, et ce qu'il faut regarder exactement. |
 | — | [Annexe — projet d'accord de sous-traitance](annexe-sous-traitance.md) | **Projet à valider par le DPO et/ou un juriste.** |
 
 ## Correspondance avec les sujets demandés
@@ -67,7 +69,7 @@ Le détail figure en tête de
 | Validation des dépôts de fichiers | 09 |
 | Tests web (OWASP) | 09 |
 | Nomenclature logicielle (SBOM) | 09 |
-| Consoles Vercel et Supabase | 02 — **NON VÉRIFIÉ** |
+| Consoles Vercel et Supabase | 02 et l'annexe des contrôles manuels — **NON VÉRIFIÉ** |
 | Transferts hors EEE | 08, 16 (R-02) |
 | Conservation et effacement | 07, 13 (F-09) |
 | Droits des personnes, export élève | 07, 16 (R-08) |
@@ -78,7 +80,7 @@ Le détail figure en tête de
 | Sauvegarde et restauration | 11 |
 | Continuité et réversibilité | 11 |
 | Disponibilité | 11 |
-| Séparation des environnements | 02 — **NON VÉRIFIÉ** |
+| Séparation des environnements | 02 et l'annexe des contrôles manuels — **NON VÉRIFIÉ** |
 | Sécurité du développement | 14 |
 | Sécurité d'exploitation | 10, 11, 12 |
 | Protection des mineurs | 07 |
@@ -94,7 +96,7 @@ Par ordre de priorité. Les quatre premiers points ne demandent que des accès.
 
 | # | Action | Qui | Lié à |
 |---|---|---|---|
-| 1 | Ouvrir les consoles Vercel et Supabase, vérifier le second facteur, les accès, les variables et la sauvegarde ponctuelle | Éditeur | R-03 |
+| 1 | Ouvrir les consoles Vercel et Supabase — la liste exacte est dans l'[annexe des contrôles manuels](annexe-controles-manuels.md) | Éditeur | R-03, R-03 bis |
 | 2 | Obtenir les accords de traitement des deux fournisseurs et les annexer | Éditeur + DPO | R-02 |
 | 3 | Jouer l'exercice de restauration de bout en bout, dans un projet jetable, et joindre le compte rendu | Éditeur | ch. 11 |
 | 4 | Vérifier qu'un déploiement d'aperçu ne pointe pas vers la base de production | Éditeur | R-03 |
