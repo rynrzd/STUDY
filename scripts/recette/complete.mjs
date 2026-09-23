@@ -196,6 +196,24 @@ try {
     resume(anonyme.sortie),
   );
 
+  // Deux garanties qui ne se lisent pas dans un schema : elles se jouent.
+  // Une session de compte suspendu ne doit rendre aucun role (F-02), et la
+  // conservation de vingt-quatre heures doit etre appliquee, pas seulement
+  // ecrite (F-09). Les deux s executent sur la base reelle et ne laissent rien.
+  const suspendue = await lancer("session suspendue", ["verifier:session-suspendue"]);
+  noter(
+    "une adhesion suspendue ne rend plus de role",
+    suspendue.code === 0 ? "ok" : "echec",
+    resume(suspendue.sortie),
+  );
+
+  const purge = await lancer("purge des tentatives", ["verifier:purge"]);
+  noter(
+    "la conservation de 24 h est appliquee, pas seulement ecrite",
+    purge.code === 0 ? "ok" : "echec",
+    resume(purge.sortie),
+  );
+
   console.log("\n3. Contre le site deploye");
 
   if (CIBLE === "") {
