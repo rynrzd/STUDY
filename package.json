@@ -20,7 +20,7 @@
     "buckets:verifier": "node scripts/provisionner-buckets.mjs --verifier",
     "buckets:appliquer": "node scripts/provisionner-buckets.mjs --appliquer",
     "bootstrap:editeur": "node scripts/bootstrap-editeur.mjs",
-    "worker": "node scripts/worker.mjs",
+    "worker": "node --conditions=react-server scripts/worker.mjs",
     "restauration:test": "node scripts/restauration-test.mjs",
     "db:dictionnaire": "node tests/db/dictionnaire.mjs",
     "verifier:base": "node scripts/verifier-base.mjs",
