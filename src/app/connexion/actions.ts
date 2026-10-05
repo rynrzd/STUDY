@@ -9,6 +9,7 @@ import { DepotSupabase } from "@/lib/depot-authentification";
 import { FournisseurSupabase } from "@/lib/fournisseur-supabase";
 import { cookieSession, empreinteJeton, NOM_COOKIE_SESSION } from "@/lib/session";
 import { baseConfiguree } from "@/lib/supabase-serveur";
+import { suiteSure } from "@/lib/v6/redirection";
 
 /**
  * Connexion — section 5.1 du cahier de finition.
@@ -133,5 +134,8 @@ export async function seConnecter(
   }
 
   // `redirect` lève : rien de ce qui suit ne s'exécute.
-  redirect(resultat.activationRequise ? "/activation" : "/app");
+  // Reprise du parcours : seule une route interne de l application est suivie
+  // (dossier V6, AUTH-03). Une activation en attente passe toujours avant.
+  const suite = suiteSure(String(donnees.get("suite") ?? ""));
+  redirect(resultat.activationRequise ? "/activation" : (suite ?? "/app"));
 }

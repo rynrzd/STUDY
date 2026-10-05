@@ -40,7 +40,7 @@ const MANQUE: Record<Champ, string> = {
 
 const ORDRE: readonly Champ[] = ["code", "identifiant", "motDePasse"];
 
-export function FormulaireConnexion() {
+export function FormulaireConnexion({ suite = null }: { suite?: string | null }) {
   const [etat, action] = useActionState<EtatConnexion, FormData>(seConnecter, ETAT_INITIAL);
   const alerte = useRef<HTMLDivElement>(null);
   const formulaire = useRef<HTMLFormElement>(null);
@@ -128,6 +128,9 @@ export function FormulaireConnexion() {
           ) : null}
         </div>
       ) : null}
+
+      {/* La suite du parcours, revalidée côté serveur (dossier V6, AUTH-03). */}
+      {suite ? <input type="hidden" name="suite" value={suite} /> : null}
 
       <div className="space-y-6">
         <div>

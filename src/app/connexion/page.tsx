@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { FormulaireConnexion } from "@/components/site/FormulaireConnexion";
 import { MARQUE } from "@/lib/identite-legale";
 import { destinationApresConnexion, sessionCourante } from "@/lib/session-serveur";
+import { suiteSure } from "@/lib/v6/redirection";
 
 export const metadata: Metadata = pagePrivee({
   titre: "Connexion",
@@ -29,12 +30,13 @@ export const dynamic = "force-dynamic";
 export default async function PageConnexion({
   searchParams,
 }: {
-  searchParams: Promise<{ fin?: string }>;
+  searchParams: Promise<{ fin?: string; suite?: string; motif?: string; invitation?: string }>;
 }) {
-  const personne = await sessionCourante();
-  if (personne !== null) redirect(destinationApresConnexion(personne));
-
   const parametres = await searchParams;
+  const suite = suiteSure(parametres.suite);
+  const personne = await sessionCourante();
+  if (personne !== null) redirect(personne.activationRequise ? "/activation" : (suite ?? destinationApresConnexion(personne)));
+
   const deconnexionConfirmee = parametres.fin === "1";
 
   return (
@@ -71,6 +73,24 @@ export default async function PageConnexion({
             passe.
           </p>
 
+          {parametres.motif === "expiree" ? (
+            <p
+              role="status"
+              className="m-0 mt-6 rounded-[var(--radius-carte)] bg-[color:var(--color-attention-fond)] p-4 text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)] text-[color:var(--color-attention)]"
+            >
+              Votre session a pris fin. Reconnectez-vous : vous reprendrez là où vous étiez.
+            </p>
+          ) : null}
+
+          {parametres.invitation === "ok" ? (
+            <p
+              role="status"
+              className="m-0 mt-6 rounded-[var(--radius-carte)] bg-[color:var(--color-succes-fond)] p-4 text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)] text-[color:var(--color-succes)]"
+            >
+              Votre mot de passe est enregistré. Connectez-vous avec le code de votre établissement et votre identifiant.
+            </p>
+          ) : null}
+
           {deconnexionConfirmee ? (
             <p
               role="status"
@@ -81,12 +101,12 @@ export default async function PageConnexion({
             </p>
           ) : null}
 
-          <FormulaireConnexion />
+          <FormulaireConnexion suite={suite} />
 
           <div className="mt-8 border-t border-[color:var(--color-bordure)] pt-6">
             <p className="m-0 text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)] text-[color:var(--color-encre-faible)]">
               <Link
-                href="/mot-de-passe-oublie"
+                href="/acces-oublie"
                 className="font-semibold text-[color:var(--color-accent)]"
               >
                 Besoin d&apos;aide ?
@@ -96,6 +116,13 @@ export default async function PageConnexion({
               votre mot de passe.
             </p>
           </div>
+
+          <p className="m-0 mt-4 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
+            Votre professeur vous a donné un code de classe ?{" "}
+            <Link href="/rejoindre" className="font-semibold text-[color:var(--color-accent)]">
+              Rejoindre une classe
+            </Link>
+          </p>
 
           <p className="mt-8 text-[length:var(--text-aide)]">
             <Link href="/" className="text-[color:var(--color-encre-faible)]">

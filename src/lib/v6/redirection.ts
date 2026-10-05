@@ -10,7 +10,7 @@
  * Module pur : il se teste sans serveur.
  */
 
-const PREFIXES_AUTORISES = ["/app", "/professeur", "/studio", "/admin", "/parametres", "/eleve"] as const;
+const PREFIXES_AUTORISES = ["/app", "/professeur", "/studio", "/admin", "/parametres", "/eleve", "/rejoindre"] as const;
 
 export function suiteSure(brute: string | null | undefined): string | null {
   if (typeof brute !== "string") return null;

@@ -151,7 +151,7 @@ $fn$;
  * lien valable : celui qui le tient est la personne invitée.
  */
 create or replace function study.invitation_etat(p_empreinte bytea)
-returns table (etat text, prenom text, organisation text, code_etablissement text, identifiant text)
+returns table (etat text, prenom text, organisation text, code_etablissement text, identifiant text, profile_id uuid)
 language plpgsql
 stable
 security definer
@@ -163,23 +163,23 @@ begin
   select * into t from study_prive.activation_tokens a
    where a.token_sha256 = p_empreinte and a.purpose = 'activation_compte';
   if not found then
-    return query select 'inconnue'::text, null::text, null::text, null::text, null::text;
+    return query select 'inconnue'::text, null::text, null::text, null::text, null::text, null::uuid;
     return;
   end if;
   if t.consumed_at is not null then
-    return query select 'utilisee'::text, null::text, null::text, null::text, null::text;
+    return query select 'utilisee'::text, null::text, null::text, null::text, null::text, null::uuid;
     return;
   end if;
   if t.invalidated_at is not null then
-    return query select 'revoquee'::text, null::text, null::text, null::text, null::text;
+    return query select 'revoquee'::text, null::text, null::text, null::text, null::text, null::uuid;
     return;
   end if;
   if t.expires_at <= now() then
-    return query select 'expiree'::text, null::text, null::text, null::text, null::text;
+    return query select 'expiree'::text, null::text, null::text, null::text, null::text, null::uuid;
     return;
   end if;
   return query
-    select 'valide'::text, p.first_name, o.name, o.public_code, m.local_login
+    select 'valide'::text, p.first_name, o.name, o.public_code, m.local_login, p.id
       from study.profiles p
       join study.organization_memberships m on m.profile_id = p.id and m.organization_id = t.organization_id
       join study.organizations o on o.id = t.organization_id

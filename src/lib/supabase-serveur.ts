@@ -74,7 +74,11 @@ export type MotifPrivilegie =
   // montre donc rien de l entraide, et c est voulu. Il doit pourtant voir ce
   // qui a ete signale, sans quoi il tranche a l aveugle. La lecture est bornee
   // aux contenus vises par un signalement de son propre etablissement.
-  | "moderation_des_signalements";
+  | "moderation_des_signalements"
+  // Dossier V6 : une invitation se lit et se consomme avant toute connexion,
+  // et une demande de recuperation vient d un visiteur anonyme. Les fonctions
+  // appelees ne rendent rien qu un lien valable ne justifie.
+  | "invitation_et_recuperation";
 
 /**
  * Client d'authentification : parle à l'API Auth du fournisseur, pas aux

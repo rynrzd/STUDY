@@ -56,7 +56,6 @@ const VITRINES_PRERENDUES = new Set([
   "/contact",
   "/maintenance",
   "/mentions-legales",
-  "/mot-de-passe-oublie",
   "/offre",
   "/produit",
   "/securite",
