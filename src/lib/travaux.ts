@@ -49,7 +49,7 @@ export type Gestionnaire = (travail: Travail) => Promise<ResultatTravail>;
  * comptes, notifications, factures — dépendent de services qui ne sont pas
  * raccordés ; les prendre ici ne ferait que les faire échouer plus vite.
  */
-export const TYPES_TRAITES = ["import_cours"] as const;
+export const TYPES_TRAITES = ["import_cours", "fiche_revision"] as const;
 
 const GESTIONNAIRES: Record<string, Gestionnaire> = {
   async import_cours(travail) {
@@ -66,6 +66,20 @@ const GESTIONNAIRES: Record<string, Gestionnaire> = {
     const resultat = await convertir({ organisation, document, fichier, proprietaire });
 
     return resultat.ok ? { ok: true } : { ok: false, refus: resultat.message };
+  },
+
+  // Fiche de revision assemblee a partir des seances choisies (dossier V6,
+  // §8.1). Les sources sont reverifiees pour le proprietaire a l'entree et a
+  // la sortie, dans la base : ce gestionnaire ne decide d'aucun droit.
+  async fiche_revision(travail) {
+    const fiche = travail.payload.fiche;
+    if (typeof fiche !== "string") throw new Error("job fiche_revision incomplet");
+
+    const { traiterFiche } = await import("./revision/moteur-fiches.ts");
+    const client = clientExploitation("tache_planifiee");
+    const issue = await traiterFiche((nom, parametres) => client.rpc(nom, parametres), fiche);
+
+    return issue === "failed" ? { ok: false, refus: "fiche non restituee" } : { ok: true };
   },
 };
 
