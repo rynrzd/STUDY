@@ -49,7 +49,7 @@ export type Gestionnaire = (travail: Travail) => Promise<ResultatTravail>;
  * comptes, notifications, factures — dépendent de services qui ne sont pas
  * raccordés ; les prendre ici ne ferait que les faire échouer plus vite.
  */
-export const TYPES_TRAITES = ["import_cours", "fiche_revision"] as const;
+export const TYPES_TRAITES = ["import_cours", "fiche_revision", "recherche_indexer"] as const;
 
 const GESTIONNAIRES: Record<string, Gestionnaire> = {
   async import_cours(travail) {
@@ -83,6 +83,14 @@ const GESTIONNAIRES: Record<string, Gestionnaire> = {
     }, fiche);
 
     return issue === "failed" ? { ok: false, refus: "fiche non restituee" } : { ok: true };
+  },
+
+  // File d'indexation de la recherche (dossier V6, §7.2). Les retraits sont
+  // deja faits dans la transaction qui depublie ; ce travail ne fait qu'ecrire.
+  async recherche_indexer() {
+    const { error } = await clientExploitation("tache_planifiee").rpc("recherche_traiter_file", { p_limite: 300 });
+    if (error !== null) throw new Error("recherche_traiter_file");
+    return { ok: true };
   },
 };
 
