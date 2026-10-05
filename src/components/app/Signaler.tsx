@@ -2,8 +2,8 @@
 
 import { useActionState, useId, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { signalerUnContenu } from "@/app/eleve/actions";
-import { ETAT_ELEVE_INITIAL, type EtatEleve } from "@/app/eleve/etats";
+import { signalerUnContenu } from "@/app/app/actions-eleve";
+import { ETAT_ELEVE_INITIAL, type EtatEleve } from "@/app/app/etats-eleve";
 
 /**
  * Signaler un message d'entraide — cahier V5, §7.

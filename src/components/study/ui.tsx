@@ -1,0 +1,241 @@
+import Link from "next/link";
+import { CircleAlert, FileText, Lock, type LucideIcon } from "lucide-react";
+
+/**
+ * Composants d'affichage partagés — dossier Study V6, §3.4.
+ *
+ * Rendus côté serveur, sans état. Une couleur n'y porte jamais seule une
+ * information : chaque état a un libellé. Icônes Lucide, 20 px, trait 1,75.
+ */
+
+export const ICONE = { size: 20, strokeWidth: 1.75, "aria-hidden": true } as const;
+
+export function EnTetePage({
+  sourcil,
+  titre,
+  sousTitre,
+  actions,
+  filAriane,
+}: {
+  sourcil?: string | null;
+  titre: string;
+  sousTitre?: React.ReactNode;
+  actions?: React.ReactNode;
+  filAriane?: readonly { href: string; libelle: string }[];
+}) {
+  return (
+    <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
+      <div className="min-w-0">
+        {filAriane && filAriane.length > 0 ? <FilAriane etapes={filAriane} /> : null}
+        {sourcil ? <span className="sourcil">{sourcil}</span> : null}
+        <h1 className="titre-page">{titre}</h1>
+        {sousTitre ? <p className="m-0 mt-2 max-w-[62ch] text-[color:var(--color-encre-faible)]">{sousTitre}</p> : null}
+      </div>
+      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+    </header>
+  );
+}
+
+export function FilAriane({ etapes }: { etapes: readonly { href: string; libelle: string }[] }) {
+  return (
+    <nav aria-label="Fil d'Ariane" className="mb-3">
+      <ol className="m-0 flex list-none flex-wrap items-center gap-1.5 p-0 meta">
+        {etapes.map((etape, i) => (
+          <li key={etape.href} className="flex items-center gap-1.5">
+            {i > 0 ? <span aria-hidden="true">›</span> : null}
+            <Link href={etape.href} className="text-[color:var(--color-encre-faible)] no-underline hover:text-[color:var(--color-accent)]">
+              {etape.libelle}
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+}
+
+export type Ton = "neutre" | "rose" | "succes" | "attention" | "erreur";
+
+export function Etiquette({ ton = "neutre", children }: { ton?: Ton; children: React.ReactNode }) {
+  return (
+    <span className="etiquette-etat" data-ton={ton === "neutre" ? undefined : ton}>
+      {children}
+    </span>
+  );
+}
+
+/** Vide initial : une explication et l'action qui correspond au rôle. */
+export function EtatVide({
+  icone: Icone = FileText,
+  titre,
+  texte,
+  action,
+}: {
+  icone?: LucideIcon;
+  titre: string;
+  texte: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="panneau flex flex-col items-center px-6 py-12 text-center">
+      <span className="mb-4 inline-grid h-12 w-12 place-items-center rounded-full bg-[color:var(--color-rose-clair)] text-[color:var(--color-accent)]">
+        <Icone {...ICONE} />
+      </span>
+      <p className="titre-bloc m-0 font-semibold">{titre}</p>
+      <p className="m-0 mt-2 max-w-[52ch] text-[color:var(--color-encre-faible)]">{texte}</p>
+      {action ? <div className="mt-6 flex flex-wrap justify-center gap-2">{action}</div> : null}
+    </div>
+  );
+}
+
+/** Erreur serveur ou fournisseur : explication honnête et identifiant opaque. */
+export function EtatErreur({
+  titre = "Ce contenu n'a pas pu être chargé.",
+  texte = "Rien n'a été perdu. Réessayez dans un instant.",
+  requestId,
+  action,
+}: {
+  titre?: string;
+  texte?: React.ReactNode;
+  requestId?: string | null;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div role="alert" className="panneau border-[color:var(--color-erreur-fond)] bg-[color:var(--color-erreur-fond)]">
+      <p className="m-0 flex items-center gap-2 font-semibold text-[color:var(--color-erreur)]">
+        <CircleAlert {...ICONE} />
+        {titre}
+      </p>
+      <p className="m-0 mt-2 text-[color:var(--color-encre)]">{texte}</p>
+      {requestId ? <p className="meta m-0 mt-2">Référence pour l&apos;assistance : {requestId.slice(0, 8)}</p> : null}
+      {action ? <div className="mt-4">{action}</div> : null}
+    </div>
+  );
+}
+
+/** E35 — accès indisponible : aucun titre, aucune trace du contenu demandé. */
+export function AccesIndisponible({ retour = "/app" }: { retour?: string }) {
+  return (
+    <div className="mx-auto max-w-[520px] py-10">
+      <div className="panneau flex flex-col items-center px-6 py-12 text-center">
+        <span className="mb-4 inline-grid h-12 w-12 place-items-center rounded-full bg-[color:var(--color-survol)] text-[color:var(--color-encre-faible)]">
+          <Lock {...ICONE} />
+        </span>
+        <h1 className="titre-section">Ce contenu n&apos;est pas accessible</h1>
+        <p className="m-0 mt-2 max-w-[44ch] text-[color:var(--color-encre-faible)]">
+          Il n&apos;existe plus, ou il ne fait pas partie de vos classes. Si vous pensez qu&apos;il s&apos;agit d&apos;une
+          erreur, adressez-vous à votre professeur ou à la vie scolaire.
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <Link href={retour} className="bouton bouton-primaire">
+            Mon espace
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Squelette de même géométrie que des lignes de contenu. */
+export function SqueletteLignes({ lignes = 4, titre = true }: { lignes?: number; titre?: boolean }) {
+  return (
+    <div aria-busy="true" aria-live="polite" className="panneau">
+      <span className="sr-only">Chargement…</span>
+      {titre ? <span className="squelette-ligne mb-6 h-5 w-48" /> : null}
+      {Array.from({ length: lignes }, (_, i) => (
+        <div key={i} className="ligne">
+          <span className="squelette-ligne h-10 w-12" />
+          <div className="flex-1 space-y-2">
+            <span className="squelette-ligne w-2/3" />
+            <span className="squelette-ligne w-1/3" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const MOIS = ["JANV.", "FÉVR.", "MARS", "AVR.", "MAI", "JUIN", "JUIL.", "AOÛT", "SEPT.", "OCT.", "NOV.", "DÉC."];
+
+export function DateBloc({ date }: { date: string | Date }) {
+  const d = typeof date === "string" ? new Date(date) : date;
+  const jour = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", timeZone: "Europe/Paris" }).format(d);
+  const mois = Number(new Intl.DateTimeFormat("fr-FR", { month: "numeric", timeZone: "Europe/Paris" }).format(d)) - 1;
+  return (
+    <span className="date-bloc" aria-hidden="true">
+      {jour}
+      <small>{MOIS[mois]}</small>
+    </span>
+  );
+}
+
+export function dateLisible(iso: string | null | undefined, options: Intl.DateTimeFormatOptions = { day: "numeric", month: "long" }) {
+  if (!iso) return "";
+  return new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", ...options }).format(new Date(iso));
+}
+
+export function dateHeure(iso: string | null | undefined) {
+  return dateLisible(iso, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
+/** Référence de source : d'où vient un passage, et quelle version. */
+export function SourceCitee({ titre, detail, href }: { titre: string; detail?: string | null; href?: string | null }) {
+  const contenu = (
+    <>
+      <FileText size={14} strokeWidth={1.75} aria-hidden="true" />
+      <span className="truncate">{titre}</span>
+      {detail ? <span className="text-[color:var(--color-encre-faible)]">· {detail}</span> : null}
+    </>
+  );
+  return href ? (
+    <Link href={href} className="inline-flex max-w-full items-center gap-1.5 meta no-underline hover:text-[color:var(--color-accent)]">
+      {contenu}
+    </Link>
+  ) : (
+    <span className="inline-flex max-w-full items-center gap-1.5 meta">{contenu}</span>
+  );
+}
+
+/** Avis de visibilité : qui verra ce qui est saisi, avant la saisie. */
+export function AvisVisibilite({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex gap-3 rounded-[12px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-4">
+      <Lock size={18} strokeWidth={1.75} aria-hidden="true" className="mt-0.5 shrink-0 text-[color:var(--color-accent)]" />
+      <div className="text-[0.8125rem] leading-[1.5]">{children}</div>
+    </div>
+  );
+}
+
+export function Panneau({
+  titre,
+  action,
+  children,
+  className = "",
+  as: Balise = "section",
+  id,
+}: {
+  titre?: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+  as?: "section" | "div" | "article" | "aside";
+  id?: string;
+}) {
+  const idTitre = titre && id ? `${id}-titre` : undefined;
+  return (
+    <Balise className={`panneau ${className}`} id={id} aria-labelledby={idTitre}>
+      {titre || action ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          {titre ? (
+            <h2 id={idTitre} className="titre-section">
+              {titre}
+            </h2>
+          ) : (
+            <span />
+          )}
+          {action}
+        </div>
+      ) : null}
+      {children}
+    </Balise>
+  );
+}

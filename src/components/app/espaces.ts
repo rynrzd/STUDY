@@ -21,10 +21,10 @@ export const LIENS_PROFESSEUR: readonly LienEspace[] = [
 ];
 
 export const LIENS_ELEVE: readonly LienEspace[] = [
-  { href: "/eleve", libelle: "Accueil" },
-  { href: "/eleve/cours", libelle: "Mes cours" },
-  { href: "/eleve/devoirs", libelle: "À faire" },
-  { href: "/eleve/entraide", libelle: "Entraide" },
+  { href: "/app", libelle: "Accueil" },
+  { href: "/app/cours", libelle: "Mes cours" },
+  { href: "/app/devoirs", libelle: "À faire" },
+  { href: "/app/entraide", libelle: "Entraide" },
   { href: "/parametres", libelle: "Paramètres" },
 ];
 

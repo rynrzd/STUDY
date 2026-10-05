@@ -122,7 +122,7 @@ export default async function PageDevoirsEleve() {
             titre="Rien à rendre pour le moment."
             texte="Les devoirs donnés par vos professeurs apparaissent ici, du plus proche au plus lointain, avec le cours auquel ils se rattachent."
             action={
-              <Link href="/eleve/cours" className="bouton bouton-secondaire">
+              <Link href="/app/cours" className="bouton bouton-secondaire">
                 Voir mes cours
               </Link>
             }
@@ -152,7 +152,7 @@ export default async function PageDevoirsEleve() {
               {groupe.lignes.map((ligne) => (
                 <li key={ligne.devoir.id}>
                   <Link
-                    href={`/eleve/devoirs/${ligne.devoir.id}`}
+                    href={`/app/devoirs/${ligne.devoir.id}`}
                     data-testid="devoir-lien"
                     data-devoir={ligne.devoir.id}
                     className="flex min-h-[44px] flex-wrap items-center justify-between gap-3 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] p-4 no-underline hover:border-[color:var(--color-bordure-forte)]"

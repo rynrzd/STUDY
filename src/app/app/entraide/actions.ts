@@ -98,7 +98,7 @@ export async function creerGroupe(
     return REFUS;
   }
 
-  revalidatePath("/eleve/entraide");
+  revalidatePath("/app/entraide");
   return { etat: "ok", message: `Groupe « ${analyse.data.label} » créé.` };
 }
 
@@ -158,7 +158,7 @@ export async function rejoindreGroupe(
       : REFUS;
   }
 
-  revalidatePath("/eleve/entraide");
+  revalidatePath("/app/entraide");
   return { etat: "ok", message: "Vous faites partie du groupe." };
 }
 
@@ -185,6 +185,6 @@ export async function quitterGroupe(
 
   if (error !== null) return REFUS;
 
-  revalidatePath("/eleve/entraide");
+  revalidatePath("/app/entraide");
   return { etat: "ok", message: "Vous avez quitté le groupe." };
 }

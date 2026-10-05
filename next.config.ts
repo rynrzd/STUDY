@@ -46,7 +46,13 @@ const nextConfig: NextConfig = {
       { source: "/fonctionnalites", destination: "/produit", permanent: true },
       { source: "/demo", destination: "/etablissements", permanent: true },
       // Refonte V2 (ch. 21) : les espaces connectes changent d adresse.
-      { source: "/mes-cours", destination: "/eleve", permanent: true },
+      { source: "/mes-cours", destination: "/app", permanent: true },
+      // V6 (dossier du 5 octobre 2026, §2.3) : l espace eleve vit sous /app.
+      { source: "/eleve", destination: "/app", permanent: true },
+      { source: "/eleve/cours", destination: "/app/cours", permanent: true },
+      { source: "/eleve/cours/:seance", destination: "/app/seances/:seance", permanent: true },
+      { source: "/eleve/:chemin*", destination: "/app/:chemin*", permanent: true },
+      { source: "/mot-de-passe-oublie", destination: "/acces-oublie", permanent: true },
       { source: "/etablissement", destination: "/admin", permanent: true },
       { source: "/etablissement/:chemin*", destination: "/admin/:chemin*", permanent: true },
       { source: "/apres-connexion", destination: "/app", permanent: true },

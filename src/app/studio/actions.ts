@@ -262,7 +262,7 @@ export async function publierSeance(
       .eq("lesson_id", analyse.data.id);
 
     revalidatePath(`/studio/${analyse.data.id}`);
-    revalidatePath("/eleve");
+    revalidatePath("/app");
     return { etat: "ok", message: "Séance dépubliée : elle redevient un brouillon." };
   }
 
@@ -340,8 +340,8 @@ export async function publierSeance(
   }
 
   revalidatePath(`/studio/${analyse.data.id}`);
-  revalidatePath("/eleve");
-  revalidatePath("/eleve/cours");
+  revalidatePath("/app");
+  revalidatePath("/app/cours");
 
   return { etat: "ok", message: "Séance publiée : la classe y a accès." };
 }
@@ -650,7 +650,7 @@ export async function modifierBloc(
   }
 
   revalidatePath(`/studio/${seanceId}`);
-  revalidatePath("/eleve");
+  revalidatePath("/app");
   return { etat: "ok", message: "Bloc modifié." };
 }
 
@@ -696,7 +696,7 @@ export async function supprimerBloc(
   }
 
   revalidatePath(`/studio/${seanceId}`);
-  revalidatePath("/eleve");
+  revalidatePath("/app");
   return { etat: "ok", message: "Bloc supprimé." };
 }
 

@@ -1,8 +1,8 @@
 "use client";
 
 import { useActionState, useOptimistic } from "react";
-import { marquerFait } from "@/app/eleve/actions";
-import { ETAT_ELEVE_INITIAL, type EtatEleve } from "@/app/eleve/etats";
+import { marquerFait } from "@/app/app/actions-eleve";
+import { ETAT_ELEVE_INITIAL, type EtatEleve } from "@/app/app/etats-eleve";
 
 /**
  * « Fait » — cahier V5, §3.3.

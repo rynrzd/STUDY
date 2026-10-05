@@ -76,7 +76,7 @@ export default async function PageDevoirEleve({
   return (
     <article className="max-w-[var(--spacing-lecture)]">
       <nav aria-label="Fil d'ariane" className="mb-6 print:hidden">
-        <Link href="/eleve/devoirs" className="lien-fleche text-[length:var(--text-tableau)]">
+        <Link href="/app/devoirs" className="lien-fleche text-[length:var(--text-tableau)]">
           <span aria-hidden="true">←</span> À faire
         </Link>
       </nav>
@@ -182,7 +182,7 @@ export default async function PageDevoirEleve({
 
             <p className="m-0 mt-4 print:hidden">
               <Link
-                href={`/eleve/devoirs/${identifiant}/preuve`}
+                href={`/app/devoirs/${identifiant}/preuve`}
                 data-testid="voir-preuve"
                 className="bouton bouton-secondaire bouton-compact"
               >

@@ -163,7 +163,7 @@ export async function modifierUnDevoir(
   });
 
   revalidatePath(`/professeur/devoirs/${analyse.data.devoir}`);
-  revalidatePath("/eleve/devoirs");
+  revalidatePath("/app/devoirs");
 
   return fait
     ? { etat: "ok", message: "Devoir modifié." }
@@ -206,8 +206,8 @@ export async function basculerPublication(
 
   revalidatePath(`/professeur/devoirs/${analyse.data.devoir}`);
   revalidatePath("/professeur/devoirs");
-  revalidatePath("/eleve/devoirs");
-  revalidatePath("/eleve");
+  revalidatePath("/app/devoirs");
+  revalidatePath("/app");
 
   return resultat.ok
     ? {
@@ -241,7 +241,7 @@ export async function basculerArchive(
 
   revalidatePath(`/professeur/devoirs/${analyse.data.devoir}`);
   revalidatePath("/professeur/devoirs");
-  revalidatePath("/eleve/devoirs");
+  revalidatePath("/app/devoirs");
 
   return fait
     ? {
@@ -287,7 +287,7 @@ export async function constaterRemisePapier(
   });
 
   revalidatePath(`/professeur/devoirs/${analyse.data.devoir}`);
-  revalidatePath("/eleve/devoirs");
+  revalidatePath("/app/devoirs");
 
   return fait
     ? { etat: "ok", message: "État de remise enregistré." }
@@ -367,8 +367,8 @@ export async function enregistrerUneCorrection(
   }
 
   revalidatePath(`/professeur/devoirs/${analyse.data.devoir}`);
-  revalidatePath("/eleve/devoirs");
-  revalidatePath("/eleve");
+  revalidatePath("/app/devoirs");
+  revalidatePath("/app");
 
   return {
     etat: "ok",
@@ -395,7 +395,7 @@ export async function retirerUneCorrection(
   const fait = await publierRetour(session.jeton, analyse.data.retour, false);
 
   revalidatePath(`/professeur/devoirs/${analyse.data.devoir}`);
-  revalidatePath("/eleve/devoirs");
+  revalidatePath("/app/devoirs");
 
   return fait
     ? { etat: "ok", message: "Correction retirée : l'élève ne la voit plus." }
@@ -482,9 +482,9 @@ export async function enregistrerLaCorrectionCommune(
   }
 
   revalidatePath(`/professeur/devoirs/${analyse.data.devoir}`);
-  revalidatePath(`/eleve/devoirs/${analyse.data.devoir}`);
-  revalidatePath("/eleve/devoirs");
-  revalidatePath("/eleve");
+  revalidatePath(`/app/devoirs/${analyse.data.devoir}`);
+  revalidatePath("/app/devoirs");
+  revalidatePath("/app");
 
   return {
     etat: "ok",
@@ -512,8 +512,8 @@ export async function retirerLaCorrectionCommune(
   const fait = await publierCorrectionCommune(session.jeton, analyse.data.correction, false);
 
   revalidatePath(`/professeur/devoirs/${analyse.data.devoir}`);
-  revalidatePath(`/eleve/devoirs/${analyse.data.devoir}`);
-  revalidatePath("/eleve/devoirs");
+  revalidatePath(`/app/devoirs/${analyse.data.devoir}`);
+  revalidatePath("/app/devoirs");
 
   return fait
     ? {

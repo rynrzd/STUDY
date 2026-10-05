@@ -247,8 +247,8 @@ export async function publierDocument(
   }
 
   revalidatePath(`/professeur/studio/${analyse.data.document}`);
-  revalidatePath("/eleve");
-  revalidatePath("/eleve/cours");
+  revalidatePath("/app");
+  revalidatePath("/app/cours");
 
   return { etat: "ok", message: "Le cours est publié : la classe y a accès." };
 }

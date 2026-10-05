@@ -168,6 +168,10 @@ export default function proxy(requete: NextRequest) {
 
   const entetes = new Headers(requete.headers);
   if (valeurNonce !== null) entetes.set("x-study-nonce", valeurNonce);
+  // Le chemin demandé, pour qu'une reconnexion ramène au même endroit
+  // (dossier V6, §6.1). C'est une indication de navigation, jamais un droit :
+  // il est revalidé par suiteSure() avant tout usage.
+  entetes.set("x-study-chemin", `${requete.nextUrl.pathname}${requete.nextUrl.search}`);
 
   // C'est **cette ligne** qui fait que le site fonctionne.
   //

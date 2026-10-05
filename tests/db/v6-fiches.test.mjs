@@ -223,3 +223,35 @@ test("Le moteur n'est pas appelable depuis un navigateur", async (t) => {
        and (has_function_privilege('authenticated', p.oid, 'execute') or has_function_privilege('anon', p.oid, 'execute'))`);
   assert.deepEqual(r.rows, []);
 });
+
+test("Les seances importees du Studio fournissent leurs passages (body.document.blocs)", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+  const version = (
+    await db.query(
+      `insert into study.content_versions (organization_id, body, sealed_at, created_by)
+       values ($1, $2, now(), $3) returning id`,
+      [
+        ACTEURS.lyceeA,
+        JSON.stringify({
+          document: {
+            version: 1,
+            titre: "Cours importe",
+            blocs: [
+              { type: "titre", niveau: 1, texte: "Image d un nombre", origine: { page: 1 } },
+              { type: "paragraphe", texte: "On dit que f(a) est l image de a.", origine: { page: 2 } },
+              { type: "encadre", intitule: "Definition", texte: "Un antecedent de b verifie f(a) = b." },
+            ],
+          },
+          reglages: { modele: "classique" },
+        }),
+        ACTEURS.profMartin,
+      ],
+    )
+  ).rows[0].id;
+  await db.query("update study.lessons set content_version_id = $1 where id = $2", [version, OBJETS.seanceA1]);
+  const passages = (await db.query("select * from study.passages_de_seance($1)", [OBJETS.seanceA1])).rows;
+  assert.deepEqual(passages.map((p) => p.kind), ["titre", "paragraphe", "encadre"]);
+  assert.equal(passages[1].page, 2, "la page d'origine est conservee pour la citation");
+  assert.equal(passages[2].texte, "Definition : Un antecedent de b verifie f(a) = b.");
+});

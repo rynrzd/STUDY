@@ -110,9 +110,9 @@ export async function remettreUneCopie(
     return { etat: "erreur", message: resultat.message };
   }
 
-  revalidatePath("/eleve/devoirs");
-  revalidatePath(`/eleve/devoirs/${analyse.data.devoir}`);
-  revalidatePath("/eleve");
+  revalidatePath("/app/devoirs");
+  revalidatePath(`/app/devoirs/${analyse.data.devoir}`);
+  revalidatePath("/app");
 
   return {
     etat: "remis",

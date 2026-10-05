@@ -94,7 +94,8 @@ as $$
              end
         from study.lessons l
         join study.content_versions cv on cv.id = l.content_version_id
-        cross join lateral jsonb_array_elements(coalesce(cv.body -> 'blocs', '[]'::jsonb)) with ordinality as e(bloc, idx)
+        -- Studio : {document: {blocs}} ; contenus plus anciens : {blocs}.
+        cross join lateral jsonb_array_elements(coalesce(cv.body -> 'document' -> 'blocs', cv.body -> 'blocs', '[]'::jsonb)) with ordinality as e(bloc, idx)
        where l.id = p_lecon
     ) p
    where texte is not null and length(btrim(texte)) > 0;

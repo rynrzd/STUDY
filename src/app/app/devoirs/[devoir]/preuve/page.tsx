@@ -65,7 +65,7 @@ export default async function PagePreuve({ params }: { params: Promise<{ devoir:
     <article className="max-w-[var(--spacing-lecture)]">
       <nav aria-label="Fil d'ariane" className="mb-6 print:hidden">
         <Link
-          href={`/eleve/devoirs/${identifiant}`}
+          href={`/app/devoirs/${identifiant}`}
           className="lien-fleche text-[length:var(--text-tableau)]"
         >
           <span aria-hidden="true">←</span> Le devoir
@@ -143,7 +143,7 @@ export default async function PagePreuve({ params }: { params: Promise<{ devoir:
       </p>
 
       <p className="m-0 mt-6 print:hidden">
-        <Link href={`/eleve/devoirs/${identifiant}`} className="bouton bouton-secondaire">
+        <Link href={`/app/devoirs/${identifiant}`} className="bouton bouton-secondaire">
           Retour au devoir
         </Link>
       </p>

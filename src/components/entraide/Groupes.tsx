@@ -2,8 +2,8 @@
 
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { creerGroupe, quitterGroupe, rejoindreGroupe } from "@/app/eleve/entraide/actions";
-import { ETAT_ENTRAIDE_INITIAL, type EtatEntraide } from "@/app/eleve/entraide/etats";
+import { creerGroupe, quitterGroupe, rejoindreGroupe } from "@/app/app/entraide/actions";
+import { ETAT_ENTRAIDE_INITIAL, type EtatEntraide } from "@/app/app/entraide/etats";
 
 /**
  * Groupes d'entraide — cahier V2, §13.

@@ -2,8 +2,8 @@
 
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { demanderDeLAide, repondreAUnCamarade } from "@/app/eleve/actions";
-import { ETAT_ELEVE_INITIAL, type EtatEleve } from "@/app/eleve/etats";
+import { demanderDeLAide, repondreAUnCamarade } from "@/app/app/actions-eleve";
+import { ETAT_ELEVE_INITIAL, type EtatEleve } from "@/app/app/etats-eleve";
 import type { FilEntraide } from "@/lib/parcours-eleve";
 import { Signaler } from "./Signaler";
 

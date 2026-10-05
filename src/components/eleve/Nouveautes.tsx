@@ -2,8 +2,8 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { lireUneNouveaute, toutLire } from "@/app/eleve/actions";
-import { ETAT_ELEVE_INITIAL, type EtatEleve } from "@/app/eleve/etats";
+import { lireUneNouveaute, toutLire } from "@/app/app/actions-eleve";
+import { ETAT_ELEVE_INITIAL, type EtatEleve } from "@/app/app/etats-eleve";
 import type { GenreNouveaute, Nouveaute } from "@/lib/nouveautes";
 
 // Les libellés vivent ici, et non dans `@/lib/nouveautes` : ce module est

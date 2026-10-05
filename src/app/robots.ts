@@ -29,6 +29,7 @@ export default function robots(): MetadataRoute.Robots {
           "/connexion",
           "/documents/",
           "/eleve/",
+          "/app/",
           "/mot-de-passe-oublie",
           "/parametres",
           "/professeur/",

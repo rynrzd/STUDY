@@ -263,7 +263,7 @@ export function destinationApresConnexion(personne: Personne): string {
   if (estExploitant(personne)) return "/administration";
   if (estAdministrateur(personne)) return "/admin";
   if (estEnseignant(personne)) return "/professeur";
-  return "/eleve";
+  return "/app";
 }
 
 export { depot as depotAuthentification };

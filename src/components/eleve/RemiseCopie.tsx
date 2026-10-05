@@ -2,8 +2,8 @@
 
 import { useActionState, useId, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { remettreUneCopie } from "@/app/eleve/devoirs/actions";
-import { ETAT_REMISE_INITIAL, type EtatRemiseAction } from "@/app/eleve/devoirs/etats";
+import { remettreUneCopie } from "@/app/app/devoirs/actions";
+import { ETAT_REMISE_INITIAL, type EtatRemiseAction } from "@/app/app/devoirs/etats";
 import { instantLisible } from "@/lib/horodatage";
 import { tailleLisible } from "@/lib/formats-documents";
 

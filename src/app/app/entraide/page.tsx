@@ -43,7 +43,7 @@ export default async function PageEntraide({
             titre="Aucun cours pour le moment."
             texte="Les groupes d'entraide se créent à l'intérieur d'un cours. Ils apparaîtront ici dès que votre inscription sera enregistrée."
             action={
-              <Link href="/eleve" className="bouton bouton-secondaire">
+              <Link href="/app" className="bouton bouton-secondaire">
                 Retour à l&apos;accueil
               </Link>
             }
@@ -69,7 +69,7 @@ export default async function PageEntraide({
               return (
                 <li key={autre.id}>
                   <Link
-                    href={`/eleve/entraide?cours=${autre.id}`}
+                    href={`/app/entraide?cours=${autre.id}`}
                     aria-current={active ? "page" : undefined}
                     className={`inline-flex min-h-9 items-center rounded-full border px-3.5 text-[length:var(--text-tableau)] no-underline ${
                       active

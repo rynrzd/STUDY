@@ -16,15 +16,18 @@ export function VueSeance({
   blocs,
   libelleCours,
   chapitre,
+  sansEntete = false,
 }: {
   seance: Seance;
   blocs: Bloc[];
   libelleCours: string;
   chapitre?: string | null;
+  /** La page V6 porte déjà le titre, le fil d'Ariane et la version. */
+  sansEntete?: boolean;
 }) {
   return (
     <article>
-      <header className="border-b border-[color:var(--color-bordure)] pb-5">
+      <header className={sansEntete ? "hidden" : "border-b border-[color:var(--color-bordure)] pb-5"}>
         <p className="m-0 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
           {libelleCours}
           {chapitre ? ` · ${chapitre}` : ""}
@@ -62,9 +65,12 @@ export function VueSeance({
           Cette séance ne contient encore rien.
         </p>
       ) : (
-        <div className="mt-6 space-y-5">
+        <div className={sansEntete ? "space-y-5" : "mt-6 space-y-5"}>
           {blocs.map((bloc) => (
-            <BlocLu key={bloc.id} bloc={bloc} />
+            // Ancre stable : la recherche ouvre le passage précis (#bloc-…).
+            <div key={bloc.id} id={`bloc-${bloc.id}`} className="scroll-mt-24">
+              <BlocLu bloc={bloc} />
+            </div>
           ))}
         </div>
       )}

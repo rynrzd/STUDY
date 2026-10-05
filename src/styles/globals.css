@@ -17,54 +17,59 @@
 
 @theme {
   /* -- Couleurs ---------------------------------------------------------- */
-  --color-fond: #ffffff;          /* la landing est blanche (ch. 02) */
+  /* Jetons contractuels du dossier Study V6 (design-tokens.css, §3.2).
+     Les noms historiques sont conservés : tout le produit change d'un coup. */
+  --color-fond: #fbfafb;
   --color-surface: #ffffff;
-  --color-surface-douce: #faf9fa; /* aplats de section, très discrets */
+  --color-surface-douce: #f8f5f7;
 
-  --color-encre: #17171b;         /* texte principal, boutons pleins */
-  --color-encre-faible: #62626a;  /* texte secondaire — 6,04:1 sur blanc */
+  --color-encre: #29282e;
+  --color-encre-faible: #696570;  /* muted du dossier — 5,6:1 sur blanc */
   /* Mesuré, pas estimé. #8b8b95 donnait 3,37:1 sur blanc : au-dessous du
      4,5:1 qu'exige WCAG 2.2 AA pour du texte normal, et ce gris portait les
      légendes de l'aperçu, les libellés de pied de page et les petites notes.
      #686872 tient 4,5:1 sur **tous** les fonds du produit — blanc, surface
      douce, survol, et jusqu'au rose clair (4,51:1). Un ton qui ne passe que
      sur blanc se casse le jour où quelqu'un le pose ailleurs. */
-  --color-encre-tres-faible: #686872;
+  --color-encre-tres-faible: #696570;
 
   /* Le rose, en trois intensités et pas une de plus. */
-  --color-accent: #a43760;        /* petits libellés roses, lisibles */
+  --color-accent: #81445b;        /* rose-ink : texte et accent sur rose clair */
   /* Ce qui s'écrit **sur** l'accent. Le jeton manquait, et une pastille
      l'appelait tout de même : la couleur ne résolvant à rien, le texte
      héritait de l'encre — 2,8:1 sur le rose, au-dessous du 4,5:1 exigé.
      Un nom de variable qui n'existe pas ne casse rien à la compilation ; il
      casse la lisibilité, en silence. Le blanc donne 6,38:1. */
   --color-sur-accent: #ffffff;
-  --color-accent-fonce: #832c4d;  /* survol et focus */
-  --color-rose-clair: #f8e3eb;    /* bandes et fonds roses */
-  --color-surlignage: #f7dfeb;    /* le trait rose sous le hero */
-  --color-rose-decor: #e9b6c8;    /* filets et repères, jamais du texte */
+  --color-accent-fonce: #693346;
+  --color-rose-clair: #f9e7ed;    /* rose-surface : sélection, accueil, contexte */
+  --color-surlignage: #f6dce6;
+  --color-rose-decor: #e3bccb;
 
-  --color-bordure: #e7e4e7;
-  --color-bordure-forte: #cfcbd2;  /* filets et séparateurs, décoratifs */
+  --color-bordure: #e4dfe6;
+  --color-bordure-forte: #cfc7d2;
   /* La bordure d'un champ n'est pas décorative : c'est elle qui dit où
      commence la zone de saisie, et WCAG 1.4.11 lui demande 3:1. #cfcbd2 en
      donnait 1,60 — un champ qu'on devine plus qu'on ne le voit. Celle-ci
      tient 3,31:1. */
-  --color-bordure-champ: #8f8c94;
-  --color-survol: #f2f0f2;
+  --color-bordure-champ: #8e8894;
+  --color-survol: #f5f0f3;
+  --color-primaire: #302b32;      /* action principale */
+  --color-primaire-survol: #1f1b21;
+  --color-focus: #a05c78;         /* anneau de focus de 3 px */
 
-  --color-succes: #216847;
-  --color-succes-fond: #eef5f1;
-  --color-erreur: #b42335;
-  --color-erreur-fond: #fbeef0;
-  --color-attention: #8a5a00;
-  --color-attention-fond: #fdf4e3;
+  --color-succes: #365c43;
+  --color-succes-fond: #e9f2ed;
+  --color-erreur: #993b36;
+  --color-erreur-fond: #fcedec;
+  --color-attention: #78571e;
+  --color-attention-fond: #fbf2df;
 
   /* -- Typographie : une seule famille ----------------------------------- */
-  --font-texte: Arial, "Helvetica Neue", Helvetica, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-texte: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-titre: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   /* Le mot-symbole, et lui seul, retrouve l'empattement de la référence. */
-  --font-marque: Georgia, "Times New Roman", serif;
+  --font-marque: "Manrope", system-ui, sans-serif;
 
   --text-aide: 0.8125rem;                          /* 13 px */
   --text-aide--line-height: 1.25rem;
@@ -98,7 +103,7 @@
 
   /* -- Géométrie : arrondis modérés -------------------------------------- */
   --radius-champ: 8px;
-  --radius-carte: 12px;
+  --radius-carte: 14px;
 
   /* Une seule ombre, discrète, réservée à ce qui flotte réellement. */
   --shadow-flottant: 0 2px 4px rgba(25, 25, 29, 0.04), 0 8px 24px rgba(25, 25, 29, 0.08);
@@ -116,11 +121,19 @@
    =========================================================================== */
 
 @font-face {
-  font-family: "Inter";
+  font-family: "DM Sans";
   font-style: normal;
-  font-weight: 400 800;
+  font-weight: 100 1000;
   font-display: swap;
-  src: url("/fonts/inter-variable.woff2") format("woff2");
+  src: url("/fonts/dm-sans-variable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("/fonts/manrope-variable.woff2") format("woff2");
 }
 
 /* ===========================================================================
@@ -149,6 +162,7 @@
   }
 
   h1, h2, h3, h4 {
+    font-family: var(--font-titre);
     font-weight: 700;
     letter-spacing: -0.02em;
     margin: 0;
@@ -164,7 +178,7 @@
 
   /* Focus visible obligatoire, en rose : il signale l'élément actif. */
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 3px solid var(--color-focus);
     outline-offset: 2px;
     border-radius: 4px;
   }
@@ -234,12 +248,12 @@
   /* Action principale : encre pleine. Le rose reste l'accent, pas le fond
      de tous les boutons — sans quoi il cesse de signaler quoi que ce soit. */
   .bouton-primaire {
-    background: var(--color-encre);
-    border-color: var(--color-encre);
-    color: var(--color-surface);
+    background: var(--color-primaire);
+    border-color: var(--color-primaire);
+    color: #fff;
   }
 
-  .bouton-primaire:hover:not(:disabled) { background: #000; }
+  .bouton-primaire:hover:not(:disabled) { background: var(--color-primaire-survol); }
 
   /* Action rose : réservée à l'action décisive d'un écran. */
   .bouton-rose {
@@ -819,5 +833,523 @@
      écrite en toutes lettres dans la fiche. */
   .fiche-impression a::after {
     content: "" !important;
+  }
+}
+
+/* ===========================================================================
+   Study V6 — l'application connectée (dossier du 5 octobre 2026, §3)
+
+   Barre latérale 240 px (208 px sous 1 280 px), en-tête 80 px, contenu
+   1 200 px au plus. Sous 768 px : en-tête 60 px, barre inférieure de cinq
+   destinations, 64 px plus la zone sûre, dont l'encombrement est réservé.
+   Corps 14 px ; 16 px dans les champs sur téléphone (sans quoi iOS zoome).
+   Une seule ombre, pour ce qui flotte. Animations de 120 à 180 ms.
+   =========================================================================== */
+
+@layer components {
+  .app-coque {
+    min-height: 100dvh;
+    background: var(--color-fond);
+    color: var(--color-encre);
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+
+  .app-barre {
+    display: none;
+  }
+
+  .app-espace {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+  }
+
+  .app-entete {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 60px;
+    padding-inline: 16px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-bordure);
+  }
+
+  .app-principal {
+    flex: 1;
+    width: 100%;
+    max-width: 1200px;
+    margin-inline: auto;
+    padding: 20px 16px calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .app-nav-mobile {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    height: calc(64px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-bordure);
+  }
+
+  .app-nav-mobile a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 44px;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--color-encre-faible);
+    text-decoration: none;
+  }
+
+  .app-nav-mobile a[aria-current="page"] {
+    color: var(--color-accent);
+    font-weight: 700;
+  }
+
+  @media (min-width: 768px) {
+    .app-coque {
+      display: grid;
+      grid-template-columns: 208px minmax(0, 1fr);
+    }
+
+    .app-barre {
+      position: sticky;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      overflow-y: auto;
+      padding: 24px 12px 16px;
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-bordure);
+    }
+
+    .app-entete {
+      height: 80px;
+      padding-inline: 24px;
+      gap: 12px;
+    }
+
+    .app-principal {
+      padding: 32px 24px 48px;
+    }
+
+    .app-nav-mobile,
+    .app-seulement-mobile {
+      display: none !important;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .app-seulement-bureau {
+      display: none !important;
+    }
+
+    .app-coque .champ,
+    .app-coque input,
+    .app-coque select,
+    .app-coque textarea {
+      font-size: 16px;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .app-coque {
+      grid-template-columns: 240px minmax(0, 1fr);
+    }
+
+    .app-barre {
+      padding-inline: 16px;
+    }
+
+    .app-entete,
+    .app-principal {
+      padding-inline: 40px;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .app-coque .champ {
+      font-size: 0.875rem;
+    }
+  }
+
+  .app-coque .bouton {
+    font-size: 0.8125rem;
+    min-height: 40px;
+    padding-inline: 16px;
+  }
+
+  @media (max-width: 640px), (pointer: coarse) {
+    .app-coque .bouton {
+      min-height: 44px;
+    }
+  }
+
+  .marque-study {
+    font-family: var(--font-titre);
+    font-weight: 800;
+    letter-spacing: -0.06em;
+    color: var(--color-encre);
+    text-decoration: none;
+  }
+
+  .marque-study span {
+    color: #c37a94;
+  }
+
+  .lien-barre {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: 9px;
+    color: var(--color-encre-faible);
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color 140ms ease, color 140ms ease;
+  }
+
+  .lien-barre:hover {
+    background: var(--color-survol);
+    color: var(--color-encre);
+  }
+
+  .lien-barre[aria-current="page"] {
+    background: var(--color-rose-clair);
+    color: var(--color-accent-fonce);
+    font-weight: 600;
+  }
+
+  .compteur {
+    margin-left: auto;
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 20px;
+    text-align: center;
+  }
+
+  .pastille-point {
+    position: absolute;
+    top: 9px;
+    right: 9px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #b0647f;
+    box-shadow: 0 0 0 2px var(--color-surface);
+  }
+
+  .bouton-icone {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    color: var(--color-encre);
+    text-decoration: none;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+  }
+
+  .bouton-icone:hover {
+    background: var(--color-survol);
+  }
+
+  .avatar {
+    display: inline-grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #efe4e9;
+    color: var(--color-accent-fonce);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  /* --- Typographie de l'application ------------------------------------ */
+  .sourcil {
+    display: block;
+    margin: 0 0 8px;
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+
+  .titre-page {
+    font-size: 1.75rem;
+    line-height: 2.25rem;
+    letter-spacing: -0.03em;
+  }
+
+  @media (min-width: 768px) {
+    .titre-page {
+      font-size: 2rem;
+      line-height: 2.5rem;
+    }
+  }
+
+  .titre-section {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    letter-spacing: -0.02em;
+  }
+
+  .titre-bloc {
+    font-size: 1rem;
+    line-height: 1.5rem;
+    letter-spacing: -0.01em;
+  }
+
+  .meta {
+    font-size: 0.75rem;
+    line-height: 1.125rem;
+    color: var(--color-encre-faible);
+  }
+
+  .lecture {
+    max-width: 720px;
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+
+  .lecture p {
+    margin: 0 0 1em;
+  }
+
+  /* --- Panneaux --------------------------------------------------------- */
+  .panneau {
+    min-width: 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-bordure);
+    border-radius: var(--radius-carte);
+    padding: 20px;
+  }
+
+  @media (min-width: 768px) {
+    .panneau {
+      padding: 24px;
+    }
+  }
+
+  .panneau-rose {
+    background: var(--color-rose-clair);
+    border-color: var(--color-rose-clair);
+  }
+
+  .panneau-vert {
+    background: var(--color-succes-fond);
+    border-color: var(--color-succes-fond);
+  }
+
+  .ligne {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 56px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--color-bordure);
+  }
+
+  .ligne:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .ligne:first-child {
+    padding-top: 0;
+  }
+
+  .date-bloc {
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    min-width: 48px;
+    padding: 6px;
+    border-radius: 8px;
+    background: var(--color-surface-douce);
+    font-family: var(--font-titre);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .date-bloc small {
+    display: block;
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--color-encre-faible);
+  }
+
+  /* --- Étiquettes d'état : le texte porte le sens, la couleur l'appuie -- */
+  .etiquette-etat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.125rem;
+    white-space: nowrap;
+    background: var(--color-survol);
+    color: var(--color-encre);
+  }
+
+  .etiquette-etat[data-ton="rose"] { background: var(--color-rose-clair); color: var(--color-accent-fonce); }
+  .etiquette-etat[data-ton="succes"] { background: var(--color-succes-fond); color: var(--color-succes); }
+  .etiquette-etat[data-ton="attention"] { background: var(--color-attention-fond); color: var(--color-attention); }
+  .etiquette-etat[data-ton="erreur"] { background: var(--color-erreur-fond); color: var(--color-erreur); }
+
+  /* --- Onglets en liens -------------------------------------------------- */
+  .onglets-liens {
+    display: flex;
+    gap: 22px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--color-bordure);
+    scrollbar-width: none;
+  }
+
+  .onglets-liens a {
+    flex-shrink: 0;
+    padding: 12px 0;
+    border-bottom: 2px solid transparent;
+    color: var(--color-encre-faible);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .onglets-liens a[aria-current="page"] {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-focus);
+    font-weight: 600;
+  }
+
+  /* --- Squelette : même géométrie que le contenu ------------------------- */
+  .squelette-ligne {
+    display: block;
+    height: 12px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #f1edf0 0%, #f8f5f7 50%, #f1edf0 100%);
+    background-size: 200% 100%;
+    animation: miroiter 1.2s ease-in-out infinite;
+  }
+
+  @keyframes miroiter {
+    from { background-position: 100% 0; }
+    to { background-position: -100% 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .squelette-ligne { animation: none; }
+  }
+
+  /* --- Dialogue ---------------------------------------------------------- */
+  .dialogue {
+    width: min(520px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    padding: 28px;
+    border: 1px solid var(--color-bordure);
+    border-radius: 16px;
+    color: var(--color-encre);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-flottant);
+  }
+
+  .dialogue::backdrop {
+    background: rgba(33, 23, 35, 0.35);
+  }
+
+  /* --- Texte surligné d'un résultat de recherche ------------------------- */
+  .surligne-recherche {
+    background: var(--color-rose-clair);
+    color: var(--color-accent-fonce);
+    border-radius: 3px;
+    padding: 0 2px;
+    font-weight: 600;
+  }
+
+  /* --- Composeur de message : collé au bas, au-dessus du clavier --------- */
+  .composeur {
+    position: sticky;
+    bottom: calc(64px + env(safe-area-inset-bottom));
+    z-index: 5;
+    background: var(--color-surface);
+  }
+
+  @media (min-width: 768px) {
+    .composeur {
+      bottom: 0;
+    }
+  }
+
+  /* --- Menu déroulant natif (details) ------------------------------------ */
+  .menu-deroulant {
+    position: relative;
+  }
+
+  .menu-deroulant > summary {
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .menu-deroulant > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .menu-deroulant-panneau {
+    position: absolute;
+    z-index: 40;
+    min-width: 240px;
+    padding: 8px;
+    border: 1px solid var(--color-bordure);
+    border-radius: 12px;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-flottant);
+  }
+}
+
+@media print {
+  .app-barre,
+  .app-entete,
+  .app-nav-mobile,
+  .app-sans-impression {
+    display: none !important;
+  }
+
+  .app-coque {
+    display: block !important;
+    background: #fff;
+  }
+
+  .app-principal {
+    max-width: none;
+    padding: 0 !important;
   }
 }

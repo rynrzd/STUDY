@@ -18,7 +18,7 @@ import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
  * ne rend rien, et l'écriture n'a pas lieu.
  */
 
-import type { EtatEleve } from "./etats";
+import type { EtatEleve } from "./etats-eleve";
 
 const REFUS: EtatEleve = {
   etat: "erreur",
@@ -59,8 +59,8 @@ export async function marquerFait(_precedent: EtatEleve, donnees: FormData): Pro
 
   if (!fait) return REFUS;
 
-  revalidatePath("/eleve");
-  revalidatePath("/eleve/devoirs");
+  revalidatePath("/app");
+  revalidatePath("/app/devoirs");
   return {
     etat: "ok",
     message: analyse.data.fait === "oui" ? "Marqué comme fait." : "Remis à faire.",
@@ -101,7 +101,7 @@ export async function demanderDeLAide(
 
   if (!resultat.ok) return { etat: "erreur", message: resultat.message };
 
-  revalidatePath(`/eleve/cours/${analyse.data.seance}`);
+  revalidatePath(`/app/seances/${analyse.data.seance}`);
   return { etat: "ok", message: "Votre question est posée à votre classe." };
 }
 
@@ -138,7 +138,7 @@ export async function repondreAUnCamarade(
 
   if (!resultat.ok) return { etat: "erreur", message: resultat.message };
 
-  revalidatePath(`/eleve/cours/${analyse.data.seance}`);
+  revalidatePath(`/app/seances/${analyse.data.seance}`);
   return { etat: "ok", message: "Votre réponse est publiée." };
 }
 
@@ -202,7 +202,7 @@ export async function signalerUnContenu(
     return { etat: resultat.dejaSignale === true ? "ok" : "erreur", message: resultat.message };
   }
 
-  revalidatePath(`/eleve/cours/${analyse.data.seance}`);
+  revalidatePath(`/app/seances/${analyse.data.seance}`);
 
   return {
     etat: "ok",
@@ -240,9 +240,9 @@ export async function lireUneNouveaute(
   if (!analyse.success) return REFUS;
 
   await marquerLue(session.jeton, analyse.data.nouveaute);
-  revalidatePath("/eleve");
+  revalidatePath("/app");
 
-  redirect(`/eleve/devoirs/${analyse.data.devoir}`);
+  redirect(`/app/devoirs/${analyse.data.devoir}`);
 }
 
 /** Marque toutes mes nouveautés lues — pour la rentrée, quand la liste a grossi. */
@@ -251,7 +251,7 @@ export async function toutLire(_precedent: EtatEleve, _donnees: FormData): Promi
   if (session === null) return REFUS;
 
   const fait = await toutMarquerLu(session.jeton);
-  revalidatePath("/eleve");
+  revalidatePath("/app");
 
   return fait
     ? { etat: "ok", message: "Tout est marqué comme lu." }
