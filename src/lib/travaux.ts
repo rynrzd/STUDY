@@ -77,7 +77,10 @@ const GESTIONNAIRES: Record<string, Gestionnaire> = {
 
     const { traiterFiche } = await import("./revision/moteur-fiches.ts");
     const client = clientExploitation("tache_planifiee");
-    const issue = await traiterFiche((nom, parametres) => client.rpc(nom, parametres), fiche);
+    const issue = await traiterFiche(async (nom, parametres) => {
+      const { data, error } = await client.rpc(nom, parametres);
+      return { data, error };
+    }, fiche);
 
     return issue === "failed" ? { ok: false, refus: "fiche non restituee" } : { ok: true };
   },
