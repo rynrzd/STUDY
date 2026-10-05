@@ -253,3 +253,27 @@ test("Graphe de prerequis sans cycle ; variante proposee", async (t) => {
   const variante = await lirePour(db, ACTEURS.eleveA1Rayan, "select study.revision_variante($1) as v", [qcm]);
   assert.equal(variante[0].v, num);
 });
+
+test("Lectures de revision (0055) : sources disponibles, reprise de session, carnet", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+  const { qcm, num } = await preparerBanque(db);
+
+  const dispo = await lirePour(db, ACTEURS.eleveA1Rayan, "select * from study.seances_textes_disponibles($1)", [[OBJETS.seanceA1, OBJETS.seanceB1, OBJETS.seanceA1Brouillon]]);
+  assert.deepEqual(dispo.map((d) => d.lesson_id), [OBJETS.seanceA1], "ni l'autre lycee ni le brouillon, pas meme leur titre");
+  assert.equal(dispo[0].exercices, 2);
+
+  const session = (await lirePour(db, ACTEURS.eleveA1Rayan, "select study.entrainement_ouvrir('Revoir', $1) as id", [[qcm, num]]))[0].id;
+  await lirePour(db, ACTEURS.eleveA1Rayan, "select * from study.revision_tenter($1, $2, gen_random_uuid(), $3)", [qcm, JSON.stringify({ index: 0 }), session]);
+  const etat = await lirePour(db, ACTEURS.eleveA1Rayan, "select * from study.entrainement_etat($1)", [session]);
+  assert.equal(etat.length, 2);
+  assert.equal(etat[0].correct, false, "la reprise sait ce qui a deja ete repondu");
+  assert.equal(etat[1].tentative_id, null);
+  assert.ok(!("bonne_reponse" in etat[0]));
+  assert.equal((await lirePour(db, ACTEURS.eleveA1Lina, "select * from study.entrainement_etat($1)", [session])).length, 0, "la session d'un autre est vide");
+
+  const carnet = await lirePour(db, ACTEURS.eleveA1Rayan, "select * from study.carnet_lire()");
+  assert.equal(carnet.length, 1);
+  assert.match(carnet[0].explication, /2 x 3 \+ 1 = 7/, "l'explication est rendue apres la tentative");
+  assert.equal((await lirePour(db, ACTEURS.profMartin, "select * from study.carnet_lire()")).length, 0);
+});
