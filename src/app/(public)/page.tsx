@@ -12,6 +12,8 @@ import {
 import { ApercuEntraide, ApercuProfesseur } from "@/components/site/ApercusVivants";
 import { Faq, Onglets } from "@/components/site/Onglets";
 import { MARQUE } from "@/lib/identite-legale";
+import { ObservateurApparitions } from "@/components/study/mouvement";
+import { RubanStudy } from "@/components/study/ruban/RubanStudy";
 
 export const metadata: Metadata = pagePublique({
   chemin: "/",
@@ -42,10 +44,12 @@ export default function PageAccueil() {
   // temps que le clavier n'a pas.
   return (
     <main id="contenu">
+      <ObservateurApparitions />
       {/* -- L02 — Hero ---------------------------------------------------- */}
       <section className="relative z-10 pt-14 pb-0 sm:pt-20">
         <div className="contenu-site grid min-w-0 items-center gap-8 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-14">
-          <div>
+          {/* Entrée du texte : opacité et 12 px, chaque bloc à son tour. Rien n’attend le ruban. */}
+          <div className="entree-texte">
             <h1 className="m-0 text-[length:var(--text-h1-etroit)] leading-[var(--text-h1-etroit--line-height)] tracking-[-0.03em] min-[390px]:text-[length:var(--text-h1-mobile)] min-[390px]:leading-[var(--text-h1-mobile--line-height)] lg:text-[length:var(--text-h1)] lg:leading-[var(--text-h1--line-height)]">
               La classe.
               <br />
@@ -75,7 +79,16 @@ export default function PageAccueil() {
               qu'il lui reste à faire — sans barre latérale ni cadre de fenêtre.
               Au-dessus, la fenêtre reprend sa place et descend sur la bande
               rose, comme dans la référence. */}
-          <div>
+          <div className="relative lg:pt-[170px]">
+            {/* Le ruban Study : derrière l’aperçu, à droite, jamais devant un texte
+                ou un bouton. Scène 3D sur ordinateur seulement ; image fixe sinon. */}
+            <RubanStudy
+              composition="grande"
+              webgl
+              className="ruban-controle-haut absolute right-0 -top-6 z-0 hidden h-[340px] w-[430px] lg:block"
+            />
+            <RubanStudy composition="grande" className="mx-auto -mb-2 h-[170px] w-full max-w-[320px] lg:hidden" controle={false} />
+            <div className="relative z-[1] lg:w-[84%]">
             {/* La mention est discrète, mais elle est au-dessus de l'aperçu et
                 non en dessous : quelqu'un qui découvre le produit doit savoir
                 avant de lire que ces noms et ces devoirs ne sont l'espace de
@@ -89,6 +102,7 @@ export default function PageAccueil() {
             </div>
             <div className="hidden lg:-mb-24 lg:block">
               <ApercuEleve />
+            </div>
             </div>
           </div>
         </div>

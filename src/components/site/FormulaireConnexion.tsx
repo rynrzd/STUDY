@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { seConnecter } from "@/app/connexion/actions";
@@ -254,7 +255,15 @@ function BoutonConnexion() {
       disabled={pending}
       className="bouton bouton-primaire mt-8 w-full"
     >
-      {pending ? "Vérification…" : "Se connecter"}
+      {pending ? (
+        <>
+          {/* Indicateur simple, sans fausse progression : il tourne tant que la requête est en cours. */}
+          <Loader2 size={18} strokeWidth={2} aria-hidden="true" className="animate-spin motion-reduce:animate-none" />
+          Vérification…
+        </>
+      ) : (
+        "Se connecter"
+      )}
     </button>
   );
 }

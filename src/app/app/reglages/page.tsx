@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { KeyRound, ShieldCheck } from "lucide-react";
 import { CopiesLocales } from "@/components/study/HorsLigne";
+import { PreferencesMouvement } from "@/components/study/PreferencesMouvement";
 import { EnTetePage, ICONE, Panneau } from "@/components/study/ui";
 import { seDeconnecter } from "@/app/deconnexion/actions";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
@@ -37,6 +38,10 @@ export default async function PageReglages() {
             }}
             appareilPartage={ctx.personne.appareil === "partage"}
           />
+        </Panneau>
+
+        <Panneau id="effets" titre="Effets visuels">
+          <PreferencesMouvement />
         </Panneau>
 
         <Panneau id="appareil" titre="Copies sur cet appareil">

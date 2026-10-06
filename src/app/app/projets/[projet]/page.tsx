@@ -89,7 +89,7 @@ export default async function PageProjet({ params, searchParams }: { params: Pro
               {liste.length === 0 ? <p className="meta m-0">Rien ici.</p> : null}
               <ul className="m-0 grid list-none gap-3 p-0">
                 {liste.map((t) => (
-                  <li key={t.id} className="panneau p-4 md:p-4">
+                  <li key={t.id} className="panneau statut-change p-4 md:p-4">
                     <p className="m-0 font-semibold">{t.titre}</p>
                     <p className="meta m-0 mt-1">
                       {nom(t.responsable)}

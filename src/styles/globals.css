@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./mouvement.css";
 
 /* ===========================================================================
    AvecStudy — jetons de design
@@ -11,6 +12,8 @@
    Ce qui est proscrit et ne doit réapparaître nulle part : gradients violets
    ou bleus, glassmorphism, halos, ombres épaisses, décorations abstraites.
    Une interface scolaire se juge à sa lisibilité, pas à ses effets.
+   Exception mesurée (brief 3D, octobre 2026) : le ruban Study, rose nacré,
+   sur quelques écrans précis, jamais derrière un texte ou un bouton.
 
    Aucune couleur n'est écrite en dur ailleurs que dans ce bloc.
    =========================================================================== */
@@ -45,6 +48,7 @@
   --color-rose-clair: #f9e7ed;    /* rose-surface : sélection, accueil, contexte */
   --color-surlignage: #f6dce6;
   --color-rose-decor: #e3bccb;
+  --color-rose-moyen: #e8b5c8;    /* rose intermédiaire du brief 3D : bordures du ruban et décors */
 
   --color-bordure: #e4dfe6;
   --color-bordure-forte: #cfc7d2;
@@ -239,8 +243,8 @@
     line-height: 1;
     text-decoration: none;
     cursor: pointer;
-    transition: background-color 180ms ease, border-color 180ms ease,
-                color 180ms ease, transform 180ms ease;
+    transition: background-color var(--duree-bouton, 120ms) ease, border-color var(--duree-bouton, 120ms) ease,
+                color var(--duree-bouton, 120ms) ease, transform var(--duree-bouton, 120ms) var(--courbe-entree, ease);
   }
 
   .bouton:disabled { cursor: not-allowed; opacity: 0.55; }
@@ -406,23 +410,11 @@
   }
 
   /* --- Apparition des sections au défilement ------------------------------
-     Entièrement en CSS, par animation liée au défilement. Le point qui compte :
-     l'état de départ vit **dans** `@supports`. Là où la fonctionnalité manque,
-     la règle n'existe pas du tout, et le contenu est simplement visible — on ne
-     peut donc pas se retrouver avec une page blanche parce qu'un script n'a pas
-     tourné, ce que le chapitre 10 interdit.
-
-     12 px de translation et 250 ms de fondu : le mouvement se remarque à peine,
-     et c'est voulu. Une entrée spectaculaire se remarque deux fois, puis agace. */
-  @supports (animation-timeline: view()) {
-    @media (prefers-reduced-motion: no-preference) {
-      .apparition {
-        animation: apparaitre 250ms ease-out both;
-        animation-timeline: view();
-        animation-range: entry 0% entry 55%;
-      }
-    }
-  }
+     Brief 3D (octobre 2026) : une section apparaît **une seule fois**, et le
+     défilement n’est jamais lié à une animation. L’ancienne animation liée au
+     défilement (animation-timeline: view()) rejouait en sens inverse quand on
+     remontait ; elle est remplacée par `ObservateurApparitions`, qui pose
+     data-revele (règles plus bas). Sans script, tout reste visible. */
 
   @keyframes apparaitre {
     from { opacity: 0; transform: translateY(12px); }

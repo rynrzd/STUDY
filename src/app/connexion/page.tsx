@@ -3,6 +3,7 @@ import { pagePrivee } from "@/lib/metadonnees";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { FormulaireConnexion } from "@/components/site/FormulaireConnexion";
+import { RubanStudy } from "@/components/study/ruban/RubanStudy";
 import { MARQUE } from "@/lib/identite-legale";
 import { destinationApresConnexion, sessionCourante } from "@/lib/session-serveur";
 import { suiteSure } from "@/lib/v6/redirection";
@@ -47,6 +48,10 @@ export default async function PageConnexion({
           study<span>.</span>
         </Link>
 
+        {/* Petit ruban : la scène 3D ne se charge qu’ici, sur ordinateur, après
+            le formulaire ; le formulaire n’en dépend jamais. */}
+        <RubanStudy composition="petite" webgl className="mx-auto aspect-[640/520] w-full max-w-[420px]" />
+
         <p className="m-0 max-w-[14ch] font-[family-name:var(--font-titre)] text-[length:var(--text-h2-large)] font-bold leading-[var(--text-h2-large--line-height)] tracking-[-0.03em]">
           Retrouvez votre classe.
         </p>
@@ -61,9 +66,13 @@ export default async function PageConnexion({
         className="flex flex-col justify-center bg-[color:var(--color-surface)] px-5 py-12 sm:px-8"
       >
         <div className="mx-auto w-full max-w-[420px]">
-          <Link href="/" className="marque-study text-[1.75rem] leading-none lg:hidden" aria-label={MARQUE}>
-            study<span>.</span>
-          </Link>
+          <div className="flex items-center justify-between gap-4 lg:hidden">
+            <Link href="/" className="marque-study text-[1.75rem] leading-none" aria-label={MARQUE}>
+              study<span>.</span>
+            </Link>
+            {/* Téléphone : illustration fixe et compacte, aucune 3D à charger avant de saisir ses identifiants. */}
+            <RubanStudy composition="petite" className="h-[56px] w-[72px] shrink-0" controle={false} />
+          </div>
 
           <h1 className="mt-8 text-[length:var(--text-h2)] leading-[var(--text-h2--line-height)] tracking-[-0.02em] lg:mt-0">
             Se connecter

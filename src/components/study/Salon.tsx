@@ -34,6 +34,7 @@ import {
 } from "@/app/app/messagerie/actions";
 import type { MessageVu, PageMessages } from "@/lib/v6/messagerie";
 import { useMinuteCourante } from "./horloge";
+import { useImpulsion } from "./mouvement";
 
 /**
  * Salon de classe — E09.
@@ -107,6 +108,10 @@ export function Salon({
   const [annonce, setAnnonce] = useState("");
   const liste = useRef<HTMLDivElement>(null);
   const enBas = useRef(true);
+  // Arrivés pendant la lecture : apparition courte, et un bouton plutôt qu’un
+  // défilement forcé si la personne lit l’historique (brief §3, messagerie).
+  const [arrives, setArrives] = useState<ReadonlySet<string>>(() => new Set());
+  const [nonVus, setNonVus] = useState(0);
 
   // --- Relecture régulière ------------------------------------------------
   const relire = useCallback(async () => {
@@ -133,6 +138,8 @@ export function Salon({
         if (nouveaux.length > 0) {
           const dernier = nouveaux[nouveaux.length - 1]!;
           setAnnonce(`Nouveau message de ${dernier.auteurNom}`);
+          setArrives((a) => new Set([...a, ...nouveaux.map((m) => m.id)]));
+          if (!enBas.current) setNonVus((n) => n + nouveaux.length);
         }
         // Les plus anciens chargés restent ; la première page est remplacée.
         return [...anciens.filter((a) => !ids.has(a.id) && a.creeLe < (recents[0]?.creeLe ?? "")), ...recents];
@@ -303,6 +310,7 @@ export function Salon({
           onScroll={(e) => {
             const el = e.currentTarget;
             enBas.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+            if (enBas.current && nonVus > 0) setNonVus(0);
           }}
         >
           {suivant ? (
@@ -319,7 +327,7 @@ export function Salon({
           ) : null}
           <ol className="m-0 list-none p-0">
             {racines.map((m) => (
-              <li key={m.id} id={`m-${m.id}`}>
+              <li key={m.id} id={`m-${m.id}`} className={arrives.has(m.id) ? "message-nouveau" : undefined}>
                 <Message m={m} animateur={animateur} mode={mode} classe={classe} surFil={() => setFil(m.id)} apres={relire} />
               </li>
             ))}
@@ -329,6 +337,23 @@ export function Salon({
             .map((a) => (
               <EnvoiLocal key={a.clientId} item={a} prenom={moi.prenom} reessayer={() => void envoyer(a)} abandonner={() => setAttente((x) => x.filter((y) => y.clientId !== a.clientId))} />
             ))}
+          {nonVus > 0 ? (
+            <div className="nouveaux-messages">
+              <button
+                type="button"
+                className="bouton bouton-primaire bouton-compact"
+                onClick={() => {
+                  const el = liste.current;
+                  const doux = document.documentElement.dataset.effets === "auto" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+                  if (el) el.scrollTo({ top: el.scrollHeight, behavior: doux ? "smooth" : "auto" });
+                  enBas.current = true;
+                  setNonVus(0);
+                }}
+              >
+                Nouveaux messages · {nonVus}
+              </button>
+            </div>
+          ) : null}
           <p className="sr-only" aria-live="polite">
             {annonce}
           </p>
@@ -448,6 +473,7 @@ function Message({
       }
     });
   const minute = useMinuteCourante();
+  const impulsion = useImpulsion(m.moiAussi, 220);
   const modifiable = m.moi && !m.supprime && minute * 60_000 - Date.parse(m.creeLe) < 14 * 60_000;
 
   if (m.supprime) {
@@ -532,7 +558,7 @@ function Message({
               aria-pressed={m.moiAussi}
               disabled={enCours}
               onClick={() => agir(() => memeQuestion(m.id, !m.moiAussi))}
-              className={`bouton bouton-compact ${m.moiAussi ? "bouton-secondaire" : "bouton-discret"}`}
+              className={`bouton bouton-compact ${m.moiAussi ? "bouton-secondaire" : "bouton-discret"} ${impulsion && m.moiAussi ? "reaction-active" : ""}`}
             >
               <CircleHelp size={14} strokeWidth={1.75} aria-hidden="true" /> J&apos;ai la même question{m.memeQuestion > 0 ? ` · ${m.memeQuestion}` : ""}
             </button>
@@ -630,7 +656,9 @@ function taille(octets: number) {
  * classe ; un refus laisse le message intact.
  */
 function Joindre({ message, fermer, apres }: { message: string; fermer: () => void; apres: () => Promise<void> }) {
-  const [etat, setEtat] = useState<{ phase: "saisie" | "envoi" | "fait" | "erreur"; texte?: string }>({ phase: "saisie" });
+  // Phases réelles : « envoi » tant que les octets partent (progression du
+  // transfert), « vérification » pendant que le serveur contrôle et enregistre.
+  const [etat, setEtat] = useState<{ phase: "saisie" | "envoi" | "verification" | "fait" | "erreur"; texte?: string }>({ phase: "saisie" });
   return (
     <form
       className="mt-2 grid gap-2 rounded-[10px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-3 text-left"
@@ -647,22 +675,31 @@ function Joindre({ message, fermer, apres }: { message: string; fermer: () => vo
           return;
         }
         setEtat({ phase: "envoi" });
-        try {
-          const r = await fetch(`/api/v6/messages/${message}/pieces`, { method: "POST", body: donnees });
-          if (!r.ok) {
-            const corps = (await r.json().catch(() => null)) as { error?: { message?: string } } | null;
-            setEtat({
-              phase: "erreur",
-              texte: r.status === 401 ? "Session terminée : reconnectez-vous, puis réessayez." : (corps?.error?.message ?? "Le fichier n'a pas été joint."),
-            });
-            return;
-          }
-          setEtat({ phase: "fait" });
-          await apres();
-          fermer();
-        } catch {
+        const reponse = await new Promise<{ statut: number; corps: string } | null>((resoudre) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", `/api/v6/messages/${message}/pieces`);
+          xhr.upload.onload = () => setEtat({ phase: "verification" });
+          xhr.onload = () => resoudre({ statut: xhr.status, corps: xhr.responseText });
+          xhr.onerror = () => resoudre(null);
+          xhr.send(donnees);
+        });
+        if (reponse === null) {
           setEtat({ phase: "erreur", texte: "Connexion interrompue : le fichier n'a pas été joint." });
+          return;
         }
+        if (reponse.statut < 200 || reponse.statut >= 300) {
+          let texte = "Le fichier n'a pas été joint.";
+          try {
+            texte = (JSON.parse(reponse.corps) as { error?: { message?: string } }).error?.message ?? texte;
+          } catch {
+            /* réponse illisible : message générique */
+          }
+          setEtat({ phase: "erreur", texte: reponse.statut === 401 ? "Session terminée : reconnectez-vous, puis réessayez." : texte });
+          return;
+        }
+        setEtat({ phase: "fait" });
+        await apres();
+        fermer();
       }}
     >
       <label htmlFor={`piece-${message}`} className="text-[0.8125rem] font-semibold">
@@ -676,11 +713,11 @@ function Joindre({ message, fermer, apres }: { message: string; fermer: () => vo
         </p>
       ) : null}
       <p role="status" className="sr-only">
-        {etat.phase === "envoi" ? "Envoi du fichier…" : etat.phase === "fait" ? "Fichier joint." : ""}
+        {etat.phase === "envoi" ? "Envoi du fichier…" : etat.phase === "verification" ? "Vérification du fichier…" : etat.phase === "fait" ? "Fichier joint." : ""}
       </p>
       <div className="flex gap-2">
-        <button type="submit" className="bouton bouton-primaire bouton-compact" disabled={etat.phase === "envoi"}>
-          {etat.phase === "envoi" ? "Envoi…" : "Joindre"}
+        <button type="submit" className="bouton bouton-primaire bouton-compact" disabled={etat.phase === "envoi" || etat.phase === "verification"}>
+          {etat.phase === "envoi" ? "Envoi…" : etat.phase === "verification" ? "Vérification…" : "Joindre"}
         </button>
         <button type="button" className="bouton bouton-discret bouton-compact" onClick={fermer}>
           Annuler
@@ -911,7 +948,7 @@ function Fil({
   const peutRepondre = mode !== "annonces" || animateur;
   return (
     <aside
-      className="fixed inset-0 z-40 flex flex-col bg-[color:var(--color-surface)] xl:static xl:z-auto xl:rounded-[var(--radius-carte)] xl:border xl:border-[color:var(--color-bordure)]"
+      className="panneau-fil fixed inset-0 z-40 flex flex-col bg-[color:var(--color-surface)] xl:static xl:z-auto xl:rounded-[var(--radius-carte)] xl:border xl:border-[color:var(--color-bordure)]"
       aria-label="Fil de discussion"
     >
       <div className="flex items-center justify-between border-b border-[color:var(--color-bordure)] px-4 py-3">

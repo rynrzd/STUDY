@@ -10,7 +10,17 @@ import { EditionFiche } from "./EditionFiche";
 export const metadata = { title: "Fiche" };
 export const dynamic = "force-dynamic";
 
-const ETAPES = ["Lecture des sources", "Vérification des accès", "Assemblage des extraits"] as const;
+/**
+ * Étapes montrées pendant la préparation. Elles suivent **l’état réel** de la
+ * fiche, rien d’autre : le travail lit les sources, prépare et vérifie les
+ * citations dans une seule passe, sans rendre compte de ses sous-étapes. On
+ * n’affiche donc pas de sous-étape « en cours » qui serait une supposition.
+ */
+const ETAPES = [
+  { cle: "demande", libelle: "Demande enregistrée" },
+  { cle: "travail", libelle: "Lecture des sources, préparation et vérification" },
+  { cle: "prete", libelle: "Fiche prête" },
+] as const;
 
 /**
  * E05 et E40 — une fiche et sa préparation. Pendant le travail : les étapes
@@ -52,12 +62,19 @@ export default async function PageFiche({ params, searchParams }: { params: Prom
 
       {enCours ? (
         <Panneau titre="Préparation en cours">
-          <ol className="m-0 grid list-none gap-3 p-0">
-            {ETAPES.map((e, i) => {
-              const fait = fiche.etat === "processing" && i < 2;
-              const courant = (fiche.etat === "queued" && i === 0) || (fiche.etat === "processing" && i === 2);
+          <div className="flex flex-wrap items-center gap-6">
+          {/* Illustration : une pile de cartes, qui oscille quatre fois pendant un travail réel puis se pose. */}
+          <div className="pile-cartes" data-actif={fiche.etat === "processing" ? "oui" : "non"} aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
+          <ol className="m-0 grid min-w-0 flex-1 list-none gap-3 p-0">
+            {ETAPES.map((e) => {
+              const fait = e.cle === "demande";
+              const courant = e.cle === "travail" && fiche.etat === "processing";
               return (
-                <li key={e} className="flex items-center gap-3">
+                <li key={e.cle} className="flex items-center gap-3">
                   {fait ? (
                     <CheckCircle2 {...ICONE} className="text-[color:var(--color-succes)]" />
                   ) : courant ? (
@@ -65,11 +82,15 @@ export default async function PageFiche({ params, searchParams }: { params: Prom
                   ) : (
                     <Circle {...ICONE} className="text-[color:var(--color-bordure-forte)]" />
                   )}
-                  <span className={courant ? "font-semibold" : ""}>{e}</span>
+                  <span className={courant ? "font-semibold" : ""}>
+                    {e.libelle}
+                    {e.cle === "travail" && fiche.etat === "queued" ? <span className="meta"> — en attente de traitement</span> : null}
+                  </span>
                 </li>
               );
             })}
           </ol>
+          </div>
           <p className="meta m-0 mt-4">État : {ETATS_FICHE[fiche.etat]?.libelle}. Sources : {[...titres.values()].join(", ")}.</p>
           <Actualisation actif />
           <form action={annulerFiche} className="mt-4">

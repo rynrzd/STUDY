@@ -71,7 +71,7 @@ export default async function PageProjets() {
                 const t = prochaine(p.id);
                 return (
                   <li key={p.id}>
-                    <Link href={`/app/projets/${p.id}`} className="panneau block h-full no-underline hover:border-[color:var(--color-bordure-forte)]">
+                    <Link href={`/app/projets/${p.id}`} className="panneau carte-souleve block h-full no-underline hover:border-[color:var(--color-bordure-forte)]">
                       <span className="flex items-center justify-between gap-2">
                         <span className="titre-bloc font-bold text-[color:var(--color-encre)]">{p.titre}</span>
                         <Etiquette ton={p.visibilite === "prive" ? "neutre" : "rose"}>

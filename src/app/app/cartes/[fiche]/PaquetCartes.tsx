@@ -4,6 +4,7 @@ import Link from "next/link";
 import { RotateCcw } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { avisCarte } from "@/app/app/reviser/actions";
+import { CocheFin } from "@/components/study/CocheFin";
 
 interface CarteVue {
   readonly recto: string;
@@ -52,7 +53,8 @@ export function PaquetCartes({ fiche, cartes }: { fiche: string; cartes: readonl
     const aRevoir = avis.filter((a) => a === "a_revoir").length;
     return (
       <div className="panneau text-center">
-        <p className="titre-section m-0">Paquet terminé</p>
+        <CocheFin />
+        <p className="titre-section m-0 mt-3">Paquet terminé</p>
         <p className="m-0 mt-2 text-[color:var(--color-encre-faible)]">
           {cartes.length - aRevoir} carte{cartes.length - aRevoir > 1 ? "s" : ""} connue{cartes.length - aRevoir > 1 ? "s" : ""}, {aRevoir} à revoir. C&apos;est ton
           auto-évaluation : elle n&apos;est vue par personne d&apos;autre.
@@ -81,28 +83,43 @@ export function PaquetCartes({ fiche, cartes }: { fiche: string; cartes: readonl
       <p className="meta m-0 mb-3" aria-live="polite">
         Carte {index + 1} sur {cartes.length}
       </p>
-      <button
-        ref={zone}
-        type="button"
-        aria-pressed={retournee}
-        aria-label={retournee ? "Carte retournée, réponse affichée" : "Retourner la carte pour voir la réponse"}
-        onClick={() => setRetournee((r) => !r)}
-        className="grid min-h-[260px] w-full place-items-center rounded-[14px] border-0 bg-[color:var(--color-rose-clair)] p-8 text-center"
-      >
-        <span>
-          <span className="block font-[family-name:var(--font-titre)] text-[1.375rem] font-semibold leading-[1.45]">{carte!.recto}</span>
-          {retournee ? (
-            <span className="mt-5 block border-t border-[color:var(--color-rose-decor)] pt-5 text-[1rem] leading-[1.7]">{carte!.verso}</span>
-          ) : (
-            <span className="meta mt-5 block">Appuie pour retourner (Entrée ou Espace)</span>
-          )}
-        </span>
-      </button>
-      {retournee ? (
-        <p className="meta m-0 mt-2">
+      {/* Retournement sur l'axe vertical (brief §3) : les deux faces occupent la
+          même cellule de grille, la carte prend la hauteur de la plus haute —
+          aucun texte coupé. La face cachée est retirée de l'arbre
+          d'accessibilité ; le nom du bouton est la face visible. */}
+      <div className="carte-memoire" data-retournee={retournee ? "oui" : "non"} key={index}>
+        <button
+          ref={zone}
+          type="button"
+          aria-pressed={retournee}
+          onClick={() => setRetournee((r) => !r)}
+          className="block w-full cursor-pointer rounded-[16px] border-0 bg-transparent p-0 text-center"
+        >
+          <span className="carte-memoire-interieur">
+            <span className="carte-memoire-face carte-memoire-recto bg-[color:var(--color-rose-clair)]" aria-hidden={retournee}>
+              <span>
+                <span className="block font-[family-name:var(--font-titre)] text-[1.375rem] font-semibold leading-[1.45]">{carte!.recto}</span>
+                <span className="meta mt-5 block">Appuie pour retourner (Entrée ou Espace)</span>
+              </span>
+            </span>
+            <span
+              className="carte-memoire-face carte-memoire-verso border border-[color:var(--color-rose-moyen)] bg-[color:var(--color-surface)]"
+              aria-hidden={!retournee}
+            >
+              <span>
+                <span className="meta block">{carte!.recto}</span>
+                <span className="mt-4 block text-[1.0625rem] leading-[1.7]">{carte!.verso}</span>
+              </span>
+            </span>
+          </span>
+        </button>
+      </div>
+      {/* La ligne existe toujours : les boutons « À revoir / Je savais » ne bougent pas au retournement. */}
+      <p className="meta m-0 mt-2 min-h-[1.5rem]">
+        {retournee ? (
           <Link href={`/app/seances/${carte!.lesson}${carte!.ref.startsWith("bloc:") ? `#${carte!.ref.replace(":", "-")}` : ""}`}>Voir dans le cours</Link>
-        </p>
-      ) : null}
+        ) : null}
+      </p>
       {erreur ? (
         <p role="alert" className="m-0 mt-3 text-[color:var(--color-erreur)]">
           {erreur}

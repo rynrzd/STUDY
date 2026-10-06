@@ -62,7 +62,8 @@ export function CaseFaite({
               : "border-[color:var(--color-bordure)]"
           }`}
         >
-          {coche ? "✓" : ""}
+          {/* La coche entre en 200 ms quand l’état change ; si le serveur refuse, elle repart et l’erreur est annoncée. */}
+          {coche ? <span key="fait" className="statut-change">✓</span> : ""}
         </span>
         <span className="sr-only">
           {coche ? "Marquer comme à faire :" : "Marquer comme fait :"} {libelle}

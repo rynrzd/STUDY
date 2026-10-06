@@ -157,3 +157,40 @@ explicite du propriétaire.
   repris.
 - Tests de charge, mesures LCP/INP/CLS, zoom 200 % et lecteur d'écran sur les
   écrans connectés : non faits.
+
+## Direction visuelle, mouvement et 3D (brief du 6 octobre 2026)
+
+Livré sur la même branche, sans changement de données ni de permissions.
+
+| Élément | Où | Repli |
+|---|---|---|
+| Jetons de mouvement (durées, courbes, amplitudes) | `src/lib/mouvement.ts` → variables CSS sur `<html>` ; règles dans `src/styles/mouvement.css` | — |
+| Préférence « Effets visuels » (Automatique / Réduits / Désactivés) | cookie d'appareil `study_effets`, posé avant le premier rendu par un script `beforeInteractive` ; réglage dans `/app/reglages` | Automatique suit `prefers-reduced-motion` |
+| Ruban Study (scène WebGL procédurale, Three.js 0.186.1) | `components/study/ruban/` : page publique (grande, à droite de l'aperçu), connexion ordinateur (petite) | image fixe WebP rendue depuis la scène (`public/visuels/ruban-*.webp`, 7 à 14 Ko) : téléphone, effets réduits ou désactivés, WebGL absent ou perdu, rendu logiciel |
+| Fragment du ruban | accueil élève (bloc « Reprendre ») | image fixe seulement, jamais de WebGL dans l'application |
+| Carte mémoire retournée sur l'axe vertical (320 ms) | `cartes/[fiche]/PaquetCartes.tsx` | effets réduits : changement immédiat |
+| Coche de fin (< 1 s) | fin d'entraînement, fin de paquet de cartes | tracée sans mouvement |
+| Messagerie : apparition 4 px, « Nouveaux messages » sans défilement forcé, réaction « même question », fil en panneau, phases réelles de dépôt (envoi puis vérification) | `Salon.tsx` | — |
+| Pile de cartes pendant la préparation d'une fiche ; étapes = états réels uniquement | `fiches/[fiche]/page.tsx` | — |
+| Transition de page (200 ms, 4 px) | `app/app/template.tsx` | — |
+| Apparition unique des sections publiques | `ObservateurApparitions` (remplace l'animation liée au défilement, qui rejouait) | sans script : tout est visible |
+
+Une seule scène WebGL, un seul contexte pour toute la visite (toile
+rattachée/détachée ; libération 20 s après le dernier démontage). Pause hors
+écran, onglet masqué et sur bouton ; mouvement autonome limité à 14 s ;
+réaction au pointeur sur ordinateur seulement ; pixel ratio ≤ 1,5.
+
+Recette (build de production, Edge, GPU Intel UHD 600) : moteur 3D 190 Ko
+transférés, chargé seulement sur ordinateur et après le contenu ; 0 Ko de
+3D sur téléphone ; CLS ≤ 0,003 ; aucune violation CSP ; aperçus 404 en
+production ; mémoire stable sur 32 allers-retours (même pente que sans scène) ;
+scène prête 4,4 à 5,9 s après la navigation sur ce GPU (l'image fixe identique
+est affichée entre-temps). Aperçus de développement fictifs : `/apercu/*`
+(404 en production).
+
+Non vérifié : Safari (macOS/iOS) — aucun appareil Apple disponible ; vrai
+téléphone (mesures faites par émulation : processeur ×4, réseau 1,6 Mb/s) ;
+clavier virtuel dans la messagerie ; lecteur d'écran ; écrans connectés réels
+(aperçus fictifs seulement). Avertissement d'hydratation en développement
+seulement : l'attribut `nonce` du script de démarrage, masqué par le
+navigateur.

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CheckCircle2, HandHelping, Lightbulb, XCircle } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { demanderAide, tenter } from "@/app/app/reviser/actions";
+import { CocheFin } from "@/components/study/CocheFin";
 import type { QuestionSession } from "@/lib/v6/fiches";
 
 interface Correction {
@@ -46,7 +47,8 @@ export function Entrainement({ session, questions }: { session: string; question
     const corrigees = Object.values(corrections).filter((c) => c.correct !== null).length;
     return (
       <div className="panneau text-center">
-        <p className="titre-section m-0">Entraînement terminé</p>
+        <CocheFin />
+        <p className="titre-section m-0 mt-3">Entraînement terminé</p>
         <p className="m-0 mt-2 text-[color:var(--color-encre-faible)]">
           {reussies} réussite{reussies > 1 ? "s" : ""} sur {corrigees} question{corrigees > 1 ? "s" : ""} corrigée{corrigees > 1 ? "s" : ""}. Ce n&apos;est pas une note : tes
           erreurs sont rangées dans ton carnet, pour y revenir.
@@ -122,9 +124,19 @@ export function Entrainement({ session, questions }: { session: string; question
                 const choisi = valeur === String(i);
                 const ton = correction && choisi ? (correction.correct ? "border-[color:var(--color-succes)] bg-[color:var(--color-succes-fond)]" : "border-[color:var(--color-erreur)] bg-[color:var(--color-erreur-fond)]") : choisi ? "border-[color:var(--color-focus)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)]";
                 return (
-                  <label key={i} className={`flex min-h-[48px] cursor-pointer items-center gap-3 rounded-[10px] border px-4 py-3 ${ton}`}>
+                  <label key={i} className={`choix-reponse flex min-h-[48px] cursor-pointer items-center gap-3 rounded-[10px] border px-4 py-3 ${ton}`}>
                     <input type="radio" name="choix" value={i} checked={choisi} onChange={() => setReponses((r) => ({ ...r, [q.versionId]: String(i) }))} />
-                    {c}
+                    <span className="flex-1">{c}</span>
+                    {/* Jamais la couleur seule : une icône et un mot accompagnent l’état. */}
+                    {correction && choisi && correction.correct === true ? (
+                      <span className="inline-flex items-center gap-1 text-[0.8125rem] font-semibold text-[color:var(--color-succes)]">
+                        <CheckCircle2 size={18} strokeWidth={1.75} aria-hidden="true" /> Ta réponse, juste
+                      </span>
+                    ) : correction && choisi && correction.correct === false ? (
+                      <span className="inline-flex items-center gap-1 text-[0.8125rem] font-semibold text-[color:var(--color-erreur)]">
+                        <XCircle size={18} strokeWidth={1.75} aria-hidden="true" /> Ta réponse
+                      </span>
+                    ) : null}
                   </label>
                 );
               })}
@@ -177,7 +189,7 @@ export function Entrainement({ session, questions }: { session: string; question
           </p>
         ))}
         {correction ? (
-          <div role="status" className="mt-5 rounded-[12px] border border-[color:var(--color-bordure)] p-4">
+          <div role="status" className="correction-entree mt-5 rounded-[12px] border border-[color:var(--color-bordure)] p-4">
             <p className="m-0 flex items-center gap-2 font-semibold">
               {correction.correct === true ? (
                 <>
