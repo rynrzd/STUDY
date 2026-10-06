@@ -15,6 +15,14 @@ et ce qui reste — dans cet ordre, et sans arrondir.
 | IA | **Sans fournisseur** | La règle « Aucune IA » du dépôt reste vraie. Fiches, cartes et quiz sont *assemblés* de façon déterministe à partir des sources choisies (extraits cités, aucune phrase inventée) ; recherche **lexicale annoncée comme telle** ; l'emplacement d'un fournisseur sémantique existe et répond « non configuré ». |
 | Courrier | **Sans e-mail** | Invitations = jeton à usage unique remis sur fiche imprimable ; récupération = demande générique traitée par un adulte habilité. Aucun faux envoi. |
 
+## Résultats en fin de travaux (6 octobre 2026)
+
+- `npm run typecheck`, `npx eslint .`, `next build` : propres.
+- `npm run test:unite` : 179/179.
+- `npm run test:rls` (0001 à 0056) : 270/270, ~41 min. Le test 0057 (pièces
+  jointes de message) a été ajouté ensuite et passe seul ; `v6-messagerie`
+  compte désormais 14 tests.
+
 ## Base de référence avant travaux
 
 - `npm run typecheck` : propre.
