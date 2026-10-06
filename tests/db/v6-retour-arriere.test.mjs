@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 import { ACTEURS, appliquerMigrations, baseDeTest, doitEchouer, lirePourAdmin } from "./harness.mjs";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
-const RETOUR = path.resolve(ICI, "..", "..", "supabase", "retour-arriere", "retour-0059-0058.sql");
+const RETOURS = ["retour-0060.sql", "retour-0059-0058.sql"].map((f) => path.resolve(ICI, "..", "..", "supabase", "retour-arriere", f));
 const empreinte = (s) => createHash("sha256").update(s).digest();
 
 const definitions = async (db) =>
@@ -42,19 +42,20 @@ const droits = async (db, noms) =>
 const colonnes = async (db, table) =>
   (await db.query("select column_name from information_schema.columns where table_schema = 'study' and table_name = $1 order by 1", [table])).rows.map((r) => r.column_name);
 
-test("1 — migrer 0058/0059 puis exécuter le script de retour rend le schéma d'avant, sans perdre les demandes", async (t) => {
+test("1 — migrer 0058 à 0060 puis exécuter le script de retour rend le schéma d'avant, sans perdre les demandes", async (t) => {
   const db = await baseDeTest({ jusqua: "0057" });
   t.after(() => db.close());
   const avant = await definitions(db);
   const droitsAvant = await droits(db, ["invitation_etat", "recuperation_demander", "recuperation_a_traiter"]);
   const colonnesAvant = await colonnes(db, "demandes_recuperation");
+  const colonnesExercices = await colonnes(db, "exercices");
 
   await appliquerMigrations(db, { depuis: "0057" });
   await db.query("select study.recuperation_demander('TESTA1', 'rayan.dupont', $1, 'K7M2-P9QX')", [empreinte("ip")]);
   await lirePourAdmin(db, ACTEURS.adminA, "select study.annee_preparer('2027-2028', '2027-09-01', '2028-07-05')");
   assert.notDeepEqual(await definitions(db), avant, "la migration a bien changé le schéma");
 
-  await db.exec(await readFile(RETOUR, "utf8"));
+  for (const f of RETOURS) await db.exec(await readFile(f, "utf8"));
 
   const apres = await definitions(db);
   assert.deepEqual(apres.map((f) => f.sig), avant.map((f) => f.sig), "mêmes fonctions qu'avant la migration");
@@ -63,6 +64,7 @@ test("1 — migrer 0058/0059 puis exécuter le script de retour rend le schéma 
   }
   assert.deepEqual(await droits(db, ["invitation_etat", "recuperation_demander", "recuperation_a_traiter"]), droitsAvant, "mêmes droits d'exécution");
   assert.deepEqual(await colonnes(db, "demandes_recuperation"), colonnesAvant);
+  assert.deepEqual(await colonnes(db, "exercices"), colonnesExercices);
   const [{ n }] = (await db.query("select count(*)::int as n from study.demandes_recuperation")).rows;
   assert.equal(n, 1, "la demande enregistrée pendant la période migrée est conservée");
   const [{ n: annees }] = (await db.query("select count(*)::int as n from study.academic_years where label = '2027-2028'")).rows;

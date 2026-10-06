@@ -16,6 +16,8 @@ export const LIENS_PROFESSEUR: readonly LienEspace[] = [
   // d'un document existant. Deux gestes distincts, deux entrées distinctes.
   { href: "/studio", libelle: "Mes cours" },
   { href: "/professeur/studio", libelle: "Studio" },
+  { href: "/studio/exercices", libelle: "Banque d’exercices" },
+  { href: "/app/prof/ateliers", libelle: "Ateliers" },
   { href: "/professeur/devoirs", libelle: "Devoirs" },
   { href: "/parametres", libelle: "Paramètres" },
 ];

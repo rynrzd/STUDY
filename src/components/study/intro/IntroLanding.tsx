@@ -3,6 +3,7 @@
 import { BookOpen, Sparkles, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { niveauEffets, useEffets } from "../mouvement";
+import { LOGO_LETTRES, LOGO_POINT, LOGO_VIEWBOX } from "./logo-svg";
 import type { SceneIntro } from "./scene-intro";
 
 /**
@@ -80,12 +81,16 @@ export function IntroLanding({ apercu }: { apercu: React.ReactNode }) {
     const economie = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
     if (!economie && hote.current) {
       const mobile = window.matchMedia("(max-width: 767px)").matches;
-      const logiciel = process.env.NODE_ENV !== "production" && new URLSearchParams(window.location.search).has("rendu-logiciel");
+      const parametres = new URLSearchParams(window.location.search);
+      const logiciel = process.env.NODE_ENV !== "production" && parametres.has("rendu-logiciel");
+      // Capture de l'affiche (développement) : ruban seul, le logo étant en HTML.
+      const sansLogo = process.env.NODE_ENV !== "production" && parametres.has("affiche-ruban");
       void import("./scene-intro")
         .then(({ monterIntro }) =>
           monterIntro(hote.current!, {
             mobile,
             logicielAccepte: logiciel,
+            sansLogo,
             abandon: () => {
               scene = null;
               setScenePrete(false);
@@ -130,6 +135,14 @@ export function IntroLanding({ apercu }: { apercu: React.ReactNode }) {
         <div ref={hote} className="intro-toile" aria-hidden="true">
           {/* eslint-disable-next-line @next/next/no-img-element -- image fixe locale, repli de la scène */}
           <img src="/visuels/intro-poster.webp" alt="" width={1440} height={900} className="intro-poster" decoding="async" fetchPriority="high" />
+          {/* Le logo réel, en SVG dans le HTML : visible dès le premier affichage,
+              sans attendre ni l'image ni la 3D. Remplacé en fondu par le logo 3D. */}
+          <svg className="intro-logo" viewBox={LOGO_VIEWBOX} aria-hidden="true" focusable="false">
+            <g transform="scale(1,-1)">
+              <path fill="#29282e" d={LOGO_LETTRES} />
+              <path fill="#c37a94" d={LOGO_POINT} />
+            </g>
+          </svg>
         </div>
 
         <div className="intro-calques">

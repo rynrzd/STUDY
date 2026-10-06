@@ -399,3 +399,22 @@
     .intro[data-mode="anime"] .intro-passer { top: 12px; }
   }
 }
+
+@layer components {
+  /* Logo réel en SVG, posé là où la 3D le dessine au premier cadre. */
+  .intro-logo {
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    width: min(56vw, 640px);
+    height: auto;
+    translate: -50% -50%;
+    transition: opacity 400ms ease;
+  }
+  .intro[data-scene="oui"] .intro-logo { opacity: 0; }
+  .intro[data-mode="anime"] .intro-logo { top: 36%; width: min(47vw, 760px); }
+  @media (max-width: 767px) {
+    .intro-logo { width: 78vw; top: 45%; }
+    .intro[data-mode="anime"] .intro-logo { width: 84vw; top: 41%; }
+  }
+}

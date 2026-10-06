@@ -35,6 +35,11 @@ const productionOnlyHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // CSS en ligne dans le <head> : supprime la requête bloquante du premier
+  // affichage (~14 Ko compressés, Tailwind). Mesuré sur la landing :
+  // docs/study-v7-mapping.md, section « Performance ». La CSP autorise déjà
+  // style-src 'unsafe-inline'.
+  experimental: { inlineCss: true },
   poweredByHeader: false,
   // Les images distantes ne sont pas autorisees : tout support vient du stockage prive via le BFF.
   images: { remotePatterns: [] },
@@ -68,7 +73,7 @@ const nextConfig: NextConfig = {
       { source: "/app/professeur", destination: "/professeur", permanent: false },
       { source: "/app/studio", destination: "/studio", permanent: false },
       { source: "/app/studio/cours/:id", destination: "/studio/:id", permanent: false },
-      { source: "/app/studio/exercices", destination: "/studio", permanent: false },
+      { source: "/app/studio/exercices", destination: "/studio/exercices", permanent: false },
       { source: "/app/studio/ateliers", destination: "/app/prof/ateliers", permanent: false },
       { source: "/app/admin", destination: "/admin", permanent: false },
       { source: "/app/admin/eleves", destination: "/admin/import", permanent: false },

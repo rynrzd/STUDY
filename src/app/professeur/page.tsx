@@ -5,7 +5,11 @@ import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { coursDuProfesseur } from "@/lib/studio";
 import { devoirsDuProfesseur, seancesDuProfesseur } from "@/lib/espace-professeur";
 import { echeanceLisible, seancesDuJour } from "@/lib/echeances";
+import { ChevronRight, CircleHelp, ClipboardCheck, Library } from "lucide-react";
 import { QuestionsDesClasses } from "@/components/study/QuestionsDesClasses";
+import { Panneau, dateLisible } from "@/components/study/ui";
+import { agenda } from "@/lib/v6/eleve";
+import { tableauProfesseur } from "@/lib/v6/professeur";
 
 /**
  * Accueil du professeur — cahier V2, §8.1.
@@ -40,10 +44,18 @@ export default async function PageProfesseur() {
     );
   }
 
-  const [seances, devoirs] = await Promise.all([
+  const maintenant = new Date();
+  const [seances, devoirs, tableau, semaine] = await Promise.all([
     seancesDuProfesseur(jeton),
     devoirsDuProfesseur(jeton),
+    tableauProfesseur(jeton, cours),
+    agenda(jeton, maintenant, new Date(maintenant.getTime() + 7 * 86_400_000)),
   ]);
+  const priorites = [
+    { libelle: "Questions en attente", detail: "Questions d'élèves sans réponse dans vos salons", n: tableau.questionsEnAttente, href: "#questions", icone: CircleHelp },
+    { libelle: "Copies à évaluer", detail: "Remises en attente de votre retour", n: tableau.copiesAEvaluer, href: "/professeur/devoirs", icone: ClipboardCheck },
+    { libelle: "Réponses aux ateliers", detail: "Réponses d'élèves des sept derniers jours", n: tableau.reponsesAteliers, href: "/app/prof/ateliers", icone: Library },
+  ];
 
   const libelles = new Map(cours.map((c) => [c.id, c.libelle] as const));
   const aujourdhui = seancesDuJour(seances);
@@ -63,7 +75,74 @@ export default async function PageProfesseur() {
         }
       />
 
-      <div className="mt-9">
+      {tableau.erreur ? (
+        <p role="alert" className="m-0 mt-6 text-[color:var(--color-erreur)]">Certaines données n&apos;ont pas pu être chargées. Les compteurs peuvent être incomplets.</p>
+      ) : null}
+
+      {/* T01 — une carte par enseignement : questions sans réponse réelles. */}
+      <ul className="m-0 mt-8 grid list-none gap-4 p-0 sm:grid-cols-2 xl:grid-cols-4">
+        {tableau.cartes.map((c) => (
+          <li key={c.id}>
+            <Link
+              href={c.salon ? `/app/messagerie/${c.salon}` : "/studio"}
+              className="carte-souleve flex h-full flex-col rounded-[16px] bg-[color:var(--color-rose-clair)] p-5 no-underline"
+            >
+              <span className="font-semibold text-[color:var(--color-encre)]">{c.classe}</span>
+              <span className="meta">{c.matiere}</span>
+              <span className="mt-4 flex items-end justify-between gap-2">
+                <span>
+                  <span className="block font-[family-name:var(--font-titre)] text-[2rem] font-bold leading-none text-[color:var(--color-encre)]">{c.questionsSansReponse}</span>
+                  <span className="meta">question{c.questionsSansReponse > 1 ? "s" : ""} sans réponse</span>
+                </span>
+                <ChevronRight size={18} strokeWidth={1.75} aria-hidden="true" className="text-[color:var(--color-encre-faible)]" />
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <Panneau titre="À traiter en priorité">
+          <ul className="m-0 list-none p-0">
+            {priorites.map((x) => (
+              <li key={x.libelle}>
+                <Link href={x.href} className="ligne no-underline">
+                  <x.icone size={20} strokeWidth={1.75} aria-hidden="true" className="shrink-0 text-[color:var(--color-accent)]" />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2 font-semibold text-[color:var(--color-encre)]">
+                      {x.libelle}
+                      <span className="etiquette-etat" data-ton="rose">{x.n}</span>
+                    </span>
+                    <span className="meta">{x.detail}</span>
+                  </span>
+                  <ChevronRight size={18} strokeWidth={1.75} aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Panneau>
+        <Panneau titre="Mon agenda" action={<Link href="/app/agenda" className="lien-fleche text-[0.8125rem]">Voir tout</Link>}>
+          {semaine === null ? (
+            <p className="m-0 text-[color:var(--color-erreur)]">L&apos;agenda n&apos;a pas pu être chargé.</p>
+          ) : semaine.length === 0 ? (
+            <p className="m-0 text-[color:var(--color-encre-faible)]">Rien de prévu dans les sept prochains jours.</p>
+          ) : (
+            <ul className="m-0 list-none p-0">
+              {semaine.slice(0, 4).map((e) => (
+                <li key={`${e.kind}-${e.id}`} className="ligne items-start">
+                  <span className="min-w-0 flex-1">
+                    <span className="sourcil mb-0.5">{dateLisible(e.debut, { weekday: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                    <span className="block font-semibold">{e.titre}</span>
+                    {e.contexte ? <span className="meta">{e.contexte}</span> : null}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panneau>
+      </div>
+
+      <div id="questions" className="mt-6 scroll-mt-24">
         <QuestionsDesClasses jeton={jeton} />
       </div>
 

@@ -25,7 +25,7 @@ const lisse = (a: number, b: number, x: number) => {
 };
 const melange = (a: number, b: number, t: number) => a + (b - a) * t;
 
-export async function monterIntro(hote: HTMLElement, options: { mobile: boolean; abandon: () => void; logicielAccepte?: boolean }): Promise<SceneIntro | null> {
+export async function monterIntro(hote: HTMLElement, options: { mobile: boolean; abandon: () => void; logicielAccepte?: boolean; sansLogo?: boolean }): Promise<SceneIntro | null> {
   const T = await import("three");
   const { SVGLoader } = await import("three/examples/jsm/loaders/SVGLoader.js");
   const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
@@ -95,6 +95,7 @@ export async function monterIntro(hote: HTMLElement, options: { mobile: boolean;
   const pivot = new T.Group();
   pivot.add(logo);
   pivot.scale.set(echelle, -echelle, echelle);
+  pivot.visible = options.sansLogo !== true;
   scene.add(pivot);
 
   // --- Ruban : une grande boucle derrière le logo, que la caméra traverse ----

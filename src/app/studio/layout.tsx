@@ -23,6 +23,7 @@ export const LIENS_PROFESSEUR = [
   { href: "/professeur", libelle: "Accueil" },
   { href: "/professeur/classes", libelle: "Mes classes" },
   { href: "/studio", libelle: "Studio" },
+  { href: "/studio/exercices", libelle: "Banque d’exercices" },
   { href: "/professeur/devoirs", libelle: "Devoirs" },
   { href: "/parametres", libelle: "Paramètres" },
 ] as const;

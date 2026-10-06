@@ -95,6 +95,7 @@ function destinations(ctx: ContexteApp): { principales: Destination[]; mobile: D
         { href: "/professeur/studio", libelle: "Importer un cours", icone: Upload },
         { href: "/professeur/devoirs", libelle: "Devoirs et copies", icone: ClipboardList },
         { href: "/professeur/classes", libelle: "Mes élèves", icone: Users },
+        { href: "/studio/exercices", libelle: "Banque d’exercices", icone: ClipboardList },
         { href: "/app/prof/ateliers", libelle: "Ateliers", icone: Library },
       ]
     : [];
