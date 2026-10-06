@@ -38,55 +38,76 @@ const ETATS: Record<string, string> = {
   rejete: "Classé sans suite",
 };
 
-export function Signalements({ signalements }: { signalements: readonly Signalement[] }) {
-  const [tout, setTout] = useState(false);
+const ONGLETS = [
+  { cle: "a_traiter", libelle: "À traiter", etats: ["ouvert"] },
+  { cle: "en_cours", libelle: "En cours", etats: ["en_examen"] },
+  { cle: "traites", libelle: "Traités", etats: ["traite", "rejete"] },
+] as const;
 
-  const ouverts = signalements.filter(
-    (ligne) => ligne.etat === "ouvert" || ligne.etat === "en_examen",
-  );
-  const visibles = tout ? signalements : ouverts;
+/**
+ * D04 — deux panneaux : la file (onglets À traiter / En cours / Traités) et
+ * le détail du signalement choisi, avec la décision motivée. La décision
+ * reste celle du serveur (`moderer_signalement`, périmètre et audit).
+ */
+export function Signalements({ signalements }: { signalements: readonly Signalement[] }) {
+  const ouverts = signalements.filter((ligne) => ligne.etat === "ouvert" || ligne.etat === "en_examen");
+  const [onglet, setOnglet] = useState<(typeof ONGLETS)[number]["cle"]>("a_traiter");
+  const actif = ONGLETS.find((o) => o.cle === onglet) ?? ONGLETS[0];
+  const visibles = signalements.filter((l) => (actif.etats as readonly string[]).includes(l.etat));
+  const [selection, setSelection] = useState<string | null>(null);
+  const choisi = visibles.find((l) => l.id === selection) ?? visibles[0] ?? null;
 
   return (
     <section className="mt-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <p
-          data-testid="signalements-compte"
-          data-ouverts={ouverts.length}
-          className="m-0 text-[color:var(--color-encre-faible)]"
-        >
-          {ouverts.length === 0
-            ? "Aucun signalement à regarder."
-            : ouverts.length === 1
-              ? "1 signalement à regarder."
-              : `${ouverts.length} signalements à regarder.`}
-        </p>
+      <p data-testid="signalements-compte" data-ouverts={ouverts.length} className="m-0 text-[color:var(--color-encre-faible)]">
+        {ouverts.length === 0 ? "Aucun signalement à regarder." : ouverts.length === 1 ? "1 signalement à regarder." : `${ouverts.length} signalements à regarder.`}
+      </p>
 
-        {signalements.length > ouverts.length ? (
-          <button
-            type="button"
-            data-testid="signalements-basculer"
-            onClick={() => setTout((valeur) => !valeur)}
-            className="bouton bouton-discret bouton-compact"
-          >
-            {tout ? "Ne montrer que ceux à regarder" : "Montrer aussi les décisions passées"}
-          </button>
-        ) : null}
+      <div role="tablist" aria-label="File des signalements" className="mt-4 flex flex-wrap gap-2">
+        {ONGLETS.map((o) => {
+          const n = signalements.filter((l) => (o.etats as readonly string[]).includes(l.etat)).length;
+          return (
+            <button
+              key={o.cle}
+              type="button"
+              role="tab"
+              aria-selected={onglet === o.cle}
+              onClick={() => {
+                setOnglet(o.cle);
+                setSelection(null);
+              }}
+              className={`bouton bouton-compact ${onglet === o.cle ? "bouton-primaire" : "bouton-secondaire"}`}
+            >
+              {o.libelle} · {n}
+            </button>
+          );
+        })}
       </div>
 
       {visibles.length === 0 ? (
         <p className="m-0 mt-6 max-w-[var(--spacing-lecture)] text-[color:var(--color-encre-faible)]">
-          Rien n&apos;a été signalé dans l&apos;entraide de votre établissement.
-          C&apos;est la situation normale : le bouton est discret, et il sert
-          rarement.
+          {onglet === "a_traiter" ? "Rien à traiter. Le bouton de signalement est discret, et il sert rarement." : "Aucun signalement dans cette file."}
         </p>
       ) : (
-        <ul className="m-0 mt-6 list-none space-y-5 p-0">
-          {visibles.map((signalement) => (
-            <li key={signalement.id}>
-              <Fiche signalement={signalement} />
-            </li>
-          ))}
-        </ul>
+        <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <ul className="m-0 grid list-none content-start gap-2 p-0" aria-label={actif.libelle}>
+            {visibles.map((l) => (
+              <li key={l.id}>
+                <button
+                  type="button"
+                  aria-pressed={choisi?.id === l.id}
+                  onClick={() => setSelection(l.id)}
+                  className={`w-full cursor-pointer rounded-[12px] border p-4 text-left ${choisi?.id === l.id ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)] bg-[color:var(--color-surface)]"}`}
+                >
+                  <span className="block font-semibold">{l.cible === "fil" ? "Question signalée" : l.cible === "message" ? "Message de salon signalé" : "Réponse signalée"}</span>
+                  <span className="meta block truncate">{l.cours}</span>
+                  <span className="meta block">{instantLisible(l.signaleLe)}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <div>{choisi ? <Fiche key={choisi.id} signalement={choisi} /> : null}</div>
+        </div>
       )}
     </section>
   );

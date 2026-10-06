@@ -19,6 +19,7 @@ export function OngletsClasse({
   const base = `/app/classes/${classe}`;
   const onglets = [
     { href: base, libelle: "Vie de classe", exact: true },
+    { href: `${base}/propositions`, libelle: "Propositions et suivi" },
     { href: `${base}/salons`, libelle: "Messagerie" },
     { href: `${base}/bibliotheque`, libelle: "Bibliothèque" },
     { href: `${base}/membres`, libelle: gestion ? "Membres et accès" : "Membres" },

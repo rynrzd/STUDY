@@ -7,5 +7,5 @@ export const dynamic = "force-dynamic";
 export default async function Page() {
   const ctx = await contexteApp();
   if (!ctx.classeActive) redirect("/app/classe");
-  redirect(`/app/classes/${ctx.classeActive.classe}`);
+  redirect(`/app/classes/${ctx.classeActive.classe}/propositions`);
 }

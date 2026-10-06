@@ -142,7 +142,7 @@ export async function decisions(jeton: string, classeId: string): Promise<Decisi
     .select("id, titre, explication, statut, motif, responsable, suivi_le, publiee, version, updated_at")
     .eq("class_id", classeId)
     .order("updated_at", { ascending: false })
-    .limit(30);
+    .limit(200);
   return ((data ?? []) as {
     id: string;
     titre: string;

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { AccesIndisponible, EnTetePage, Etiquette, Panneau } from "@/components/study/ui";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 import { contexteApp } from "@/lib/v6/contexte";
-import { FormulaireAtelier } from "../../ateliers/formulaires";
 
 export const metadata = { title: "Ateliers" };
 export const dynamic = "force-dynamic";
@@ -29,7 +28,7 @@ export default async function PageAteliersProf() {
           <ul className="m-0 list-none p-0">
             {liste.map((a) => (
               <li key={a.id} className="ligne">
-                <Link href={`/app/prof/ateliers/${a.id}`} className="min-w-0 flex-1">
+                <Link href={a.etat === "brouillon" ? `/app/prof/ateliers/${a.id}/assistant` : `/app/prof/ateliers/${a.id}`} className="min-w-0 flex-1">
                   {a.titre}
                 </Link>
                 <span className="meta">{a.kind === "actualite" ? "Actualité" : "Vérifier une réponse d'IA"}</span>
@@ -39,7 +38,14 @@ export default async function PageAteliersProf() {
           </ul>
         </Panneau>
         <Panneau titre="Nouvel atelier" as="aside">
-          <FormulaireAtelier atelier={null} espaces={espaces} />
+          <p className="m-0 text-[color:var(--color-encre-faible)]">Quatre étapes : objectif, documents datés, consignes, corrigé. Le brouillon est enregistré à chaque étape.</p>
+          {espaces.length === 0 ? (
+            <p className="meta m-0 mt-3">Aucun cours ne vous est affecté : un atelier s&apos;adresse aux élèves d&apos;un de vos cours.</p>
+          ) : (
+            <Link href="/app/prof/ateliers/nouveau" className="bouton bouton-primaire mt-4">
+              Créer un atelier
+            </Link>
+          )}
         </Panneau>
       </div>
     </>

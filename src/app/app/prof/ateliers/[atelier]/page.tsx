@@ -1,9 +1,10 @@
+import Link from "next/link";
 import { AccesIndisponible, EnTetePage, Etiquette, Panneau } from "@/components/study/ui";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 import { contexteApp } from "@/lib/v6/contexte";
 import { nomsAffichables } from "@/lib/v6/classe";
 import { changerEtatAtelier } from "../../../ateliers/actions";
-import { FormulaireAtelier, FormulaireSyntheseAtelier } from "../../../ateliers/formulaires";
+import { FormulaireSyntheseAtelier } from "../../../ateliers/formulaires";
 
 export const metadata = { title: "Atelier" };
 export const dynamic = "force-dynamic";
@@ -16,9 +17,8 @@ export default async function PageAtelierProf({ params, searchParams }: { params
   const { erreur } = await searchParams;
   if (!/^[0-9a-f-]{36}$/iu.test(id)) return <AccesIndisponible />;
   const client = clientUtilisateur(ctx.jeton);
-  const [a, corrige, reponses] = await Promise.all([
+  const [a, reponses] = await Promise.all([
     client.from("ateliers").select("id, kind, titre, question, consigne, sources, texte_examine, etat, synthese, teaching_space_id").eq("id", id).maybeSingle(),
-    client.from("ateliers_corriges").select("corrige").eq("atelier_id", id).maybeSingle(),
     client.from("ateliers_reponses").select("author_id, annotations, contestation, updated_at").eq("atelier_id", id),
   ]);
   const at = a.data as {
@@ -82,20 +82,15 @@ export default async function PageAtelierProf({ params, searchParams }: { params
           ) : null}
         </div>
         {at.etat === "brouillon" ? (
-          <Panneau titre="Modifier le brouillon" as="aside">
-            <FormulaireAtelier
-              atelier={id}
-              espaces={[]}
-              initial={{
-                kind: at.kind,
-                titre: at.titre,
-                question: at.question,
-                consigne: at.consigne ?? "",
-                texte: at.texte_examine ?? "",
-                sources: at.sources,
-                corrige: (corrige.data as { corrige: string } | null)?.corrige ?? "",
-              }}
-            />
+          <Panneau titre="Brouillon" as="aside">
+            <p className="m-0 text-[color:var(--color-encre-faible)]">Reprenez l&apos;assistant à l&apos;étape voulue ; le brouillon est enregistré à chacune.</p>
+            <ol className="m-0 mt-3 grid gap-1 pl-5">
+              {["Objectif", "Sources datées", "Consignes", "Corrigé et publication"].map((e, i) => (
+                <li key={e}>
+                  <Link href={`/app/prof/ateliers/${id}/assistant?etape=${i + 1}`}>{e}</Link>
+                </li>
+              ))}
+            </ol>
           </Panneau>
         ) : (
           <Panneau titre="Sources" as="aside">

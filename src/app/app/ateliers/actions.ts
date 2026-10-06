@@ -132,3 +132,103 @@ export async function repondreAtelier(atelier: string, version: number, _p: Etat
   revalidatePath(`/app/ateliers/${atelier}`);
   return { ok: true, message: `Réponse enregistrée (version ${String(data)}).` };
 }
+
+/**
+ * Assistant d'atelier (T05) — quatre étapes, brouillon enregistré à chacune :
+ * 1. objectif (type, cours, titre, question) ; 2. sources datées (et texte
+ * examiné) ; 3. consignes ; 4. corrigé, puis publication pour les élèves du
+ * cours choisi. Les contrôles finaux (2 à 5 sources datées pour l'actualité,
+ * texte requis pour « vérifier l'IA ») sont ceux de la base à la publication.
+ */
+export async function enregistrerEtape(atelier: string | null, etape: number, _p: EtatFormulaire, donnees: FormData): Promise<EtatFormulaire> {
+  const requestId = idRequete();
+  const { jeton, personne } = await contexteApp();
+  const client = clientUtilisateur(jeton);
+  const suite = (id: string, n: number) => redirect(`/app/prof/ateliers/${id}/assistant?etape=${n}`);
+
+  if (etape === 1) {
+    const kind = donnees.get("kind") === "verifier_ia" ? "verifier_ia" : "actualite";
+    const valeurs = { kind, espace: String(donnees.get("espace") ?? ""), titre: String(donnees.get("titre") ?? "").trim(), question: String(donnees.get("question") ?? "").trim() };
+    const champs: Record<string, string[]> = {};
+    if (!atelier && !uuid.safeParse(valeurs.espace).success) champs.espace = ["Choisissez le cours et sa classe."];
+    if (valeurs.titre.length < 3) champs.titre = ["Trois caractères au moins."];
+    if (valeurs.question.length < 3) champs.question = ["La question guide l'atelier."];
+    if (Object.keys(champs).length) return { ok: false, message: "Certains champs sont à corriger.", champs, valeurs };
+    if (atelier) {
+      const { error } = await client.from("ateliers").update({ titre: valeurs.titre.slice(0, 140), question: valeurs.question.slice(0, 1000) }).eq("id", atelier).eq("etat", "brouillon");
+      if (error !== null) return { ok: false, message: traduire(error, requestId).message, requestId, valeurs };
+      suite(atelier, 2);
+    }
+    const espace = await client.from("teaching_spaces").select("organization_id").eq("id", valeurs.espace).maybeSingle();
+    if (espace.data === null) return { ok: false, message: "Ce contenu n'est pas accessible.", requestId, valeurs };
+    const { data, error } = await client
+      .from("ateliers")
+      .insert({
+        kind,
+        titre: valeurs.titre.slice(0, 140),
+        question: valeurs.question.slice(0, 1000),
+        sources: [],
+        organization_id: (espace.data as { organization_id: string }).organization_id,
+        teaching_space_id: valeurs.espace,
+        created_by: personne.profileId,
+      })
+      .select("id")
+      .single();
+    if (error !== null) return { ok: false, message: traduire(error, requestId).message, requestId, valeurs };
+    revalidatePath("/app/prof/ateliers");
+    suite((data as { id: string }).id, 2);
+  }
+
+  if (!atelier || !uuid.safeParse(atelier).success) return { ok: false, message: "Atelier introuvable.", requestId };
+  const lu = await client.from("ateliers").select("kind, etat").eq("id", atelier).maybeSingle();
+  const courant = lu.data as { kind: string; etat: string } | null;
+  if (!courant) return { ok: false, message: "Ce contenu n'est pas accessible.", requestId };
+  if (courant.etat !== "brouillon") return { ok: false, message: "Cet atelier est publié : il ne se modifie plus.", requestId };
+
+  if (etape === 2) {
+    const liste = sources(donnees);
+    const texte = String(donnees.get("texte") ?? "").trim();
+    const champs: Record<string, string[]> = {};
+    if (liste.some((s) => !/^\d{4}-\d{2}-\d{2}$/u.test(s.date))) champs.sources = ["Chaque source doit être datée."];
+    if (courant.kind === "actualite" && liste.length > 5) champs.sources = ["Cinq sources au plus."];
+    if (courant.kind === "verifier_ia" && texte.length < 3) champs.texte = ["Collez la réponse à examiner."];
+    if (Object.keys(champs).length) return { ok: false, message: "Certains champs sont à corriger.", champs, valeurs: { texte } };
+    const { error } = await client
+      .from("ateliers")
+      .update({ sources: liste, texte_examine: courant.kind === "verifier_ia" ? texte.slice(0, 8000) : null })
+      .eq("id", atelier)
+      .eq("etat", "brouillon");
+    if (error !== null) return { ok: false, message: traduire(error, requestId).message, requestId };
+    suite(atelier, 3);
+  }
+
+  if (etape === 3) {
+    const consigne = String(donnees.get("consigne") ?? "").trim().slice(0, 4000);
+    const { error } = await client.from("ateliers").update({ consigne: consigne || null }).eq("id", atelier).eq("etat", "brouillon");
+    if (error !== null) return { ok: false, message: traduire(error, requestId).message, requestId, valeurs: { consigne } };
+    suite(atelier, 4);
+  }
+
+  // Étape 4 : corrigé, puis publication si demandée.
+  const corrige = String(donnees.get("corrige") ?? "").trim();
+  if (corrige.length >= 3) {
+    const { error } = await client.from("ateliers_corriges").upsert({ atelier_id: atelier, corrige: corrige.slice(0, 8000) });
+    if (error !== null) return { ok: false, message: traduire(error, requestId).message, requestId, valeurs: { corrige } };
+  }
+  if (donnees.get("intention") === "publier") {
+    const { error } = await client.rpc("atelier_etat", { p_atelier: atelier, p_etat: "publie" });
+    if (error !== null) {
+      const message =
+        error.code === "23514"
+          ? courant.kind === "actualite"
+            ? "Publication refusée : il faut entre 2 et 5 sources datées (étape 2)."
+            : "Publication refusée : le texte à examiner manque (étape 2)."
+          : traduire(error, requestId).message;
+      return { ok: false, message, requestId, valeurs: { corrige } };
+    }
+    revalidatePath("/app/prof/ateliers");
+    redirect(`/app/prof/ateliers/${atelier}?publie=1`);
+  }
+  revalidatePath(`/app/prof/ateliers/${atelier}`);
+  return { ok: true, message: "Brouillon enregistré.", valeurs: { corrige } };
+}

@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { TitreEspace, Vide } from "@/components/app/Cadre";
 import { affectations, classes, contexte, membres } from "@/lib/etablissement";
 import { historiqueImports } from "@/lib/lot-rentree";
-import { sessionCourante } from "@/lib/session-serveur";
+import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
+import { clientUtilisateur } from "@/lib/supabase-serveur";
+import { KeyRound, ShieldCheck, Upload, UserPlus } from "lucide-react";
 
 /**
  * Tableau de bord de l'établissement — cahier V2, §14.1.
@@ -34,12 +36,19 @@ export default async function PageAdmin() {
     );
   }
 
-  const [listeClasses, listeMembres, listeAffectations, imports] = await Promise.all([
+  const jeton = await jetonAccesDe(personne);
+  const client = jeton ? clientUtilisateur(jeton) : null;
+  const [listeClasses, listeMembres, listeAffectations, imports, signalementsOuverts, recuperations] = await Promise.all([
     classes(personne.profileId),
     membres(personne.profileId),
     affectations(personne.profileId),
     historiqueImports(personne.profileId),
+    // Compteurs réels, sous le jeton de l'administrateur (second facteur exigé par la base).
+    client ? client.from("reports").select("id", { count: "exact", head: true }).in("state", ["ouvert", "en_examen"]) : null,
+    client ? client.rpc("recuperation_a_traiter") : null,
   ]);
+  const nbSignalements = signalementsOuverts?.error ? null : (signalementsOuverts?.count ?? null);
+  const nbRecuperations = recuperations?.error ? null : ((recuperations?.data ?? []) as unknown[]).length;
 
   const eleves = listeMembres.filter((membre) => membre.roles.includes("eleve"));
   const enseignants = listeMembres.filter((membre) => membre.roles.includes("professeur"));
@@ -66,11 +75,55 @@ export default async function PageAdmin() {
       />
 
       <dl className="m-0 mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Compteur terme="Classes" valeur={listeClasses.length} />
         <Compteur terme="Élèves" valeur={eleves.length} />
-        <Compteur terme="Professeurs" valeur={enseignants.length} />
+        <Compteur terme="Classes" valeur={listeClasses.length} />
+        <Compteur terme="Enseignants" valeur={enseignants.length} />
         <Compteur terme="Comptes à activer" valeur={aActiver.length} />
       </dl>
+
+      {/* D01 — demandes en attente : compteurs réels ; « — » si la lecture est refusée (second facteur non validé). */}
+      <section className="mt-6 grid gap-4 lg:grid-cols-2" aria-label="Demandes en attente">
+        <Link href="/admin/moderation" className="carte-souleve flex items-center justify-between gap-3 rounded-[16px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-5 no-underline">
+          <span>
+            <span className="block font-semibold text-[color:var(--color-encre)]">Modération</span>
+            <span className="meta">Signalements ouverts ou en examen</span>
+          </span>
+          <span className="font-[family-name:var(--font-titre)] text-[1.75rem] font-bold text-[color:var(--color-encre)]">{nbSignalements ?? "—"}</span>
+        </Link>
+        <Link href="/admin/recuperation" className="carte-souleve flex items-center justify-between gap-3 rounded-[16px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-5 no-underline">
+          <span>
+            <span className="block font-semibold text-[color:var(--color-encre)]">Récupération de compte</span>
+            <span className="meta">Demandes d&apos;accès à traiter</span>
+          </span>
+          <span className="font-[family-name:var(--font-titre)] text-[1.75rem] font-bold text-[color:var(--color-encre)]">{nbRecuperations ?? "—"}</span>
+        </Link>
+      </section>
+
+      <section className="mt-6" aria-labelledby="acces-rapides">
+        <h2 id="acces-rapides" className="text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
+          Accès rapides
+        </h2>
+        <ul className="m-0 mt-3 grid list-none gap-3 p-0 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { href: "/admin/import", titre: "Importer des élèves", detail: "Fichier CSV ou XLSX, aperçu avant écriture", Icone: Upload },
+            { href: "/admin/professeurs", titre: "Ajouter des enseignants", detail: "Comptes et affectations", Icone: UserPlus },
+            { href: "/admin/moderation", titre: "Modération", detail: "Signalements de l'établissement", Icone: ShieldCheck },
+            { href: "/admin/recuperation", titre: "Récupération de compte", detail: "Vérifier l'identité, remettre un lien", Icone: KeyRound },
+          ].map(({ href, titre, detail, Icone }) => (
+            <li key={href}>
+              <Link href={href} className="carte-souleve flex h-full flex-col gap-3 rounded-[16px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-5 no-underline">
+                <span className="grid size-10 place-items-center rounded-[12px] bg-[color:var(--color-rose-clair)] text-[color:var(--color-accent)]">
+                  <Icone size={20} strokeWidth={1.75} aria-hidden="true" />
+                </span>
+                <span>
+                  <span className="block font-semibold text-[color:var(--color-encre)]">{titre}</span>
+                  <span className="meta">{detail}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {listeClasses.length === 0 ? (
         <div className="mt-10">
