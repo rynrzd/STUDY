@@ -52,7 +52,7 @@ seulement).
 | A11 | Ma classe | `/app/classe` | `/app/classe` → `/app/classes/:id` | `app/app/classes/[classe]` | `classe`, consultations | Fait V6 |
 | A12 | Salon | `/app/messages` | `/app/messagerie`, `/app/messagerie/:salon` | `components/study/Salon.tsx` | `salon_*` (0046, 0057) | Fait, testé en base ; pas de temps réel push (relecture régulière) |
 | A13 | Membres | `/app/classe/membres` | → `/app/classes/:id/membres` | `app/app/classe/membres` (renvoi) | `membres`, `invitation_creer` | Fait |
-| A14 | Vie de classe | `/app/classe/vie` | → `/app/classes/:id` | `app/app/classe/vie` (renvoi) | consultations (0050) | Fait V6 ; vue en colonnes proposé/retenu non reprise |
+| A14 | Vie de classe | `/app/classe/vie` | → `/app/classes/:id/propositions` | `app/app/classes/[classe]/propositions` | décisions et événements (0050) | Fait (propositions, suivi, historique, filtres par statut réel) ; non vérifié connecté |
 | A15 | Projets | `/app/projets` | idem | `app/app/projets` | `projet_*` (0051) | Fait V6 |
 | A16 | Agenda | `/app/agenda` | idem | `app/app/agenda` | `agenda_periode` | Fait V6 |
 | A17 | Orientation | `/app/orientation` | idem | `app/app/orientation` | 0052 | Fait V6 |
@@ -66,21 +66,21 @@ seulement).
 
 | # | Écran | Route V7 | Route réelle | Fichier | Service | Statut |
 |---|---|---|---|---|---|---|
-| T01 | Accueil professeur | `/app/professeur` | `/professeur` | `app/professeur` | agrégats existants | Existant, non repris visuellement |
-| T02 | Studio | `/app/studio` | `/studio` | `app/studio` | versions de séance | Existant |
-| T03 | Éditeur de cours | `/app/studio/cours/:id` | `/studio/:seance` | `app/studio/[seance]` | versions, publication | Existant |
-| T04 | Banque d'exercices | `/app/studio/exercices` | `/studio/:seance/exercices` (par séance) | `app/studio/[seance]/exercices` | `exercice_publier` (0047) | **Partiel** : pas de banque transversale filtrable |
-| T05 | Éditeur atelier | `/app/studio/ateliers` | `/app/prof/ateliers` | `app/app/prof/ateliers` | 0052 | Fait V6 ; assistant en 4 étapes non repris |
+| T01 | Accueil professeur | `/app/professeur` | `/professeur` | `app/professeur/page.tsx`, `lib/v6/professeur.ts` | salons, submissions, ateliers_reponses, agenda | Fait (maquette 03) ; non vérifié connecté |
+| T02 | Studio | `/app/studio` | `/studio` | `app/studio` | versions de séance | Existant ; **écart** : onglets Contenu/Paramètres/Aperçu et visuel de la maquette non repris |
+| T03 | Éditeur de cours | `/app/studio/cours/:id` | `/studio/:seance` | `app/studio/[seance]` | versions, publication | Existant ; **écart** : panneau « Audience » à cases et réorganisation des chapitres par glisser non repris (publication multi-classes existante par duplication) |
+| T04 | Banque d'exercices | `/app/studio/exercices` | `/studio/exercices` | `app/studio/exercices/*`, `lib/v6/banque.ts` | `exercice_ajouter_a_seance` (0060) | Fait, testé en base ; « Favoris » de la maquette non repris |
+| T05 | Éditeur atelier | `/app/studio/ateliers` | `/app/prof/ateliers`, `/nouveau`, `/:id/assistant` | `app/app/ateliers/AssistantAtelier.tsx` | 0052 | Fait (assistant 4 étapes, brouillon par étape) ; non vérifié connecté |
 
 ## Administration
 
 | # | Écran | Route V7 | Route réelle | Fichier | Service | Statut |
 |---|---|---|---|---|---|---|
-| D01 | Administration | `/app/admin` | `/admin` | `app/admin` | second facteur exigé (`aal2`) | Existant |
-| D02 | Élèves et import | `/app/admin/eleves` | `/admin/import` | `app/admin/import` | lots 0031 (aperçu avant écriture) | Existant |
-| D03 | Récupérations | `/app/admin/acces` | `/admin/recuperation` | `app/admin/recuperation/*` | `recuperation_a_traiter`, `invitation_creer` | Fait (vérification d'identité, référence, lien 3 j) ; non vérifié connecté |
-| D04 | Modération | `/app/admin/moderation` | `/admin/moderation` | `app/admin/moderation` | `moderer_signalement` (0056) | Fait, testé en base |
-| D05 | Années scolaires | `/app/admin/annees` | `/admin/annees` | `app/admin/annees/*` | `annee_preparer`, `annee_apercu`, `annee_basculer` (0059) | Fait, testé en base ; non vérifié connecté |
+| D01 | Administration | `/app/admin` | `/admin` | `app/admin/page.tsx` | compteurs réels, reports, `recuperation_a_traiter` | Fait (demandes en attente, accès rapides) ; non vérifié connecté |
+| D02 | Élèves et import | `/app/admin/eleves` | `/admin/import` | `app/admin/import` | lots 0031 (aperçu avant écriture) | Existant (aperçu, lignes à corriger) ; **écart** : indicateur d'étapes et onglets Valides/À corriger/En double de la maquette ; pas d'envoi d'invitations par e-mail (aucun fournisseur) |
+| D03 | Récupérations | `/app/admin/acces` | `/admin/recuperation` | `app/admin/recuperation/*` | `recuperation_a_traiter`, `invitation_creer` | Fait (file + détail, vérification hors application, référence, lien 3 j) ; non vérifié connecté |
+| D04 | Modération | `/app/admin/moderation` | `/admin/moderation` | `components/admin/Signalements.tsx` | `moderer_signalement` (0056) | Fait (deux panneaux, onglets), testé en base |
+| D05 | Années scolaires | `/app/admin/annees` | `/admin/annees` | `app/admin/annees/*` | 0059 : préparer, créer une classe, reconduire, contrôle par élève, basculer | Fait, testé en base (adhésions réelles après bascule) ; non vérifié connecté |
 
 ## Fournisseurs absents (état honnête affiché)
 
@@ -94,3 +94,37 @@ seulement).
 
 Configuration à prévoir si un fournisseur est choisi : variables d'environnement
 à ajouter à `.env.example` par le propriétaire, aucune clé n'est inventée ici.
+
+## Écarts visuels restants avec les maquettes (non repris)
+
+Écrans fonctionnels existants dont la mise en page diffère encore des planches :
+- A05 Recherche (07) : puces de matières et signets ; le moteur et ses filtres existent.
+- A08 Fiche (07) : sources en colonne latérale avec renvois numérotés ; indicateur d'étapes de génération (les étapes réelles sont affichées).
+- A09 Carnet (07) : puces par matière avec compteurs.
+- A10 Débloque-moi (07) : trois indices verrouillés successifs (les indices du professeur existent).
+- 01 élève, 05 mobile, 08 projets/orientation, 09 états : non comparés planche par planche dans cette passe.
+
+## Performance — premier affichage de la landing
+
+Mesure reproductible (serveur de production local `next start`, Edge, script
+apparié : navigateur chaud, contexte neuf et cache HTTP vide à chaque passage,
+landing et témoin `/mentions-legales` alternés, 10 passages chacun).
+
+| Mesure | Landing `/` | Témoin `/mentions-legales` |
+|---|---|---|
+| LCP médiane, bureau 1440 | 756 ms (668–2156) | 560 ms |
+| LCP médiane, mobile lent (1,6 Mb/s, 150 ms, CPU ×4) | 1148 ms (1016–1472) | 760 ms |
+| Première requête après démarrage à froid | 4960 ms (TTFB 4–5 s) | — |
+
+Cause des 3,8 s observées : démarrage à froid du serveur (compilation et
+premier rendu), non le contenu de la page. La trace du fil principal avant le
+premier affichage (848 ms) est quasi vide ; bloquer polices ou JavaScript ne
+change pas le LCP. Une page servie depuis un CDN déjà chaud n'a pas ce coût :
+non vérifié sur l'hébergeur, aucun déploiement effectué.
+
+Changements : CSS en ligne (`experimental.inlineCss`, une requête bloquante en
+moins) ; logo `study.` en SVG en ligne (`components/study/intro/logo-svg.ts`,
+glyphes Manrope 800 extraits de la police du dépôt) affiché avant la 3D ;
+affiche `intro-poster.webp` réduite au ruban seul (13,8 Ko) ; la scène 3D
+prend le relais sans masquer le logo. Sans JavaScript, logo, accroche et
+affiche sont visibles à 1440 et 390 px (vérifié par capture).
