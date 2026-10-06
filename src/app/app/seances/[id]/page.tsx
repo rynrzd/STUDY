@@ -3,6 +3,7 @@ import { Bookmark, BookmarkCheck, Dumbbell, FileText, HandHelping, MessageCircle
 import { Entraide } from "@/components/app/Entraide";
 import { VueSeance } from "@/components/seance/VueSeance";
 import { RenduDocument } from "@/components/studio/RenduDocument";
+import { BoutonHorsLigne } from "@/components/study/HorsLigne";
 import { LectureSeance } from "@/components/study/LectureSeance";
 import { NotePrivee } from "@/components/study/NotePrivee";
 import { AccesIndisponible, EnTetePage, Etiquette, EtatVide, ICONE, Panneau, dateLisible } from "@/components/study/ui";
@@ -184,6 +185,7 @@ export default async function PageSeance({
                   <Dumbbell {...ICONE} /> M&apos;entraîner
                 </Link>
               ) : null}
+              <BoutonHorsLigne seance={id} autorise={ctx.copiesLocales && seance.etat === "publiee"} />
               {ctx.roles.eleve ? (
                 <form action={basculerRepere}>
                   <input type="hidden" name="seance" value={id} />

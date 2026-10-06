@@ -48,6 +48,8 @@ export interface ContexteApp {
     readonly exploitant: boolean;
   };
   readonly nonLus: { readonly notifications: number; readonly messages: number };
+  /** Copies hors ligne autorisées : préférence explicite et appareil personnel. */
+  readonly copiesLocales: boolean;
   readonly chemin: string;
 }
 
@@ -72,10 +74,11 @@ export const contexteApp = cache(async (): Promise<ContexteApp> => {
   if (jeton === null) redirect(versConnexion(chemin, "expiree"));
 
   const client = clientUtilisateur(jeton);
-  const [contextesLus, notifications, salons] = await Promise.all([
+  const [contextesLus, notifications, salons, preferences] = await Promise.all([
     client.rpc("mes_contextes"),
     client.from("nouveautes").select("id", { count: "exact", head: true }).is("lu_le", null),
     client.rpc("mes_salons"),
+    client.from("preferences_notifications").select("copies_locales").maybeSingle(),
   ]);
 
   const contextes = ((contextesLus.data ?? []) as { classe: string; libelle: string; annee: string; role: ContexteClasse["role"] }[]).map(
@@ -99,6 +102,7 @@ export const contexteApp = cache(async (): Promise<ContexteApp> => {
       exploitant: estExploitant(personne),
     },
     nonLus: { notifications: notifications.count ?? 0, messages },
+    copiesLocales: (preferences.data as { copies_locales: boolean } | null)?.copies_locales === true && personne.appareil === "personnel",
     chemin,
   };
 });

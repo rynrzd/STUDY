@@ -17,7 +17,7 @@ function abonner(rappel: () => void) {
   };
 }
 
-export function BandeauReseau() {
+export function BandeauReseau({ copies = false }: { copies?: boolean }) {
   const enLigne = useSyncExternalStore(
     abonner,
     () => navigator.onLine,
@@ -31,6 +31,11 @@ export function BandeauReseau() {
     >
       <WifiOff size={16} strokeWidth={1.75} aria-hidden="true" />
       Connexion perdue. Ce qui est affiché reste lisible ; vos envois reprendront au retour du réseau, sans doublon.
+      {copies ? (
+        <a href="/app/hors-ligne" className="ml-1 font-semibold text-[color:var(--color-attention)]">
+          Mes copies hors ligne
+        </a>
+      ) : null}
     </div>
   );
 }

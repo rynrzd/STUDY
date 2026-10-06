@@ -24,6 +24,7 @@ import { seDeconnecter } from "@/app/deconnexion/actions";
 import { changerClasse } from "@/app/app/contexte-actions";
 import { initiales, type ContexteApp } from "@/lib/v6/contexte";
 import { BandeauReseau } from "./BandeauReseau";
+import { ServiceHorsLigne } from "./HorsLigne";
 import { LienNavigation } from "./LienNavigation";
 
 /**
@@ -276,7 +277,8 @@ export function Coque({ ctx, children }: { ctx: ContexteApp; children: React.Rea
             </span>
           </Link>
         </header>
-        <BandeauReseau />
+        <BandeauReseau copies={ctx.copiesLocales} />
+        <ServiceHorsLigne autorise={ctx.copiesLocales} />
         <main id="contenu" className="app-principal" tabIndex={-1}>
           {children}
         </main>
