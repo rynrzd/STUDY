@@ -14,6 +14,7 @@ import { Faq, Onglets } from "@/components/site/Onglets";
 import { MARQUE } from "@/lib/identite-legale";
 import { ObservateurApparitions } from "@/components/study/mouvement";
 import { RubanStudy } from "@/components/study/ruban/RubanStudy";
+import { IntroLanding } from "@/components/study/intro/IntroLanding";
 
 export const metadata: Metadata = pagePublique({
   chemin: "/",
@@ -45,8 +46,18 @@ export default function PageAccueil() {
   return (
     <main id="contenu">
       <ObservateurApparitions />
+      {/* V7 — introduction 3D pilotée par le défilement, greffée avant les
+          sections existantes, qui restent inchangées. */}
+      <IntroLanding
+        apercu={
+          <>
+            <p className="m-0 mb-2 text-center text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)]">Aperçu fictif de l&apos;espace élève</p>
+            <FragmentsEleve />
+          </>
+        }
+      />
       {/* -- L02 — Hero ---------------------------------------------------- */}
-      <section className="relative z-10 pt-14 pb-0 sm:pt-20">
+      <section id="apres-intro" className="relative z-10 scroll-mt-20 pt-14 pb-0 sm:pt-20">
         <div className="contenu-site grid min-w-0 items-center gap-8 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-14">
           {/* Entrée du texte : opacité et 12 px, chaque bloc à son tour. Rien n’attend le ruban. */}
           <div className="entree-texte">
@@ -84,7 +95,6 @@ export default function PageAccueil() {
                 ou un bouton. Scène 3D sur ordinateur seulement ; image fixe sinon. */}
             <RubanStudy
               composition="grande"
-              webgl
               className="ruban-controle-haut absolute right-0 -top-6 z-0 hidden h-[340px] w-[430px] lg:block"
             />
             <RubanStudy composition="grande" className="mx-auto -mb-2 h-[170px] w-full max-w-[320px] lg:hidden" controle={false} />

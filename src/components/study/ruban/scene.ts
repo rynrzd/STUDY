@@ -64,7 +64,7 @@ const CADRAGES: Record<Composition, { camera: [number, number, number]; fov: num
   fragment: { camera: [0, 0, 8.2], fov: 36, rotation: [0.45, -0.7, -0.35], echelle: 1.05 },
 };
 
-function geometrieRuban(T: typeof TroisType): TroisType.BufferGeometry {
+export function geometrieRuban(T: typeof TroisType): TroisType.BufferGeometry {
   const courbe = new T.CatmullRomCurve3(
     CHEMIN.map(([x, y, z]) => new T.Vector3(x, y, z)),
     false,

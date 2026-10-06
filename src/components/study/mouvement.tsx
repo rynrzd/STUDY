@@ -42,6 +42,11 @@ export function SynchroEffets() {
   return null;
 }
 
+/** Niveau effectif, lu directement (hors rendu). */
+export function niveauEffets(): NiveauEffets {
+  return niveau();
+}
+
 function niveau(): NiveauEffets {
   const p = preferenceCourante();
   if (p === "desactives") return "aucun";

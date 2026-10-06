@@ -50,7 +50,7 @@
   --color-rose-decor: #e3bccb;
   --color-rose-moyen: #e8b5c8;    /* rose intermédiaire du brief 3D : bordures du ruban et décors */
 
-  --color-bordure: #e4dfe6;
+  --color-bordure: #ddd7db;       /* V7 : #DDD7DB */
   --color-bordure-forte: #cfc7d2;
   /* La bordure d'un champ n'est pas décorative : c'est elle qui dit où
      commence la zone de saisie, et WCAG 1.4.11 lui demande 3:1. #cfcbd2 en
@@ -79,8 +79,8 @@
   --text-aide--line-height: 1.25rem;
   --text-tableau: 0.875rem;                        /* 14 px */
   --text-tableau--line-height: 1.375rem;
-  --text-corps: 1.0625rem;                         /* 17 px */
-  --text-corps--line-height: 1.6575rem;            /* 1,55 */
+  --text-corps: 1rem;                              /* 16 px (V7 : corps 16/24) */
+  --text-corps--line-height: 1.5rem;               /* 24 px */
   --text-grand: 1.1875rem;                         /* 19 px, chapeaux */
   --text-grand--line-height: 1.85rem;
 

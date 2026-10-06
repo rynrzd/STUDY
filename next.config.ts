@@ -56,6 +56,27 @@ const nextConfig: NextConfig = {
       { source: "/etablissement", destination: "/admin", permanent: true },
       { source: "/etablissement/:chemin*", destination: "/admin/:chemin*", permanent: true },
       { source: "/apres-connexion", destination: "/app", permanent: true },
+      // Catalogue V7 (docs/study-v7-mapping.md) : adresses proposées par le
+      // dossier, renvoyées vers les écrans existants équivalents. Redirections
+      // temporaires : les routes existantes restent canoniques.
+      { source: "/app/messages", destination: "/app/messagerie", permanent: false },
+      { source: "/app/debloque-moi", destination: "/app/aide", permanent: false },
+      { source: "/app/aide-adulte", destination: "/app/demandes", permanent: false },
+      { source: "/app/fiches", destination: "/app/reviser#fiches", permanent: false },
+      { source: "/app/reviser/seance", destination: "/app/entrainements/nouveau", permanent: false },
+      { source: "/app/acces-en-attente", destination: "/acces-en-attente", permanent: false },
+      { source: "/app/professeur", destination: "/professeur", permanent: false },
+      { source: "/app/studio", destination: "/studio", permanent: false },
+      { source: "/app/studio/cours/:id", destination: "/studio/:id", permanent: false },
+      { source: "/app/studio/exercices", destination: "/studio", permanent: false },
+      { source: "/app/studio/ateliers", destination: "/app/prof/ateliers", permanent: false },
+      { source: "/app/admin", destination: "/admin", permanent: false },
+      { source: "/app/admin/eleves", destination: "/admin/import", permanent: false },
+      { source: "/app/admin/acces", destination: "/admin/recuperation", permanent: false },
+      { source: "/app/admin/moderation", destination: "/admin/moderation", permanent: false },
+      { source: "/app/admin/annees", destination: "/admin/annees", permanent: false },
+      { source: "/acces-oublie/confirmation", destination: "/acces-oublie", permanent: false },
+      { source: "/activation/:jeton", destination: "/invitation/:jeton", permanent: false },
     ];
   },
   async headers() {

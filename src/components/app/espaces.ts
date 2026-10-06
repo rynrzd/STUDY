@@ -35,5 +35,7 @@ export const LIENS_ADMIN: readonly LienEspace[] = [
   { href: "/admin/utilisateurs", libelle: "Utilisateurs" },
   { href: "/admin/import", libelle: "Import" },
   { href: "/admin/moderation", libelle: "Modération" },
+  { href: "/admin/recuperation", libelle: "Demandes d’accès" },
+  { href: "/admin/annees", libelle: "Années scolaires" },
   { href: "/parametres", libelle: "Paramètres" },
 ];

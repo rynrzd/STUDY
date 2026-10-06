@@ -268,3 +268,134 @@
   /* Bouton de pause en haut du ruban quand le bas est recouvert par un aperçu. */
   .ruban-controle-haut .ruban-pause { top: 8px; bottom: auto; }
 }
+
+/* ===========================================================================
+   Introduction de la landing (dossier V7, §3).
+   Statique par défaut ; `data-mode="anime"` n'est posé qu'après montage, avec
+   des effets complets. Le canvas est décoratif ; tout le texte est du HTML.
+   =========================================================================== */
+@layer components {
+  .intro { position: relative; background: var(--color-fond); }
+  .intro-scene { position: relative; }
+  .intro-toile { position: relative; height: min(62svh, 560px); overflow: hidden; pointer-events: none; }
+  .intro-poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  .intro[data-scene="oui"] .intro-poster { visibility: hidden; }
+  .intro-calques { display: grid; gap: 40px; max-width: 1180px; margin: 0 auto; padding: 0 20px 56px; }
+  .intro-etape { min-width: 0; }
+  .intro-accroche {
+    margin: 0;
+    text-align: center;
+    font-family: var(--font-titre);
+    font-weight: 700;
+    font-size: clamp(1.5rem, 3.2vw, 2.5rem);
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+  .intro-indice { display: none; }
+  .intro-cartes { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+  .intro-cartes li {
+    display: grid;
+    gap: 6px;
+    padding: 20px;
+    border: 1px solid var(--color-bordure);
+    border-radius: 20px;
+    background: var(--color-surface);
+    color: var(--color-encre);
+  }
+  .intro-cartes li svg { color: var(--color-accent); }
+  .intro-cartes strong { font-family: var(--font-titre); font-size: 1.25rem; }
+  .intro-cartes span { color: var(--color-encre-faible); font-size: 1rem; line-height: 1.5; }
+  .intro-titre-fin {
+    margin: 0 0 16px;
+    text-align: center;
+    font-family: var(--font-titre);
+    font-weight: 800;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: -0.035em;
+  }
+  .intro-apercu { max-width: 760px; margin: 0 auto; }
+  .intro-passer {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+    border: 1px solid var(--color-bordure);
+    color: var(--color-encre);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  @media (min-width: 768px) {
+    .intro-cartes { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+  }
+
+  /* --- Mode animé : récit sticky de 320svh (240svh sur téléphone) --------- */
+  .intro[data-mode="anime"] { height: 240svh; }
+  @media (min-width: 768px) { .intro[data-mode="anime"] { height: 320svh; } }
+  .intro[data-mode="anime"] .intro-scene { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+  .intro[data-mode="anime"] .intro-toile { position: absolute; inset: 0; height: auto; }
+  .intro[data-mode="anime"] .intro-calques { position: absolute; inset: 0; display: block; padding: 0; max-width: none; pointer-events: none; }
+  .intro[data-mode="anime"] .intro-etape {
+    position: absolute;
+    left: 50%;
+    width: min(1180px, calc(100% - 32px));
+    translate: -50% 0;
+    pointer-events: auto;
+    will-change: opacity, transform;
+  }
+  .intro[data-mode="anime"] .intro-etape-a { bottom: max(48px, 9svh); }
+  .intro[data-mode="anime"] .intro-etape-b { bottom: max(40px, 8svh); opacity: 0; }
+  .intro[data-mode="anime"] .intro-etape-c { top: 50%; translate: -50% -50%; opacity: 0; }
+  .intro[data-mode="anime"] .intro-indice {
+    display: block;
+    margin: 14px 0 0;
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--color-encre-faible);
+  }
+  .intro[data-mode="anime"] .intro-cartes li { background: color-mix(in srgb, var(--color-surface) 92%, transparent); }
+  .intro[data-mode="anime"] .intro-apercu { max-height: 56svh; overflow: hidden; border-radius: 20px; }
+  @media (max-width: 767px) {
+    .intro[data-mode="anime"] .intro-cartes { gap: 8px; }
+    .intro[data-mode="anime"] .intro-cartes li { padding: 12px 14px; grid-template-columns: auto 1fr; column-gap: 10px; }
+    .intro[data-mode="anime"] .intro-cartes li span { grid-column: 1 / -1; font-size: 0.9375rem; }
+    .intro[data-mode="anime"] .intro-apercu { max-height: 48svh; }
+  }
+}
+
+@layer components {
+  /* L'accroche reste lisible même si le ruban passe derrière. */
+  .intro[data-mode="anime"] .intro-accroche {
+    width: fit-content;
+    margin: 0 auto;
+    padding: 10px 18px;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--color-fond) 82%, transparent);
+  }
+}
+
+@layer components {
+  /* Sous l'en-tête fixe (72 px) en mode animé. */
+  .intro[data-mode="anime"] .intro-passer { top: 84px; }
+}
+
+@layer components {
+  /* Réduction des mouvements (système ou préférence Study) : la version
+     statique s'applique avant le premier rendu, même si le serveur a rendu
+     la version animée. */
+  @media (prefers-reduced-motion: reduce) {
+    .intro[data-mode="anime"] { height: auto; }
+    .intro[data-mode="anime"] .intro-scene { position: relative; height: auto; overflow: visible; }
+    .intro[data-mode="anime"] .intro-toile { position: relative; inset: auto; height: min(62svh, 560px); }
+    .intro[data-mode="anime"] .intro-calques { position: static; display: grid; gap: 40px; max-width: 1180px; margin: 0 auto; padding: 0 20px 56px; pointer-events: auto; }
+    .intro[data-mode="anime"] .intro-etape { position: static; width: auto; translate: none; opacity: 1 !important; transform: none !important; }
+    .intro[data-mode="anime"] .intro-indice { display: none; }
+    .intro[data-mode="anime"] .intro-passer { top: 12px; }
+  }
+}

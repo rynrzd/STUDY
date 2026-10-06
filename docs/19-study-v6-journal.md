@@ -194,3 +194,25 @@ clavier virtuel dans la messagerie ; lecteur d'écran ; écrans connectés réel
 (aperçus fictifs seulement). Avertissement d'hydratation en développement
 seulement : l'attribut `nonce` du script de démarrage, masqué par le
 navigateur.
+
+## V7 — landing 3D, catalogue et passage d'année (6 octobre 2026)
+
+Correspondance complète des 46 écrans : `docs/study-v7-mapping.md`.
+
+- Landing : introduction pilotée par le défilement (320svh / 240svh), vrai
+  logo extrudé depuis `public/visuels/logo-study.svg` (contours extraits de
+  Manrope 800 de `public/fonts`), ruban, cartes HTML, « Passer
+  l'introduction », version statique (réduction des mouvements, sans script,
+  sans WebGL), image fixe `intro-poster.webp` (20 Ko). Pas de GLB : le logo est
+  extrudé à l'exécution depuis le SVG exact (2 Ko).
+- 0059 : passage d'année (préparer, aperçu, basculer ; idempotent, sans
+  suppression, refus d'une année sans classe) ; écran `/admin/annees`.
+- `/app/ateliers`, `/session-expiree`, `/lien-expire`, alias temporaires des
+  routes du catalogue vers les écrans existants.
+- Jetons : bordure #DDD7DB, corps 16/24.
+
+Mesures (build de production local, Edge, GPU Intel UHD 600) : landing LCP
+3,8 s au premier chargement à froid, 1,2 s ensuite ; CLS 0 ; 3D 200 Ko
+transférés (moteur + chargeurs), logo 2 Ko, image fixe 20 Ko ; scène prête
+5 à 11 s selon la charge de la machine (image fixe affichée entre-temps).
+Non mesuré sur un vrai téléphone.

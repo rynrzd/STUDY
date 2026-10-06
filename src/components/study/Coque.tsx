@@ -107,6 +107,7 @@ function destinations(ctx: ContexteApp): { principales: Destination[]; mobile: D
         { href: "/admin/import", libelle: "Import", icone: Upload },
         { href: "/admin/recuperation", libelle: "Demandes d'accès", icone: KeyRound },
         { href: "/admin/moderation", libelle: "Modération", icone: ShieldCheck },
+        { href: "/admin/annees", libelle: "Années scolaires", icone: CalendarDays },
       ]
     : [];
 
