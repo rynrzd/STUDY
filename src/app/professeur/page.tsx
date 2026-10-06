@@ -5,6 +5,7 @@ import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { coursDuProfesseur } from "@/lib/studio";
 import { devoirsDuProfesseur, seancesDuProfesseur } from "@/lib/espace-professeur";
 import { echeanceLisible, seancesDuJour } from "@/lib/echeances";
+import { QuestionsDesClasses } from "@/components/study/QuestionsDesClasses";
 
 /**
  * Accueil du professeur — cahier V2, §8.1.
@@ -61,6 +62,10 @@ export default async function PageProfesseur() {
           </Link>
         }
       />
+
+      <div className="mt-9">
+        <QuestionsDesClasses jeton={jeton} />
+      </div>
 
       <section className="mt-9">
         <h2 className="text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">

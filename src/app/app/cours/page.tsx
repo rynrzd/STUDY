@@ -3,6 +3,7 @@ import { BookOpen, CalendarClock, Sparkles } from "lucide-react";
 import { EnTetePage, EtatErreur, EtatVide, ICONE, dateLisible } from "@/components/study/ui";
 import { contexteApp, idRequete } from "@/lib/v6/contexte";
 import { mesCours } from "@/lib/v6/cours";
+import { clientUtilisateur } from "@/lib/supabase-serveur";
 
 export const metadata = { title: "Mes cours" };
 export const dynamic = "force-dynamic";
@@ -17,7 +18,11 @@ const TEINTES = ["#f3e4ec", "#edf0e5", "#efeaf7", "#fbf0e1", "#e6eef4", "#f4e9e4
 export default async function PageCours({ searchParams }: { searchParams: Promise<{ classe?: string }> }) {
   const ctx = await contexteApp();
   const { classe } = await searchParams;
-  const cours = await mesCours(ctx.jeton);
+  const [cours, ateliers] = await Promise.all([
+    mesCours(ctx.jeton),
+    clientUtilisateur(ctx.jeton).from("ateliers").select("id, titre, kind, etat").neq("etat", "brouillon").order("published_at", { ascending: false }).limit(6),
+  ]);
+  const listeAteliers = (ateliers.data ?? []) as { id: string; titre: string; kind: string; etat: string }[];
 
   if (cours === null) {
     return (
@@ -105,6 +110,23 @@ export default async function PageCours({ searchParams }: { searchParams: Promis
           ))}
         </ul>
       )}
+      {listeAteliers.length > 0 ? (
+        <section className="panneau mt-8" aria-labelledby="ateliers">
+          <h2 id="ateliers" className="titre-section mb-3">
+            Ateliers
+          </h2>
+          <ul className="m-0 list-none p-0">
+            {listeAteliers.map((a) => (
+              <li key={a.id} className="ligne">
+                <Link href={`/app/ateliers/${a.id}`} className="min-w-0 flex-1">
+                  {a.titre}
+                </Link>
+                <span className="meta">{a.kind === "actualite" ? "Actualité" : "Vérifier une réponse d'IA"}{a.etat === "clos" ? " · clos" : ""}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </>
   );
 }

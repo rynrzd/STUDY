@@ -42,6 +42,15 @@ export default async function PageSeance({
         </Link>
       </nav>
 
+      <div className="mb-6 flex flex-wrap gap-2">
+        <Link href={`/studio/${id}/exercices`} className="bouton bouton-secondaire">
+          Exercices et notions
+        </Link>
+        <Link href={`/app/seances/${id}`} className="bouton bouton-discret">
+          Aperçu élève
+        </Link>
+      </div>
+
       <Editeur
         seance={ensemble.seance}
         blocs={ensemble.blocs}
