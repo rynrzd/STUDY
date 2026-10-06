@@ -8,6 +8,7 @@ import {
   GraduationCap,
   House,
   Inbox,
+  KeyRound,
   LayoutDashboard,
   Library,
   LogOut,
@@ -103,6 +104,7 @@ function destinations(ctx: ContexteApp): { principales: Destination[]; mobile: D
         { href: "/admin/classes", libelle: "Classes", icone: Users },
         { href: "/admin/utilisateurs", libelle: "Comptes", icone: Inbox },
         { href: "/admin/import", libelle: "Import", icone: Upload },
+        { href: "/admin/recuperation", libelle: "Demandes d'accès", icone: KeyRound },
         { href: "/admin/moderation", libelle: "Modération", icone: ShieldCheck },
       ]
     : [];

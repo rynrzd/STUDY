@@ -48,7 +48,7 @@ export interface Signalement {
   /** Le texte visé, tel qu'il est en base. Vide si le contenu a disparu. */
   readonly contenu: string;
   /** « un fil » ou « une réponse » — ce sur quoi porte la décision. */
-  readonly cible: "fil" | "reponse";
+  readonly cible: "fil" | "reponse" | "message";
   readonly masque: boolean;
   /** Combien de personnes distinctes ont signalé ce même contenu. */
   readonly signalements: number;
@@ -159,7 +159,7 @@ export async function signalements(options: {
 
   let requete = client
     .from("reports")
-    .select("id, reason, detail, state, created_at, fil_id, reponse_id, reporter_id")
+    .select("id, reason, detail, state, created_at, fil_id, reponse_id, salon_message_id, reporter_id")
     .eq("organization_id", options.organisation)
     .order("created_at", { ascending: false })
     .limit(100);
@@ -180,6 +180,7 @@ export async function signalements(options: {
     created_at: string;
     fil_id: string | null;
     reponse_id: string | null;
+    salon_message_id: string | null;
     reporter_id: string;
   }[];
 
@@ -188,6 +189,14 @@ export async function signalements(options: {
   // Les contenus visés, en deux requêtes bornées aux identifiants signalés.
   const filsVises = [...new Set(lignes.map((l) => l.fil_id).filter(estUnIdentifiant))];
   const reponsesVisees = [...new Set(lignes.map((l) => l.reponse_id).filter(estUnIdentifiant))];
+
+  const messagesVises = [...new Set(lignes.map((l) => l.salon_message_id).filter(estUnIdentifiant))];
+  const messagesSalon = messagesVises.length === 0
+    ? { data: [] }
+    : await client.from("messages_salon").select("id, body, author_id, hidden_at, deleted_at, salons(label)").in("id", messagesVises);
+  const parMessage = new Map(
+    ((messagesSalon.data ?? []) as unknown as { id: string; body: string; author_id: string; hidden_at: string | null; deleted_at: string | null; salons: { label: string } | null }[]).map((m) => [m.id, m]),
+  );
 
   const [fils, reponses] = await Promise.all([
     filsVises.length === 0
@@ -228,6 +237,7 @@ export async function signalements(options: {
   const profils = new Set<string>(lignes.map((l) => l.reporter_id));
   for (const fil of parFil.values()) profils.add(fil.auteur_id);
   for (const reponse of parReponse.values()) profils.add(reponse.auteur_id);
+  for (const message of parMessage.values()) profils.add(message.author_id);
 
   const { data: personnes } = await client
     .from("profiles")
@@ -290,13 +300,30 @@ export async function signalements(options: {
   // isolée ou d'une classe qui réagit.
   const compte = new Map<string, number>();
   for (const ligne of lignes) {
-    const cle = ligne.fil_id ?? ligne.reponse_id ?? "";
+    const cle = ligne.fil_id ?? ligne.reponse_id ?? ligne.salon_message_id ?? "";
     compte.set(cle, (compte.get(cle) ?? 0) + 1);
   }
 
   return lignes.map((ligne) => {
     const fil = ligne.fil_id === null ? null : (parFil.get(ligne.fil_id) ?? null);
     const reponse = ligne.reponse_id === null ? null : (parReponse.get(ligne.reponse_id) ?? null);
+    const message = ligne.salon_message_id === null ? null : (parMessage.get(ligne.salon_message_id) ?? null);
+    if (ligne.salon_message_id !== null) {
+      return {
+        id: ligne.id,
+        raison: ligne.reason,
+        detail: ligne.detail,
+        etat: ligne.state,
+        signaleLe: ligne.created_at,
+        contenu: message?.deleted_at ? "(message supprimé par son auteur)" : (message?.body ?? ""),
+        cible: "message" as const,
+        masque: (message?.hidden_at ?? null) !== null,
+        signalements: compte.get(ligne.salon_message_id) ?? 1,
+        auteurContenu: noms.get(message?.author_id ?? "") ?? "Compte supprimé",
+        signalePar: noms.get(ligne.reporter_id) ?? "Compte supprimé",
+        cours: message?.salons?.label ? "Salon " + message.salons.label : "Salon",
+      };
+    }
 
     const espace =
       fil !== null

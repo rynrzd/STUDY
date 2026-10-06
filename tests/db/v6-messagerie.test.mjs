@@ -381,3 +381,29 @@ test("enTantQue est bien utilise (garde-fou du harnais)", async (t) => {
   const r = await enTantQue(db, ACTEURS.eleveA1Rayan, (d) => d.query("select study.current_user_id() as id"));
   assert.equal(r.rows[0].id, ACTEURS.eleveA1Rayan);
 });
+
+test("E37 (0056) — un message de salon signale est modere par l'administration, pas par le professeur seul", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+  const general = await salon(db, OBJETS.classeA1);
+  const m = await envoyer(db, ACTEURS.eleveA1Rayan, general, "message limite");
+  await lirePour(
+    db,
+    ACTEURS.eleveA1Lina,
+    "insert into study.reports (organization_id, reporter_id, salon_message_id, reason) values ($1, $2, $3, 'autre')",
+    [ACTEURS.lyceeA, ACTEURS.eleveA1Lina, m.id],
+  );
+  const rapport = (await db.query("select id from study.reports where salon_message_id = $1", [m.id])).rows[0].id;
+  const parProf = await doitEchouer(() =>
+    db.query("select study.moderer_signalement($1, $2, 'masquer', 'motif suffisamment long')", [ACTEURS.profMartin, rapport]),
+  );
+  assert.match(parProf.message, /reservee a l administration/);
+  await db.query("select study.moderer_signalement($1, $2, 'masquer', 'propos blessant envers un camarade')", [ACTEURS.adminA, rapport]);
+  assert.equal((await lirePour(db, ACTEURS.eleveA1Lina, "select 1 from study.messages_salon where id = $1", [m.id])).length, 0);
+  const etat = (await db.query("select state::text as s from study.reports where id = $1", [rapport])).rows[0].s;
+  assert.equal(etat, "traite");
+  const navigateur = await doitEchouer(() =>
+    lirePour(db, ACTEURS.adminA, "select study.moderer_signalement($1, $2, 'restaurer', 'motif suffisamment long')", [ACTEURS.adminA, rapport]),
+  );
+  assert.match(navigateur.message, /permission denied/, "la decision passe par le serveur, jamais par le navigateur");
+});

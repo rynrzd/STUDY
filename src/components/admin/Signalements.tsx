@@ -109,7 +109,7 @@ function Fiche({ signalement }: { signalement: Signalement }) {
     >
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <p className="m-0 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
-          {signalement.cible === "fil" ? "Une question" : "Une réponse"} · {signalement.cours} ·
+          {signalement.cible === "fil" ? "Une question" : signalement.cible === "message" ? "Un message de salon" : "Une réponse"} · {signalement.cours} ·
           signalé le {instantLisible(signalement.signaleLe)}
         </p>
         <span className="rounded-full bg-[color:var(--color-surface-douce)] px-2.5 py-0.5 text-[0.7rem] font-semibold">
