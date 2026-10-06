@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { seDeconnecter } from "@/app/deconnexion/actions";
 import { MARQUE } from "@/lib/identite-legale";
 import { etapeSecondFacteur } from "@/lib/second-facteur";
 import { estExploitant, sessionCourante } from "@/lib/session-serveur";
@@ -61,7 +60,7 @@ export default async function GabaritAdministration({
             <span className="hidden text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)] sm:inline">
               {personne.prenom} {personne.nom}
             </span>
-            <form action={seDeconnecter}>
+            <form method="post" action="/deconnexion">
               <button type="submit" className="bouton bouton-secondaire h-9 min-h-9 px-3.5 text-[length:var(--text-tableau)]">
                 Se déconnecter
               </button>

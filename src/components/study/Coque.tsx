@@ -21,10 +21,11 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { seDeconnecter } from "@/app/deconnexion/actions";
 import { changerClasse } from "@/app/app/contexte-actions";
 import { initiales, type ContexteApp } from "@/lib/v6/contexte";
+import { createHash } from "node:crypto";
 import { BandeauReseau } from "./BandeauReseau";
+import { GardienBrouillons } from "./connexion/NettoyageLocal";
 import { ServiceHorsLigne } from "./HorsLigne";
 import { LienNavigation } from "./LienNavigation";
 
@@ -228,7 +229,7 @@ export function Coque({ ctx, children }: { ctx: ContexteApp; children: React.Rea
               <Link href="/app/reglages" className="lien-barre">
                 <Settings size={18} strokeWidth={1.75} aria-hidden="true" /> Réglages
               </Link>
-              <form action={seDeconnecter}>
+              <form method="post" action="/deconnexion">
                 <button type="submit" className="lien-barre w-full cursor-pointer border-0 bg-transparent text-left">
                   <LogOut size={18} strokeWidth={1.75} aria-hidden="true" /> Se déconnecter
                 </button>
@@ -282,7 +283,7 @@ export function Coque({ ctx, children }: { ctx: ContexteApp; children: React.Rea
         <BandeauReseau copies={ctx.copiesLocales} />
         <ServiceHorsLigne autorise={ctx.copiesLocales} />
         <main id="contenu" className="app-principal" tabIndex={-1}>
-          {children}
+          <GardienBrouillons proprietaire={createHash("sha256").update(`study-brouillons:${personne.profileId}`).digest("base64url").slice(0, 22)}>{children}</GardienBrouillons>
         </main>
       </div>
 

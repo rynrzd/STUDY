@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { ConteneurEffets } from "@/components/study/ConteneurEffets";
 import { Coque } from "@/components/study/Coque";
 import { contexteApp } from "@/lib/v6/contexte";
 
@@ -25,5 +26,9 @@ export default async function GabaritApp({ children }: { children: React.ReactNo
   const seulementEleve = ctx.roles.eleve && !ctx.roles.professeur && !ctx.roles.admin;
   if (seulementEleve && ctx.contextes.length === 0) redirect("/acces-en-attente");
 
-  return <Coque ctx={ctx}>{children}</Coque>;
+  return (
+    <ConteneurEffets>
+      <Coque ctx={ctx}>{children}</Coque>
+    </ConteneurEffets>
+  );
 }

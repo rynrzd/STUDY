@@ -178,9 +178,20 @@ export async function attendreStabilisation(page, { calme = 600, delai = 20_000 
 export async function connecter(page, base, identite) {
   const { code, login, motDePasse, motDePasseFinal = null } = identite;
 
-  await exigerPage(page, base, "/connexion", { attendu: "/connexion", marqueur: "#identifiant" });
+  // Connexion en deux temps (0058) : l’établissement d’abord, s’il n’est pas
+  // déjà mémorisé — ou s’il en faut un autre que celui mémorisé.
+  await exigerPage(page, base, "/connexion", { attendu: "/connexion", marqueur: "#identifiant, #code-etablissement" });
+  const nomAffiche = await page.locator('[data-testid="etablissement-nom"]').count();
+  if (nomAffiche > 0 && (await page.locator('input[name="code"][type="hidden"]').getAttribute("value")) !== code.toUpperCase()) {
+    await page.getByRole("button", { name: /Changer d.établissement/ }).click();
+    await page.waitForSelector("#code-etablissement");
+  }
+  if ((await page.locator("#code-etablissement").count()) > 0) {
+    await page.fill("#code-etablissement", code);
+    await page.click('[data-testid="etablissement-continuer"]');
+    await page.waitForSelector("#identifiant", { timeout: 30_000 });
+  }
 
-  await page.fill("#code", code);
   await page.fill("#identifiant", login);
   await page.fill("#motDePasse", motDePasse);
   await soumettre(page, '[data-testid="connexion-valider"]', { quitter: "/connexion" });

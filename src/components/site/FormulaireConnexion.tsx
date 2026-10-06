@@ -1,241 +1,221 @@
 "use client";
 
+import Link from "next/link";
 import { Loader2 } from "lucide-react";
-import { useActionState, useEffect, useId, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { seConnecter } from "@/app/connexion/actions";
 import { ETAT_INITIAL, type EtatConnexion } from "@/app/connexion/etats";
 
 /**
- * Formulaire de connexion.
+ * Formulaire de connexion — étape 2, l'établissement est connu.
  *
- * Deux sortes de messages, et il ne faut jamais les confondre.
+ * Deux sortes de messages, à ne jamais confondre :
+ * - **ce qui manque** se dit précisément, sous le champ, sans envoi ;
+ * - **ce qui est faux** se dit toujours de la même façon, que le compte
+ *   existe ou non (non-divulgation).
  *
- * **Ce qui manque** se dit précisément : « Indiquez votre identifiant ». C'est
- * une faute de saisie, elle n'apprend rien à personne, et la taire ferait
- * perdre du temps à quelqu'un qui a simplement oublié un champ.
+ * Les autres refus ont chacun leur message : réseau (la requête n'est pas
+ * partie), service indisponible, limitation des tentatives (avec le délai).
  *
- * **Ce qui est faux** se dit toujours de la même façon, que le compte existe
- * ou non, qu'il soit suspendu ou que le mot de passe soit erroné. Cette
- * uniformité est une décision de sécurité : un message plus précis
- * transformerait la page en annuaire des comptes d'un lycée.
- *
- * Le contrôle des champs vides a lieu **avant** tout envoi. C'est le §4 du
- * cahier, et c'était un vrai défaut : le formulaire porte `noValidate` — pour
- * écrire ses propres messages plutôt que ceux du navigateur — mais rien ne
- * remplaçait la validation native. Un formulaire entièrement vide partait donc
- * au serveur, et revenait avec le message générique, qui laissait croire à un
- * mauvais mot de passe.
- *
- * Sans JavaScript, le formulaire reste utilisable : l'action est attachée au
- * `<form>`, et un envoi vide reçoit le refus du serveur.
+ * L'identifiant est conservé après un refus. Le mot de passe n'est jamais
+ * renvoyé par le serveur ; il est gardé dans le champ après une erreur de
+ * réseau ou de service (on réessaie le même), et effacé — en le disant —
+ * après « identifiant ou mot de passe incorrect ». Il n'est jamais modifié :
+ * ni rognage, ni changement de casse. Collage et gestionnaires de mots de
+ * passe fonctionnent (attributs `autocomplete`, aucun blocage du collage).
  */
 
-type Champ = "code" | "identifiant" | "motDePasse";
+type Champ = "identifiant" | "motDePasse";
+const MANQUE: Record<Champ, string> = { identifiant: "Indique ton identifiant.", motDePasse: "Indique ton mot de passe." };
 
-const MANQUE: Record<Champ, string> = {
-  code: "Indiquez le code de votre établissement.",
-  identifiant: "Indiquez votre identifiant.",
-  motDePasse: "Indiquez votre mot de passe.",
-};
-
-const ORDRE: readonly Champ[] = ["code", "identifiant", "motDePasse"];
-
-export function FormulaireConnexion({ suite = null }: { suite?: string | null }) {
-  const [etat, action] = useActionState<EtatConnexion, FormData>(seConnecter, ETAT_INITIAL);
+export function FormulaireConnexion({ suite = null, code = null }: { suite?: string | null; code?: string | null }) {
+  const [etat, action] = useActionState<EtatConnexion, FormData>(async (precedent, donnees) => {
+    const identifiant = String(donnees.get("identifiant") ?? "").slice(0, 40);
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      return { etat: "refus", type: "reseau", message: "Pas de connexion internet. Ta saisie est gardée : réessaie quand le réseau revient.", saisie: { identifiant } };
+    }
+    try {
+      return await seConnecter(precedent, donnees);
+    } catch (e) {
+      // Une redirection réussie n'arrive pas ici ; une requête qui n'a pas pu partir, si.
+      if (e instanceof TypeError) {
+        return { etat: "refus", type: "reseau", message: "La requête n'a pas abouti : connexion internet interrompue. Réessaie.", saisie: { identifiant } };
+      }
+      throw e;
+    }
+  }, ETAT_INITIAL);
+  const [motDePasse, setMotDePasse] = useState("");
+  const [visible, setVisible] = useState(false);
+  const [manquants, setManquants] = useState<Partial<Record<Champ, string>>>({});
+  const [efface, setEfface] = useState(false);
   const alerte = useRef<HTMLDivElement>(null);
   const formulaire = useRef<HTMLFormElement>(null);
-  const [motDePasseVisible, setMotDePasseVisible] = useState(false);
-  const [manquants, setManquants] = useState<readonly Champ[]>([]);
-  const aideVisibilite = useId();
-  const prefixe = useId();
+  const [vu, setVu] = useState(etat);
 
-  const identifiantErreur = (champ: Champ) => `${prefixe}-erreur-${champ}`;
-
-  useEffect(() => {
-    if (etat.etat === "refus") alerte.current?.focus();
-  }, [etat]);
+  // Réaction à un nouveau résultat du serveur (pendant le rendu, pas dans un effet).
+  if (vu !== etat) {
+    setVu(etat);
+    if (etat.etat === "refus" && etat.type === "identifiants") {
+      setMotDePasse("");
+      setEfface(true);
+    } else {
+      setEfface(false);
+    }
+    setManquants(etat.champs ?? {});
+  }
 
   /**
-   * Arrête l'envoi tant qu'un champ obligatoire est vide.
-   *
-   * `preventDefault` empêche React d'appeler l'action serveur : aucune requête
-   * d'authentification ne part, et la limitation de tentatives côté serveur
-   * n'est pas consommée par une faute de frappe.
+   * Focus sur un champ en erreur, centré dans la zone visible : avec le
+   * clavier ouvert, le champ, son message et le bouton restent ensemble.
    */
-  function verifier(evenement: React.FormEvent<HTMLFormElement>) {
-    const donnees = new FormData(evenement.currentTarget);
-    const vides = ORDRE.filter((champ) => String(donnees.get(champ) ?? "").trim() === "");
+  function focaliser(id: Champ) {
+    const champ = formulaire.current?.querySelector<HTMLInputElement>(`#${id}`);
+    if (!champ) return;
+    champ.focus({ preventScroll: true });
+    champ.scrollIntoView({ block: "center" });
+  }
 
+  useEffect(() => {
+    if (etat.etat !== "refus") return;
+    if (etat.type === "saisie") {
+      const premier = (["identifiant", "motDePasse"] as const).find((c) => etat.champs?.[c]);
+      if (premier) focaliser(premier);
+    } else if (etat.type === "identifiants") {
+      focaliser("motDePasse");
+    } else {
+      alerte.current?.focus();
+    }
+  }, [etat]);
+
+  function verifier(e: React.FormEvent<HTMLFormElement>) {
+    const d = new FormData(e.currentTarget);
+    const vides: Partial<Record<Champ, string>> = {};
+    if (String(d.get("identifiant") ?? "").trim() === "") vides.identifiant = MANQUE.identifiant;
+    if (String(d.get("motDePasse") ?? "") === "") vides.motDePasse = MANQUE.motDePasse;
     setManquants(vides);
-    if (vides.length === 0) return;
-
-    evenement.preventDefault();
-
-    // Le focus va au premier champ fautif, dans l'ordre de lecture — pas au
-    // résumé : on veut que la personne puisse taper tout de suite.
-    const premier = vides[0];
-    if (premier !== undefined) {
-      formulaire.current?.querySelector<HTMLInputElement>(`#${CSS.escape(premier)}`)?.focus();
+    setEfface(false);
+    const premier = (["identifiant", "motDePasse"] as const).find((c) => vides[c]);
+    if (premier) {
+      // Aucune requête ne part : la limitation des tentatives n'est pas consommée.
+      e.preventDefault();
+      focaliser(premier);
     }
   }
 
-  const estManquant = (champ: Champ) => manquants.includes(champ);
-
-  /** Les attributs communs à un champ obligatoire, selon qu'il manque ou non. */
-  function attributs(champ: Champ, aideExistante?: string) {
-    const decrit = [aideExistante, estManquant(champ) ? identifiantErreur(champ) : null]
-      .filter((valeur) => valeur !== null && valeur !== undefined)
-      .join(" ");
-
-    return {
-      "aria-invalid": estManquant(champ) ? (true as const) : undefined,
-      "aria-describedby": decrit === "" ? undefined : decrit,
-    };
-  }
+  const general = etat.etat === "refus" && etat.type !== "saisie" && etat.type !== "identifiants" ? etat : null;
+  const refusIdentifiants = etat.etat === "refus" && etat.type === "identifiants" ? etat.message : null;
+  const decrit = (champ: Champ, aide?: string) => {
+    const ids = [aide, manquants[champ] ? `erreur-${champ}` : null, champ === "motDePasse" && refusIdentifiants ? "erreur-connexion" : null].filter(Boolean);
+    return ids.length ? ids.join(" ") : undefined;
+  };
 
   return (
-    <form ref={formulaire} action={action} onSubmit={verifier} className="mt-8" noValidate>
-      {manquants.length > 0 ? (
-        <div
-          role="alert"
-          className="mb-6 rounded-[var(--radius-carte)] border border-[color:var(--color-erreur)] bg-[color:var(--color-erreur-fond)] p-4"
-        >
-          <p className="m-0 font-semibold text-[color:var(--color-erreur)]">
-            {manquants.length === 1
-              ? "Un champ est vide."
-              : `${manquants.length} champs sont vides.`}
-          </p>
-          <ul className="m-0 mt-2 list-disc space-y-1 pl-5 text-[length:var(--text-aide)]">
-            {manquants.map((champ) => (
-              <li key={champ}>{MANQUE[champ]}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+    <form ref={formulaire} action={action} onSubmit={verifier} noValidate>
+      {suite ? <input type="hidden" name="suite" value={suite} /> : null}
+      {code ? <input type="hidden" name="code" value={code} /> : null}
 
-      {etat.etat === "refus" ? (
+      {general ? (
         <div
           ref={alerte}
           tabIndex={-1}
           role="alert"
-          className="mb-6 rounded-[var(--radius-carte)] border border-[color:var(--color-erreur)] bg-[color:var(--color-erreur-fond)] p-4"
+          data-type={general.type}
+          className="mb-5 rounded-[12px] border border-[color:var(--color-attention)] bg-[color:var(--color-attention-fond)] p-4 text-[color:var(--color-attention)]"
         >
-          <p className="m-0 font-semibold text-[color:var(--color-erreur)]">{etat.message}</p>
-          {etat.reprendreDansSecondes ? (
-            <p className="m-0 mt-2 text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)]">
-              Nouvelle tentative possible dans {etat.reprendreDansSecondes} secondes.
-            </p>
+          <p className="m-0 font-semibold">{general.message}</p>
+          {general.reprendreDansSecondes ? (
+            <p className="m-0 mt-1 text-[0.875rem]">Nouvelle tentative possible dans {Math.ceil(general.reprendreDansSecondes / 60) > 1 ? `${Math.ceil(general.reprendreDansSecondes / 60)} minutes` : `${general.reprendreDansSecondes} secondes`}.</p>
           ) : null}
         </div>
       ) : null}
 
-      {/* La suite du parcours, revalidée côté serveur (dossier V6, AUTH-03). */}
-      {suite ? <input type="hidden" name="suite" value={suite} /> : null}
-
-      <div className="space-y-6">
-        <div>
-          <label className="etiquette" htmlFor="code">
-            Code établissement
-          </label>
-          <input
-            className="champ uppercase"
-            id="code"
-            name="code"
-            type="text"
-            autoCapitalize="characters"
-            autoComplete="organization"
-            spellCheck={false}
-            defaultValue={etat.saisie?.code ?? ""}
-            required
-            {...attributs("code", "aide-code")}
-          />
-          {estManquant("code") ? (
-            <span className="aide-champ text-[color:var(--color-erreur)]" id={identifiantErreur("code")}>
-              {MANQUE.code}
-            </span>
-          ) : null}
-          <span className="aide-champ" id="aide-code">
-            Il figure sur la fiche remise par votre lycée. Il identifie
-            l&apos;établissement et n&apos;ouvre aucun accès à lui seul.
-          </span>
-        </div>
-
+      <div className="grid gap-5">
         <div>
           <label className="etiquette" htmlFor="identifiant">
             Identifiant
           </label>
           <input
-            className="champ"
+            className="champ champ-acces"
             id="identifiant"
             name="identifiant"
             type="text"
             autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
             spellCheck={false}
+            maxLength={40}
             defaultValue={etat.saisie?.identifiant ?? ""}
             required
-            {...attributs("identifiant")}
+            aria-invalid={manquants.identifiant || refusIdentifiants ? true : undefined}
+            aria-describedby={decrit("identifiant", "aide-identifiant")}
           />
-          {estManquant("identifiant") ? (
-            <span
-              className="aide-champ text-[color:var(--color-erreur)]"
-              id={identifiantErreur("identifiant")}
-            >
-              {MANQUE.identifiant}
-            </span>
+          {manquants.identifiant ? (
+            <p id="erreur-identifiant" className="aide-champ m-0 font-semibold text-[color:var(--color-erreur)]">
+              {manquants.identifiant}
+            </p>
           ) : null}
+          <p id="aide-identifiant" className="aide-champ m-0">
+            Celui de ta fiche de connexion, par exemple <span className="font-mono">camille.martin</span>.
+          </p>
         </div>
 
         <div>
-          <label className="etiquette" htmlFor="motDePasse">
-            Mot de passe
-          </label>
+          <div className="flex items-baseline justify-between gap-3">
+            <label className="etiquette" htmlFor="motDePasse">
+              Mot de passe
+            </label>
+            <Link href="/acces-oublie" className="text-[0.875rem] font-semibold text-[color:var(--color-accent)]">
+              Mot de passe oublié ?
+            </Link>
+          </div>
           <div className="relative">
             <input
-              className="champ pr-[5.5rem]"
+              className="champ champ-acces pr-[6rem]"
               id="motDePasse"
               name="motDePasse"
-              type={motDePasseVisible ? "text" : "password"}
+              type={visible ? "text" : "password"}
               autoComplete="current-password"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              maxLength={200}
+              value={motDePasse}
+              onChange={(e) => setMotDePasse(e.target.value)}
               required
-              {...attributs("motDePasse", aideVisibilite)}
+              aria-invalid={manquants.motDePasse || refusIdentifiants ? true : undefined}
+              aria-describedby={decrit("motDePasse")}
             />
-            {/* Utile sur un clavier de téléphone, où une faute de frappe reste
-                invisible. Le champ repart toujours masqué. */}
             <button
               type="button"
-              onClick={() => setMotDePasseVisible((valeur) => !valeur)}
-              aria-pressed={motDePasseVisible}
+              onClick={() => setVisible((v) => !v)}
+              aria-pressed={visible}
               aria-controls="motDePasse"
-              className="absolute inset-y-0 right-0 flex items-center px-3 text-[length:var(--text-aide)] font-semibold text-[color:var(--color-accent)]"
+              className="absolute inset-y-0 right-0 flex min-w-[5.5rem] items-center justify-center px-3 text-[0.875rem] font-semibold text-[color:var(--color-accent)]"
             >
-              {motDePasseVisible ? "Masquer" : "Afficher"}
+              {visible ? "Masquer" : "Afficher"}
             </button>
           </div>
-          {estManquant("motDePasse") ? (
-            <span
-              className="aide-champ text-[color:var(--color-erreur)]"
-              id={identifiantErreur("motDePasse")}
-            >
-              {MANQUE.motDePasse}
-            </span>
+          {manquants.motDePasse ? (
+            <p id="erreur-motDePasse" className="aide-champ m-0 font-semibold text-[color:var(--color-erreur)]">
+              {manquants.motDePasse}
+            </p>
           ) : null}
-          <span className="sr-only" id={aideVisibilite}>
-            {motDePasseVisible ? "Le mot de passe est visible." : "Le mot de passe est masqué."}
-          </span>
+          {refusIdentifiants ? (
+            <p id="erreur-connexion" role="alert" className="aide-champ m-0 font-semibold text-[color:var(--color-erreur)]" data-type="identifiants">
+              {refusIdentifiants}
+              {efface ? " Le mot de passe a été effacé." : ""}
+            </p>
+          ) : null}
         </div>
 
-        <label className="flex min-h-[var(--spacing-cible)] items-start gap-3">
-          <input
-            type="checkbox"
-            name="postePartage"
-            value="oui"
-            className="mt-1 size-4 shrink-0 accent-[color:var(--color-accent)]"
-          />
+        <label className="flex min-h-[48px] cursor-pointer items-start gap-3 rounded-[12px] border border-[color:var(--color-bordure)] px-4 py-3">
+          <input type="checkbox" name="postePartage" value="oui" className="mt-1 size-5 shrink-0 accent-[color:var(--color-accent)]" aria-describedby="aide-poste-partage" />
           <span>
-            Poste partagé
-            <span className="aide-champ">
-              Session plus courte, rien n&apos;est conservé sur cet ordinateur.
+            <span className="block font-semibold">Appareil partagé</span>
+            <span id="aide-poste-partage" className="aide-champ m-0 mt-0.5">
+              Pour un ordinateur du lycée ou utilisé par plusieurs personnes. La session se ferme à la fermeture du navigateur
+              ou après 30 minutes sans activité, et ton établissement n&apos;est pas mémorisé.
             </span>
           </span>
         </label>
@@ -249,17 +229,12 @@ export function FormulaireConnexion({ suite = null }: { suite?: string | null })
 function BoutonConnexion() {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      data-testid="connexion-valider"
-      disabled={pending}
-      className="bouton bouton-primaire mt-8 w-full"
-    >
+    <button type="submit" data-testid="connexion-valider" disabled={pending} aria-disabled={pending} className="bouton bouton-primaire bouton-acces mt-6 w-full">
       {pending ? (
         <>
-          {/* Indicateur simple, sans fausse progression : il tourne tant que la requête est en cours. */}
+          {/* Indicateur simple, sans fausse progression. Le bouton reste désactivé : pas de double envoi. */}
           <Loader2 size={18} strokeWidth={2} aria-hidden="true" className="animate-spin motion-reduce:animate-none" />
-          Vérification…
+          Connexion…
         </>
       ) : (
         "Se connecter"

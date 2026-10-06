@@ -3,7 +3,6 @@ import { KeyRound, ShieldCheck } from "lucide-react";
 import { CopiesLocales } from "@/components/study/HorsLigne";
 import { PreferencesMouvement } from "@/components/study/PreferencesMouvement";
 import { EnTetePage, ICONE, Panneau } from "@/components/study/ui";
-import { seDeconnecter } from "@/app/deconnexion/actions";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 import { contexteApp } from "@/lib/v6/contexte";
 import { FormulairePreferences } from "./FormulairePreferences";
@@ -64,12 +63,24 @@ export default async function PageReglages() {
                 <ShieldCheck {...ICONE} /> Double authentification
               </Link>
             ) : null}
-            <form action={seDeconnecter}>
+            <form method="post" action="/deconnexion">
               <button type="submit" className="bouton bouton-discret">
                 Se déconnecter de cet appareil
               </button>
             </form>
+            <form method="post" action="/deconnexion">
+              <input type="hidden" name="partout" value="oui" />
+              <button type="submit" className="bouton bouton-discret">
+                Se déconnecter de tous mes appareils
+              </button>
+            </form>
           </div>
+          <p className="meta m-0 mt-3">
+            Sur ordinateur partagé, la session se ferme à la fermeture du navigateur ou après 30 minutes sans activité (8 heures au plus).
+            Sur ton appareil, après 2 heures sans activité (12 heures au plus). À la déconnexion, les brouillons et copies de Study
+            enregistrés dans ce navigateur sont effacés ; les fichiers que tu as téléchargés restent dans ton dossier de
+            téléchargements.
+          </p>
         </Panneau>
 
         <Panneau id="donnees" titre="Mes données">

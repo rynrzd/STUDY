@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import "../styles/globals.css";
+import { SynchroEffets } from "@/components/study/mouvement";
 import { DOMAINE, MARQUE } from "@/lib/identite-legale";
-import { SCRIPT_EFFETS, variablesMouvement } from "@/lib/mouvement";
+import { variablesMouvement } from "@/lib/mouvement";
 
 export const metadata: Metadata = {
   metadataBase: new URL(DOMAINE),
@@ -51,14 +51,13 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    // `data-effets` est posé avant le premier rendu par le script de démarrage
-    // (préférence « Effets visuels », cookie d'appareil) : le serveur ne le
-    // connaît pas, d'où `suppressHydrationWarning` sur cette seule balise.
+    // `data-effets` (préférence « Effets visuels ») est posé sur <html> au
+    // chargement par `SynchroEffets`, après l'hydratation ; d'où
+    // `suppressHydrationWarning` sur cette seule balise. Les pages dynamiques
+    // le posent en plus côté serveur sur leur conteneur (voir lib/mouvement.ts).
     <html lang="fr" style={variablesMouvement() as React.CSSProperties} suppressHydrationWarning>
       <body>
-        <Script id="preference-effets" strategy="beforeInteractive">
-          {SCRIPT_EFFETS}
-        </Script>
+        <SynchroEffets />
         <a className="lien-evitement" href="#contenu">
           Aller au contenu principal
         </a>

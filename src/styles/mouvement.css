@@ -6,12 +6,12 @@
    =========================================================================== */
 @layer components {
   /* --- Préférence de la personne : prioritaire sur tout effet ------------ */
-  :root[data-effets="reduits"] *,
-  :root[data-effets="reduits"] *::before,
-  :root[data-effets="reduits"] *::after,
-  :root[data-effets="desactives"] *,
-  :root[data-effets="desactives"] *::before,
-  :root[data-effets="desactives"] *::after {
+  [data-effets="reduits"] *,
+  [data-effets="reduits"] *::before,
+  [data-effets="reduits"] *::after,
+  [data-effets="desactives"] *,
+  [data-effets="desactives"] *::before,
+  [data-effets="desactives"] *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -156,14 +156,14 @@
     .carte-memoire[data-retournee="oui"] .carte-memoire-recto,
     .carte-memoire[data-retournee="non"] .carte-memoire-verso { visibility: hidden; }
   }
-  :root[data-effets="reduits"] .carte-memoire-interieur,
-  :root[data-effets="desactives"] .carte-memoire-interieur { transform: none !important; transition: none; }
-  :root[data-effets="reduits"] .carte-memoire-verso,
-  :root[data-effets="desactives"] .carte-memoire-verso { transform: none; }
-  :root[data-effets="reduits"] .carte-memoire[data-retournee="oui"] .carte-memoire-recto,
-  :root[data-effets="reduits"] .carte-memoire[data-retournee="non"] .carte-memoire-verso,
-  :root[data-effets="desactives"] .carte-memoire[data-retournee="oui"] .carte-memoire-recto,
-  :root[data-effets="desactives"] .carte-memoire[data-retournee="non"] .carte-memoire-verso { visibility: hidden; }
+  [data-effets="reduits"] .carte-memoire-interieur,
+  [data-effets="desactives"] .carte-memoire-interieur { transform: none !important; transition: none; }
+  [data-effets="reduits"] .carte-memoire-verso,
+  [data-effets="desactives"] .carte-memoire-verso { transform: none; }
+  [data-effets="reduits"] .carte-memoire[data-retournee="oui"] .carte-memoire-recto,
+  [data-effets="reduits"] .carte-memoire[data-retournee="non"] .carte-memoire-verso,
+  [data-effets="desactives"] .carte-memoire[data-retournee="oui"] .carte-memoire-recto,
+  [data-effets="desactives"] .carte-memoire[data-retournee="non"] .carte-memoire-verso { visibility: hidden; }
 
   /* --- Fin de séance : une coche qui se trace, moins d'une seconde ---------- */
   .coche-fin circle {

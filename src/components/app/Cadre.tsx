@@ -1,3 +1,4 @@
+import { ConteneurEffets } from "@/components/study/ConteneurEffets";
 import { Coque } from "@/components/study/Coque";
 import { contexteApp } from "@/lib/v6/contexte";
 
@@ -28,7 +29,11 @@ export async function Cadre({
   children: React.ReactNode;
 }) {
   const ctx = await contexteApp();
-  return <Coque ctx={ctx}>{children}</Coque>;
+  return (
+    <ConteneurEffets>
+      <Coque ctx={ctx}>{children}</Coque>
+    </ConteneurEffets>
+  );
 }
 
 /**

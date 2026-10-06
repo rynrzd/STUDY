@@ -1345,3 +1345,18 @@
     padding: 0 !important;
   }
 }
+
+@layer components {
+  /* --- Écrans d'accès : cibles de 48 px, texte d'au moins 16 px ----------
+     16 px au minimum évite le zoom automatique d'iOS au focus d'un champ. */
+  .champ-acces {
+    min-height: 48px;
+    font-size: max(1rem, var(--text-corps));
+  }
+  .bouton-acces {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+  /* Le champ actif reste visible au-dessus du clavier et de la barre d'adresse. */
+  .champ-acces { scroll-margin-block: 96px; }
+}

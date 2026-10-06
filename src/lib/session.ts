@@ -87,7 +87,13 @@ export interface OptionsCookieSession {
   readonly secure: boolean;
   readonly sameSite: "lax";
   readonly path: "/";
-  readonly maxAge: number;
+  /**
+   * Absent pour un appareil partagé : c'est alors un cookie de session de
+   * navigateur, qui disparaît à la fermeture du navigateur — sauf si celui-ci
+   * restaure les sessions. L'échéance serveur (30 min d'inactivité, 8 h au
+   * total) reste donc la vraie limite.
+   */
+  readonly maxAge?: number;
 }
 
 /**
@@ -97,7 +103,7 @@ export interface OptionsCookieSession {
  * (WEB-03) impose en plus un jeton CSRF et la validation Origin /
  * Fetch Metadata sur toute mutation. Voir `src/lib/csrf.ts`.
  */
-export function cookieSession(jeton: string, dureeSecondes: number): OptionsCookieSession {
+export function cookieSession(jeton: string, dureeSecondes: number, persistant = true): OptionsCookieSession {
   return {
     name: NOM_COOKIE_SESSION,
     value: jeton,
@@ -105,7 +111,7 @@ export function cookieSession(jeton: string, dureeSecondes: number): OptionsCook
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: dureeSecondes,
+    ...(persistant ? { maxAge: dureeSecondes } : {}),
   };
 }
 

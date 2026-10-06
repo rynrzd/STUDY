@@ -78,7 +78,10 @@ export type MotifPrivilegie =
   // Dossier V6 : une invitation se lit et se consomme avant toute connexion,
   // et une demande de recuperation vient d un visiteur anonyme. Les fonctions
   // appelees ne rendent rien qu un lien valable ne justifie.
-  | "invitation_et_recuperation";
+  | "invitation_et_recuperation"
+  // Connexion simplifiée (0058) : le nom d’un établissement à partir de son
+  // code public, avant toute session. Rien d’autre n’est lu.
+  | "decouverte_etablissement";
 
 /**
  * Client d'authentification : parle à l'API Auth du fournisseur, pas aux

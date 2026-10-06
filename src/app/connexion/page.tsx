@@ -1,145 +1,140 @@
 import type { Metadata } from "next";
-import { pagePrivee } from "@/lib/metadonnees";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { FormulaireConnexion } from "@/components/site/FormulaireConnexion";
-import { RubanStudy } from "@/components/study/ruban/RubanStudy";
-import { MARQUE } from "@/lib/identite-legale";
-import { destinationApresConnexion, sessionCourante } from "@/lib/session-serveur";
+import { BandeauEtablissement, CadreConnexion, LiensAcces } from "@/components/study/connexion/CadreConnexion";
+import { FormulaireEtablissement } from "@/components/study/connexion/FormulaireEtablissement";
+import { NettoyageApresDeconnexion } from "@/components/study/connexion/NettoyageLocal";
+import { pagePrivee } from "@/lib/metadonnees";
+import { destinationApresConnexion, jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
+import { normaliserCode } from "@/lib/v6/contexte-etablissement";
+import { lireContexteEtablissement } from "@/lib/v6/connexion-serveur";
 import { suiteSure } from "@/lib/v6/redirection";
+import { changerEtablissement } from "./actions";
 
 export const metadata: Metadata = pagePrivee({
   titre: "Connexion",
-  description:
-    "Entrée réservée aux membres d'un établissement équipé.",
+  description: "Entrée réservée aux membres d'un établissement équipé.",
 });
 
-/**
- * /connexion — C01.
- *
- * Deux panneaux sur ordinateur : le rose porte la marque et une phrase, le
- * blanc porte le formulaire. Sur téléphone, une seule colonne et un en-tête
- * réduit — le panneau rose disparaît plutôt que de pousser les champs sous la
- * ligne de flottaison.
- *
- * Il n'y a pas d'inscription : un compte est créé par l'établissement. Rien ici
- * ne doit ressembler à une page d'inscription grand public, ni proposer une
- * connexion par un compte tiers.
- */
 export const dynamic = "force-dynamic";
 
+/**
+ * /connexion — « Retrouve ta classe. »
+ *
+ * 1. Sans établissement connu : on le trouve (code ou lien d'invitation).
+ * 2. Établissement connu (parcours en cours, ou mémorisé sur un appareil
+ *    personnel) : son nom s'affiche avec « Changer », puis identifiant et
+ *    mot de passe.
+ *
+ * Aucun choix de rôle : les droits viennent des affectations vérifiées en
+ * base. Pas d'inscription : un compte est créé par l'établissement.
+ *
+ * Boucle évitée : une session présente mais inutilisable (jetons du
+ * fournisseur non renouvelables) n'est plus considérée comme « connectée » ;
+ * avant, `/app` renvoyait ici et cette page renvoyait vers `/app`.
+ */
 export default async function PageConnexion({
   searchParams,
 }: {
-  searchParams: Promise<{ fin?: string; suite?: string; motif?: string; invitation?: string }>;
+  searchParams: Promise<{ fin?: string; suite?: string; motif?: string; invitation?: string; etablissement?: string; code?: string; changer?: string }>;
 }) {
-  const parametres = await searchParams;
-  const suite = suiteSure(parametres.suite);
+  const p = await searchParams;
+  const suite = suiteSure(p.suite);
   const personne = await sessionCourante();
-  if (personne !== null) redirect(personne.activationRequise ? "/activation" : (suite ?? destinationApresConnexion(personne)));
 
-  const deconnexionConfirmee = parametres.fin === "1";
+  if (personne !== null) {
+    const utilisable = personne.activationRequise || (await jetonAccesDe(personne)) !== null;
+    if (utilisable && p.changer !== "1") {
+      redirect(personne.activationRequise ? "/activation" : (suite ?? destinationApresConnexion(personne)));
+    }
+    if (utilisable) {
+      return (
+        <CadreConnexion titre="Changer de compte" sousTitre="Une session est déjà ouverte dans ce navigateur.">
+          <div className="rounded-[12px] border border-[color:var(--color-bordure)] p-4">
+            <p className="m-0 text-[0.875rem] text-[color:var(--color-encre-faible)]">Session ouverte</p>
+            <p className="m-0 mt-0.5 font-semibold">
+              {personne.prenom} {personne.nom}
+              {personne.organisation ? ` · ${personne.organisation}` : ""}
+            </p>
+          </div>
+          <Link href={destinationApresConnexion(personne)} className="bouton bouton-primaire bouton-acces mt-6 w-full">
+            Continuer avec ce compte
+          </Link>
+          <form method="post" action="/deconnexion" className="mt-3">
+            <button type="submit" className="bouton bouton-secondaire bouton-acces w-full">
+              Me déconnecter pour changer de compte
+            </button>
+          </form>
+          <p className="meta m-0 mt-4">La déconnexion efface les brouillons et copies de Study enregistrés dans ce navigateur.</p>
+        </CadreConnexion>
+      );
+    }
+  }
+
+  const contexte = await lireContexteEtablissement();
+  const fin = p.fin === "1" || p.fin === "partout";
 
   return (
-    <div className="sans-debordement grid min-h-dvh lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-      {/* Panneau rose : présent seulement là où il a la place d'exister. */}
-      <aside className="hidden flex-col justify-between bg-[color:var(--color-rose-clair)] p-12 lg:flex">
-        <Link href="/" className="marque-study text-[2rem] leading-none" aria-label={MARQUE}>
-          study<span>.</span>
-        </Link>
+    <CadreConnexion titre="Retrouve ta classe." sousTitre="Connecte-toi à ton espace Study.">
+      {fin ? <NettoyageApresDeconnexion /> : null}
+      <Messages motif={p.motif} fin={p.fin} invitation={p.invitation} sessionInutilisable={personne !== null} />
 
-        {/* Petit ruban : la scène 3D ne se charge qu’ici, sur ordinateur, après
-            le formulaire ; le formulaire n’en dépend jamais. */}
-        <RubanStudy composition="petite" webgl className="mx-auto aspect-[640/520] w-full max-w-[420px]" />
-
-        <p className="m-0 max-w-[14ch] font-[family-name:var(--font-titre)] text-[length:var(--text-h2-large)] font-bold leading-[var(--text-h2-large--line-height)] tracking-[-0.03em]">
-          Retrouvez votre classe.
-        </p>
-
-        <p className="m-0 max-w-[40ch] text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)] text-[color:var(--color-encre-faible)]">
-          Le cours, les devoirs et l&apos;entraide, au même endroit.
-        </p>
-      </aside>
-
-      <main
-        id="contenu"
-        className="flex flex-col justify-center bg-[color:var(--color-surface)] px-5 py-12 sm:px-8"
-      >
-        <div className="mx-auto w-full max-w-[420px]">
-          <div className="flex items-center justify-between gap-4 lg:hidden">
-            <Link href="/" className="marque-study text-[1.75rem] leading-none" aria-label={MARQUE}>
-              study<span>.</span>
-            </Link>
-            {/* Téléphone : illustration fixe et compacte, aucune 3D à charger avant de saisir ses identifiants. */}
-            <RubanStudy composition="petite" className="h-[56px] w-[72px] shrink-0" controle={false} />
-          </div>
-
-          <h1 className="mt-8 text-[length:var(--text-h2)] leading-[var(--text-h2--line-height)] tracking-[-0.02em] lg:mt-0">
-            Se connecter
-          </h1>
-          <p className="mt-3 text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)] text-[color:var(--color-encre-faible)]">
-            Votre établissement vous a remis un code, un identifiant et un mot de
-            passe.
+      {contexte ? (
+        <>
+          <BandeauEtablissement
+            nom={contexte.nom}
+            changer={
+              <form action={changerEtablissement}>
+                {suite ? <input type="hidden" name="suite" value={suite} /> : null}
+                <button type="submit" className="bouton bouton-discret bouton-compact" aria-label={`Changer d'établissement (actuellement ${contexte.nom})`}>
+                  Changer
+                </button>
+              </form>
+            }
+          />
+          <FormulaireConnexion suite={suite} code={contexte.code} />
+        </>
+      ) : (
+        <>
+          <p className="m-0 mb-5 text-[0.9375rem]">
+            <span className="font-semibold">Étape 1 sur 2.</span> Trouve ton établissement : ton identifiant n&apos;existe que dans
+            celui-ci.
           </p>
+          <FormulaireEtablissement suite={suite} codeInitial={normaliserCode(p.etablissement ?? p.code)} />
+        </>
+      )}
 
-          {parametres.motif === "expiree" ? (
-            <p
-              role="status"
-              className="m-0 mt-6 rounded-[var(--radius-carte)] bg-[color:var(--color-attention-fond)] p-4 text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)] text-[color:var(--color-attention)]"
-            >
-              Votre session a pris fin. Reconnectez-vous : vous reprendrez là où vous étiez.
-            </p>
-          ) : null}
-
-          {parametres.invitation === "ok" ? (
-            <p
-              role="status"
-              className="m-0 mt-6 rounded-[var(--radius-carte)] bg-[color:var(--color-succes-fond)] p-4 text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)] text-[color:var(--color-succes)]"
-            >
-              Votre mot de passe est enregistré. Connectez-vous avec le code de votre établissement et votre identifiant.
-            </p>
-          ) : null}
-
-          {deconnexionConfirmee ? (
-            <p
-              role="status"
-              className="m-0 mt-6 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-succes-fond)] p-4 text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)] text-[color:var(--color-succes)]"
-            >
-              Vous êtes déconnecté. Sur un poste partagé, fermez aussi le
-              navigateur.
-            </p>
-          ) : null}
-
-          <FormulaireConnexion suite={suite} />
-
-          <div className="mt-8 border-t border-[color:var(--color-bordure)] pt-6">
-            <p className="m-0 text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)] text-[color:var(--color-encre-faible)]">
-              <Link
-                href="/acces-oublie"
-                className="font-semibold text-[color:var(--color-accent)]"
-              >
-                Besoin d&apos;aide ?
-              </Link>{" "}
-              L&apos;administration de votre établissement réinitialise votre
-              accès après avoir vérifié votre identité. Personne ne peut lire
-              votre mot de passe.
-            </p>
-          </div>
-
-          <p className="m-0 mt-4 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
-            Votre professeur vous a donné un code de classe ?{" "}
-            <Link href="/rejoindre" className="font-semibold text-[color:var(--color-accent)]">
-              Rejoindre une classe
-            </Link>
-          </p>
-
-          <p className="mt-8 text-[length:var(--text-aide)]">
-            <Link href="/" className="text-[color:var(--color-encre-faible)]">
-              ← Retour au site
-            </Link>
-          </p>
-        </div>
-      </main>
-    </div>
+      <LiensAcces />
+    </CadreConnexion>
   );
+}
+
+function Messages({ motif, fin, invitation, sessionInutilisable }: { motif?: string; fin?: string; invitation?: string; sessionInutilisable: boolean }) {
+  const boite = "mb-5 rounded-[12px] p-4 text-[0.9375rem]";
+  if (motif === "expiree" || sessionInutilisable) {
+    return (
+      <p role="status" className={`${boite} bg-[color:var(--color-attention-fond)] text-[color:var(--color-attention)]`}>
+        Ta session a pris fin. Reconnecte-toi : tu reviendras sur la page que tu consultais, et les brouillons enregistrés sur cet
+        appareil t&apos;attendent — rien n&apos;a été publié à ta place.
+      </p>
+    );
+  }
+  if (fin === "1" || fin === "partout") {
+    return (
+      <p role="status" className={`${boite} bg-[color:var(--color-succes-fond)] text-[color:var(--color-succes)]`}>
+        {fin === "partout" ? "Déconnexion effectuée sur tous tes appareils." : "Déconnexion effectuée."} Les brouillons et copies de Study enregistrés dans
+        ce navigateur ont été effacés. Les fichiers téléchargés restent dans ton dossier de téléchargements ; sur un ordinateur
+        partagé, ferme aussi le navigateur.
+      </p>
+    );
+  }
+  if (invitation === "ok") {
+    return (
+      <p role="status" className={`${boite} bg-[color:var(--color-succes-fond)] text-[color:var(--color-succes)]`}>
+        Ton mot de passe est enregistré. Connecte-toi avec ton identifiant.
+      </p>
+    );
+  }
+  return null;
 }

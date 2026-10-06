@@ -70,9 +70,17 @@ export function variablesMouvement(): Record<string, string> {
 }
 
 /**
- * Script de démarrage, exécuté avant le premier rendu : il pose
- * `data-effets` sur <html> à partir du cookie, pour qu'aucune animation
- * d'entrée ne joue chez une personne qui les a désactivées. Il ne lit rien
- * d'autre et n'écrit rien.
+ * Où la préférence s’applique : l’attribut `data-effets` sur un ancêtre.
+ * - Pages dynamiques (application, écrans d’accès) : posé côté serveur sur
+ *   leur conteneur, à partir du cookie — aucune animation ne joue avant.
+ * - Pages publiques prérendues : posé sur <html> au chargement
+ *   (`SynchroEffets`) ; la réduction système, elle, s’applique toujours
+ *   avant le premier rendu par la requête média CSS.
+ *
+ * (Un script de démarrage `beforeInteractive` faisait cela avant : le nonce
+ * CSP posé par le serveur et masqué par le navigateur provoquait une
+ * différence d’hydratation à chaque page dynamique.)
  */
-export const SCRIPT_EFFETS = `(function(){try{var m=document.cookie.match(/(?:^|; )${COOKIE_EFFETS}=(auto|reduits|desactives)/);document.documentElement.dataset.effets=m?m[1]:"auto";}catch(e){}})();`;
+export function lirePreferenceCookie(cookie: string | null | undefined): PreferenceEffets {
+  return lirePreference(cookie);
+}

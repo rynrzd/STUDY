@@ -11,17 +11,35 @@ import { COOKIE_EFFETS, lirePreference, type PreferenceEffets } from "@/lib/mouv
  * - « reduit » : préférence Réduits, ou Automatique avec réduction système ;
  * - « aucun » : préférence Désactivés.
  *
- * La préférence vit dans un cookie d'appareil (`study_effets`), lu avant le
- * premier rendu par le script de démarrage, qui pose `data-effets` sur <html>.
- * Le CSS s'y accroche ; les composants passent par `useEffets`.
+ * La préférence vit dans un cookie d'appareil (`study_effets`). Les pages
+ * dynamiques la posent côté serveur sur leur conteneur ; `SynchroEffets` la
+ * pose sur <html> au chargement. Le CSS s'accroche à `[data-effets]` ; les
+ * composants passent par `useEffets`.
  */
 
 export type NiveauEffets = "complet" | "reduit" | "aucun";
 
 const EVENEMENT = "study:effets";
 
+function lireCookie(): string | undefined {
+  try {
+    return new RegExp(`(?:^|; )${COOKIE_EFFETS}=([a-z]+)`).exec(document.cookie)?.[1];
+  } catch {
+    return undefined;
+  }
+}
+
 function preferenceCourante(): PreferenceEffets {
-  return lirePreference(document.documentElement.dataset.effets);
+  return lirePreference(document.documentElement.dataset.effets ?? lireCookie());
+}
+
+/** Pose la préférence de l'appareil sur <html>, une fois, au chargement. */
+export function SynchroEffets() {
+  useEffect(() => {
+    document.documentElement.dataset.effets = lirePreference(lireCookie());
+    window.dispatchEvent(new Event(EVENEMENT));
+  }, []);
+  return null;
 }
 
 function niveau(): NiveauEffets {
@@ -54,6 +72,10 @@ export function enregistrerPreference(p: PreferenceEffets) {
     /* cookies bloqués : la préférence vaut pour cette page seulement */
   }
   document.documentElement.dataset.effets = p;
+  // Les conteneurs rendus par le serveur portent l'ancienne valeur : on les aligne.
+  document.querySelectorAll<HTMLElement>("[data-effets]").forEach((el) => {
+    el.dataset.effets = p;
+  });
   window.dispatchEvent(new Event(EVENEMENT));
 }
 

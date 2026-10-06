@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { seDeconnecter } from "@/app/deconnexion/actions";
 import { TitreEspace } from "@/components/app/Cadre";
 import { MotDePasse } from "@/components/parametres/MotDePasse";
 import { sessionCourante } from "@/lib/session-serveur";
@@ -63,7 +62,7 @@ export default async function PageParametres() {
               Sur un ordinateur partagé, déconnectez-vous avant de quitter votre
               place : fermer l&apos;onglet ne suffit pas.
             </p>
-            <form action={seDeconnecter} className="mt-4">
+            <form method="post" action="/deconnexion" className="mt-4">
               <button type="submit" className="bouton bouton-secondaire w-full">
                 Se déconnecter
               </button>

@@ -5,7 +5,6 @@ import { Clock3, RefreshCw } from "lucide-react";
 import { CarteAcces } from "@/components/study/CarteAcces";
 import { Confirmer } from "@/components/study/Dialogue";
 import { Etiquette, ICONE, dateLisible } from "@/components/study/ui";
-import { seDeconnecter } from "@/app/deconnexion/actions";
 import { pagePrivee } from "@/lib/metadonnees";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
@@ -105,7 +104,7 @@ export default async function PageAccesEnAttente({ searchParams }: { searchParam
         ))}
       </div>
 
-      <form action={seDeconnecter} className="mt-6 border-t border-[color:var(--color-bordure)] pt-4">
+      <form method="post" action="/deconnexion" className="mt-6 border-t border-[color:var(--color-bordure)] pt-4">
         <button type="submit" className="cursor-pointer border-0 bg-transparent p-0 text-[0.8125rem] text-[color:var(--color-encre-faible)] underline">
           Se déconnecter
         </button>
