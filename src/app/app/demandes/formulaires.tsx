@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { BoutonEnvoi, Champ, Liste, RetourFormulaire, ZoneTexte, type EtatFormulaire } from "@/components/study/formulaire";
 import { AvisVisibilite } from "@/components/study/ui";
 import { ouvrirDemande, repondreDemande } from "./actions";
@@ -45,9 +45,11 @@ export function FormulaireNouvelleDemande({
 
 export function FormulaireReponseDemande({ demande }: { demande: string }) {
   const [etat, action] = useActionState<EtatFormulaire, FormData>(repondreDemande.bind(null, demande), {});
-  const client = useMemo(() => crypto.randomUUID(), [etat]); // nouveau message après chaque envoi réussi
+  // Un identifiant par message : le serveur en renvoie un neuf après chaque envoi réussi.
+  const [initial] = useState(() => crypto.randomUUID());
+  const client = etat.valeurs?.client ?? initial;
   return (
-    <form action={action} key={etat.ok ? client : "saisie"}>
+    <form action={action} key={client}>
       <RetourFormulaire etat={etat} />
       <input type="hidden" name="client" value={client} />
       <ZoneTexte libelle="Répondre" nom="corps" requis lignes={3} maxLength={4000} valeur={etat.ok ? "" : etat.valeurs?.corps} erreurs={etat.champs?.corps} />

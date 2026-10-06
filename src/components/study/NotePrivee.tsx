@@ -3,6 +3,7 @@
 import { Lock } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { enregistrerNote, type EtatNote } from "@/app/app/seances/actions";
+import { useStockage } from "./horloge";
 
 /**
  * Note privée d'une séance — E03. Enregistrement automatique avec état
@@ -18,15 +19,10 @@ export function NotePrivee({ seance, initiale, revision }: { seance: string; ini
   const cle = `study-note-${seance}`;
 
   // Un brouillon local plus récent (coupure réseau) est proposé, pas imposé.
-  const [brouillonLocal, setBrouillonLocal] = useState<string | null>(null);
-  useEffect(() => {
-    try {
-      const b = window.localStorage.getItem(cle);
-      if (b !== null && b !== initiale) setBrouillonLocal(b);
-    } catch {
-      /* stockage indisponible : rien à proposer */
-    }
-  }, [cle, initiale]);
+  const stocke = useStockage(cle);
+  const [ecarte, setEcarte] = useState(false);
+  const brouillonLocal = !ecarte && stocke !== null && stocke !== initiale && stocke !== texte ? stocke : null;
+  const setBrouillonLocal = (_: null) => setEcarte(true);
 
   useEffect(() => {
     if (texte === dernier.current || etat.etat === "conflit") return;
@@ -60,7 +56,7 @@ export function NotePrivee({ seance, initiale, revision }: { seance: string; ini
     enCours
       ? "Enregistrement…"
       : etat.etat === "enregistre"
-        ? `Enregistrée à ${new Date(etat.enregistreLe ?? Date.now()).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`
+        ? `Enregistrée à ${new Date(etat.enregistreLe ?? 0).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`
         : etat.etat === "conflit"
           ? "Une version plus récente existe"
           : etat.etat === "erreur"

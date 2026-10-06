@@ -34,7 +34,7 @@ export function Entrainement({ session, questions }: { session: string; question
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const clients = useMemo(() => Object.fromEntries(questions.map((q) => [q.versionId, crypto.randomUUID()])), [questions]);
-  const debut = useRef(Date.now());
+  const debut = useRef(0);
   const titre = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     debut.current = Date.now();

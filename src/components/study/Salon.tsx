@@ -10,6 +10,7 @@ import {
   Flag,
   Megaphone,
   MoreHorizontal,
+  Paperclip,
   Pencil,
   Pin,
   PinOff,
@@ -32,6 +33,7 @@ import {
   type ResultatAction,
 } from "@/app/app/messagerie/actions";
 import type { MessageVu, PageMessages } from "@/lib/v6/messagerie";
+import { useMinuteCourante } from "./horloge";
 
 /**
  * Salon de classe — E09.
@@ -433,7 +435,8 @@ function Message({
   const [erreur, setErreur] = useState<string | null>(null);
   const [edition, setEdition] = useState(false);
   const [signalement, setSignalement] = useState(false);
-  const agir = (f: () => Promise<ResultatAction>) =>
+  const [joindre, setJoindre] = useState(false);
+  const agir =(f: () => Promise<ResultatAction>) =>
     demarrer(async () => {
       setErreur(null);
       try {
@@ -444,7 +447,8 @@ function Message({
         setErreur("Action non enregistrée : connexion interrompue.");
       }
     });
-  const modifiable = m.moi && !m.supprime && Date.now() - Date.parse(m.creeLe) < 15 * 60_000;
+  const minute = useMinuteCourante();
+  const modifiable = m.moi && !m.supprime && minute * 60_000 - Date.parse(m.creeLe) < 14 * 60_000;
 
   if (m.supprime) {
     return <p className="meta my-3 italic">Message supprimé{m.reponses > 0 ? ` · ${m.reponses} réponse${m.reponses > 1 ? "s" : ""}` : ""}</p>;
@@ -505,7 +509,21 @@ function Message({
               <CornerDownRight size={14} strokeWidth={1.75} aria-hidden="true" /> Séance citée
             </Link>
           ) : null}
+          {m.pieces.length > 0 ? (
+            <ul className="m-0 mt-2 grid list-none gap-1 p-0">
+              {m.pieces.map((p) => (
+                <li key={p.id}>
+                  {/* Téléchargement par le serveur : les droits sont relus à chaque ouverture. */}
+                  <a href={`/documents/${p.id}`} className="meta inline-flex items-center gap-1 font-semibold">
+                    <Paperclip size={14} strokeWidth={1.75} aria-hidden="true" /> {p.nom}
+                    <span className="font-normal"> · {taille(p.taille)}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
+        {joindre ? <Joindre message={m.id} fermer={() => setJoindre(false)} apres={apres} /> : null}
 
         <div className="mt-1.5 flex flex-wrap items-center gap-1.5" style={{ justifyContent: m.moi ? "flex-end" : "flex-start" }}>
           {!dansFil && m.parentId === null && mode !== "annonces" && m.kind !== "annonce" ? (
@@ -539,6 +557,11 @@ function Message({
               {modifiable ? (
                 <button type="button" className="lien-barre w-full cursor-pointer border-0 bg-transparent text-left" onClick={() => setEdition(true)}>
                   <Pencil size={16} strokeWidth={1.75} aria-hidden="true" /> Modifier
+                </button>
+              ) : null}
+              {m.moi && !m.masque && m.pieces.length < 3 ? (
+                <button type="button" className="lien-barre w-full cursor-pointer border-0 bg-transparent text-left" onClick={() => setJoindre(true)}>
+                  <Paperclip size={16} strokeWidth={1.75} aria-hidden="true" /> Joindre un fichier
                 </button>
               ) : null}
               {m.moi || animateur ? (
@@ -594,6 +617,76 @@ function Message({
         ) : null}
       </div>
     </article>
+  );
+}
+
+function taille(octets: number) {
+  return octets >= 1024 * 1024 ? `${(octets / (1024 * 1024)).toFixed(1).replace(".", ",")} Mo` : `${Math.max(1, Math.round(octets / 1024))} Ko`;
+}
+
+/**
+ * Joindre un fichier à son propre message, déjà envoyé. Le fichier est
+ * vérifié par le serveur (format réel, taille) avant d'être montré à la
+ * classe ; un refus laisse le message intact.
+ */
+function Joindre({ message, fermer, apres }: { message: string; fermer: () => void; apres: () => Promise<void> }) {
+  const [etat, setEtat] = useState<{ phase: "saisie" | "envoi" | "fait" | "erreur"; texte?: string }>({ phase: "saisie" });
+  return (
+    <form
+      className="mt-2 grid gap-2 rounded-[10px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-3 text-left"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        const donnees = new FormData(e.currentTarget);
+        const fichier = donnees.get("fichier");
+        if (!(fichier instanceof File) || fichier.size === 0) {
+          setEtat({ phase: "erreur", texte: "Choisissez un fichier." });
+          return;
+        }
+        if (fichier.size > 10 * 1024 * 1024) {
+          setEtat({ phase: "erreur", texte: "Ce fichier dépasse 10 Mo." });
+          return;
+        }
+        setEtat({ phase: "envoi" });
+        try {
+          const r = await fetch(`/api/v6/messages/${message}/pieces`, { method: "POST", body: donnees });
+          if (!r.ok) {
+            const corps = (await r.json().catch(() => null)) as { error?: { message?: string } } | null;
+            setEtat({
+              phase: "erreur",
+              texte: r.status === 401 ? "Session terminée : reconnectez-vous, puis réessayez." : (corps?.error?.message ?? "Le fichier n'a pas été joint."),
+            });
+            return;
+          }
+          setEtat({ phase: "fait" });
+          await apres();
+          fermer();
+        } catch {
+          setEtat({ phase: "erreur", texte: "Connexion interrompue : le fichier n'a pas été joint." });
+        }
+      }}
+    >
+      <label htmlFor={`piece-${message}`} className="text-[0.8125rem] font-semibold">
+        Joindre un fichier
+      </label>
+      <input id={`piece-${message}`} name="fichier" type="file" accept="application/pdf,image/png,image/jpeg,image/webp" className="champ" required />
+      <p className="meta m-0">PDF ou image (PNG, JPEG, WebP), 10 Mo au plus. Visible par les membres du salon une fois vérifié.</p>
+      {etat.phase === "erreur" ? (
+        <p role="alert" className="m-0 text-[0.75rem] text-[color:var(--color-erreur)]">
+          {etat.texte}
+        </p>
+      ) : null}
+      <p role="status" className="sr-only">
+        {etat.phase === "envoi" ? "Envoi du fichier…" : etat.phase === "fait" ? "Fichier joint." : ""}
+      </p>
+      <div className="flex gap-2">
+        <button type="submit" className="bouton bouton-primaire bouton-compact" disabled={etat.phase === "envoi"}>
+          {etat.phase === "envoi" ? "Envoi…" : "Joindre"}
+        </button>
+        <button type="button" className="bouton bouton-discret bouton-compact" onClick={fermer}>
+          Annuler
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -679,7 +772,8 @@ function Composeur({
   useEffect(() => {
     try {
       const b = window.sessionStorage.getItem(cle);
-      if (b && !citation) setTexte(b);
+      // Lecture asynchrone d'un système externe : le brouillon ne réécrit pas le rendu en cours.
+      if (b && !citation) window.setTimeout(() => setTexte(b), 0);
     } catch {
       /* ignoré */
     }
@@ -804,9 +898,12 @@ function Fil({
     }
   }, [salon, racine]);
   useEffect(() => {
-    void charger();
+    const premier = window.setTimeout(() => void charger(), 0);
     const t = window.setInterval(() => void charger(), INTERVALLE_MS);
-    return () => window.clearInterval(t);
+    return () => {
+      window.clearTimeout(premier);
+      window.clearInterval(t);
+    };
   }, [charger, attente.length]);
   const titre = useRef<HTMLHeadingElement>(null);
   useEffect(() => titre.current?.focus(), [racine]);

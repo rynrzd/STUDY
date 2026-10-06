@@ -407,3 +407,35 @@ test("E37 (0056) — un message de salon signale est modere par l'administration
   );
   assert.match(navigateur.message, /permission denied/, "la decision passe par le serveur, jamais par le navigateur");
 });
+
+test("0057 — une piece de message se finalise par la voie verifiee, puis suit les droits du message", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+  const general = await salon(db, OBJETS.classeA1);
+  const m = await envoyer(db, ACTEURS.eleveA1Rayan, general, "le schema du TP");
+  const fichier = (
+    await lirePour(
+      db,
+      ACTEURS.eleveA1Rayan,
+      `insert into study.files (organization_id, owner_id, display_name, storage_key, mime_declared, byte_size, state, attached_kind, attached_id)
+       values ($1, $2, 'schema.png', $4, 'image/png', 0, 'reserve', 'message', $3) returning id`,
+      [ACTEURS.lyceeA, ACTEURS.eleveA1Rayan, m.id, `${ACTEURS.lyceeA}/${m.id}/${randomUUID()}`],
+    )
+  )[0].id;
+  await db.query("select study.finaliser_piece_jointe($1, 'image/png', 2048, decode('00', 'hex'))", [fichier]);
+  const etat = (await db.query("select state::text as s from study.files where id = $1", [fichier])).rows[0].s;
+  assert.equal(etat, "disponible");
+  assert.equal((await lirePour(db, ACTEURS.eleveA1Lina, "select id from study.files where id = $1", [fichier])).length, 0, "pas encore joint : invisible");
+
+  await lirePour(db, ACTEURS.eleveA1Rayan, "select study.salon_joindre($1, $2)", [m.id, fichier]);
+  assert.equal((await lirePour(db, ACTEURS.eleveA1Lina, "select id from study.files where id = $1", [fichier])).length, 1);
+  assert.equal((await lirePour(db, ACTEURS.eleveA2Samir, "select id from study.files where id = $1", [fichier])).length, 0, "autre classe");
+  assert.equal((await lirePour(db, ACTEURS.profAutre, "select id from study.files where id = $1", [fichier])).length, 0, "professeur non affecte");
+
+  const autre = await envoyer(db, ACTEURS.eleveA1Lina, general, "le mien");
+  const vol = await doitEchouer(() => lirePour(db, ACTEURS.eleveA1Lina, "select study.salon_joindre($1, $2)", [autre.id, fichier]));
+  assert.match(vol.message, /PIECE_INVALIDE/, "on ne joint pas le fichier d'un autre");
+
+  await lirePour(db, ACTEURS.eleveA1Rayan, "select study.salon_supprimer($1)", [m.id]);
+  assert.equal((await lirePour(db, ACTEURS.eleveA1Lina, "select id from study.files where id = $1", [fichier])).length, 0, "message supprime : piece retiree");
+});

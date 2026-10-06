@@ -58,11 +58,94 @@ BLOQUÉ / NON FAIT.
 | Lot | Statut | Preuves |
 |---|---|---|
 | 1. Cartographie | FAIT | ce fichier |
-| 2. Fondations (tokens, composants, shell) | en cours | |
-| 3. Administration et classes | à faire | |
-| 4. Cours et travail | à faire | |
-| 5. Messagerie | à faire | |
-| 6. Recherche | à faire | |
-| 7. Révisions | à faire | |
-| 8. Vie de classe et projets | à faire | |
-| 9. Consolidation | à faire | |
+| 2. Fondations | FAIT ET TESTÉ (build, lint, typecheck) | jetons, polices locales, `components/study/*`, coque commune |
+| 3. Accès, classes, administration | FAIT ET TESTÉ en base ; écrans NON VÉRIFIÉS connectés | 0045, 0054, 0056 ; `v6-adhesions`, `v6-acces`, `v6-messagerie` (E37) |
+| 4. Cours et travail | FAIT ET TESTÉ en base ; écrans NON VÉRIFIÉS connectés | 0047, 0053, 0055 ; `v6-revision`, `v6-affichage` |
+| 5. Messagerie | FAIT ET TESTÉ en base ; écrans NON VÉRIFIÉS connectés | 0046, 0057 (pièces jointes) ; `v6-messagerie` |
+| 6. Recherche | FAIT ET TESTÉ (base + moteur) ; écran NON VÉRIFIÉ connecté | 0049 ; `v6-recherche`, `tests/unite/recherche.test.ts` |
+| 7. Révisions | FAIT ET TESTÉ (base + assembleur réel exécuté contre la base) | 0048 ; `v6-fiches`, `tests/unite/revision.test.ts` |
+| 8. Vie de classe, projets, compléments | FAIT ET TESTÉ en base ; écrans NON VÉRIFIÉS connectés | 0050-0052 ; `v6-vie-de-classe`, `v6-projets-agenda`, `v6-orientation-ateliers` |
+| 9. Consolidation | PARTIEL | voir ci-dessous |
+
+## Écrans livrés (route → écran du catalogue)
+
+| Route | Écran |
+|---|---|
+| `/app` | E01 Aujourd'hui |
+| `/app/cours`, `/app/cours/[cours]` | E02 Mes cours (+ ateliers publiés) |
+| `/app/seances/[id]` | E03 Séance (cours, exercices, questions ; note privée ; à revoir ; hors ligne) |
+| `/app/fiches/nouvelle`, `/app/fiches/[fiche]` | E04 Créer une révision, E05 Fiche, E40 Génération |
+| `/app/cartes/[fiche]` | E06 Cartes mémoire |
+| `/app/entrainements/[session]`, `/nouveau` | E07 Entraînement |
+| `/app/aide` | E08 Débloque-moi |
+| `/app/classes/[c]/salons/[s]`, `/app/messagerie[/s]` | E09 Salon |
+| `/app/classes/[c]` | E10 Ma classe |
+| `/app/classes/[c]/consultations/[id]` | E11 Consultation |
+| `/app/classes/[c]/delegues` | E12 Bureau des délégués |
+| `/app/classes/[c]/bibliotheque` | E13 Bibliothèque |
+| `/app/projets`, `/app/projets/[p]` | E14, E15 Projets |
+| `/app/agenda` | E16 Agenda |
+| `/app/recherche` | E17 Recherche |
+| `/app/classes/[c]/membres` | E18 Membres (codes, demandes, invitations, retrait, mandats) |
+| `/admin/import` (existant) | E19 Import |
+| `/professeur` (+ questions en attente) | E20 Accueil professeur |
+| `/studio/[seance]` (+ `/exercices`) | E21 Studio (existant + banque d'exercices versionnée) |
+| `/app/rattrapage` | E22 Rattrapage |
+| `/app/erreurs` | E23 Carnet d'erreurs (+ export CSV) |
+| `/app/devoirs/*` (existant, déplacé) | E24 Devoir |
+| `/app/entraide/[revision]` | E25 Révision collective |
+| `/app/orientation` | E26 Orientation |
+| `/app/bienvenue` | E27 Bienvenue |
+| `/app/reglages`, `/app/hors-ligne` | E28 Réglages, copies hors ligne |
+| `/app/notifications` | E29 Notifications |
+| `/connexion`, `/acces-oublie`, `/rejoindre`, `/acces-en-attente`, `/invitation/[jeton]` | E30-E32, E34 |
+| `/` (existant, rethémé) | E33 Accueil public |
+| `AccesIndisponible` | E35 |
+| `/admin/classes` (existant) | E36 |
+| `/admin/moderation` (étendu), `/admin/recuperation` | E37, demandes d'accès |
+| `/app/prof/ateliers`, `/app/ateliers/[id]` | E38, E39 |
+
+Écart de routage assumé : les espaces professeur et administration gardent
+leurs adresses existantes (`/professeur`, `/studio`, `/admin`) au lieu de
+`/app/prof` et `/app/admin`, pour ne casser ni liens ni scripts de recette ; ils
+partagent la même coque.
+
+## Changements de comportement à valider avant déploiement
+
+1. **0054 — `session_mfa_verifiee` lit la revendication `aal` du jeton.** Les
+   politiques « administrateur avec second facteur » deviennent effectives
+   sous le jeton de l'administrateur (elles ne l'étaient jamais via
+   PostgREST). C'est l'intention d'origine des politiques, mais c'est un
+   changement réel en production.
+2. **Rethème global** : tous les écrans existants changent de police et de
+   palette. Les scripts de recette qui cherchent « AvecStudy. » sur
+   `/connexion` (mot-symbole remplacé par « study. ») sont à ajuster.
+3. **`/eleve/*` → `/app/*`** par redirection permanente ; `/mot-de-passe-oublie`
+   → `/acces-oublie`.
+
+## Aucune migration n'est appliquée en production
+
+0045 à 0057 sont testées sur PostgreSQL 17 embarqué uniquement. Avant
+application : sauvegarde (`npm run sauvegarde`), `npm run migrations:verifier`,
+puis `migrations:appliquer` selon `docs/07-exploitation.md`, avec accord
+explicite du propriétaire.
+
+## Reste à faire (non réalisé)
+
+- Indexation des PDF joints et OCR : aucun fournisseur ; non indexés.
+- Pièces jointes de la messagerie (0057 + `POST /api/v6/messages/[message]/pieces`) :
+  jointes à un message déjà envoyé, 3 au plus, PDF/PNG/JPEG/WebP, 10 Mo
+  (limite du corps de requête traversant le proxy). Vérification par signature
+  de format et empreinte, **sans antivirus** (aucun moteur raccordé). Le
+  dépôt réel vers le stockage n'a pas été exercé : pas de projet de recette.
+- Recherche sémantique : aucun fournisseur d'embeddings (mode lexical annoncé).
+- Évaluation de pertinence sur 60 requêtes annotées (§7.4) : non constituée.
+- Copie d'un cours vers une autre classe : la duplication de séance existante
+  est conservée (elle ne copie aucune donnée d'élève) ; pas de copie de cours
+  entier.
+- Planification de publication avec fuseau, relecture, publication ciblée
+  multi-classes : fonctions existantes du Studio, non étendues.
+- Gestion des années scolaires et passage d'année : écrans existants, non
+  repris.
+- Tests de charge, mesures LCP/INP/CLS, zoom 200 % et lecteur d'écran sur les
+  écrans connectés : non faits.

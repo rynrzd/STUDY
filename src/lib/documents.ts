@@ -249,7 +249,7 @@ export async function lireSupport(jeton: string, fileId: string): Promise<Suppor
 /* -------------------------------------------------------------------------- */
 
 /** Les genres de pièce jointe que cette voie accepte. */
-export type GenrePiece = "copie" | "consigne_devoir" | "correction";
+export type GenrePiece = "copie" | "consigne_devoir" | "correction" | "message";
 
 /**
  * Dépose une pièce jointe qui n'est pas un support de séance.

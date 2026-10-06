@@ -76,6 +76,14 @@ export interface MessageVu {
   readonly reponses: number;
   readonly accuses: number | null;
   readonly moi: boolean;
+  /** Pièces disponibles seulement : une pièce en vérification n'est montrée à personne. */
+  readonly pieces: readonly PieceVue[];
+}
+
+export interface PieceVue {
+  readonly id: string;
+  readonly nom: string;
+  readonly taille: number;
 }
 
 export interface PageMessages {
@@ -154,10 +162,28 @@ export async function pageMessages(
 
   const ids = lignes.map((l) => l.id);
   const auteurs = [...new Set(lignes.map((l) => l.author_id))];
-  const [compteurs, noms] = await Promise.all([
+  const [compteurs, noms, liens] = await Promise.all([
     ids.length > 0 ? client.rpc("salon_compteurs", { p_messages: ids }) : Promise.resolve({ data: [] }),
     auteurs.length > 0 ? client.rpc("noms_affichables", { p_ids: auteurs }) : Promise.resolve({ data: [] }),
+    ids.length > 0 ? client.from("pieces_salon").select("message_id, file_id").in("message_id", ids) : Promise.resolve({ data: [] }),
   ]);
+  // Les fichiers sont relus sous le même jeton : la politique `files_piece_salon`
+  // ne rend que ce que la personne peut ouvrir maintenant.
+  const lignesPieces = (liens.data ?? []) as { message_id: string; file_id: string }[];
+  const fichiers =
+    lignesPieces.length > 0
+      ? await client.from("files").select("id, display_name, byte_size, state").in("id", lignesPieces.map((p) => p.file_id))
+      : { data: [] };
+  const parFichier = new Map(
+    ((fichiers.data ?? []) as { id: string; display_name: string; byte_size: number; state: string }[])
+      .filter((f) => f.state === "disponible")
+      .map((f) => [f.id, { id: f.id, nom: f.display_name, taille: f.byte_size }]),
+  );
+  const piecesPar = new Map<string, PieceVue[]>();
+  for (const p of lignesPieces) {
+    const f = parFichier.get(p.file_id);
+    if (f) piecesPar.set(p.message_id, [...(piecesPar.get(p.message_id) ?? []), f]);
+  }
   const parId = new Map(
     ((compteurs.data ?? []) as { message_id: string; meme_question: number; moi_aussi: boolean; reponses: number; accuses: number | null }[]).map(
       (c) => [c.message_id, c],
@@ -196,6 +222,7 @@ export async function pageMessages(
         reponses: c?.reponses ?? 0,
         accuses: c?.accuses ?? null,
         moi: l.author_id === moi,
+        pieces: l.deleted_at ? [] : (piecesPar.get(l.id) ?? []),
       };
     }),
   };

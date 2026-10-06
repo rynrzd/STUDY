@@ -52,7 +52,7 @@ const TABLE: Readonly<Record<string, Traduction>> = {
   LECON_INVALIDE: { code: "NOT_ACCESSIBLE", message: "Cette séance ne peut pas être citée ici." },
   MENTION_RESERVEE: { code: "VALIDATION_FAILED", message: "La mention @tous est réservée à l'équipe pédagogique." },
   CORPS_INVALIDE: { code: "VALIDATION_FAILED", message: "Le message doit contenir entre 1 et 4 000 caractères." },
-  PIECE_INVALIDE: { code: "VALIDATION_FAILED", message: "Seuls les PDF, JPEG, PNG et WebP de 20 Mo au plus peuvent être joints." },
+  PIECE_INVALIDE: { code: "VALIDATION_FAILED", message: "Seuls les PDF, JPEG, PNG et WebP de 10 Mo au plus peuvent être joints." },
   TROP_DE_PIECES: { code: "VALIDATION_FAILED", message: "Trois pièces jointes au plus par message." },
   DELAI_DEPASSE: { code: "VALIDATION_FAILED", message: "Un message ne se modifie que dans les 15 minutes qui suivent son envoi." },
   TROP_D_EPINGLES: { code: "VALIDATION_FAILED", message: "Trois messages épinglés au plus : retirez-en un d'abord." },

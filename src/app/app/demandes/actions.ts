@@ -60,10 +60,11 @@ export async function repondreDemande(demande: string, _p: EtatFormulaire, donne
   });
   if (error !== null) {
     const e = traduire(error, requestId);
-    return { ok: false, message: e.message, requestId, valeurs: { corps } };
+    // On garde le même identifiant : réessayer ne dupliquera pas le message.
+    return { ok: false, message: e.message, requestId, valeurs: { corps, client } };
   }
   revalidatePath(`/app/demandes/${demande}`);
-  return { ok: true, message: "Message envoyé." };
+  return { ok: true, message: "Message envoyé.", valeurs: { client: randomUUID() } };
 }
 
 export async function clore(donnees: FormData): Promise<void> {

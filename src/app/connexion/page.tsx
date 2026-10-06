@@ -43,11 +43,11 @@ export default async function PageConnexion({
     <div className="sans-debordement grid min-h-dvh lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
       {/* Panneau rose : présent seulement là où il a la place d'exister. */}
       <aside className="hidden flex-col justify-between bg-[color:var(--color-rose-clair)] p-12 lg:flex">
-        <Link href="/" className="marque text-[1.5rem] no-underline">
-          {MARQUE}.
+        <Link href="/" className="marque-study text-[2rem] leading-none" aria-label={MARQUE}>
+          study<span>.</span>
         </Link>
 
-        <p className="m-0 max-w-[14ch] text-[length:var(--text-h2-large)] leading-[var(--text-h2-large--line-height)] tracking-[-0.02em]">
+        <p className="m-0 max-w-[14ch] font-[family-name:var(--font-titre)] text-[length:var(--text-h2-large)] font-bold leading-[var(--text-h2-large--line-height)] tracking-[-0.03em]">
           Retrouvez votre classe.
         </p>
 
@@ -61,8 +61,8 @@ export default async function PageConnexion({
         className="flex flex-col justify-center bg-[color:var(--color-surface)] px-5 py-12 sm:px-8"
       >
         <div className="mx-auto w-full max-w-[420px]">
-          <Link href="/" className="marque text-[1.375rem] no-underline lg:hidden">
-            {MARQUE}.
+          <Link href="/" className="marque-study text-[1.75rem] leading-none lg:hidden" aria-label={MARQUE}>
+            study<span>.</span>
           </Link>
 
           <h1 className="mt-8 text-[length:var(--text-h2)] leading-[var(--text-h2--line-height)] tracking-[-0.02em] lg:mt-0">
