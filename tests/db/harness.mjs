@@ -22,9 +22,17 @@ const DOSSIER_MIGRATIONS = path.resolve(ICI, "..", "..", "supabase", "migrations
 const DOSSIER_SEED = path.resolve(ICI, "..", "..", "supabase", "seed");
 
 /** Applique toutes les migrations dans l'ordre lexicographique des fichiers. */
-export async function appliquerMigrations(db) {
+/**
+ * Applique les migrations dans l'ordre. `jusqua` (préfixe numérique, ex.
+ * "0057") s'arrête après cette migration : sert à reproduire l'état d'une
+ * base qui n'a pas encore reçu les suivantes (tests de déploiement et de
+ * retour arrière). `depuis` applique seulement les migrations postérieures.
+ */
+export async function appliquerMigrations(db, { jusqua = null, depuis = null } = {}) {
   const fichiers = (await readdir(DOSSIER_MIGRATIONS))
     .filter((f) => f.endsWith(".sql"))
+    .filter((f) => jusqua === null || f.slice(0, 4) <= jusqua)
+    .filter((f) => depuis === null || f.slice(0, 4) > depuis)
     .sort();
 
   for (const fichier of fichiers) {
@@ -69,7 +77,13 @@ async function gabaritMigre() {
 }
 
 /** Base neuve, migrée et remplie de données fictives. */
-export async function baseDeTest({ seed = true } = {}) {
+export async function baseDeTest({ seed = true, jusqua = null } = {}) {
+  if (jusqua !== null) {
+    const db = await PGlite.create();
+    await appliquerMigrations(db, { jusqua });
+    if (seed) await chargerSeed(db);
+    return db;
+  }
   if (!seed) {
     const db = await PGlite.create();
     await appliquerMigrations(db);
