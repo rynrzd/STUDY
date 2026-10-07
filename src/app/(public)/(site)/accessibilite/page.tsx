@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
 import { Prose, Section, TitrePage } from "@/components/site/Ui";
+import { Sommaire } from "@/components/site/Sommaire";
 import { MARQUE } from "@/lib/identite-legale";
 
 export const metadata: Metadata = pagePublique({
@@ -49,6 +50,7 @@ export default function Accessibilite() {
       />
 
       <Section>
+        <Sommaire />
         <h2 className="text-[length:var(--text-h2)] leading-[var(--text-h2--line-height)] md:text-[length:var(--text-h2-large)] md:leading-[var(--text-h2-large--line-height)]">
           Ce qui est appliqué dès maintenant
         </h2>

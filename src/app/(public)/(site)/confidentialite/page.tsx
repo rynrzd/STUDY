@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
 import { Prose, Section, TitrePage } from "@/components/site/Ui";
+import { Sommaire } from "@/components/site/Sommaire";
 import { CONSERVATION, IDENTITE, MARQUE, mention } from "@/lib/identite-legale";
 
 export const metadata: Metadata = pagePublique({
@@ -56,6 +57,7 @@ export default function PageConfidentialite() {
       />
 
       <Section>
+        <Sommaire />
         <div className="grid gap-5 md:grid-cols-2">
           <div className="carte p-6 md:p-7">
             <h2 className="text-[length:var(--text-h3)] leading-[var(--text-h3--line-height)]">

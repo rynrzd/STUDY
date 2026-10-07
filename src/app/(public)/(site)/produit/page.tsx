@@ -1,192 +1,165 @@
 import type { Metadata } from "next";
-import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
-import { AppelFinal, Carte, Section, TitrePage } from "@/components/site/Ui";
-import { Reveler } from "@/components/site/Reveler";
-import { MARQUE } from "@/lib/identite-legale";
+import { pagePublique } from "@/lib/metadonnees";
+import { ExempleCours, ExempleEchange, ExemplePublication } from "@/components/site/Exemples";
+import { AppelFinal, EnteteSection, Section, TitrePage } from "@/components/site/Ui";
 
 export const metadata: Metadata = pagePublique({
   chemin: "/produit",
-  titre: "Produit",
-  description:
-    "Séances, devoirs et entraide, dans la continuité de la classe. Ce que fait AvecStudy aujourd'hui, et ce qu'il ne fait pas.",
+  titre: "La plateforme",
+  description: "Les cours, le travail et les échanges de la classe : ce que fait Study aujourd'hui, et ce qu'il ne fait pas.",
 });
 
-const FAMILLES = [
-  {
-    titre: "Préparer et publier",
-    entrees: [
-      ["Bibliothèque privée", "Chaque enseignant prépare ses documents chez lui. Un collègue n'y accède pas."],
-      ["Séance structurée", "Titre, objectif, chapitre, date, et cinq types de blocs : texte, exercice, lien, document joint, devoir."],
-      ["Publication par classe", "Une séance publiée en Seconde 1 n'apparaît pas en Seconde 2. Elle reste un brouillon invisible tant qu'elle n'est pas publiée."],
-      ["Réutilisation", "« Dupliquer vers une autre classe » crée un brouillon indépendant. Modifier la copie ne change pas l'original."],
-    ],
-  },
-  {
-    titre: "Animer la séance",
-    entrees: [
-      ["Mode projection", "Une vue distincte, pensée pour être projetée au tableau."],
-      ["Aperçu élève", "Voir la séance exactement comme un élève de la classe la verra, avant de la publier."],
-      ["Impression", "Le support s'imprime sans la navigation, sans les boutons et sans les discussions."],
-    ],
-  },
-  {
-    titre: "Donner du travail",
-    entrees: [
-      ["Devoir rattaché à la séance", "Un bloc « devoir » porte un titre, une consigne et une échéance. Il apparaît chez l'élève dans « À faire »."],
-      ["Publié avec sa séance", "Un devoir préparé dans un brouillon reste invisible. Il paraît quand le cours paraît, et se retire avec lui."],
-      ["Case « fait »", "L'élève coche ce qu'il a terminé. C'est son suivi à lui : personne d'autre ne le voit, et rien n'en est déduit."],
-    ],
-  },
-  {
-    titre: "Ramasser et corriger",
-    entrees: [
-      ["Remise de la copie", "L'élève dépose son fichier. L'heure retenue est celle du serveur, jamais celle de son téléphone, et un accusé d'enregistrement lui est rendu — ce n'est pas une preuve juridique, et l'écran le dit."],
-      ["Remplacement sans perte", "Rendre une nouvelle version n'efface pas la précédente. Le professeur voit la dernière, et garde accès aux antérieures si un élève conteste."],
-      ["Remise sur papier", "Un devoir à rendre en main propre n'affiche aucune zone de dépôt chez l'élève, mais la mention « à rendre sur papier »."],
-      ["Suivi de la classe", "La liste part des élèves, pas des copies : celui qui n'a rien rendu apparaît, au lieu de se confondre avec un absent."],
-      ["Correction individuelle", "Un commentaire et un corrigé facultatif, par élève. Le retour naît en brouillon : tant qu'il n'est pas publié, l'élève ne sait même pas qu'il existe."],
-      ["Correction pour la classe", "La même correction écrite une fois, lue par tous ceux à qui le devoir a été donné. Elle se publie séparément des retours individuels, et reste invisible avant."],
-      ["Une seule copie courante", "Remplacer une copie n'efface pas la précédente : son enregistrement reste, avec sa date. Seule la dernière se télécharge — deux fichiers téléchargeables, ce seraient deux réponses à « qu'ai-je rendu ? »."],
-      ["Constat du professeur", "Pour un devoir papier, le professeur note non remis, remis ou remis en retard. L'élève voit l'état retenu, et chaque changement est journalisé : c'est ce qui permet de trancher un désaccord."],
-      ["Remise en retard", "Si le devoir l'autorise, une copie rendue après l'échéance est acceptée et marquée tardive — par l'horloge du serveur, jamais par celle du téléphone. Sinon la remise se ferme."],
-      ["La copie s'ouvre côté professeur", "Le professeur du cours ouvre la copie de son élève, avec son nom de fichier et la référence de l'accusé. Personne d'autre ne l'ouvre : ni un camarade, ni une autre classe, ni un enseignant d'un autre cours."],
-      ["Fichier corrigé", "Un corrigé peut être joint à la correction individuelle. Il ne descend qu'à l'élève concerné, et seulement une fois la correction publiée."],
-      ["Preuve de remise", "Une page imprimable qui porte la référence, le devoir, l'élève, sa classe, le nom du fichier, l'horodatage serveur et l'état à l'heure ou en retard. Ce n'est pas un constat juridique, et la page le dit."],
-      ["Ce qui vous concerne", "Nouveau devoir, échéance proche, correction publiée, retour sur sa copie. Dans l'application seulement : aucun courriel n'est envoyé à un élève."],
-    ],
-  },
-  {
-    titre: "Entraide",
-    entrees: [
-      ["Questions sur le cours", "Un élève pose une question sur une séance ; ses camarades de la même classe y répondent. Le fil reste dans la classe."],
-      ["Groupes de travail", "De deux à six élèves, rattachés à un cours."],
-      ["Jamais imprimé", "Les discussions n'apparaissent pas sur le support imprimé : ce qu'on colle dans un cahier, c'est le cours."],
-      ["Signalement", "Un message peut être signalé. Rien n'est retiré automatiquement, et le nombre de signalements ne décide de rien : un responsable de l'établissement tranche, avec un motif écrit et conservé. Le nom de celui qui signale n'est montré ni à l'auteur ni à la classe."],
-    ],
-  },
-  {
-    titre: "Administrer l'établissement",
-    entrees: [
-      ["Import de rentrée", "Un fichier .xlsx ou .csv crée les classes manquantes et rattache les élèves — après un récapitulatif et une confirmation. Réimporter le même fichier ne crée aucun doublon."],
-      ["Remise des accès", "Identifiant lisible et secret temporaire, sur fiche imprimable. Après la première activation, aucun document ne permet de retrouver le mot de passe."],
-      ["Affectation par cours", "Un professeur est rattaché à une classe pour une matière. Il ne voit que les classes où il enseigne."],
-      ["Second facteur", "L'exploitant et les administrateurs d'établissement présentent un code à usage unique, en plus de leur mot de passe."],
-      ["Journal", "Les actions sensibles sont tracées, avec leur auteur, leur portée et leur motif. Le journal est immuable."],
-    ],
-  },
-] as const;
-
-const ABSENT = [
-  ["Aucune intelligence artificielle", "Pas de chatbot, pas de génération de cours, pas de correction intelligente, pas de transcription, pas d'analyse automatique de l'écriture."],
-  ["Aucune gestion administrative", "Ni sanctions, ni cantine, ni bulletins officiels, ni absences. AvecStudy est un outil pédagogique."],
-  ["Aucun mécanisme d'accrochage", "Pas de fil infini, pas de série quotidienne punitive, pas de classement public entre élèves."],
-  ["Aucune surveillance", "Pas d'enregistrement vidéo de session, pas de mesure d'attention. Une ouverture de document ne prouve pas qu'un contenu a été appris."],
-] as const;
-
 /**
- * Ce qui n'existe pas aujourd'hui.
+ * P15 — Produit, R2 (cahier §05).
  *
- * Écrit au présent de l'absence, sans « bientôt » ni « prévu » : un
- * établissement ne doit pas demander un devis en croyant acheter une fonction
- * qui n'est pas là. Ce qui rejoindra le produit sera écrit plus haut le jour
- * où il fonctionnera — pas le jour où il sera décidé.
+ * Hero court, navigation par thèmes (Cours / Travail / Échanges /
+ * Établissement), une section par usage avec un exemple lisible, puis ce que
+ * Study ne fait pas et ce qui demande une configuration. Seules les fonctions
+ * réellement installées sont décrites.
  */
-const HORS_PREMIERE_LIVRAISON = [
-  "Brouillon partagé entre élèves d'un même groupe",
-  "Fiches de révision et quiz",
-  "Annotations ancrées dans une copie",
-  "Grille de notation",
-  "Application native (le service fonctionne dans le navigateur)",
-  "Intégration officielle ENT, EduConnect ou GAR",
-  "Import universel Moodle ou Éléa",
-  "Visioconférence",
-  "Reconnaissance de texte manuscrit (OCR)",
-  "Surveillance d'examens",
+
+const THEMES = [
+  { id: "cours", libelle: "Cours" },
+  { id: "travail", libelle: "Travail" },
+  { id: "echanges", libelle: "Échanges" },
+  { id: "etablissement", libelle: "Établissement" },
 ] as const;
+
+function Liste({ entrees }: { entrees: readonly (readonly [string, string])[] }) {
+  return (
+    <dl className="m-0 grid gap-x-8 gap-y-6 sm:grid-cols-2">
+      {entrees.map(([nom, texte]) => (
+        <div key={nom} className="border-t border-[color:var(--color-bordure)] pt-4">
+          <dt className="text-[1.0625rem] font-extrabold">{nom}</dt>
+          <dd className="m-0 mt-1.5 text-[1rem] leading-[1.65] text-[color:var(--color-encre-faible)]">{texte}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
 
 export default function PageProduit() {
   return (
     <>
       <TitrePage
-        surtitre="Produit"
-        titre={`Ce que fait ${MARQUE}`}
-        chapeau="Le cours, les devoirs et l'entraide, dans la continuité de la classe. Cette page ne décrit que ce qui fonctionne aujourd'hui ; ce qui n'existe pas est dit aussi clairement."
+        surtitre="La plateforme"
+        titre="Tout ce qui aide la classe à avancer."
+        chapeau="Les cours, le travail à faire et les échanges, publiés par les professeurs pour leurs classes. Cette page décrit ce qui fonctionne aujourd'hui, et dit aussi clairement ce qui n'existe pas."
         actions={
           <>
-            <Link href="/etablissements" className="bouton bouton-primaire">
+            <Link href="/contact" className="bouton bouton-primaire bouton-grand">
               Demander une démonstration
-              <span aria-hidden="true" className="fleche">→</span>
             </Link>
-            <Link href="/securite" className="bouton bouton-secondaire">
+            <Link href="/securite" className="bouton bouton-secondaire bouton-grand">
               Sécurité et données
             </Link>
           </>
         }
       />
 
-      {FAMILLES.map((famille, index) => (
-        <Section key={famille.titre} fond={index % 2 === 1 ? "doux" : "clair"}>
-          <Reveler>
-            <h2 className="text-[length:var(--text-h2)] leading-[var(--text-h2--line-height)] md:text-[length:var(--text-h2-large)] md:leading-[var(--text-h2-large--line-height)]">
-              {famille.titre}
-            </h2>
-          </Reveler>
-          <dl className="m-0 mt-10 grid gap-5 md:grid-cols-2">
-            {famille.entrees.map(([nom, description], rang) => (
-              <Reveler key={nom} delai={rang * 60}>
-                <div className="carte h-full p-6 md:p-7">
-                  <dt className="font-semibold">{nom}</dt>
-                  <dd className="m-0 mt-2 text-[color:var(--color-encre-faible)]">
-                    {description}
-                  </dd>
-                </div>
-              </Reveler>
-            ))}
-          </dl>
-        </Section>
-      ))}
-
-      <Section>
-        <Reveler className="max-w-[46ch]">
-          <h2 className="text-[length:var(--text-h2)] leading-[var(--text-h2--line-height)] md:text-[length:var(--text-h2-large)] md:leading-[var(--text-h2-large--line-height)]">
-            Ce que {MARQUE} ne fait pas
-          </h2>
-          <p className="mt-5 text-[color:var(--color-encre-faible)]">
-            Ce ne sont pas des manques à combler plus tard. Ce sont des
-            décisions.
-          </p>
-        </Reveler>
-
-        <div className="mt-10 grid gap-5 md:grid-cols-2">
-          {ABSENT.map(([nom, description], rang) => (
-            <Reveler key={nom} delai={rang * 60}>
-              <Carte titre={nom} className="h-full">
-                <p>{description}</p>
-              </Carte>
-            </Reveler>
-          ))}
-        </div>
-      </Section>
-
-      <Section fond="doux">
-        <Reveler className="max-w-[46ch]">
-          <h2 className="text-[length:var(--text-h2)] leading-[var(--text-h2--line-height)] md:text-[length:var(--text-h2-large)] md:leading-[var(--text-h2-large--line-height)]">
-            Hors première livraison
-          </h2>
-          <p className="mt-5 text-[color:var(--color-encre-faible)]">
-            Ces éléments ne sont pas inclus. Les annoncer serait vous vendre
-            quelque chose qui n&apos;existe pas.
-          </p>
-        </Reveler>
-
-        <ul className="m-0 mt-8 grid list-none gap-x-10 gap-y-3 p-0 text-[color:var(--color-encre-faible)] md:grid-cols-2">
-          {HORS_PREMIERE_LIVRAISON.map((element) => (
-            <li key={element} className="flex gap-3 border-t border-[color:var(--color-bordure)] pt-3">
-              {element}
+      <nav aria-label="Thèmes de la page" className="sticky top-16 z-20 border-y border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] md:top-[72px]">
+        <ul className="contenu sans-barre m-0 flex list-none gap-2 overflow-x-auto py-2">
+          {THEMES.map((t) => (
+            <li key={t.id} className="shrink-0">
+              <a href={`#${t.id}`} className="inline-flex min-h-11 items-center rounded-[10px] px-4 text-[0.9375rem] font-bold text-[color:var(--color-encre)] no-underline hover:bg-[color:var(--color-rose-clair)]">
+                {t.libelle}
+              </a>
             </li>
           ))}
         </ul>
+      </nav>
+
+      <Section id="cours">
+        <div className="grid items-start gap-10 lg:grid-cols-[5fr_7fr] lg:gap-14">
+          <EnteteSection surtitre="Cours" titre="Le cours, lisible partout." chapeau="Chaque séance a un titre, un objectif et des blocs : texte, exercice, lien, document, devoir. Elle se lit sur un téléphone comme au tableau." />
+          <ExempleCours />
+        </div>
+        <div className="mt-12">
+          <Liste
+            entrees={[
+              ["Publication par classe", "Une séance publiée en Seconde 1 n'apparaît pas en Seconde 2. Tant qu'elle est en brouillon, aucun élève ne la voit."],
+              ["Aperçu élève", "Le professeur voit la séance exactement comme ses élèves avant de la publier."],
+              ["Mode projection et impression", "Une vue pour le tableau, et une impression sans navigation ni discussions."],
+              ["Recherche", "Dans les cours, fiches et échanges auxquels l'élève a accès — lexicale, et annoncée comme telle."],
+            ]}
+          />
+        </div>
+      </Section>
+
+      <Section id="travail" fond="blanc">
+        <div className="grid items-start gap-10 lg:grid-cols-[7fr_5fr] lg:gap-14">
+          <div className="lg:order-2">
+            <EnteteSection surtitre="Travail" titre="Ce qui est à faire, et pour quand." chapeau="Le devoir est rattaché à sa séance : il paraît avec elle et se retire avec elle. La copie se rend en ligne ou sur papier, selon la consigne." />
+          </div>
+          <div className="lg:order-1">
+            <ExemplePublication />
+          </div>
+        </div>
+        <div className="mt-12">
+          <Liste
+            entrees={[
+              ["Remise horodatée", "L'heure retenue est celle du serveur. Un accusé est rendu à l'élève ; ce n'est pas une preuve juridique, et l'écran le dit."],
+              ["Nouvelle version sans perte", "Rendre une nouvelle copie n'efface pas l'enregistrement de la précédente."],
+              ["Correction", "Un retour individuel et une correction pour la classe, chacun publié quand le professeur le décide."],
+              ["Révision", "Rappels, cartes et entraînements tirés des cours ; fiches assemblées à partir des passages du cours."],
+            ]}
+          />
+        </div>
+      </Section>
+
+      <Section id="echanges">
+        <div className="grid items-center gap-10 rounded-[var(--radius-grand)] bg-[color:var(--color-rose-clair)] p-6 sm:p-10 lg:grid-cols-[5fr_7fr] lg:p-14">
+          <EnteteSection surtitre="Échanges" titre="Une classe qui s'entraide, avec son professeur." chapeau="Le salon de la classe réunit élèves et professeur. Les questions sur un cours y restent attachées, et se retrouvent ensuite." />
+          <ExempleEchange />
+        </div>
+        <div className="mt-12">
+          <Liste
+            entrees={[
+              ["Salon collectif", "Élèves et professeur d'une même classe. Pas de conversation privée entre élèves."],
+              ["Demander à un adulte", "Une demande séparée du salon. Dans l'application, seuls l'élève qui l'écrit et l'adulte choisi peuvent la lire."],
+              ["Signalement et modération", "Rien n'est retiré automatiquement : un responsable de l'établissement décide, avec un motif écrit et conservé."],
+              ["Vie de classe", "Propositions, consultations et suivi des décisions, avec les délégués désignés par l'établissement."],
+            ]}
+          />
+        </div>
+      </Section>
+
+      <Section id="etablissement" fond="blanc">
+        <EnteteSection surtitre="Établissement" titre="Une administration claire." chapeau="Les comptes, les classes et les accès sont gérés par l'établissement, avec un second facteur pour les administrateurs." />
+        <div className="mt-10">
+          <Liste
+            entrees={[
+              ["Import de rentrée", "Un fichier .xlsx ou .csv, vérifié ligne par ligne avant confirmation. Réimporter le même fichier ne crée aucun doublon."],
+              ["Remise des accès", "Identifiant d'établissement et lien d'activation remis par l'équipe. Aucune adresse e-mail n'est exigée des élèves."],
+              ["Récupération d'accès", "La demande arrive à l'administration, qui vérifie l'identité hors de l'application avant de rétablir l'accès."],
+              ["Années scolaires", "Préparer l'année suivante, reconduire les classes, puis basculer après contrôle de chaque élève."],
+            ]}
+          />
+        </div>
+      </Section>
+
+      <Section>
+        <div className="grid gap-6 md:grid-cols-2">
+          <article className="carte p-6 md:p-8">
+            <h2 className="m-0 text-[1.375rem] font-extrabold">Ce que Study ne fait pas</h2>
+            <ul className="m-0 mt-4 grid list-disc gap-2 pl-5 text-[1rem] text-[color:var(--color-encre-faible)]">
+              <li>Aucune gestion administrative : ni absences, ni bulletins, ni cantine.</li>
+              <li>Aucun classement public entre élèves, aucune série punitive.</li>
+              <li>Aucune surveillance : ni vidéo de session, ni mesure d&apos;attention.</li>
+              <li>Pas d&apos;intégration ENT, EduConnect ou GAR ; pas de visioconférence.</li>
+            </ul>
+          </article>
+          <article className="carte p-6 md:p-8">
+            <h2 className="m-0 text-[1.375rem] font-extrabold">Ce qui demande une configuration</h2>
+            <ul className="m-0 mt-4 grid list-disc gap-2 pl-5 text-[1rem] text-[color:var(--color-encre-faible)]">
+              <li>Aucun fournisseur d&apos;intelligence artificielle n&apos;est raccordé : les fiches assemblent des passages du cours.</li>
+              <li>Aucun envoi d&apos;e-mail : les accès sont remis par l&apos;établissement.</li>
+              <li>Pas d&apos;analyse antivirus des fichiers : type, taille et empreinte sont contrôlés, et c&apos;est annoncé.</li>
+              <li>Pas de reconnaissance de texte (OCR) : un PDF scanné n&apos;est pas indexé.</li>
+            </ul>
+          </article>
+        </div>
       </Section>
 
       <AppelFinal />

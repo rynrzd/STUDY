@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
 import { Prose, Section, TitrePage } from "@/components/site/Ui";
+import { Sommaire } from "@/components/site/Sommaire";
 import {
   DOMAINE,
   IDENTITE,
@@ -39,6 +40,7 @@ export default function PageMentionsLegales() {
       <TitrePage surtitre="Informations légales" titre="Mentions légales." />
 
       <Section>
+        <Sommaire />
         <dl className="m-0 max-w-[var(--spacing-lecture)] space-y-6 p-0">
           <Ligne terme="Entreprise éditrice">
             {IDENTITE.editeur} — {IDENTITE.formeJuridique}

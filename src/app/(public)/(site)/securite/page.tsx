@@ -3,6 +3,7 @@ import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
 import { Reveler } from "@/components/site/Reveler";
 import { AppelFinal, Carte, Prose, Section, TitrePage } from "@/components/site/Ui";
+import { Sommaire } from "@/components/site/Sommaire";
 import { CONSERVATION, IDENTITE, MARQUE } from "@/lib/identite-legale";
 
 export const metadata: Metadata = pagePublique({
@@ -85,6 +86,7 @@ export default function PageSecurite() {
       />
 
       <Section>
+        <Sommaire />
         <Reveler>
           <div className="carte p-7 md:p-8">
             <p className="surtitre m-0">Le point qui compte le plus</p>

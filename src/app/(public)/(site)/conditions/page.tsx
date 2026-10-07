@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
 import { Prose, Section, TitrePage } from "@/components/site/Ui";
+import { Sommaire } from "@/components/site/Sommaire";
 import { DOMAINE, IDENTITE, MARQUE } from "@/lib/identite-legale";
 
 export const metadata: Metadata = pagePublique({
@@ -41,6 +42,7 @@ export default function PageConditions() {
       />
 
       <Section>
+        <Sommaire />
         <Prose>
           <h2>1. Objet</h2>
           <p>

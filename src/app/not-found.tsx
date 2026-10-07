@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SearchX } from "lucide-react";
 import { Entete } from "@/components/site/Entete";
 import { PiedDePage } from "@/components/site/PiedDePage";
 
@@ -24,28 +25,30 @@ export default function Introuvable() {
     <div className="sans-debordement flex min-h-screen flex-col">
       <Entete />
       <main id="contenu" className="flex-1">
-        <div className="contenu py-20 md:py-28">
-          <p className="surtitre m-0">Erreur 404</p>
-          <h1 className="mt-4 max-w-[18ch] text-[length:var(--text-h1-mobile)] leading-[var(--text-h1-mobile--line-height)] md:text-[3.25rem] md:leading-[3.5rem]">
-            Cette page n&apos;existe pas.
+        <div className="contenu py-16 md:py-24">
+          <span className="grid h-12 w-12 place-items-center rounded-[14px] bg-[color:var(--color-rose-clair)] text-[color:var(--color-accent)]" aria-hidden="true">
+            <SearchX size={26} strokeWidth={1.75} />
+          </span>
+          <p className="surtitre m-0 mt-6">Erreur 404</p>
+          <h1 className="m-0 mt-3 max-w-[20ch] text-[length:var(--text-h1-etroit)] font-extrabold leading-[var(--text-h1-etroit--line-height)] tracking-[-0.045em] min-[390px]:text-[length:var(--text-h1-mobile)] md:text-[3.25rem] md:leading-[3.5rem]">
+            Cette page est introuvable.
           </h1>
-          <p className="mt-6 max-w-[58ch] text-[length:var(--text-grand)] leading-[var(--text-grand--line-height)] text-[color:var(--color-encre-faible)]">
-            L&apos;adresse est probablement incorrecte, ou la page a changé de
-            nom.
+          <p className="m-0 mt-5 max-w-[58ch] text-[1.125rem] leading-[1.7] text-[color:var(--color-encre-faible)]">
+            L&apos;adresse est probablement incorrecte, ou la page a changé de nom. Tes cours et ton travail se trouvent après la connexion.
           </p>
-          <p className="mt-4 max-w-[58ch] text-[color:var(--color-encre-faible)]">
-            Si vous cherchez vos cours ou vos devoirs, passez par{" "}
-            <Link href="/connexion" className="text-[color:var(--color-accent)]">
-              la connexion
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/" className="bouton bouton-primaire bouton-grand">
+              Retour à l&apos;accueil
             </Link>
-            .
-          </p>
-
-          <nav aria-label="Pages du site" className="mt-10">
-            <ul className="m-0 flex list-none flex-wrap gap-3 p-0">
-              {PISTES.map(([href, libelle]) => (
+            <Link href="/connexion" className="bouton bouton-secondaire bouton-grand">
+              Se connecter
+            </Link>
+          </div>
+          <nav aria-label="Autres pages du site" className="mt-10">
+            <ul className="m-0 flex list-none flex-wrap gap-x-6 gap-y-1 p-0">
+              {PISTES.filter(([href]) => href !== "/").map(([href, libelle]) => (
                 <li key={href}>
-                  <Link href={href} className="bouton bouton-secondaire">
+                  <Link href={href} className="inline-flex min-h-[44px] items-center font-semibold text-[color:var(--color-accent)]">
                     {libelle}
                   </Link>
                 </li>
