@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MARQUE } from "@/lib/identite-legale";
+import { MotSymbole } from "@/components/site/MotSymbole";
 
 /**
  * Page de maintenance.
@@ -20,8 +20,8 @@ export default function PageMaintenance() {
   return (
     <main id="contenu" className="sans-debordement">
       <div className="contenu flex min-h-screen max-w-[46rem] flex-col justify-center py-20">
-        <p className="m-0 text-[1.3125rem] font-extrabold tracking-[-0.03em]">{MARQUE}</p>
-        <h1 className="mt-8 text-[length:var(--text-h1-mobile)] leading-[var(--text-h1-mobile--line-height)] md:text-[3.25rem] md:leading-[3.5rem]">
+        <MotSymbole titre="Study" className="block h-auto w-[92px] text-[color:var(--color-encre)]" />
+        <h1 className="m-0 mt-8 font-extrabold tracking-[-0.045em] text-[length:var(--text-h1-mobile)] leading-[var(--text-h1-mobile--line-height)] md:text-[3.25rem] md:leading-[3.5rem]">
           Intervention en cours.
         </h1>
         <p className="mt-6 max-w-[58ch] text-[length:var(--text-grand)] leading-[var(--text-grand--line-height)] text-[color:var(--color-encre-faible)]">

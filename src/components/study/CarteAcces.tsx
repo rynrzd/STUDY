@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { CadreConnexion } from "./connexion/CadreConnexion";
 
 /**
- * Coque des écrans d'accès (E30 à E34) : marque, carte centrée de 480 px,
- * retour explicite. Aucune donnée scolaire n'y est chargée.
+ * Écrans d'accès hors formulaire de connexion (rejoindre une classe, accès en
+ * attente) : même coque que la connexion (R2, AuthShell), plus un retour
+ * explicite. Aucune donnée scolaire n'y est chargée.
  */
 export function CarteAcces({
   titre,
@@ -16,24 +18,15 @@ export function CarteAcces({
   retour?: { href: string; libelle: string } | null;
 }) {
   return (
-    <div className="app-coque !block min-h-dvh">
-      <main id="contenu" className="mx-auto flex min-h-dvh w-full max-w-[520px] flex-col justify-center px-4 py-10">
-        <Link href="/" className="marque-study mb-8 text-[2rem] leading-none">
-          study<span>.</span>
-        </Link>
-        <section className="panneau">
-          <h1 className="titre-section text-[1.5rem] leading-[2rem]">{titre}</h1>
-          {sousTitre ? <p className="m-0 mt-2 text-[color:var(--color-encre-faible)]">{sousTitre}</p> : null}
-          <div className="mt-6">{children}</div>
-        </section>
-        {retour ? (
-          <p className="meta m-0 mt-6">
-            <Link href={retour.href} className="text-[color:var(--color-encre-faible)]">
-              ← {retour.libelle}
-            </Link>
-          </p>
-        ) : null}
-      </main>
-    </div>
+    <CadreConnexion titre={titre} sousTitre={sousTitre}>
+      {children}
+      {retour ? (
+        <p className="m-0 mt-8 border-t border-[color:var(--color-bordure)] pt-5">
+          <Link href={retour.href} className="inline-flex min-h-[44px] items-center font-semibold text-[color:var(--color-accent)]">
+            ← {retour.libelle}
+          </Link>
+        </p>
+      ) : null}
+    </CadreConnexion>
   );
 }

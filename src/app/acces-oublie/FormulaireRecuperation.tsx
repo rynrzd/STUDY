@@ -26,6 +26,7 @@ export function FormulaireRecuperation({ etablissement, etatInitial }: { etablis
         <p className="m-0 font-mono text-[1.5rem] font-bold tracking-[0.08em]" data-testid="reference-demande">
           {etat.reference}
         </p>
+        <p className="m-0 mt-1 text-[0.9375rem] font-semibold">Conserve cette référence pour le suivi de ta demande.</p>
         <h3 className="m-0 mt-5 text-[1rem]">Et maintenant ?</h3>
         <ol className="m-0 mt-2 grid gap-1.5 pl-5 text-[0.9375rem]">
           <li>Présente-toi à la vie scolaire ou au secrétariat, avec cette référence.</li>
