@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { IDENTITE, MARQUE } from "@/lib/identite-legale";
+import { MotSymbole } from "./MotSymbole";
 
 /**
  * Pied de page du site public — L09.
@@ -53,6 +54,7 @@ const GROUPES: readonly {
     liens: [
       ["/contact", "Contact"],
       ["/mentions-legales", "Mentions légales"],
+      ["/aide", "Aide"],
       ["/connexion", "Connexion"],
     ],
   },
@@ -61,31 +63,19 @@ const GROUPES: readonly {
 export function PiedDePage() {
   return (
     <footer className="border-t border-[color:var(--color-bordure)] bg-[color:var(--color-surface)]">
-      <div className="contenu-site flex flex-wrap items-start justify-between gap-x-8 gap-y-8 py-10">
-        {/* La marque et les liens du pied se touchent au pouce, en bas de
-            page, souvent d'une seule main : ils ont la hauteur d'une cible
-            (V5 §11). L'espacement vertical de la liste suit, sans quoi deux
-            liens voisins se chevaucheraient au doigt. */}
-        <Link
-          href="/"
-          className="marque inline-flex min-h-[var(--spacing-cible)] items-center text-[1.25rem] no-underline"
-        >
-          {MARQUE}.
-        </Link>
-
-        <nav
-          aria-label="Liens de pied de page"
-          className="grid w-full gap-x-10 gap-y-6 sm:w-auto sm:grid-cols-3"
-        >
+      <div className="contenu-site grid gap-8 py-12 md:grid-cols-[1.2fr_2fr] md:gap-12">
+        <div>
+          <Link href="/" className="inline-flex min-h-[var(--spacing-cible)] items-center text-[color:var(--color-encre)] no-underline">
+            <MotSymbole titre="Study, accueil" className="block h-auto w-[84px]" />
+          </Link>
+          <p className="m-0 mt-3 max-w-[34ch] text-[0.9375rem] text-[color:var(--color-encre-faible)]">
+            Les cours, le travail à faire et les échanges de la classe, au même endroit.
+          </p>
+        </div>
+        <nav aria-label="Liens de pied de page" className="grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-3">
           {GROUPES.map((groupe) => (
             <div key={groupe.titre}>
-              {/* Une étiquette, pas un titre de document : trois H2 de plus
-                  par page fausseraient le plan de lecture d un lecteur
-                  d écran. La liste est nommée par elle. */}
-              <p
-                id={`pied-${groupe.titre}`}
-                className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.08em] text-[color:var(--color-encre-tres-faible)]"
-              >
+              <p id={`pied-${groupe.titre}`} className="m-0 text-[0.75rem] font-bold uppercase tracking-[0.1em] text-[color:var(--color-encre-faible)]">
                 {groupe.titre}
               </p>
               <ul aria-labelledby={`pied-${groupe.titre}`} className="m-0 mt-1 list-none p-0">
@@ -93,7 +83,7 @@ export function PiedDePage() {
                   <li key={href}>
                     <Link
                       href={href}
-                      className="inline-flex min-h-[var(--spacing-cible)] items-center text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)] no-underline transition-colors duration-[120ms] hover:text-[color:var(--color-encre)]"
+                      className="inline-flex min-h-[var(--spacing-cible)] items-center text-[0.9375rem] text-[color:var(--color-encre)] no-underline transition-colors duration-[120ms] hover:text-[color:var(--color-accent)]"
                     >
                       {libelle}
                     </Link>
@@ -104,13 +94,10 @@ export function PiedDePage() {
           ))}
         </nav>
       </div>
-
       <div className="contenu-site border-t border-[color:var(--color-bordure)] py-5">
-        <p className="m-0 text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)]">
-          {IDENTITE.editeur} — {IDENTITE.formeJuridique}. Plateforme pédagogique
-          d&apos;établissement.{" "}
-          Financée par l&apos;établissement, sans publicité ni achat par les
-          familles.
+        <p className="m-0 text-[0.8125rem] text-[color:var(--color-encre-faible)]">
+          {MARQUE} — {IDENTITE.editeur}, {IDENTITE.formeJuridique}. Plateforme pédagogique d&apos;établissement, financée par l&apos;établissement,
+          sans publicité ni achat par les familles.
         </p>
       </div>
     </footer>

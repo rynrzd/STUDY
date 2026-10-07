@@ -128,11 +128,11 @@ export function Faq({ questions }: { questions: readonly Question[] }) {
           name="faq"
           className="groupe-repli border-b border-[color:var(--color-bordure)]"
         >
-          <summary className="flex min-h-[var(--spacing-cible)] cursor-pointer list-none items-center justify-between gap-4 py-4 text-[length:var(--text-corps)] font-medium">
+          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-4 text-[1.0625rem] font-bold">
             {entree.question}
             <span
               aria-hidden="true"
-              className="marqueur-repli shrink-0 text-[1.25rem] font-light text-[color:var(--color-encre-tres-faible)] transition-transform duration-[180ms]"
+              className="marqueur-repli grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[color:var(--color-rose-clair)] text-[1.25rem] font-semibold text-[color:var(--color-accent)] transition-transform duration-[180ms]"
             >
               +
             </span>

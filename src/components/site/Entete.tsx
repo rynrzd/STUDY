@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
+import { Menu, X } from "lucide-react";
 import { MotSymbole } from "./MotSymbole";
 
 /**
  * En-tête du site public — L01.
  *
- * Blanc, 64 px (60 sur téléphone), logo « study. » à gauche, deux liens,
- * deux actions. La connexion est visible à toutes les largeurs — sur
- * téléphone, un bouton à côté du menu, pas seulement dans le menu (cahier
- * landing §6-7). La démonstration reste trouvable, en second.
+ * R2 : blanc, 72 px (64 sur téléphone), logo plat à gauche, La plateforme
+ * et Pour les lycées ; à droite Se connecter et Demander une démo. Sur
+ * téléphone : logo, Connexion visible hors du menu, et un bouton menu de
+ * 44 px qui déroule une liste sous l'en-tête.
  *
  * Le menu se ferme avec Échap et rend le focus au bouton — sans quoi on y reste
  * enfermé au clavier.
@@ -83,26 +84,18 @@ export function Entete() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-[color:var(--color-bordure)] bg-[color:var(--color-surface)]">
-      <div className="contenu-site flex h-[60px] items-center justify-between gap-4 md:h-16 md:gap-6">
-        {/* Le mot-symbole et les deux liens forment un seul groupe à gauche :
-            c'est la composition de la référence, et elle se lit mieux qu'une
-            navigation centrée qui flotte entre deux blocs. */}
-        <div className="flex items-center gap-9">
-          <Link
-            href="/"
-            /* La marque est le lien de retour a l accueil : sur telephone elle se
-               touche, donc elle a la hauteur d une cible (V5 §11). */
-            className="inline-flex min-h-[var(--spacing-cible)] items-center text-[color:var(--color-encre)] no-underline"
-          >
-            <MotSymbole titre="Study, accueil" className="block h-auto w-[90px] md:w-[104px]" />
+      <div className="contenu-site flex h-16 items-center justify-between gap-4 md:h-[72px] md:gap-8">
+        <div className="flex items-center gap-10">
+          <Link href="/" className="inline-flex min-h-[var(--spacing-cible)] items-center text-[color:var(--color-encre)] no-underline">
+            <MotSymbole titre="Study, accueil" className="block h-auto w-[84px] md:w-[100px]" />
           </Link>
 
-          <nav aria-label="Navigation principale" className="hidden items-center gap-7 md:flex">
+          <nav aria-label="Navigation principale" className="hidden items-center gap-8 md:flex">
             {LIENS.map((lien) => (
               <Link
                 key={lien.href}
                 href={lien.href}
-                className="text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)] no-underline transition-colors duration-[120ms] hover:text-[color:var(--color-encre)]"
+                className="inline-flex min-h-[var(--spacing-cible)] items-center text-[0.9375rem] font-semibold text-[color:var(--color-encre-faible)] no-underline transition-colors duration-[120ms] hover:text-[color:var(--color-encre)]"
               >
                 {lien.libelle}
               </Link>
@@ -110,60 +103,53 @@ export function Entete() {
           </nav>
         </div>
 
-        <div className="hidden items-center gap-5 md:flex">
+        <div className="hidden items-center gap-6 md:flex">
           <Link
-            href="/etablissements"
-            className="text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)] no-underline transition-colors duration-[120ms] hover:text-[color:var(--color-encre)]"
+            href="/connexion"
+            className="inline-flex min-h-[var(--spacing-cible)] items-center text-[0.9375rem] font-bold text-[color:var(--color-encre)] no-underline hover:text-[color:var(--color-accent)]"
           >
-            Demander une démo
-          </Link>
-          <Link href="/connexion" className="bouton bouton-primaire bouton-compact">
             Se connecter
+          </Link>
+          <Link href="/contact" className="bouton bouton-primaire">
+            Demander une démo
           </Link>
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
-        <Link href="/connexion" className="bouton bouton-primaire bouton-compact">
-          Connexion
-        </Link>
-        <button
-          ref={bouton}
-          type="button"
-          onClick={() => setOuvert((valeur) => !valeur)}
-          aria-expanded={ouvert}
-          aria-controls={identifiantMenu}
-          className="flex h-11 w-11 items-center justify-center rounded-[var(--radius-champ)] border border-[color:var(--color-bordure)] md:hidden"
-        >
-          <span className="sr-only">{ouvert ? "Fermer le menu" : "Ouvrir le menu"}</span>
-          <span aria-hidden="true" className="text-[1.125rem]">
-            {ouvert ? "✕" : "☰"}
-          </span>
-        </button>
+          <Link href="/connexion" className="bouton bouton-primaire min-h-11 px-4 text-[0.9375rem]">
+            Connexion
+          </Link>
+          <button
+            ref={bouton}
+            type="button"
+            onClick={() => setOuvert((valeur) => !valeur)}
+            aria-expanded={ouvert}
+            aria-controls={identifiantMenu}
+            className="flex h-11 w-11 items-center justify-center rounded-[var(--radius-bouton)] border border-[color:var(--color-bordure-forte)] bg-[color:var(--color-surface)] text-[color:var(--color-encre)]"
+          >
+            <span className="sr-only">{ouvert ? "Fermer le menu" : "Ouvrir le menu"}</span>
+            {ouvert ? <X size={22} strokeWidth={1.75} aria-hidden="true" /> : <Menu size={22} strokeWidth={1.75} aria-hidden="true" />}
+          </button>
         </div>
       </div>
 
-      <div
-        ref={panneau}
-        id={identifiantMenu}
-        hidden={!ouvert}
-        className="border-t border-[color:var(--color-bordure)] md:hidden"
-      >
-        <nav aria-label="Navigation" className="contenu-site flex flex-col py-3">
+      {/* Liste déroulante sous l'en-tête : pas un nouvel écran opaque. */}
+      <div ref={panneau} id={identifiantMenu} hidden={!ouvert} className="border-t border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] md:hidden">
+        <nav aria-label="Menu" className="contenu-site grid py-2">
           {LIENS.map((lien) => (
             <Link
               key={lien.href}
               href={lien.href}
               onClick={() => fermer()}
-              className="flex min-h-[var(--spacing-cible)] items-center text-[length:var(--text-corps)] no-underline"
+              className="flex min-h-12 items-center border-b border-[color:var(--color-bordure)] text-[1rem] font-semibold no-underline"
             >
               {lien.libelle}
             </Link>
           ))}
-          <Link
-            href="/etablissements"
-            onClick={() => fermer()}
-            className="bouton bouton-secondaire mt-2"
-          >
+          <Link href="/aide" onClick={() => fermer()} className="flex min-h-12 items-center border-b border-[color:var(--color-bordure)] text-[1rem] font-semibold no-underline">
+            Aide
+          </Link>
+          <Link href="/contact" onClick={() => fermer()} className="bouton bouton-secondaire mb-2 mt-3">
             Demander une démo
           </Link>
         </nav>

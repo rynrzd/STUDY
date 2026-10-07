@@ -1,4 +1,4 @@
-import { LOGO_LETTRES, LOGO_POINT, LOGO_VIEWBOX_SERRE } from "@/components/study/intro/logo-svg";
+import { LOGO_LETTRES, LOGO_POINT, LOGO_VIEWBOX_SERRE } from "./logo-svg";
 
 /**
  * Le mot-symbole « study. » — tracés officiels (Manrope 800, approche

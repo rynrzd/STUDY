@@ -1,240 +1,189 @@
 import type { Metadata } from "next";
-import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
-import {
-  ApercuEleve,
-  ApercuExcel,
-  ApercuMaison,
-  ApercuOrdinateur,
-  ApercuPapier,
-  FragmentsEleve,
-} from "@/components/site/Apercus";
-import { ApercuEntraide, ApercuProfesseur } from "@/components/site/ApercusVivants";
-import { Faq, Onglets } from "@/components/site/Onglets";
-import { MARQUE } from "@/lib/identite-legale";
-import { ObservateurApparitions } from "@/components/study/mouvement";
-import { IntroLanding } from "@/components/study/intro/IntroLanding";
+import { pagePublique } from "@/lib/metadonnees";
+import { ExempleCours, ExempleEchange, ExempleMatieres, ExemplePublication } from "@/components/site/Exemples";
+import { Faq } from "@/components/site/Onglets";
 
 export const metadata: Metadata = pagePublique({
   chemin: "/",
-  titre: "La classe, tout simplement",
-  description:
-    "Le cours, les devoirs et l'entraide au même endroit. Une plateforme pédagogique pour les lycées, financée par l'établissement.",
+  titre: "Ta classe, tout simplement",
+  description: "Tes cours, le travail à faire et les échanges de ta classe, au même endroit. Une plateforme pédagogique pour les lycées, financée par l'établissement.",
 });
 
 /**
- * Landing — cahier « Refonte fidèle », L01 à L09.
+ * Landing R2 — cahier « refonte complète, sans 3D », §04 (L01 à L08).
  *
- * L'ordre des sections est celui de la référence, et il raconte quelque chose :
- * on montre d'abord l'espace d'un élève, puis les trois situations où il sert,
- * puis le côté professeur, puis ce que le Studio change, puis l'entraide, puis
- * la rentrée. Les questions viennent après — quand la personne sait de quoi on
- * parle.
- *
- * Tout est rendu côté serveur. Les seuls composants clients sont les onglets,
- * la FAQ, l'avant/après et le menu : ni éditeur, ni lecteur PDF, ni moteur
- * d'export ne part dans le paquet public (P01).
+ * Un seul hero, le produit au premier plan, contenu visible dès le premier
+ * rendu et complet sans script. Les exemples sont nommés comme tels ; aucune
+ * statistique, aucun témoignage. Fonds alternés : gris clair, blanc, blush,
+ * blanc, rose très clair, blanc, baie.
  */
+
+function Surtitre({ children }: { children: React.ReactNode }) {
+  return <p className="m-0 text-[0.8125rem] font-bold uppercase tracking-[0.12em] text-[color:var(--color-accent)]">{children}</p>;
+}
+
+function TitreSection({ children, id }: { children: React.ReactNode; id?: string }) {
+  return (
+    <h2
+      id={id}
+      className="m-0 mt-3 text-[length:var(--text-h2-mobile)] font-extrabold leading-[var(--text-h2-mobile--line-height)] tracking-[-0.035em] md:text-[length:var(--text-h2-large)] md:leading-[var(--text-h2-large--line-height)]"
+    >
+      {children}
+    </h2>
+  );
+}
+
+function Texte({ children }: { children: React.ReactNode }) {
+  return <p className="m-0 mt-4 max-w-[52ch] text-[1.0625rem] leading-[1.7] text-[color:var(--color-encre-faible)] md:text-[1.125rem]">{children}</p>;
+}
+
 export default function PageAccueil() {
-  // `main` n'est pas décoratif ici. La page d'accueil vit hors du groupe
-  // `(site)`, qui en fournit un à toutes les autres pages publiques : sans
-  // lui, le lien d'évitement de l'en-tête — « Aller au contenu », ancré sur
-  // `#contenu` — ne menait nulle part, précisément sur la page la plus
-  // visitée. Un lien d'évitement cassé est pire qu'aucun : il fait perdre un
-  // temps que le clavier n'a pas.
   return (
     <main id="contenu">
-      <ObservateurApparitions />
-      {/* -- Hero unique (cahier « corrections de la landing ») : logo, ruban,
-          message, accès, puis « Tout ce qu'il faut pour avancer. ». Il absorbe
-          l'ancien hero « La classe. Tout simplement. » : même message, mêmes
-          destinations (connexion, découverte, équipement d'un lycée). */}
-      <IntroLanding />
-
-      {/* -- L02 — L'aperçu de l'espace élève, une seule fois, sans second hero
-          ni ruban. Cible du lien « Passer ». */}
-      <section id="apres-intro" aria-labelledby="apres-intro-titre" className="bande bande-rose scroll-mt-20">
-        <div className="contenu-site grid min-w-0 items-center gap-8 py-14 sm:py-20 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
+      {/* -- L02 — Hero unique ------------------------------------------------ */}
+      <section aria-labelledby="hero-titre" className="pb-14 pt-10 md:pb-24 md:pt-20">
+        <div className="contenu-site grid items-center gap-10 lg:grid-cols-[5fr_7fr] lg:gap-12">
           <div>
-            <h2
-              id="apres-intro-titre"
-              tabIndex={-1}
-              className="m-0 text-[length:var(--text-h2-mobile)] leading-[var(--text-h2-mobile--line-height)] tracking-[-0.02em] outline-none sm:text-[length:var(--text-h2-large)] sm:leading-[var(--text-h2-large--line-height)]"
+            <Surtitre>L&apos;espace de ta classe</Surtitre>
+            <h1
+              id="hero-titre"
+              className="m-0 mt-4 text-[length:var(--text-h1-etroit)] font-extrabold leading-[var(--text-h1-etroit--line-height)] tracking-[-0.045em] min-[390px]:text-[length:var(--text-h1-mobile)] min-[390px]:leading-[var(--text-h1-mobile--line-height)] lg:text-[length:var(--text-h1)] lg:leading-[var(--text-h1--line-height)]"
             >
-              Des lycées plus unis, pour des élèves plus sereins.
-            </h2>
-            <p className="m-0 mt-6">
-              <Link href="#fonctionnement" className="lien-fleche">
-                Découvrir la plateforme
-                <span aria-hidden="true" className="fleche">→</span>
+              Ta classe, <span className="text-[color:var(--color-accent)]">tout simplement.</span>
+            </h1>
+            <p className="m-0 mt-5 max-w-[40ch] text-[1.125rem] leading-[1.65] text-[color:var(--color-encre-faible)] md:text-[1.25rem]">
+              Tes cours, le travail à faire et les échanges de ta classe. Enfin au même endroit.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a href="#decouvrir" className="bouton bouton-primaire bouton-grand">
+                Découvrir Study
+              </a>
+              <Link href="/connexion" className="bouton bouton-secondaire bouton-grand">
+                Se connecter
               </Link>
-            </p>
-          </div>
-
-          <div className="min-w-0">
-            {/* La mention précède l'aperçu : ces noms et ces devoirs ne sont
-                l'espace de personne. Sur téléphone, des fragments à la taille
-                du pouce plutôt qu'un tableau de bord réduit. */}
-            <p className="m-0 mb-2 text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)]">
-              Aperçu fictif de l&apos;espace élève
-            </p>
-            <div className="lg:hidden">
-              <FragmentsEleve />
-            </div>
-            <div className="hidden lg:block">
-              <ApercuEleve />
             </div>
           </div>
+          <ExempleCours />
         </div>
       </section>
 
-      {/* -- L03 — Trois situations ---------------------------------------- */}
-      <section id="fonctionnement" className="apparition scroll-mt-24 py-12 sm:py-20">
-        <div className="contenu-site">
-          <h2 className="m-0 text-[length:var(--text-h2-mobile)] sm:text-center leading-[var(--text-h2-mobile--line-height)] tracking-[-0.02em] sm:text-[length:var(--text-h2-large)] sm:leading-[var(--text-h2-large--line-height)]">
-            En cours. À la maison. Toujours la même classe.
-          </h2>
-
-          <div className="mt-8">
-            <Onglets
-              onglets={[
-                {
-                  cle: "ordinateur",
-                  libelle: "Sur ordinateur",
-                  texte:
-                    "La séance du jour et ses exercices sont accessibles en classe, sur le poste de l'élève comme sur celui du professeur.",
-                  apercu: <ApercuOrdinateur />,
-                },
-                {
-                  cle: "papier",
-                  libelle: "Sur papier",
-                  texte:
-                    "Le professeur projette, l'élève écrit sur son cahier. Les documents restent disponibles après le cours : rien ne dépend d'un ordinateur par élève.",
-                  apercu: <ApercuPapier />,
-                },
-                {
-                  cle: "maison",
-                  libelle: "À la maison",
-                  texte:
-                    "Le soir, le cours et le devoir se retrouvent au même endroit — sans chercher dans un cahier de textes ou une pile de photocopies.",
-                  apercu: <ApercuMaison />,
-                },
-              ]}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* -- L04 — Côté professeur ----------------------------------------- */}
-      <section className="apparition py-12 sm:py-20">
-        <div className="contenu-site grid min-w-0 items-center gap-8 sm:gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+      {/* -- L03 — Retrouver un cours ------------------------------------------ */}
+      <section id="decouvrir" aria-labelledby="titre-retrouver" className="bande-blanche scroll-mt-20 py-14 md:py-24">
+        <div className="contenu-site grid items-center gap-10 lg:grid-cols-[4fr_8fr] lg:gap-16">
           <div>
-            <p className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-accent)]">
-              Pour les professeurs
-            </p>
-            <h2 className="m-0 mt-4 text-[length:var(--text-h2-mobile)] leading-[var(--text-h2-mobile--line-height)] tracking-[-0.02em] sm:text-[length:var(--text-h2-large)] sm:leading-[var(--text-h2-large--line-height)]">
-              Votre séance est prête.
-              <br />
-              Votre classe aussi.
-            </h2>
-            <p className="m-0 mt-5 max-w-[42ch] text-[length:var(--text-corps)] leading-[var(--text-corps--line-height)] text-[color:var(--color-encre-faible)]">
-              Préparez votre séance, publiez-la à la bonne classe, donnez le
-              travail à faire.
-            </p>
+            <Surtitre>01 / Retrouver</Surtitre>
+            <TitreSection id="titre-retrouver">Le bon cours. Au bon moment.</TitreSection>
+            <Texte>Retrouve la séance, ses documents et le travail à faire sans chercher dans plusieurs endroits.</Texte>
             <p className="m-0 mt-6">
               <Link href="/produit" className="lien-fleche">
-                Voir le côté professeur
-                <span aria-hidden="true" className="fleche">→</span>
+                Découvrir les cours <span aria-hidden="true" className="fleche">→</span>
               </Link>
             </p>
           </div>
-
-          <ApercuProfesseur />
+          <ExempleMatieres />
         </div>
       </section>
 
-      {/* -- L06 — Entraide ------------------------------------------------- */}
-      <div className="bande bande-rose">
-        <section className="contenu-site grid min-w-0 items-center gap-8 py-12 sm:gap-12 sm:py-20 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-          <ApercuEntraide />
+      {/* -- L04 — Échanger avec sa classe ------------------------------------- */}
+      <section aria-labelledby="titre-echanger" className="py-14 md:py-24">
+        <div className="contenu-site">
+          <div className="grid items-center gap-10 rounded-[var(--radius-grand)] bg-[color:var(--color-rose-clair)] p-6 sm:p-10 lg:grid-cols-[5fr_7fr] lg:gap-14 lg:p-14">
+            <div>
+              <Surtitre>02 / Échanger</Surtitre>
+              <TitreSection id="titre-echanger">Une question ne devrait pas te bloquer.</TitreSection>
+              <Texte>Un espace commun avec ta classe et ton professeur, pour poser une question et retrouver les réponses.</Texte>
+            </div>
+            <ExempleEchange />
+          </div>
+        </div>
+      </section>
 
-          <div>
-            <h2 className="m-0 text-[length:var(--text-h2-mobile)] leading-[var(--text-h2-mobile--line-height)] tracking-[-0.02em] sm:text-[length:var(--text-h2-large)] sm:leading-[var(--text-h2-large--line-height)]">
-              On avance mieux ensemble.
-            </h2>
-            <p className="m-0 mt-5 max-w-[42ch] text-[length:var(--text-corps)] leading-[var(--text-corps--line-height)] text-[color:var(--color-encre-faible)]">
-              Un devoir à rendre, une question à poser, un chapitre à revoir.
-              Tout reste à portée de main.
+      {/* -- L05 — Professeurs : visuel à gauche, texte à droite ---------------- */}
+      <section aria-labelledby="titre-transmettre" className="bande-blanche py-14 md:py-24">
+        <div className="contenu-site grid items-center gap-10 lg:grid-cols-[7fr_5fr] lg:gap-16">
+          <div className="lg:order-2">
+            <Surtitre>03 / Transmettre</Surtitre>
+            <TitreSection id="titre-transmettre">Préparez une fois. Partagez à la bonne classe.</TitreSection>
+            <Texte>Organisez la séance, ajoutez les supports et publiez le travail dans l&apos;espace de vos élèves.</Texte>
+            <p className="m-0 mt-6">
+              <Link href="/produit" className="lien-fleche">
+                Voir l&apos;espace professeur <span aria-hidden="true" className="fleche">→</span>
+              </Link>
             </p>
           </div>
-        </section>
-      </div>
-
-      {/* -- L07 — Rentrée -------------------------------------------------- */}
-      <section className="apparition py-12 sm:py-20">
-        <div className="contenu-site grid min-w-0 items-center gap-8 sm:gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-          <div>
-            <h2 className="m-0 text-[length:var(--text-h2-mobile)] leading-[var(--text-h2-mobile--line-height)] tracking-[-0.02em] sm:text-[length:var(--text-h2-large)] sm:leading-[var(--text-h2-large--line-height)]">
-              La rentrée commence avec votre liste de classe.
-            </h2>
-            <p className="m-0 mt-5 max-w-[42ch] text-[length:var(--text-corps)] leading-[var(--text-corps--line-height)] text-[color:var(--color-encre-faible)]">
-              Importez votre fichier Excel. Vérifiez les classes et préparez les
-              accès.
-            </p>
-          </div>
-
-          <ApercuExcel />
-        </div>
-      </section>
-
-      {/* -- L08 — Questions ------------------------------------------------ */}
-      <section className="apparition py-12 sm:py-20">
-        <div className="contenu-site max-w-[760px]">
-          <p className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-accent)]">
-            FAQ
-          </p>
-          <div className="mt-6">
-            <Faq
-              questions={[
-                {
-                  question: "Faut-il un ordinateur par élève ?",
-                  reponse:
-                    "Non. La projection en classe et le travail sur papier sont prévus dès le départ : le cours se consulte ensuite sur n'importe quel appareil, y compris un téléphone.",
-                },
-                {
-                  question: "Qui finance la plateforme ?",
-                  reponse:
-                    "L'établissement, sur devis. Il n'y a aucun achat par les familles, aucun abonnement élève et aucune publicité.",
-                },
-                {
-                  question: `Comment installer ${MARQUE} dans mon lycée ?`,
-                  reponse:
-                    "Un échange sur vos besoins, la configuration de votre espace, puis l'import de vos classes à partir de votre fichier de rentrée.",
-                },
-              ]}
-            />
+          <div className="lg:order-1">
+            <ExemplePublication />
           </div>
         </div>
       </section>
 
-      {/* -- L09 — Appel final ---------------------------------------------- */}
-      <div className="bande bande-noire">
-        <section className="contenu-site flex flex-wrap items-center justify-between gap-7 py-12 sm:gap-8 sm:py-16">
-          <h2 className="m-0 max-w-[16ch] text-[length:var(--text-h2-mobile)] leading-[var(--text-h2-mobile--line-height)] tracking-[-0.02em] text-white sm:text-[length:var(--text-h2-large)] sm:leading-[var(--text-h2-large--line-height)]">
-            Et si on commençait par votre lycée ?
-          </h2>
-
-          <div>
-            <Link href="/etablissements" className="bouton bouton-rose">
-              Demander une démonstration
-              <span aria-hidden="true" className="fleche">→</span>
+      {/* -- L06 — Établissements -------------------------------------------- */}
+      <section aria-labelledby="titre-etablissement" className="bande-douce py-14 md:py-24">
+        <div className="contenu-site">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <TitreSection id="titre-etablissement">Votre établissement, simplement.</TitreSection>
+            <Link href="/etablissements" className="bouton bouton-primaire bouton-grand">
+              Pour mon établissement
             </Link>
-            <p className="m-0 mt-3 text-[length:var(--text-aide)] text-white/70">
-              Un membre de notre équipe vous recontacte rapidement.
-            </p>
           </div>
-        </section>
-      </div>
+          <ol className="m-0 mt-10 grid list-none gap-4 p-0 md:grid-cols-3 md:gap-6">
+            {[
+              ["Importer la liste", "Chargez le fichier de rentrée (CSV ou Excel) : chaque ligne est lue avant toute création de compte."],
+              ["Vérifier les classes", "Corrigez les lignes signalées et les doublons dans un aperçu, puis confirmez."],
+              ["Préparer les accès", "Chaque élève reçoit son identifiant d'établissement et un lien d'activation remis par vos équipes."],
+            ].map(([titre, texte], i) => (
+              <li key={titre} className="rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-6">
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-[color:var(--color-rose-clair)] text-[1rem] font-extrabold text-[color:var(--color-accent)]" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <h3 className="m-0 mt-4 text-[1.1875rem] font-extrabold">{titre}</h3>
+                <p className="m-0 mt-2 text-[1rem] text-[color:var(--color-encre-faible)]">{texte}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* -- L07 — FAQ -------------------------------------------------------- */}
+      <section aria-labelledby="titre-faq" className="bande-blanche py-14 md:py-24">
+        <div className="contenu-site grid gap-8 lg:grid-cols-[4fr_8fr] lg:gap-16">
+          <TitreSection id="titre-faq">Les questions qu&apos;on nous pose.</TitreSection>
+          <Faq
+            questions={[
+              {
+                question: "Faut-il un ordinateur par élève ?",
+                reponse: "Non. La projection en classe et le travail sur papier sont prévus ; le cours se consulte ensuite sur n'importe quel appareil, y compris un téléphone.",
+              },
+              {
+                question: "Qui finance Study ?",
+                reponse: "L'établissement, sur devis. Aucun achat par les familles, aucun abonnement élève, aucune publicité.",
+              },
+              {
+                question: "Comment démarrer ?",
+                reponse: "Un échange sur vos besoins, la configuration de votre espace, puis l'import de vos classes depuis votre fichier de rentrée.",
+              },
+            ]}
+          />
+        </div>
+      </section>
+
+      {/* -- L08 — Conclusion ------------------------------------------------- */}
+      <section aria-labelledby="titre-conclusion" className="bande-baie py-14 md:py-20">
+        <div className="contenu-site flex flex-wrap items-center justify-between gap-8">
+          <h2 id="titre-conclusion" className="m-0 max-w-[18ch] text-[length:var(--text-h2-mobile)] font-extrabold leading-[var(--text-h2-mobile--line-height)] tracking-[-0.035em] text-white md:text-[length:var(--text-h2-large)] md:leading-[var(--text-h2-large--line-height)]">
+            Une classe qui avance ensemble.
+          </h2>
+          <div className="grid gap-3">
+            <Link href="/contact" className="bouton bouton-clair bouton-grand">
+              Demander une démonstration
+            </Link>
+            <Link href="/connexion" className="inline-flex min-h-[44px] items-center justify-center text-[1rem] font-semibold text-white underline-offset-4 hover:underline">
+              Déjà un accès ? Se connecter
+            </Link>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

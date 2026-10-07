@@ -45,7 +45,7 @@ export default async function PageAujourdhui() {
   ]);
 
   const libelles = new Map(cours.map((c) => [c.id, c.matiere] as const));
-  const priorites = trierDevoirs(devoirs).aVenir.filter((d) => !faits.has(d.id)).slice(0, 2);
+  const priorites = trierDevoirs(devoirs).aVenir.filter((d) => !faits.has(d.id)).slice(0, 3);
   const heure = Number(new Intl.DateTimeFormat("fr-FR", { hour: "numeric", hour12: false, timeZone: "Europe/Paris" }).format(maintenant));
   const suggestion = revision.suggestions[0];
   const recente = (nouvelles ?? []).find((n) => ["reponse_fil", "annonce", "consultation_ouverte"].includes(n.genre));

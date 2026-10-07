@@ -2,142 +2,101 @@
 @import "./mouvement.css";
 
 /* ===========================================================================
-   AvecStudy — jetons de design
-   Source : cahier des charges complet V2, section 3.
+   Study — jetons de design R2 (dossier « refonte complète, sans 3D »,
+   7 octobre 2026, §02).
 
-   Identité rose et blanche, lumineuse et très simple. Le rose est un accent,
-   jamais un remplissage : il souligne l'action en cours, il ne peint pas les
-   fonds. Le reste est du blanc, de l'encre presque noire, et de l'espace.
-
-   Ce qui est proscrit et ne doit réapparaître nulle part : gradients violets
-   ou bleus, glassmorphism, halos, ombres épaisses, décorations abstraites.
-   Une interface scolaire se juge à sa lisibilité, pas à ses effets.
-   Exception mesurée (brief 3D, octobre 2026) : le ruban Study, rose nacré,
-   sur quelques écrans précis, jamais derrière un texte ou un bouton.
+   Fond gris très clair, surfaces blanches, texte charbon, accent baie et
+   rose blush. Une seule famille : Manrope, auto-hébergée. Aucun ruban,
+   aucun objet en volume, aucune ombre qui imite la profondeur. Les noms
+   historiques des jetons sont conservés : tout le produit change d'un coup.
 
    Aucune couleur n'est écrite en dur ailleurs que dans ce bloc.
    =========================================================================== */
 
 @theme {
-  /* -- Couleurs ---------------------------------------------------------- */
-  /* Jetons contractuels du dossier Study V6 (design-tokens.css, §3.2).
-     Les noms historiques sont conservés : tout le produit change d'un coup. */
-  --color-fond: #fbfafb;
-  --color-surface: #ffffff;
-  --color-surface-douce: #f8f5f7;
+  /* -- Palette contractuelle ---------------------------------------------- */
+  --color-fond: #f8f7f9;            /* fond de page */
+  --color-surface: #ffffff;         /* surfaces */
+  --color-surface-douce: #fcf2f5;   /* rose très clair : panneaux légers */
 
-  --color-encre: #29282e;
-  --color-encre-faible: #696570;  /* muted du dossier — 5,6:1 sur blanc */
-  /* Mesuré, pas estimé. #8b8b95 donnait 3,37:1 sur blanc : au-dessous du
-     4,5:1 qu'exige WCAG 2.2 AA pour du texte normal, et ce gris portait les
-     légendes de l'aperçu, les libellés de pied de page et les petites notes.
-     #686872 tient 4,5:1 sur **tous** les fonds du produit — blanc, surface
-     douce, survol, et jusqu'au rose clair (4,51:1). Un ton qui ne passe que
-     sur blanc se casse le jour où quelqu'un le pose ailleurs. */
-  --color-encre-tres-faible: #696570;
+  --color-encre: #29282e;           /* charbon — 14,6:1 sur blanc */
+  --color-encre-faible: #64616d;    /* secondaire — 5,9:1 sur blanc, 5,1:1 sur blush */
+  --color-encre-tres-faible: #64616d;
 
-  /* Le rose, en trois intensités et pas une de plus. */
-  --color-accent: #81445b;        /* rose-ink : texte et accent sur rose clair */
-  /* Ce qui s'écrit **sur** l'accent. Le jeton manquait, et une pastille
-     l'appelait tout de même : la couleur ne résolvant à rien, le texte
-     héritait de l'encre — 2,8:1 sur le rose, au-dessous du 4,5:1 exigé.
-     Un nom de variable qui n'existe pas ne casse rien à la compilation ; il
-     casse la lisibilité, en silence. Le blanc donne 6,38:1. */
+  --color-accent: #81445b;          /* baie — 7,4:1 sur blanc */
   --color-sur-accent: #ffffff;
-  --color-accent-fonce: #693346;
-  --color-rose-clair: #f9e7ed;    /* rose-surface : sélection, accueil, contexte */
-  --color-surlignage: #f6dce6;
-  --color-rose-decor: #e3bccb;
-  --color-rose-moyen: #e8b5c8;    /* rose intermédiaire du brief 3D : bordures du ruban et décors */
+  --color-accent-fonce: #69374a;
+  --color-rose-clair: #f9e7ed;      /* blush : sélection, panneaux, contexte */
+  --color-surlignage: #f5dce5;      /* rose doux */
+  --color-rose-decor: #c37a94;      /* rose soutenu : point du logo, filets */
+  --color-rose-moyen: #c37a94;
 
-  --color-bordure: #ddd7db;       /* V7 : #DDD7DB */
-  --color-bordure-forte: #cfc7d2;
-  /* La bordure d'un champ n'est pas décorative : c'est elle qui dit où
-     commence la zone de saisie, et WCAG 1.4.11 lui demande 3:1. #cfcbd2 en
-     donnait 1,60 — un champ qu'on devine plus qu'on ne le voit. Celle-ci
-     tient 3,31:1. */
+  --color-bordure: #e5dfe5;
+  --color-bordure-forte: #d3c9d2;
+  /* Bordure de champ : 3:1 minimum (WCAG 1.4.11). */
   --color-bordure-champ: #8e8894;
-  --color-survol: #f5f0f3;
-  --color-primaire: #302b32;      /* action principale */
-  --color-primaire-survol: #1f1b21;
-  --color-focus: #a05c78;         /* anneau de focus de 3 px */
+  --color-survol: #f4eff3;
+  --color-primaire: #81445b;        /* action principale : baie */
+  --color-primaire-survol: #69374a;
+  --color-focus: #81445b;
 
-  --color-succes: #365c43;
-  --color-succes-fond: #e9f2ed;
-  --color-erreur: #993b36;
-  --color-erreur-fond: #fcedec;
-  --color-attention: #78571e;
-  --color-attention-fond: #fbf2df;
+  /* Sémantiques : jamais seules, toujours avec un libellé. */
+  --color-succes: #2f6a45;
+  --color-succes-fond: #e8f3ec;
+  --color-erreur: #a3312b;
+  --color-erreur-fond: #fcecea;
+  --color-attention: #7a5413;
+  --color-attention-fond: #fbf1dc;
 
-  /* -- Typographie : une seule famille ----------------------------------- */
-  --font-texte: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* -- Typographie : Manrope seule ---------------------------------------- */
+  --font-texte: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-titre: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  /* Le mot-symbole, et lui seul, retrouve l'empattement de la référence. */
   --font-marque: "Manrope", system-ui, sans-serif;
 
-  --text-aide: 0.8125rem;                          /* 13 px */
+  --text-aide: 0.875rem;                           /* 14 px — labels, aides */
   --text-aide--line-height: 1.25rem;
   --text-tableau: 0.875rem;                        /* 14 px */
-  --text-tableau--line-height: 1.375rem;
-  --text-corps: 1rem;                              /* 16 px (V7 : corps 16/24) */
+  --text-tableau--line-height: 1.25rem;
+  --text-corps: 1rem;                              /* 16 px */
   --text-corps--line-height: 1.5rem;               /* 24 px */
-  --text-grand: 1.1875rem;                         /* 19 px, chapeaux */
-  --text-grand--line-height: 1.85rem;
+  --text-grand: 1.125rem;                          /* 18 px, chapeaux */
+  --text-grand--line-height: 1.75rem;
 
-  --text-h3: 1.1875rem;                            /* 19 px */
-  --text-h3--line-height: 1.6rem;
+  --text-h3: 1.25rem;                              /* 20 px */
+  --text-h3--line-height: 1.75rem;
   --text-h2: 1.75rem;                              /* 28 px */
   --text-h2--line-height: 2.125rem;
-  --text-h2-large: 2.375rem;                       /* 38 px, desktop */
-  --text-h2-large--line-height: 2.75rem;
-  --text-h2-mobile: 1.875rem;                      /* 30 px */
+  --text-h2-large: 2.75rem;                        /* 44 px, public bureau */
+  --text-h2-large--line-height: 3rem;
+  --text-h2-mobile: 1.875rem;                      /* 30 px, public mobile */
   --text-h2-mobile--line-height: 2.25rem;
-  --text-h1-mobile: 2.625rem;                      /* 42 px a 390 px */
-  --text-h1-mobile--line-height: 2.75rem;          /* 1,05 */
-  --text-h1-etroit: 2.25rem;                       /* 36 px a 320 px */
-  --text-h1-etroit--line-height: 2.375rem;
-  --text-h1: 3.875rem;                             /* 62 px */
-  --text-h1--line-height: 4.0625rem;               /* 1,05 */
+  --text-h1-mobile: 2.5rem;                        /* 40 px à 390 px */
+  --text-h1-mobile--line-height: 2.75rem;
+  --text-h1-etroit: 2.375rem;                      /* 38 px à 320 px */
+  --text-h1-etroit--line-height: 2.625rem;
+  --text-h1: 4.25rem;                              /* 68 px, public bureau */
+  --text-h1--line-height: 4.5rem;
 
-  /* Échelle de l'application connectée : plus dense que le site public. */
-  --text-h1-app: 1.5rem;                           /* 24 px */
-  --text-h1-app--line-height: 2rem;
-  --text-h2-app: 1.1875rem;                        /* 19 px */
-  --text-h2-app--line-height: 1.6rem;
+  /* Application connectée. */
+  --text-h1-app: 2rem;                             /* 32 px */
+  --text-h1-app--line-height: 2.5rem;
+  --text-h2-app: 1.25rem;                          /* 20 px */
+  --text-h2-app--line-height: 1.75rem;
 
-  /* -- Géométrie : arrondis modérés -------------------------------------- */
-  --radius-champ: 8px;
-  --radius-carte: 14px;
+  /* -- Géométrie ----------------------------------------------------------- */
+  --radius-champ: 10px;
+  --radius-bouton: 12px;
+  --radius-carte: 16px;
+  --radius-grand: 24px;
 
-  /* Une seule ombre, discrète, réservée à ce qui flotte réellement. */
-  --shadow-flottant: 0 2px 4px rgba(25, 25, 29, 0.04), 0 8px 24px rgba(25, 25, 29, 0.08);
+  /* Une seule ombre, pour ce qui flotte réellement (menus, dialogues). */
+  --shadow-flottant: 0 1px 2px rgba(41, 40, 46, 0.05), 0 8px 24px rgba(41, 40, 46, 0.08);
 
-  /* -- Composition ------------------------------------------------------- */
-  --spacing-contenu: 1160px;   /* site public (ch. 02) */
-  --spacing-app: 1320px;       /* application connectée */
+  /* -- Composition --------------------------------------------------------- */
+  --spacing-contenu: 1200px;   /* site public */
+  --spacing-app: 1280px;       /* application connectée */
   --spacing-lecture: 68ch;     /* textes longs */
-  --spacing-cible: 44px;       /* hauteur minimale des cibles tactiles */
-}
-
-/* ===========================================================================
-   Police auto-hébergée (SIL Open Font License, notice dans public/fonts/).
-   Tant que le fichier n'est pas déposé, la pile de repli s'applique.
-   =========================================================================== */
-
-@font-face {
-  font-family: "DM Sans";
-  font-style: normal;
-  font-weight: 100 1000;
-  font-display: swap;
-  src: url("/fonts/dm-sans-variable.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Manrope";
-  font-style: normal;
-  font-weight: 200 800;
-  font-display: swap;
-  src: url("/fonts/manrope-variable.woff2") format("woff2");
+  --spacing-cible: 44px;       /* cible tactile minimale */
 }
 
 /* ===========================================================================
@@ -225,7 +184,7 @@
   }
 
   @media (min-width: 1024px) {
-    .contenu-app { padding-inline: 32px; }
+    .contenu, .contenu-site, .contenu-app { padding-inline: 32px; }
   }
 
   /* --- Boutons ----------------------------------------------------------- */
@@ -236,10 +195,10 @@
     gap: 8px;
     min-height: var(--spacing-cible);
     padding-inline: 20px;
-    border-radius: var(--radius-champ);
+    border-radius: var(--radius-bouton);
     border: 1px solid transparent;
     font-size: var(--text-corps);
-    font-weight: 600;
+    font-weight: 700;
     line-height: 1;
     text-decoration: none;
     cursor: pointer;
@@ -249,8 +208,7 @@
 
   .bouton:disabled { cursor: not-allowed; opacity: 0.55; }
 
-  /* Action principale : encre pleine. Le rose reste l'accent, pas le fond
-     de tous les boutons — sans quoi il cesse de signaler quoi que ce soit. */
+  /* Action principale : baie pleine (R2). */
   .bouton-primaire {
     background: var(--color-primaire);
     border-color: var(--color-primaire);
@@ -271,18 +229,30 @@
     border-color: var(--color-accent-fonce);
   }
 
+  /* Secondaire : bordure baie, texte baie, fond blanc. */
   .bouton-secondaire {
     background: var(--color-surface);
-    /* Bordure de composant, pas filet decoratif : c est elle qui dit ou le
-       bouton commence. Elle suit donc le meme jeton que les champs. */
-    border-color: var(--color-bordure-champ);
-    color: var(--color-encre);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
   }
 
   .bouton-secondaire:hover:not(:disabled) {
-    background: var(--color-survol);
-    border-color: var(--color-encre-faible);
+    background: var(--color-rose-clair);
+    border-color: var(--color-accent-fonce);
+    color: var(--color-accent-fonce);
   }
+
+  /* Sur le bandeau baie : bouton blanc, texte baie. */
+  .bouton-clair {
+    background: var(--color-surface);
+    border-color: var(--color-surface);
+    color: var(--color-accent);
+  }
+
+  .bouton-clair:hover:not(:disabled) { background: var(--color-rose-clair); border-color: var(--color-rose-clair); }
+
+  /* Appel principal d'une page : 48 px. */
+  .bouton-grand { min-height: 48px; padding-inline: 24px; }
 
   .bouton-discret {
     background: transparent;
@@ -386,18 +356,8 @@
   /* Le trait rose se trace une seule fois, de gauche a droite, en 450 ms
      (ch. 10, P02). L'animation est en CSS pur : elle ne depend d'aucun script,
      et le texte reste lisible si rien ne s'execute. */
-  .surligne-anime {
-    animation: tracer-surlignage 450ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
-  }
-
-  @keyframes tracer-surlignage {
-    from { background-size: 0% 0.62em; }
-    to { background-size: 100% 0.62em; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .surligne-anime { animation: none; background-size: 100% 0.62em; }
-  }
+  /* R2 : aucun texte n'apparaît par animation ; le trait est posé d'emblée. */
+  .surligne-anime { background-size: 100% 0.62em; }
 
   /* Rangée qui défile horizontalement, sans barre apparente : la barre
      grise sous trois onglets fait sale, et le geste reste naturel. */
@@ -485,20 +445,10 @@
   .bande-rose { background: var(--color-rose-clair); }
   .bande-douce { background: var(--color-surface-douce); }
   .bande-noire { background: var(--color-encre); color: #fff; }
+  .bande-baie { background: var(--color-accent); color: #fff; }
+  .bande-blanche { background: var(--color-surface); }
 
-  /* --- Apparition au défilement : 150 à 300 ms -------------------------- */
-  [data-revele="prete"] {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  [data-revele="visible"] {
-    opacity: 1;
-    transform: none;
-    transition: opacity 280ms ease-out,
-                transform 280ms cubic-bezier(0.16, 0.84, 0.44, 1);
-    transition-delay: var(--delai, 0ms);
-  }
+  /* R2 : aucune apparition au défilement — tout est visible au premier rendu. */
 
   /* --- En-tête : blanc au défilement ------------------------------------ */
   .entete {
@@ -829,13 +779,13 @@
 }
 
 /* ===========================================================================
-   Study V6 — l'application connectée (dossier du 5 octobre 2026, §3)
+   AppShell R2 — §03 du cahier.
 
-   Barre latérale 240 px (208 px sous 1 280 px), en-tête 80 px, contenu
-   1 200 px au plus. Sous 768 px : en-tête 60 px, barre inférieure de cinq
-   destinations, 64 px plus la zone sûre, dont l'encombrement est réservé.
-   Corps 14 px ; 16 px dans les champs sur téléphone (sans quoi iOS zoome).
-   Une seule ombre, pour ce qui flotte. Animations de 120 à 180 ms.
+   ≥ 1100 px : barre latérale blanche de 224 px, page gris clair, sélection
+   blush et texte sombre. 768–1099 px : rail de 88 px, icônes et libellés
+   courts. < 768 px : en-tête 64 px et navigation inférieure de 64 px plus la
+   zone sûre, dont l'encombrement est réservé. Contenu 1 280 px au plus.
+   Corps 16/24 ; 16 px dans les champs sur téléphone (sans quoi iOS zoome).
    =========================================================================== */
 
 @layer components {
@@ -843,8 +793,8 @@
     min-height: 100dvh;
     background: var(--color-fond);
     color: var(--color-encre);
-    font-size: 0.875rem;
-    line-height: 1.55;
+    font-size: 1rem;
+    line-height: 1.5;
   }
 
   .app-barre {
@@ -865,7 +815,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    height: 60px;
+    height: 64px;
     padding-inline: 16px;
     background: var(--color-surface);
     border-bottom: 1px solid var(--color-bordure);
@@ -874,7 +824,7 @@
   .app-principal {
     flex: 1;
     width: 100%;
-    max-width: 1200px;
+    max-width: var(--spacing-app);
     margin-inline: auto;
     padding: 20px 16px calc(96px + env(safe-area-inset-bottom));
   }
@@ -891,28 +841,50 @@
     border-top: 1px solid var(--color-bordure);
   }
 
-  .app-nav-mobile a {
+  .app-nav-mobile > a,
+  .app-nav-mobile > details > summary {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    min-height: 44px;
-    font-size: 0.6875rem;
-    font-weight: 500;
+    gap: 2px;
+    min-height: 56px;
+    font-size: 0.75rem;
+    font-weight: 600;
     color: var(--color-encre-faible);
     text-decoration: none;
+    list-style: none;
+    cursor: pointer;
   }
 
-  .app-nav-mobile a[aria-current="page"] {
+  .app-nav-mobile > details > summary::-webkit-details-marker { display: none; }
+
+  .app-nav-mobile > a[aria-current="page"],
+  .app-nav-mobile > details[data-actif="oui"] > summary {
     color: var(--color-accent);
     font-weight: 700;
+  }
+
+  /* « Plus » : liste sous forme de panneau ancré au-dessus de la barre. */
+  .app-plus-panneau {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: calc(72px + env(safe-area-inset-bottom));
+    z-index: 31;
+    display: grid;
+    gap: 2px;
+    padding: 8px;
+    border: 1px solid var(--color-bordure);
+    border-radius: var(--radius-carte);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-flottant);
   }
 
   @media (min-width: 768px) {
     .app-coque {
       display: grid;
-      grid-template-columns: 208px minmax(0, 1fr);
+      grid-template-columns: 88px minmax(0, 1fr);
     }
 
     .app-barre {
@@ -922,13 +894,24 @@
       flex-direction: column;
       height: 100dvh;
       overflow-y: auto;
-      padding: 24px 12px 16px;
+      padding: 20px 8px 16px;
       background: var(--color-surface);
       border-right: 1px solid var(--color-bordure);
     }
 
+    /* Rail : libellé court sous l'icône, rien de masqué au clavier. */
+    .app-barre .lien-barre {
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px 4px;
+      font-size: 0.75rem;
+      text-align: center;
+    }
+
+    .app-barre .barre-detail { display: none; }
+
     .app-entete {
-      height: 80px;
+      height: 72px;
       padding-inline: 24px;
       gap: 12px;
     }
@@ -940,6 +923,32 @@
     .app-nav-mobile,
     .app-seulement-mobile {
       display: none !important;
+    }
+  }
+
+  @media (min-width: 1100px) {
+    .app-coque {
+      grid-template-columns: 224px minmax(0, 1fr);
+    }
+
+    .app-barre {
+      padding: 24px 16px 16px;
+    }
+
+    .app-barre .lien-barre {
+      flex-direction: row;
+      gap: 12px;
+      padding: 10px 12px;
+      font-size: 0.9375rem;
+      text-align: left;
+    }
+
+    .app-barre .barre-detail { display: block; }
+    .app-barre .barre-rail { display: none; }
+
+    .app-entete,
+    .app-principal {
+      padding-inline: 32px;
     }
   }
 
@@ -956,37 +965,10 @@
     }
   }
 
-  @media (min-width: 1280px) {
-    .app-coque {
-      grid-template-columns: 240px minmax(0, 1fr);
-    }
-
-    .app-barre {
-      padding-inline: 16px;
-    }
-
-    .app-entete,
-    .app-principal {
-      padding-inline: 40px;
-    }
-  }
-
-  @media (min-width: 768px) {
-    .app-coque .champ {
-      font-size: 0.875rem;
-    }
-  }
-
   .app-coque .bouton {
-    font-size: 0.8125rem;
-    min-height: 40px;
-    padding-inline: 16px;
-  }
-
-  @media (max-width: 640px), (pointer: coarse) {
-    .app-coque .bouton {
-      min-height: 44px;
-    }
+    font-size: 0.9375rem;
+    min-height: 44px;
+    padding-inline: 18px;
   }
 
   .marque-study {
@@ -1007,9 +989,9 @@
     gap: 12px;
     min-height: 44px;
     padding: 10px 12px;
-    border-radius: 9px;
+    border-radius: var(--radius-champ);
     color: var(--color-encre-faible);
-    font-weight: 500;
+    font-weight: 600;
     text-decoration: none;
     transition: background-color 140ms ease, color 140ms ease;
   }
@@ -1021,9 +1003,11 @@
 
   .lien-barre[aria-current="page"] {
     background: var(--color-rose-clair);
-    color: var(--color-accent-fonce);
-    font-weight: 600;
+    color: var(--color-encre);
+    font-weight: 700;
   }
+
+  .lien-barre[aria-current="page"] svg { color: var(--color-accent); }
 
   .compteur {
     margin-left: auto;
@@ -1118,8 +1102,8 @@
   }
 
   .meta {
-    font-size: 0.75rem;
-    line-height: 1.125rem;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
     color: var(--color-encre-faible);
   }
 
@@ -1359,4 +1343,40 @@
   }
   /* Le champ actif reste visible au-dessus du clavier et de la barre d'adresse. */
   .champ-acces { scroll-margin-block: 96px; }
+}
+
+/* ===========================================================================
+   Vitrine R2 — sélecteur de matière de démonstration (L03).
+   Boutons radio natifs : clavier et sans script ; le panneau suit par CSS.
+   =========================================================================== */
+@layer components {
+  .exemple-matiere > span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: 16px;
+    border: 1px solid var(--color-bordure-forte);
+    border-radius: 999px;
+    background: var(--color-surface);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+  }
+  .exemple-matiere > input:checked + span {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: #fff;
+  }
+  .exemple-matiere > input:focus-visible + span {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  .exemple-panneau { display: none; }
+  .exemple-matieres:has(input[value="maths"]:checked) [data-matiere="maths"],
+  .exemple-matieres:has(input[value="histoire"]:checked) [data-matiere="histoire"],
+  .exemple-matieres:has(input[value="anglais"]:checked) [data-matiere="anglais"] { display: block; }
+  @supports not selector(:has(*)) {
+    .exemple-panneau[data-matiere="maths"] { display: block; }
+  }
 }

@@ -76,7 +76,10 @@ export default async function PageConnexion({
   const fin = p.fin === "1" || p.fin === "partout";
 
   return (
-    <CadreConnexion titre="Retrouve ta classe." sousTitre="Connecte-toi à ton espace Study.">
+    <CadreConnexion
+      titre={contexte ? "Connecte-toi à Study." : "Quel est ton établissement ?"}
+      sousTitre={contexte ? undefined : "Étape 1 sur 2 — ton identifiant n'existe que dans ton établissement."}
+    >
       {fin ? <NettoyageApresDeconnexion /> : null}
       <Messages motif={p.motif} fin={p.fin} invitation={p.invitation} sessionInutilisable={personne !== null} />
 
@@ -97,10 +100,6 @@ export default async function PageConnexion({
         </>
       ) : (
         <>
-          <p className="m-0 mb-5 text-[0.9375rem]">
-            <span className="font-semibold">Étape 1 sur 2.</span> Trouve ton établissement : ton identifiant n&apos;existe que dans
-            celui-ci.
-          </p>
           <FormulaireEtablissement suite={suite} codeInitial={normaliserCode(p.etablissement ?? p.code)} />
         </>
       )}
