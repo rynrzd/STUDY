@@ -51,16 +51,16 @@
 // =============================================================================
 
 import { writeFileSync, readFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
-import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import pg from "pg";
 import { RACINE, chargerEnv, titre } from "./_commun.mjs";
+import { capturerStructureComptes, capturerTable, empreinte, tablesACapturer } from "./sauvegarde-donnees.mjs";
 
 chargerEnv();
 
 const SCHEMAS = ["study", "study_prive"];
 
-const empreinte = (texte) => createHash("sha256").update(texte, "utf8").digest("hex");
 
 function connexion() {
   const url = (process.env.WORKER_DATABASE_URL ?? "").trim();
@@ -68,9 +68,11 @@ function connexion() {
     console.error("WORKER_DATABASE_URL absente de l environnement.");
     process.exit(1);
   }
+  // Base locale de répétition : pas de TLS sur 127.0.0.1.
+  const locale = ["127.0.0.1", "localhost"].includes(new URL(url).hostname);
   return new pg.Client({
     connectionString: url,
-    ssl: { rejectUnauthorized: false },
+    ssl: locale ? false : { rejectUnauthorized: false },
     application_name: "sauvegarde-production",
     // Une table de plusieurs milliers de lignes ne doit pas expirer.
     statement_timeout: 120_000,
@@ -96,17 +98,30 @@ async function listerTables(sql) {
 async function sauvegarder() {
   const sql = connexion();
   await sql.connect();
+  const avecComptes = process.argv.includes("--avec-comptes");
+  // Un instantané unique : toutes les tables vues au même instant, même si
+  // des élèves écrivent pendant la capture. Lecture seule.
+  await sql.query("begin isolation level repeatable read read only");
 
   const horodatage = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
   const dossier = path.join(RACINE, "sauvegardes", horodatage);
   const dossierDonnees = path.join(dossier, "donnees");
   mkdirSync(dossierDonnees, { recursive: true });
+  // Données réelles d'élèves : dossier lisible par l'utilisateur courant seul.
+  if (process.platform === "win32") {
+    execFileSync("icacls", [dossier, "/inheritance:r", "/grant:r", `${process.env.USERNAME}:(OI)(CI)F`], { stdio: "ignore" });
+  } else {
+    execFileSync("chmod", ["700", dossier]);
+  }
 
   const manifeste = {
     horodatage: new Date().toISOString(),
     // Ni l'hôte ni l'utilisateur : ils identifient le projet.
     base: (await sql.query("select current_database() as nom")).rows[0].nom,
     version: (await sql.query("select version() as v")).rows[0].v.split(" ").slice(0, 2).join(" "),
+    // 2 : lignes rendues par PostgreSQL (to_jsonb), restauration exacte.
+    format: 2,
+    comptes: avecComptes,
     fichiers: [],
     totaux: { tables: 0, lignes: 0 },
   };
@@ -125,18 +140,26 @@ async function sauvegarder() {
 
   console.log("\nDonnees");
 
-  const tables = await listerTables(sql);
+  const tables = await tablesACapturer(sql, { avecComptes });
   for (const { schema, table } of tables) {
-    // Le nom vient de `pg_class`, pas d'une entrée : il est déjà sûr. On le
-    // met quand même entre guillemets, par habitude et parce qu'un nom
-    // réservé casserait la requête sans prévenir.
-    const { rows } = await sql.query(`select * from "${schema}"."${table}"`);
+    // Le nom vient de `pg_class`, pas d'une entrée : il est déjà sûr.
+    const texte = await capturerTable(sql, schema, table);
+    const lignes = JSON.parse(texte).length;
     const nom = path.join("donnees", `${schema}.${table}.json`);
-    ajouter(nom, JSON.stringify(rows, null, 1), rows.length);
+    ajouter(nom, texte, lignes);
     manifeste.totaux.tables += 1;
-    manifeste.totaux.lignes += rows.length;
-    if (rows.length > 0) console.log(`  ${`${schema}.${table}`.padEnd(46)} ${rows.length}`);
+    manifeste.totaux.lignes += lignes;
+    if (lignes > 0) console.log(`  ${`${schema}.${table}`.padEnd(46)} ${lignes}`);
   }
+  if (avecComptes) {
+    const structure = await capturerStructureComptes(sql);
+    ajouter("structure-comptes.json", JSON.stringify(structure, null, 1), structure.tables.length);
+  }
+  // Niveau de migration : la base de recette doit être migrée jusque-là avant restauration.
+  const { rows: suivi } = await sql.query("select to_regclass('public.study_migrations_appliquees') is not null as e");
+  manifeste.migrations = suivi[0].e ? (await sql.query("select nom from public.study_migrations_appliquees order by nom")).rows.map((r) => r.nom) : null;
+  console.log(`  Niveau de migration : ${manifeste.migrations ? manifeste.migrations.at(-1) : "inconnu (table de suivi absente)"}`);
+  if (!avecComptes) console.log("  Comptes (auth) NON captures : relancer avec --avec-comptes pour une sauvegarde restaurable avec connexions.");
   console.log(`  ${tables.length} table(s), ${manifeste.totaux.lignes} ligne(s) au total.`);
 
   /* --- 2. Les définitions ---------------------------------------------- */
@@ -270,6 +293,7 @@ async function sauvegarder() {
   const texteManifeste = JSON.stringify(manifeste, null, 1);
   writeFileSync(path.join(dossier, "manifeste.json"), texteManifeste, "utf8");
 
+  await sql.query("commit");
   await sql.end();
 
   console.log("\n" + "-".repeat(72));
