@@ -6,8 +6,8 @@ import { enregistrerPreference, usePreference } from "./mouvement";
 
 const CHOIX: readonly { valeur: PreferenceEffets; libelle: string; aide: string }[] = [
   { valeur: "auto", libelle: "Automatique", aide: "Suit le réglage « réduire les animations » de ton appareil." },
-  { valeur: "reduits", libelle: "Réduits", aide: "Pas de rotation, de parallaxe ni de déplacement : les changements sont immédiats." },
-  { valeur: "desactives", libelle: "Désactivés", aide: "Aucune animation ni scène 3D ; les illustrations restent fixes." },
+  { valeur: "reduits", libelle: "Réduits", aide: "Ni déplacement ni fondu : les changements sont immédiats." },
+  { valeur: "desactives", libelle: "Désactivés", aide: "Aucune animation, y compris les transitions de couleur." },
 ];
 
 /**

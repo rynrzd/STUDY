@@ -138,20 +138,20 @@ function espacesDisponibles(ctx: ContexteApp): { espace: Espace; href: string; l
 function SelecteurClasse({ ctx }: { ctx: ContexteApp }) {
   if (ctx.contextes.length < 2) return null;
   return (
-    <form action={changerClasse} className="mt-2 flex items-center gap-1.5">
+    <form action={changerClasse} className="mt-3 grid gap-1.5">
       <input type="hidden" name="retour" value={ctx.chemin} />
       <label className="sr-only" htmlFor="selecteur-classe">
         Classe affichée
       </label>
-      <select id="selecteur-classe" name="classe" defaultValue={ctx.classeActive?.classe} className="champ min-h-[40px] py-1 text-[0.875rem]">
+      <select id="selecteur-classe" name="classe" defaultValue={ctx.classeActive?.classe} className="champ min-h-[40px] w-full py-1 text-[0.875rem]">
         {ctx.contextes.map((c) => (
           <option key={c.classe} value={c.classe}>
             {c.libelle} · {c.role === "professeur" ? "enseignant" : c.role === "delegue" ? "délégué" : "élève"}
           </option>
         ))}
       </select>
-      <button type="submit" className="bouton bouton-secondaire bouton-compact">
-        Changer
+      <button type="submit" className="bouton bouton-secondaire bouton-compact w-full">
+        Afficher cette classe
       </button>
     </form>
   );
