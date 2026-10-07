@@ -101,8 +101,12 @@ export async function creerStructureComptes(sql, structure) {
   }
 }
 
-/** Les lignes d'une table, rendues par PostgreSQL en JSONB (texte exact). */
+/**
+ * Les lignes d'une table, rendues par PostgreSQL en JSONB (texte exact).
+ * Fuseau de session fixé à UTC : le texte ne dépend pas du serveur.
+ */
 export async function capturerTable(sql, schema, table) {
+  await sql.query("set timezone to 'UTC'");
   const { rows } = await sql.query(`select to_jsonb(x)::text as r from "${schema}"."${table}" x order by 1`);
   return `[${rows.map((l) => l.r).join(",\n")}]`;
 }
@@ -151,6 +155,9 @@ async function ordonner(sql, tables) {
 export async function restaurer(sql, dossier, { journal = () => {} } = {}) {
   const manifeste = JSON.parse(readFileSync(path.join(dossier, "manifeste.json"), "utf8"));
   const format = manifeste.format ?? 1;
+  // Les horodatages sont rendus dans le fuseau de la session : capture et
+  // comparaison se font en UTC, quel que soit le réglage du serveur.
+  await sql.query("set timezone to 'UTC'");
 
   for (const f of manifeste.fichiers) {
     const contenu = readFileSync(path.join(dossier, f.fichier), "utf8");
@@ -168,15 +175,23 @@ export async function restaurer(sql, dossier, { journal = () => {} } = {}) {
   // Une table déjà remplie n'est acceptée que si les migrations y ont posé
   // exactement les lignes sauvegardées (données de référence) : elle est
   // alors laissée telle quelle. Toute autre table doit être vide.
-  const ecartsAvec = async (cible, texte) =>
-    (
+  // Comparaison sur les colonnes stockées de la cible : une colonne générée
+  // (auth.users.confirmed_at, auth.identities.email chez Supabase) se déduit
+  // des autres et n'est pas recréée hors Supabase.
+  const ecartsAvec = async (cible, texte) => {
+    const { rows: cols } = await sql.query(
+      "select array_agg(attname::text) as c from pg_attribute where attrelid = $1::regclass and attnum > 0 and not attisdropped and attgenerated = ''",
+      [cible],
+    );
+    return (
       await sql.query(
-        `select count(*)::int as n from jsonb_array_elements($1::jsonb) b(v)
-           full join (select to_jsonb(x) as r from ${cible} x) t on t.r = b.v
-          where t.r is null or b.v is null`,
-        [texte],
+        `with b as (select (select jsonb_object_agg(key, value) from jsonb_each(v) where key = any($2)) as v from jsonb_array_elements($1::jsonb) e(v)),
+              t as (select (select jsonb_object_agg(key, value) from jsonb_each(to_jsonb(x)) where key = any($2)) as r from ${cible} x)
+         select count(*)::int as n from b full join t on t.r = b.v where t.r is null or b.v is null`,
+        [texte, cols[0].c],
       )
     ).rows[0].n;
+  };
   const deReference = new Set();
   for (const t of tables) {
     const cible = `"${t.schema}"."${t.table}"`;

@@ -102,6 +102,8 @@ async function sauvegarder() {
   // Un instantané unique : toutes les tables vues au même instant, même si
   // des élèves écrivent pendant la capture. Lecture seule.
   await sql.query("begin isolation level repeatable read read only");
+  // Horodatages rendus en UTC : la restauration compare le texte exact.
+  await sql.query("set local timezone to 'UTC'");
 
   const horodatage = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
   const dossier = path.join(RACINE, "sauvegardes", horodatage);
