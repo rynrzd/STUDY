@@ -61,16 +61,20 @@ const PUBLIQUES = [
 ];
 
 // Pages ouvertes mais hors index : elles doivent repondre, sans etre referencees.
-const OUVERTES_NON_INDEXEES = ["/connexion", "/mot-de-passe-oublie"];
+const OUVERTES_NON_INDEXEES = ["/connexion", "/acces-oublie"];
 
 const RESSOURCES = ["/robots.txt", "/sitemap.xml", "/manifest.webmanifest", "/icon", "/opengraph-image"];
 const REDIRECTIONS = [["/fonctionnalites", "/produit"], ["/demo", "/etablissements"],
-  ["/mes-cours", "/eleve"], ["/etablissement", "/admin"], ["/etablissement/import", "/admin/import"],
-  ["/apres-connexion", "/app"]];
+  ["/mes-cours", "/app"], ["/etablissement", "/admin"], ["/etablissement/import", "/admin/import"],
+  ["/apres-connexion", "/app"],
+  // V6 : l'espace élève est /app ; les anciennes adresses y sont redirigées
+  // définitivement, puis /app renvoie vers la connexion sans session.
+  ["/eleve", "/app"], ["/eleve/cours", "/app/cours"], ["/eleve/devoirs", "/app/devoirs"],
+  ["/mot-de-passe-oublie", "/acces-oublie"]];
 const PRIVEES = ["/administration", "/administration/etablissements", "/administration/journal",
   "/admin", "/admin/classes", "/admin/utilisateurs", "/admin/import",
   "/professeur", "/professeur/classes", "/professeur/devoirs",
-  "/eleve", "/eleve/cours", "/eleve/devoirs", "/eleve/entraide",
+  "/app/cours", "/app/devoirs", "/app/entraide",
   "/studio", "/professeur/studio", "/parametres", "/app", "/activation"];
 
 /**
@@ -277,8 +281,9 @@ async function verifierMiseEnPage() {
   verifier(jeton("spacing-cible", "44px"), "cible tactile de 44 px");
   verifier(jeton("text-h1", "3\.875rem"), "H1 desktop a 62 px");
   verifier(jeton("text-h1-mobile", "2\.625rem"), "H1 mobile a 42 px");
-  verifier(jeton("color-accent", "#a43760"), "rose AvecStudy comme couleur d accent");
-  verifier(jeton("color-surlignage", "#f7dfeb"), "rose de surlignage du hero");
+  // Teintes de la refonte V6 (a414378, src/styles/globals.css) : rose-ink.
+  verifier(jeton("color-accent", "#81445b"), "rose AvecStudy comme couleur d accent");
+  verifier(jeton("color-surlignage", "#f6dce6"), "rose de surlignage du hero");
   verifier(css.includes("prefers-reduced-motion"), "mouvement reduit respecte");
   verifier(/overflow-x:\s*clip/.test(css), "la regle anti-debordement est posee");
 
@@ -419,9 +424,12 @@ async function verifierSecurite() {
 
 async function trouverFeuilleDeStyle() {
   const html = await (await demander("/")).text();
-  const lien = /<link rel="stylesheet" href="([^"]+)"/.exec(html)?.[1];
-  if (lien === undefined) return "";
-  return (await fetch(new URL(lien, BASE), { headers: ENTETES })).text();
+  // Depuis experimental.inlineCss (next.config.ts), la feuille est servie dans
+  // des balises <style> de la page, plus par un <link> : on lit les deux.
+  const enLigne = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n");
+  const liens = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map((m) => m[1]);
+  const externes = await Promise.all(liens.map(async (l) => (await fetch(new URL(l, BASE), { headers: ENTETES })).text()));
+  return [enLigne, ...externes].join("\n");
 }
 
 principal().catch((erreur) => {
