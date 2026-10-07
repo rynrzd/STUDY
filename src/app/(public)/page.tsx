@@ -13,7 +13,6 @@ import { ApercuEntraide, ApercuProfesseur } from "@/components/site/ApercusVivan
 import { Faq, Onglets } from "@/components/site/Onglets";
 import { MARQUE } from "@/lib/identite-legale";
 import { ObservateurApparitions } from "@/components/study/mouvement";
-import { RubanStudy } from "@/components/study/ruban/RubanStudy";
 import { IntroLanding } from "@/components/study/intro/IntroLanding";
 
 export const metadata: Metadata = pagePublique({
@@ -46,91 +45,48 @@ export default function PageAccueil() {
   return (
     <main id="contenu">
       <ObservateurApparitions />
-      {/* V7 — introduction 3D pilotée par le défilement, greffée avant les
-          sections existantes, qui restent inchangées. */}
-      <IntroLanding
-        apercu={
-          <>
-            <p className="m-0 mb-2 text-center text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)]">Aperçu fictif de l&apos;espace élève</p>
-            <FragmentsEleve />
-          </>
-        }
-      />
-      {/* -- L02 — Hero ---------------------------------------------------- */}
-      <section id="apres-intro" className="relative z-10 scroll-mt-20 pt-14 pb-0 sm:pt-20">
-        <div className="contenu-site grid min-w-0 items-center gap-8 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-14">
-          {/* Entrée du texte : opacité et 12 px, chaque bloc à son tour. Rien n’attend le ruban. */}
-          <div className="entree-texte">
-            <h1 className="m-0 text-[length:var(--text-h1-etroit)] leading-[var(--text-h1-etroit--line-height)] tracking-[-0.03em] min-[390px]:text-[length:var(--text-h1-mobile)] min-[390px]:leading-[var(--text-h1-mobile--line-height)] lg:text-[length:var(--text-h1)] lg:leading-[var(--text-h1--line-height)]">
-              La classe.
-              <br />
-              <span className="surligne surligne-anime">Tout simplement.</span>
-            </h1>
+      {/* -- Hero unique (cahier « corrections de la landing ») : logo, ruban,
+          message, accès, puis « Tout ce qu'il faut pour avancer. ». Il absorbe
+          l'ancien hero « La classe. Tout simplement. » : même message, mêmes
+          destinations (connexion, découverte, équipement d'un lycée). */}
+      <IntroLanding />
 
-            <p className="m-0 mt-6 max-w-[38ch] text-[length:var(--text-grand)] leading-[var(--text-grand--line-height)] text-[color:var(--color-encre-faible)]">
-              Le cours, les devoirs et l&apos;entraide, au même endroit.
-            </p>
-
-            <div className="mt-8 flex flex-wrap items-center gap-5">
-              <Link href="#fonctionnement" className="bouton bouton-primaire">
-                Découvrir {MARQUE}
+      {/* -- L02 — L'aperçu de l'espace élève, une seule fois, sans second hero
+          ni ruban. Cible du lien « Passer ». */}
+      <section id="apres-intro" aria-labelledby="apres-intro-titre" className="bande bande-rose scroll-mt-20">
+        <div className="contenu-site grid min-w-0 items-center gap-8 py-14 sm:py-20 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
+          <div>
+            <h2
+              id="apres-intro-titre"
+              tabIndex={-1}
+              className="m-0 text-[length:var(--text-h2-mobile)] leading-[var(--text-h2-mobile--line-height)] tracking-[-0.02em] outline-none sm:text-[length:var(--text-h2-large)] sm:leading-[var(--text-h2-large--line-height)]"
+            >
+              Des lycées plus unis, pour des élèves plus sereins.
+            </h2>
+            <p className="m-0 mt-6">
+              <Link href="#fonctionnement" className="lien-fleche">
+                Découvrir la plateforme
                 <span aria-hidden="true" className="fleche">→</span>
               </Link>
-              <Link
-                href="/etablissements"
-                className="inline-flex min-h-[var(--spacing-cible)] items-center text-[length:var(--text-corps)] text-[color:var(--color-encre)]"
-              >
-                Équiper mon lycée
-              </Link>
-            </div>
+            </p>
           </div>
 
-          {/* Deux compositions, pas une redimensionnée. Sous 1024 pixels, des
-              fragments à la taille du pouce — ce que l'élève a aujourd'hui, ce
-              qu'il lui reste à faire — sans barre latérale ni cadre de fenêtre.
-              Au-dessus, la fenêtre reprend sa place et descend sur la bande
-              rose, comme dans la référence. */}
-          <div className="relative lg:pt-[170px]">
-            {/* Le ruban Study : derrière l’aperçu, à droite, jamais devant un texte
-                ou un bouton. Scène 3D sur ordinateur seulement ; image fixe sinon. */}
-            <RubanStudy
-              composition="grande"
-              className="ruban-controle-haut absolute right-0 -top-6 z-0 hidden h-[340px] w-[430px] lg:block"
-            />
-            <RubanStudy composition="grande" className="mx-auto -mb-2 h-[170px] w-full max-w-[320px] lg:hidden" controle={false} />
-            <div className="relative z-[1] lg:w-[84%]">
-            {/* La mention est discrète, mais elle est au-dessus de l'aperçu et
-                non en dessous : quelqu'un qui découvre le produit doit savoir
-                avant de lire que ces noms et ces devoirs ne sont l'espace de
-                personne. */}
+          <div className="min-w-0">
+            {/* La mention précède l'aperçu : ces noms et ces devoirs ne sont
+                l'espace de personne. Sur téléphone, des fragments à la taille
+                du pouce plutôt qu'un tableau de bord réduit. */}
             <p className="m-0 mb-2 text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)]">
               Aperçu fictif de l&apos;espace élève
             </p>
-
             <div className="lg:hidden">
               <FragmentsEleve />
             </div>
-            <div className="hidden lg:-mb-24 lg:block">
+            <div className="hidden lg:block">
               <ApercuEleve />
-            </div>
             </div>
           </div>
         </div>
       </section>
-
-      <div className="bande bande-rose mt-12 sm:mt-16">
-        <div className="contenu-site py-9 lg:pb-28">
-          <span
-            aria-hidden="true"
-            className="block h-px w-6 bg-[color:var(--color-accent)]"
-          />
-          <p className="m-0 mt-3 max-w-[36ch] text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)] text-[color:var(--color-encre-faible)]">
-            Des lycées plus unis,
-            <br />
-            pour des élèves plus sereins.
-          </p>
-        </div>
-      </div>
 
       {/* -- L03 — Trois situations ---------------------------------------- */}
       <section id="fonctionnement" className="apparition scroll-mt-24 py-12 sm:py-20">

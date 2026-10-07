@@ -31,14 +31,18 @@ const BYPASS = process.env.VERCEL_AUTOMATION_BYPASS_SECRET ?? "";
  * immédiatement quel paragraphe du cahier relire.
  */
 const REPERES = [
+  // En-tête et hero unique : cahier « corrections de la landing » (7 octobre
+  // 2026), §5 à §8 — il remplace l'introduction empilée sur l'ancien hero.
   ["L01", "La plateforme"],
   ["L01", "Pour les lycées"],
   ["L01", "Demander une démo"],
-  ["L02", "La classe."],
-  ["L02", "Tout simplement."],
-  ["L02", "Le cours, les devoirs et l'entraide, au même endroit."],
-  ["L02", "Découvrir AvecStudy"],
+  ["L01", "Se connecter"],
+  ["L02", "Ta classe,"],
+  ["L02", "tout simplement."],
+  ["L02", "Les cours, les devoirs et l'entraide, au même endroit."],
+  ["L02", "Découvrir la plateforme"],
   ["L02", "Équiper mon lycée"],
+  ["L02", "Tout ce qu'il faut pour avancer."],
   ["L02", "Des lycées plus unis"],
   ["L03", "En cours. À la maison. Toujours la même classe."],
   ["L03", "Sur ordinateur"],
@@ -149,7 +153,8 @@ async function principal() {
   // ne doit apparaitre qu a l interieur de l enveloppe reservee au grand
   // ecran : si elle la precede, c est qu un panneau desktop est rendu sur
   // telephone.
-  const enveloppe = brut.indexOf("hidden lg:-mb-24 lg:block");
+  // Depuis le hero unique, l'aperçu vit dans la section #apres-intro.
+  const enveloppe = brut.indexOf('class="hidden lg:block"', brut.indexOf('id="apres-intro"'));
   const laterale = brut.indexOf("w-[84px]");
 
   verifier(enveloppe >= 0, "la fenetre d apercu a une enveloppe reservee au grand ecran");

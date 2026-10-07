@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
-import { MARQUE } from "@/lib/identite-legale";
+import { MotSymbole } from "./MotSymbole";
 
 /**
  * En-tête du site public — L01.
  *
- * Blanc, 72 px, mot-symbole à gauche, deux liens, deux actions. Sur téléphone,
- * la navigation se replie derrière un bouton : elle ne doit jamais recouvrir le
- * titre du hero, qui est la première chose qu'on vient lire.
+ * Blanc, 64 px (60 sur téléphone), logo « study. » à gauche, deux liens,
+ * deux actions. La connexion est visible à toutes les largeurs — sur
+ * téléphone, un bouton à côté du menu, pas seulement dans le menu (cahier
+ * landing §6-7). La démonstration reste trouvable, en second.
  *
  * Le menu se ferme avec Échap et rend le focus au bouton — sans quoi on y reste
  * enfermé au clavier.
@@ -82,7 +83,7 @@ export function Entete() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-[color:var(--color-bordure)] bg-[color:var(--color-surface)]">
-      <div className="contenu-site flex h-[72px] items-center justify-between gap-6">
+      <div className="contenu-site flex h-[60px] items-center justify-between gap-4 md:h-16 md:gap-6">
         {/* Le mot-symbole et les deux liens forment un seul groupe à gauche :
             c'est la composition de la référence, et elle se lit mieux qu'une
             navigation centrée qui flotte entre deux blocs. */}
@@ -91,9 +92,9 @@ export function Entete() {
             href="/"
             /* La marque est le lien de retour a l accueil : sur telephone elle se
                touche, donc elle a la hauteur d une cible (V5 §11). */
-            className="marque inline-flex min-h-[var(--spacing-cible)] items-center text-[1.375rem] no-underline"
+            className="inline-flex min-h-[var(--spacing-cible)] items-center text-[color:var(--color-encre)] no-underline"
           >
-            {MARQUE}.
+            <MotSymbole titre="Study, accueil" className="block h-auto w-[90px] md:w-[104px]" />
           </Link>
 
           <nav aria-label="Navigation principale" className="hidden items-center gap-7 md:flex">
@@ -109,18 +110,22 @@ export function Entete() {
           </nav>
         </div>
 
-        <div className="hidden items-center gap-4 md:flex">
+        <div className="hidden items-center gap-5 md:flex">
           <Link
-            href="/connexion"
-            className="text-[length:var(--text-tableau)] text-[color:var(--color-encre)] no-underline"
+            href="/etablissements"
+            className="text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)] no-underline transition-colors duration-[120ms] hover:text-[color:var(--color-encre)]"
           >
-            Se connecter
-          </Link>
-          <Link href="/etablissements" className="bouton bouton-primaire bouton-compact">
             Demander une démo
+          </Link>
+          <Link href="/connexion" className="bouton bouton-primaire bouton-compact">
+            Se connecter
           </Link>
         </div>
 
+        <div className="flex items-center gap-2 md:hidden">
+        <Link href="/connexion" className="bouton bouton-primaire bouton-compact">
+          Connexion
+        </Link>
         <button
           ref={bouton}
           type="button"
@@ -134,6 +139,7 @@ export function Entete() {
             {ouvert ? "✕" : "☰"}
           </span>
         </button>
+        </div>
       </div>
 
       <div
@@ -154,16 +160,9 @@ export function Entete() {
             </Link>
           ))}
           <Link
-            href="/connexion"
-            onClick={() => fermer()}
-            className="flex min-h-[var(--spacing-cible)] items-center text-[length:var(--text-corps)] no-underline"
-          >
-            Se connecter
-          </Link>
-          <Link
             href="/etablissements"
             onClick={() => fermer()}
-            className="bouton bouton-primaire mt-2"
+            className="bouton bouton-secondaire mt-2"
           >
             Demander une démo
           </Link>

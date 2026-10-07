@@ -64,24 +64,41 @@ const CADRAGES: Record<Composition, { camera: [number, number, number]; fov: num
   fragment: { camera: [0, 0, 8.2], fov: 36, rotation: [0.45, -0.7, -0.35], echelle: 1.05 },
 };
 
-export function geometrieRuban(T: typeof TroisType): TroisType.BufferGeometry {
+/**
+ * Forme du ruban. Les valeurs par défaut sont celles du ruban des pages
+ * connexion et accueil élève ; l'introduction de la landing passe un chemin
+ * plus ouvert et une section de satin plus plate et plus fine.
+ */
+export interface FormeRuban {
+  readonly chemin?: readonly (readonly [number, number, number])[];
+  readonly largeur?: number;
+  readonly epaisseur?: number;
+  readonly torsion?: number;
+  readonly segments?: number;
+  readonly tour?: number;
+  readonly clair?: number;
+  readonly soutenu?: number;
+}
+
+export function geometrieRuban(T: typeof TroisType, forme: FormeRuban = {}): TroisType.BufferGeometry {
   const courbe = new T.CatmullRomCurve3(
-    CHEMIN.map(([x, y, z]) => new T.Vector3(x, y, z)),
+    (forme.chemin ?? CHEMIN).map(([x, y, z]) => new T.Vector3(x, y, z)),
     false,
     "centripetal",
   );
-  const segments = 260;
-  const tour = 28;
+  const segments = forme.segments ?? 260;
+  const tour = forme.tour ?? 28;
   const reperes = courbe.computeFrenetFrames(segments, false);
   const positions: number[] = [];
   const couleurs: number[] = [];
   // Nacre : du rose presque blanc au rose framboise doux, le long du ruban.
-  const clair = new T.Color(0xf6cbda);
-  const soutenu = new T.Color(0xc4628a);
+  const clair = new T.Color(forme.clair ?? 0xf6cbda);
+  const soutenu = new T.Color(forme.soutenu ?? 0xc4628a);
   const teinte = new T.Color();
   const indices: number[] = [];
-  const largeur = 0.4;
-  const epaisseur = 0.13;
+  const largeur = forme.largeur ?? 0.4;
+  const epaisseur = forme.epaisseur ?? 0.13;
+  const tours = forme.torsion ?? 0.95;
   const lisse = (a: number, b: number, x: number) => {
     const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
     return t * t * (3 - 2 * t);
@@ -94,7 +111,7 @@ export function geometrieRuban(T: typeof TroisType): TroisType.BufferGeometry {
     courbe.getPointAt(t, p);
     // Extrémités affinées : le ruban naît et s'efface, sans bord coupé net.
     const fuseau = 0.18 + 0.82 * lisse(0, 0.12, t) * lisse(1, 0.88, t);
-    const torsion = Math.PI * 0.95 * t + 0.35 * Math.sin(t * Math.PI * 2);
+    const torsion = Math.PI * tours * t + 0.35 * Math.sin(t * Math.PI * 2);
     const c = Math.cos(torsion);
     const s = Math.sin(torsion);
     const N = reperes.normals[i]!;
