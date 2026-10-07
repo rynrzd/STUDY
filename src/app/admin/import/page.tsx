@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EtapesImport } from "@/components/admin/EtapesImport";
 import { redirect } from "next/navigation";
 import { DepotRentree } from "@/components/admin/DepotRentree";
 import { contexte } from "@/lib/etablissement";
@@ -27,7 +28,7 @@ export default async function PageImport() {
 
   return (
     <div className="max-w-[72rem]">
-      <h1 className="text-[length:var(--text-h1-app)] leading-[var(--text-h1-app--line-height)]">
+      <h1 className="titre-page m-0">
         Import de rentrée
       </h1>
       <p className="m-0 mt-2 max-w-[70ch] text-[color:var(--color-encre-faible)]">
@@ -36,6 +37,7 @@ export default async function PageImport() {
         reconnues, lignes à corriger — et rien ne sera créé tant que vous
         n&apos;aurez pas validé.
       </p>
+      <EtapesImport courante={1} />
 
       <section aria-labelledby="titre-eleves" className="mt-10">
         <h2

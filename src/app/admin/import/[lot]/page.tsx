@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EtapesImport } from "@/components/admin/EtapesImport";
 import { notFound, redirect } from "next/navigation";
 import { VerificationRentree } from "@/components/admin/VerificationRentree";
 import { contexte } from "@/lib/etablissement";
@@ -39,13 +40,14 @@ export default async function PageVerification({
         >
           ← Imports
         </Link>
-        <h1 className="mt-2 text-[length:var(--text-h1-app)] leading-[var(--text-h1-app--line-height)]">
+        <h1 className="mt-2 titre-page m-0">
           Vérifier avant de créer
         </h1>
         <p className="m-0 mt-2 max-w-[70ch] text-[color:var(--color-encre-faible)]">
           Relisez ce qui a été compris de vos fichiers. Corrigez ce qui doit
           l&apos;être. Les comptes ne seront créés qu&apos;au dernier bouton.
         </p>
+        <EtapesImport courante={2} />
       </div>
 
       <div className="mt-8">

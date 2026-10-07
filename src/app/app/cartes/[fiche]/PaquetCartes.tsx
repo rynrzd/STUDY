@@ -83,10 +83,9 @@ export function PaquetCartes({ fiche, cartes }: { fiche: string; cartes: readonl
       <p className="meta m-0 mb-3" aria-live="polite">
         Carte {index + 1} sur {cartes.length}
       </p>
-      {/* Retournement sur l'axe vertical (brief §3) : les deux faces occupent la
-          même cellule de grille, la carte prend la hauteur de la plus haute —
-          aucun texte coupé. La face cachée est retirée de l'arbre
-          d'accessibilité ; le nom du bouton est la face visible. */}
+      {/* R2 : carte à plat. Les deux faces occupent la même cellule de grille,
+          la carte prend la hauteur de la plus haute — aucun texte coupé. La
+          face cachée est retirée de l'arbre d'accessibilité. */}
       <div className="carte-memoire" data-retournee={retournee ? "oui" : "non"} key={index}>
         <button
           ref={zone}
@@ -99,11 +98,11 @@ export function PaquetCartes({ fiche, cartes }: { fiche: string; cartes: readonl
             <span className="carte-memoire-face carte-memoire-recto bg-[color:var(--color-rose-clair)]" aria-hidden={retournee}>
               <span>
                 <span className="block font-[family-name:var(--font-titre)] text-[1.375rem] font-semibold leading-[1.45]">{carte!.recto}</span>
-                <span className="meta mt-5 block">Appuie pour retourner (Entrée ou Espace)</span>
+                <span className="meta mt-5 block">Touche la carte ou « Voir la réponse »</span>
               </span>
             </span>
             <span
-              className="carte-memoire-face carte-memoire-verso border border-[color:var(--color-rose-moyen)] bg-[color:var(--color-surface)]"
+              className="carte-memoire-face carte-memoire-verso border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)]"
               aria-hidden={!retournee}
             >
               <span>
@@ -125,14 +124,23 @@ export function PaquetCartes({ fiche, cartes }: { fiche: string; cartes: readonl
           {erreur}
         </p>
       ) : null}
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        <button type="button" className="bouton bouton-secondaire" disabled={!retournee || envoi} onClick={() => void noter("a_revoir")}>
-          À revoir
-        </button>
-        <button type="button" className="bouton bouton-primaire" disabled={!retournee || envoi} onClick={() => void noter("je_savais")}>
-          Je savais
-        </button>
-      </div>
+      {/* Autoévaluation seulement après révélation (cahier §07). */}
+      {retournee ? (
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <button type="button" className="bouton bouton-secondaire bouton-grand" disabled={envoi} onClick={() => void noter("a_revoir")}>
+            À revoir
+          </button>
+          <button type="button" className="bouton bouton-primaire bouton-grand" disabled={envoi} onClick={() => void noter("je_savais")}>
+            Je savais
+          </button>
+        </div>
+      ) : (
+        <div className="mt-5">
+          <button type="button" className="bouton bouton-primaire bouton-grand w-full" onClick={() => setRetournee(true)}>
+            Voir la réponse
+          </button>
+        </div>
+      )}
     </div>
   );
 }
