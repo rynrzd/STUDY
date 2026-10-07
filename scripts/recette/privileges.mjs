@@ -91,6 +91,140 @@ const EXECUTABLES_PAR_AUTHENTICATED = new Set([
   // deuxième maillon avait été manqué au premier essai, et c'est exactement ce
   // que la section 3 de ce contrôle calcule maintenant toute seule.
   "unaccent_fallback",
+
+  // --- V6 et V7 (0045 à 0060), relevées le 7 octobre 2026 après la mise en
+  // production du schéma : chacune a un appelant, vérifié un par un.
+
+  // Appelées par les politiques RLS des tables V6.
+  "anime_vie_de_classe",
+  "enseigne_classe",
+  "membre_classe",
+  "orientation_partagee_avec_moi",
+  "orientation_proprietaire",
+  "projet_membre",
+  "recherche_lisible",
+  "responsable_classe",
+  "revcol_participant",
+  "salon_animateur",
+  "salon_lisible",
+
+  // Appelées par l'application avec le jeton de la personne (`.rpc(...)` de
+  // src/, ou par nom dans src/app/app/classes/actions.ts). Les fonctions
+  // privilégiées parmi elles relisent l'appelant par `current_user_id()`.
+  "agenda_periode",
+  "annee_apercu",
+  "annee_basculer",
+  "annee_creer_classe",
+  "annee_eleves_sans_classe",
+  "annee_preinscrire_classe",
+  "annee_preparer",
+  "atelier_etat",
+  "atelier_repondre",
+  "bibliotheque_proposer",
+  "bibliotheque_statut",
+  "carnet_annoter",
+  "carnet_lire",
+  "carte_avis",
+  "classe_annuler_demande",
+  "classe_creer_code",
+  "classe_decider_demande",
+  "classe_demandes_a_traiter",
+  "classe_mes_demandes",
+  "classe_rejoindre",
+  "classe_retirer_eleve",
+  "classe_revoquer_codes",
+  "consultation_creer",
+  "consultation_etat",
+  "consultation_modifier_synthese",
+  "consultation_ouverte",
+  "consultation_participation",
+  "consultation_preparer_synthese",
+  "consultation_publier_synthese",
+  "consultation_repondre",
+  "decision_changer",
+  "decision_creer",
+  "demande_clore",
+  "demande_destinataires",
+  "demande_ouvrir",
+  "demande_repondre",
+  "entrainement_etat",
+  "entrainement_ouvrir",
+  "est_delegue",
+  "est_professeur_principal",
+  "exercice_ajouter_a_seance",
+  "exercice_publier",
+  "exercices_de_la_seance",
+  "fiche_annuler",
+  "fiche_creer",
+  "fiche_lire",
+  "fiche_modifier",
+  "invitation_creer",
+  "invitation_revoquer",
+  "invitations_de_classe",
+  "membres_classe",
+  "mes_contextes",
+  "mes_cours",
+  "mes_salons",
+  "noms_affichables",
+  "note_enregistrer",
+  "notification_lue",
+  "orientation_modifier",
+  "orientation_partager",
+  "projet_archiver",
+  "projet_creer",
+  "projet_editeur",
+  "projet_inviter",
+  "projet_note_ajouter",
+  "projet_repondre",
+  "projet_retirer",
+  "projet_tache_creer",
+  "projet_tache_modifier",
+  "projet_tache_supprimer",
+  "recherche",
+  "recherche_vocabulaire",
+  "recuperation_a_traiter",
+  "recuperation_traiter",
+  "revcol_annuler",
+  "revcol_creer",
+  "revcol_inscrire",
+  "revision_agregats",
+  "revision_aide",
+  "revision_tenter",
+  "revision_variante",
+  "salon_accuser",
+  "salon_changer_mode",
+  "salon_compteurs",
+  "salon_envoyer",
+  "salon_epingler",
+  "salon_joindre",
+  "salon_masquer",
+  "salon_meme_question",
+  "salon_modifier",
+  "salon_supprimer",
+  "seances_textes_disponibles",
+
+  // Appelées depuis d'autres fonctions ou politiques évaluées avec les droits
+  // de l'appelant (années scolaires, lectures d'affichage de 0053).
+  "annee_organisation_admin",
+  "personne_proche",
+  // API élève prévue pour « Débloque-moi » (quelles aides existent pour une
+  // question), testée dans tests/db/v6-revision.test.mjs ; pas encore appelée
+  // par l'écran. Ne rend que deux booléens.
+  "revision_aides_disponibles",
+]);
+
+/**
+ * Fonctions privilégiées qui reçoivent un profil en paramètre, et pourquoi ce
+ * n'est pas une usurpation : le paramètre désigne la personne **visée**,
+ * l'auteur est relu du jeton et son droit vérifié avant toute écriture.
+ * Vérifié corps par corps le 7 octobre 2026.
+ */
+const CIBLES_ADMISES = new Map([
+  ["classe_retirer_eleve", "eleve retire ; auteur verifie par responsable_classe(p_classe)"],
+  ["invitation_creer", "personne invitee ; auteur verifie par is_org_admin, et refus si p_profile = current_user_id()"],
+  ["invitation_revoquer", "personne dont l invitation est revoquee ; auteur verifie par is_org_admin"],
+  ["projet_inviter", "membre invite ; auteur = proprietaire du projet (current_user_id)"],
+  ["projet_retirer", "membre retire ; auteur = proprietaire, ou la personne elle-meme"],
 ]);
 
 /**
@@ -366,7 +500,7 @@ try {
   // une fonction privilégiée, ouverte au navigateur, qui accepte **qui** elle
   // doit servir au lieu de le relire du jeton.
   const identite = /p_(profile|profil|eleve|moderateur|acteur|auteur|utilisateur|proprietaire|profils)/;
-  const usurpation = definer.filter((f) => f.ouverte && identite.test(f.args));
+  const usurpation = definer.filter((f) => f.ouverte && identite.test(f.args) && !CIBLES_ADMISES.has(f.proname));
   verifier(
     usurpation.length === 0,
     "aucune fonction privilegiee n accepte une identite depuis une session",

@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 import { ACTEURS, appliquerMigrations, baseDeTest, doitEchouer, lirePourAdmin } from "./harness.mjs";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
-const RETOURS = ["retour-0060.sql", "retour-0059-0058.sql"].map((f) => path.resolve(ICI, "..", "..", "supabase", "retour-arriere", f));
+const RETOURS = ["retour-0061.sql", "retour-0060.sql", "retour-0059-0058.sql"].map((f) => path.resolve(ICI, "..", "..", "supabase", "retour-arriere", f));
 const empreinte = (s) => createHash("sha256").update(s).digest();
 
 const definitions = async (db) =>

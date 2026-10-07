@@ -23,7 +23,7 @@ import { engendrer, lireCatalogue } from "../../scripts/engendrer-retour-arriere
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const RETOUR = (f) => path.resolve(ICI, "..", "..", "supabase", "retour-arriere", f);
-const ORDRE = ["retour-0060.sql", "retour-0059-0058.sql", "retour-0057-0045.sql"];
+const ORDRE = ["retour-0061.sql", "retour-0060.sql", "retour-0059-0058.sql", "retour-0057-0045.sql"];
 const empreinte = (s) => createHash("sha256").update(s).digest();
 
 /** Empreinte du contenu de chaque table existant en 0044, ligne par ligne. */

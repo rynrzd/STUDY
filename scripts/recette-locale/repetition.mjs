@@ -107,8 +107,8 @@ const avantMigration = await contenu(rec, tables0044);
 // --- 4. Migrations 0045 → 0060 sur les données restaurées -------------------------
 console.log("\n4. Migrations 0045 a 0060");
 const t0 = Date.now();
-const temps = await migrer(rec, "0044", "0060");
-dire(true, `16 migrations appliquees en ${Date.now() - t0} ms : ${temps.join(" ")}`);
+const temps = await migrer(rec, "0044", "0061");
+dire(true, `${temps.length} migrations appliquees en ${Date.now() - t0} ms : ${temps.join(" ")}`);
 const apresMigration = await contenu(rec, tables0044);
 const modifiees = Object.keys(avantMigration).filter((k) => avantMigration[k] !== apresMigration[k]);
 dire(modifiees.length === 0, `donnees des tables 0044 modifiees par les migrations : ${modifiees.join(", ") || "aucune"}`);
@@ -189,7 +189,7 @@ console.log("\n7. Retour arriere complet (copie de la recette migree)");
 await rec.end();
 await admin.query("create database recette_retour template recette");
 const ret = await client("recette_retour");
-for (const f of ["retour-0060.sql", "retour-0059-0058.sql", "retour-0057-0045.sql"]) {
+for (const f of ["retour-0061.sql", "retour-0060.sql", "retour-0059-0058.sql", "retour-0057-0045.sql"]) {
   await ret.query(readFileSync(path.join(DEPOT, "supabase", "retour-arriere", f), "utf8"));
 }
 const catRetour = await lireCatalogue(ret);

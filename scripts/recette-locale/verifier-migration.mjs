@@ -79,8 +79,8 @@ console.log("\nMigration 0045 a 0060 (copie)");
 const mig = await client(`${base}_migree`);
 const t0 = Date.now();
 try {
-  const temps = await migrer(mig, "0044", "0060");
-  dire(true, `16 migrations en ${Date.now() - t0} ms (${temps.join(" ")})`);
+  const temps = await migrer(mig, "0044", "0061");
+  dire(true, `${temps.length} migrations en ${Date.now() - t0} ms (${temps.join(" ")})`);
 } catch (e) {
   dire(false, `migration : ${e.message}`);
   process.exit(1);
@@ -164,8 +164,8 @@ await mig.end();
 // --- Retour arrière ---------------------------------------------------------------
 console.log("\nRetour arriere complet (autre copie, migree puis ramenee)");
 const ret = await client(`${base}_retour`);
-await migrer(ret, "0044", "0060");
-for (const f of ["retour-0060.sql", "retour-0059-0058.sql", "retour-0057-0045.sql"]) {
+await migrer(ret, "0044", "0061");
+for (const f of ["retour-0061.sql", "retour-0060.sql", "retour-0059-0058.sql", "retour-0057-0045.sql"]) {
   await ret.query(readFileSync(path.join(DEPOT, "supabase", "retour-arriere", f), "utf8"));
 }
 const catRetour = await lireCatalogue(ret);
