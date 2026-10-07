@@ -189,7 +189,7 @@ async function verifierRoutes() {
 
   const corps404 = await introuvable.text();
   verifier(
-    corps404.includes("Cette page n") && corps404.includes("Accueil"),
+    corps404.includes("Cette page est introuvable") && corps404.includes("/connexion"),
     "la page 404 propose une sortie",
   );
 }
@@ -276,14 +276,15 @@ async function verifierMiseEnPage() {
   // Valeurs du systeme de design V2 (ch. 03). Elles sont verifiees sur la page
   // servie, pas sur la feuille de style : ce qui compte est ce qui arrive au
   // navigateur d un lycee, apres compilation et minification.
-  verifier(jeton("spacing-contenu", "1160px"), "conteneur de 1160 px");
-  verifier(jeton("spacing-app", "1320px"), "cadre applicatif de 1320 px");
+  // Jetons R2 (dossier « refonte complète, sans 3D », 7 octobre 2026, §02-03).
+  verifier(jeton("spacing-contenu", "1200px"), "conteneur de 1200 px");
+  verifier(jeton("spacing-app", "1280px"), "cadre applicatif de 1280 px");
   verifier(jeton("spacing-cible", "44px"), "cible tactile de 44 px");
-  verifier(jeton("text-h1", "3\.875rem"), "H1 desktop a 62 px");
-  verifier(jeton("text-h1-mobile", "2\.625rem"), "H1 mobile a 42 px");
+  verifier(jeton("text-h1", "4\.25rem"), "H1 desktop a 68 px");
+  verifier(jeton("text-h1-mobile", "2\.5rem"), "H1 mobile a 40 px");
   // Teintes de la refonte V6 (a414378, src/styles/globals.css) : rose-ink.
   verifier(jeton("color-accent", "#81445b"), "rose AvecStudy comme couleur d accent");
-  verifier(jeton("color-surlignage", "#f6dce6"), "rose de surlignage du hero");
+  verifier(jeton("color-surlignage", "#f5dce5"), "rose doux de la palette");
   verifier(css.includes("prefers-reduced-motion"), "mouvement reduit respecte");
   verifier(/overflow-x:\s*clip/.test(css), "la regle anti-debordement est posee");
 

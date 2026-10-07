@@ -13,11 +13,9 @@
 import assert from "node:assert/strict";
 import test, { after } from "node:test";
 import {
-  cliquerOnglet,
   estHydratee,
   fermerNavigateur,
   page,
-  panneauVisible,
 } from "./harness.mjs";
 
 after(fermerNavigateur);
@@ -42,119 +40,65 @@ test("H01 — la page d accueil s hydrate reellement", async () => {
   await onglet.close();
 });
 
-/* -------------------------------------------------------- §1.1 Situations -- */
+/* ------------------------------------------------ R2 — landing sans 3D ---- */
 
-test("L01 — les trois onglets d usage changent de panneau", async () => {
+test("L01 — un seul hero, sans scène 3D, message et accès visibles au premier rendu", async () => {
   const onglet = await page("/");
-  const groupe = "Situations d'usage";
+  assert.equal(await onglet.locator("h1").count(), 1, "un seul H1");
+  assert.equal(await onglet.locator("h1").innerText(), "Ta classe, tout simplement.");
+  assert.equal(await onglet.locator("canvas").count(), 0, "aucun canvas");
+  assert.equal(await onglet.getByText("Passer l'introduction").count(), 0, "aucun lien Passer");
+  assert.equal(await onglet.getByRole("link", { name: "Découvrir Study" }).getAttribute("href"), "#decouvrir");
+  const connexion = onglet.locator("main").getByRole("link", { name: "Se connecter" }).first();
+  assert.equal(await connexion.getAttribute("href"), "/connexion");
+  assert.equal(await connexion.isVisible(), true);
+  await onglet.close();
+});
 
-  const depart = await panneauVisible(onglet, groupe);
-  assert.equal(depart?.onglet, "Sur ordinateur", "« Sur ordinateur » est selectionne au depart");
-  assert.equal(depart?.visible, true);
-  assert.equal(depart?.autresPanneauxVisibles, 0, "un seul panneau a la fois");
+test("L02 — le sélecteur de matière change d'exemple, au clavier aussi", async () => {
+  const onglet = await page("/");
+  const visible = async () =>
+    onglet.evaluate(() => [...document.querySelectorAll(".exemple-panneau")].filter((n) => getComputedStyle(n).display !== "none").map((n) => n.getAttribute("data-matiere")));
+  assert.deepEqual(await visible(), ["maths"], "un seul panneau au départ");
+  await onglet.locator('input[name="exemple-matiere"][value="maths"]').focus();
+  await onglet.keyboard.press("ArrowRight");
+  await onglet.waitForTimeout(150);
+  assert.deepEqual(await visible(), ["histoire"], "la flèche passe à la matière suivante");
+  await onglet.locator("label.exemple-matiere", { hasText: "Anglais" }).click();
+  await onglet.waitForTimeout(150);
+  assert.deepEqual(await visible(), ["anglais"]);
+  await onglet.close();
+});
 
-  const vus = new Map([[depart.onglet, depart.texte]]);
-
-  for (const libelle of ["Sur papier", "À la maison"]) {
-    await cliquerOnglet(onglet, groupe, libelle);
-    const etat = await panneauVisible(onglet, groupe);
-
-    assert.equal(etat?.onglet, libelle, `« ${libelle} » devient l onglet selectionne`);
-    assert.equal(etat?.visible, true, `le panneau de « ${libelle} » est visible`);
-    assert.equal(etat?.autresPanneauxVisibles, 0, "jamais deux panneaux en meme temps");
-    assert.ok(etat.texte.length > 40, "le panneau porte un contenu");
-
-    for (const [autre, texte] of vus) {
-      assert.notEqual(
-        etat.texte,
-        texte,
-        `« ${libelle} » doit differer de « ${autre} », pas seulement changer de couleur`,
-      );
-    }
-    vus.set(libelle, etat.texte);
+test("L03 — sections du cahier R2, dans l'ordre", async () => {
+  const onglet = await page("/");
+  const titres = await onglet.locator("main h2").allInnerTexts();
+  const attendus = [
+    "Le bon cours. Au bon moment.",
+    "Une question ne devrait pas te bloquer.",
+    "Préparez une fois. Partagez à la bonne classe.",
+    "Votre établissement, simplement.",
+    "Les questions qu'on nous pose.",
+    "Une classe qui avance ensemble.",
+  ];
+  let position = -1;
+  for (const t of attendus) {
+    const i = titres.findIndex((x) => x.replace(/[’]/g, "'").trim() === t);
+    assert.ok(i > position, `« ${t} » présent et après la section précédente`);
+    position = i;
   }
-
   await onglet.close();
 });
 
-test("L02 — les fleches du clavier changent d onglet", async () => {
+test("L04 — la FAQ s'ouvre au clavier, lignes d'au moins 56 px", async () => {
   const onglet = await page("/");
-  const groupe = "Situations d'usage";
-
-  await onglet
-    .locator(`[role="tablist"][aria-label="${groupe}"] [role="tab"]`)
-    .first()
-    .focus();
-
-  await onglet.keyboard.press("ArrowRight");
-  await onglet.waitForTimeout(200);
-  assert.equal((await panneauVisible(onglet, groupe))?.onglet, "Sur papier");
-
-  await onglet.keyboard.press("ArrowRight");
-  await onglet.waitForTimeout(200);
-  assert.equal((await panneauVisible(onglet, groupe))?.onglet, "À la maison");
-
-  // Au bout, on revient au debut : c est ce qu attend un lecteur d ecran.
-  await onglet.keyboard.press("ArrowRight");
-  await onglet.waitForTimeout(200);
-  assert.equal((await panneauVisible(onglet, groupe))?.onglet, "Sur ordinateur");
-
-  await onglet.keyboard.press("ArrowLeft");
-  await onglet.waitForTimeout(200);
-  assert.equal((await panneauVisible(onglet, groupe))?.onglet, "À la maison");
-
-  await onglet.close();
-});
-
-/* ------------------------------------------------------- §1.2 Mes classes -- */
-
-test("L03 — Seconde 1 et Seconde 2 montrent des donnees differentes", async () => {
-  const onglet = await page("/");
-  const groupe = "Mes classes";
-
-  const premiere = await panneauVisible(onglet, groupe);
-  assert.equal(premiere?.onglet, "Seconde 1");
-  assert.match(premiere.texte, /Chapitre 3/, "Seconde 1 porte son chapitre");
-
-  await cliquerOnglet(onglet, groupe, "Seconde 2");
-  const seconde = await panneauVisible(onglet, groupe);
-
-  assert.equal(seconde?.onglet, "Seconde 2", "aria-selected suit le clic");
-  assert.notEqual(seconde.texte, premiere.texte, "le contenu change vraiment");
-  assert.match(seconde.texte, /Chapitre 2/, "Seconde 2 porte un autre chapitre");
-  assert.equal(seconde.autresPanneauxVisibles, 0);
-
-  await cliquerOnglet(onglet, groupe, "Seconde 1");
-  assert.equal((await panneauVisible(onglet, groupe))?.texte, premiere.texte, "le retour marche");
-
-  await onglet.close();
-});
-
-/* ---------------------------------------------------- §1.3 Vue du devoir -- */
-
-test("L04 — Devoir, Ma copie et Entraide sont trois panneaux distincts", async () => {
-  const onglet = await page("/");
-  const groupe = "Vue du devoir";
-
-  const textes = new Map();
-
-  for (const libelle of ["Devoir", "Ma copie", "Entraide"]) {
-    await cliquerOnglet(onglet, groupe, libelle);
-    const etat = await panneauVisible(onglet, groupe);
-
-    assert.equal(etat?.onglet, libelle);
-    assert.equal(etat?.visible, true);
-    assert.equal(etat?.autresPanneauxVisibles, 0);
-    textes.set(libelle, etat.texte);
-  }
-
-  assert.match(textes.get("Devoir"), /rendre/i, "le devoir porte une echeance");
-  assert.match(textes.get("Ma copie"), /brouillon|remis|enregistr/i, "la copie porte son etat");
-  assert.match(textes.get("Entraide"), /\?/, "l entraide porte une question");
-
-  const distincts = new Set(textes.values());
-  assert.equal(distincts.size, 3, "les trois panneaux different");
-
+  const resume = onglet.locator("details[name='faq'] > summary").first();
+  const boite = await resume.boundingBox();
+  assert.ok(boite && boite.height >= 56, "ligne interactive d'au moins 56 px");
+  await resume.focus();
+  await onglet.keyboard.press("Enter");
+  await onglet.waitForTimeout(250);
+  assert.equal(await onglet.locator("details[name='faq']").first().evaluate((d) => d.open), true);
   await onglet.close();
 });
 
@@ -286,7 +230,8 @@ test("D01 — la demonstration est annoncee comme fictive", async () => {
   const onglet = await page("/");
   const texte = await onglet.evaluate(() => document.body.innerText);
 
-  assert.match(texte, /Aperçu fictif de l'espace élève/, "la mention accompagne l apercu");
+  assert.match(texte, /Exemple de présentation/, "la mention accompagne l apercu du hero");
+  assert.match(texte, /Exemple illustratif/, "les autres exemples sont nommes comme tels");
   assert.equal(
     /Bonjour Rayan/.test(texte),
     false,

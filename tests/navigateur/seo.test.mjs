@@ -34,7 +34,7 @@ const PUBLIQUES = [
 ];
 
 /** Les pages qui n'ont rien à faire dans un index. */
-const PRIVEES = ["/connexion", "/mot-de-passe-oublie"];
+const PRIVEES = ["/connexion", "/acces-oublie"];
 
 async function metadonnees(chemin) {
   const reponse = await fetch(`${BASE}${chemin}`, { redirect: "manual" });

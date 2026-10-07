@@ -39,8 +39,8 @@ function espionnerEnvois(onglet) {
 
 test("C01 — sans établissement : étape 1, titre et liens des parcours", async () => {
   const onglet = await ouvrir("/connexion");
-  assert.equal(await onglet.locator("h1").innerText(), "Retrouve ta classe.");
-  assert.match(await onglet.locator("main").innerText(), /Connecte-toi à ton espace Study\./);
+  assert.equal(await onglet.locator("h1").innerText(), "Quel est ton établissement ?");
+  assert.match(await onglet.locator("main").innerText(), /Étape 1 sur 2/);
   assert.equal(await onglet.locator("#code-etablissement").count(), 1);
   assert.equal(await onglet.getByRole("link", { name: "Activer mon accès" }).getAttribute("href"), "/activer");
   assert.equal(await onglet.getByRole("link", { name: "Rejoindre ma classe" }).getAttribute("href"), "/rejoindre");

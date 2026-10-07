@@ -31,34 +31,38 @@ const BYPASS = process.env.VERCEL_AUTOMATION_BYPASS_SECRET ?? "";
  * immédiatement quel paragraphe du cahier relire.
  */
 const REPERES = [
-  // En-tête et hero unique : cahier « corrections de la landing » (7 octobre
-  // 2026), §5 à §8 — il remplace l'introduction empilée sur l'ancien hero.
+  // Landing R2 (dossier « refonte complète, sans 3D », 7 octobre 2026, §04).
   ["L01", "La plateforme"],
   ["L01", "Pour les lycées"],
-  ["L01", "Demander une démo"],
   ["L01", "Se connecter"],
+  ["L01", "Demander une démo"],
+  ["L02", "L'espace de ta classe"],
   ["L02", "Ta classe,"],
   ["L02", "tout simplement."],
-  ["L02", "Les cours, les devoirs et l'entraide, au même endroit."],
-  ["L02", "Découvrir la plateforme"],
-  ["L02", "Équiper mon lycée"],
-  ["L02", "Tout ce qu'il faut pour avancer."],
-  ["L02", "Des lycées plus unis"],
-  ["L03", "En cours. À la maison. Toujours la même classe."],
-  ["L03", "Sur ordinateur"],
-  ["L03", "Sur papier"],
-  ["L03", "À la maison"],
-  ["L04", "Votre séance est prête."],
-  ["L04", "Votre classe aussi."],
-  ["L04", "Voir le côté professeur"],
-  ["L06", "On avance mieux ensemble."],
-  ["L07", "La rentrée commence avec votre liste de classe."],
-  ["L08", "Faut-il un ordinateur par élève ?"],
-  ["L08", "Qui finance la plateforme ?"],
-  ["L08", "Comment installer AvecStudy dans mon lycée ?"],
-  ["L09", "Et si on commençait par votre lycée ?"],
-  ["L09", "Demander une démonstration"],
-  ["L09", "Mentions légales"],
+  ["L02", "Tes cours, le travail à faire et les échanges de ta classe. Enfin au même endroit."],
+  ["L02", "Découvrir Study"],
+  ["L02", "Exemple de présentation"],
+  ["L03", "01 / Retrouver"],
+  ["L03", "Le bon cours. Au bon moment."],
+  ["L03", "Découvrir les cours"],
+  ["L04", "02 / Échanger"],
+  ["L04", "Une question ne devrait pas te bloquer."],
+  ["L05", "03 / Transmettre"],
+  ["L05", "Préparez une fois. Partagez à la bonne classe."],
+  ["L05", "Voir l'espace professeur"],
+  ["L06", "Votre établissement, simplement."],
+  ["L06", "Pour mon établissement"],
+  ["L06", "Importer la liste"],
+  ["L06", "Vérifier les classes"],
+  ["L06", "Préparer les accès"],
+  ["L07", "Les questions qu'on nous pose."],
+  ["L07", "Faut-il un ordinateur par élève ?"],
+  ["L07", "Qui finance Study ?"],
+  ["L07", "Comment démarrer ?"],
+  ["L08", "Une classe qui avance ensemble."],
+  ["L08", "Demander une démonstration"],
+  ["L08", "Déjà un accès ? Se connecter"],
+  ["L08", "Mentions légales"],
 ];
 
 /** Ce qui ne doit apparaître nulle part sur la vitrine (ch. 02, L06). */
@@ -137,32 +141,11 @@ async function principal() {
   // controle de position suffit : la fenetre doit venir apres son enveloppe
   // `hidden lg:block`, et aucune barre laterale ne doit la preceder.
   // ---------------------------------------------------------------------
-  console.log("\nLe hero sur telephone (V5 §2.2, §2.4)");
-
+  console.log("\nLe hero (R2, L02)");
   const brut = await (await fetch(`${BASE}/`, { headers: entetes })).text();
-
-  const fragments = /class="[^"]*lg:hidden[^"]*"/.test(brut);
-  verifier(fragments, "des fragments propres au telephone existent", "aucun bloc lg:hidden");
-
-  verifier(
-    html.includes(normaliser("Aujourd'hui")) && html.includes(normaliser("À faire")),
-    "les fragments nomment « Aujourd hui » et « A faire »",
-  );
-
-  // La barre laterale de la fenetre d apercu porte cette largeur fixe. Elle
-  // ne doit apparaitre qu a l interieur de l enveloppe reservee au grand
-  // ecran : si elle la precede, c est qu un panneau desktop est rendu sur
-  // telephone.
-  // Depuis le hero unique, l'aperçu vit dans la section #apres-intro.
-  const enveloppe = brut.indexOf('class="hidden lg:block"', brut.indexOf('id="apres-intro"'));
-  const laterale = brut.indexOf("w-[84px]");
-
-  verifier(enveloppe >= 0, "la fenetre d apercu a une enveloppe reservee au grand ecran");
-  verifier(
-    laterale < 0 || (enveloppe >= 0 && laterale > enveloppe),
-    "aucune barre laterale de bureau avant cette enveloppe",
-    laterale < 0 ? "" : `barre laterale en position ${laterale}, enveloppe en ${enveloppe}`,
-  );
+  verifier(!/<canvas/i.test(brut), "aucun canvas dans le HTML servi");
+  verifier(!/Passer l.introduction/i.test(brut), "aucun lien « Passer l'introduction »");
+  verifier((brut.match(/<h1[\s>]/g) ?? []).length === 1, "un seul H1");
 
   console.log("\nCe qui ne doit pas s y trouver");
   for (const [nom, motif] of PROSCRITS) {

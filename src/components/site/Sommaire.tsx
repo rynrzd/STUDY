@@ -33,7 +33,8 @@ export function Sommaire() {
       h.style.scrollMarginTop = "96px";
       return { id, texte };
     });
-    setEntrees(liste);
+    const image = requestAnimationFrame(() => setEntrees(liste));
+    return () => cancelAnimationFrame(image);
   }, []);
 
   if (entrees.length < 2) return null;
