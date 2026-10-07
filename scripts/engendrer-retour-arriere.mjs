@@ -60,6 +60,13 @@ export async function lireCatalogue(db) {
     rls: await r(`select n.nspname s, c.relname t, c.relrowsecurity rls, c.relforcerowsecurity force
                     from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname = any($1) and c.relkind='r' order by 1,2`),
   };
+  // Fins de ligne : selon la machine, les migrations d'avant 0040 sont
+  // extraites en CRLF ou en LF (.gitattributes impose LF dans le dépôt). Un
+  // retour chariot dans le corps d'une fonction ne change rien à son
+  // comportement : il est neutralisé pour que la comparaison et le script
+  // engendré ne dépendent pas du poste.
+  const sansCR = (v) => (typeof v === "string" ? v.split(String.fromCharCode(13)).join("") : v);
+  for (const partie of Object.values(c)) for (const ligne of partie) for (const k of Object.keys(ligne)) ligne[k] = sansCR(ligne[k]);
   return c;
 }
 
