@@ -209,7 +209,7 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
           hidden={panneau !== "original"}
           className="lg:!block lg:sticky lg:top-24 lg:max-h-[calc(100dvh-160px)] lg:overflow-y-auto"
         >
-          <h2 className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.08em] text-[color:var(--color-encre-faible)]">
+          <h2 className="titre-bloc m-0 font-bold">
             Original
           </h2>
           {initial.fichierSource !== null ? (
@@ -241,7 +241,7 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
           hidden={panneau !== "reglages"}
           className="lg:!block lg:sticky lg:top-24"
         >
-          <h2 className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.08em] text-[color:var(--color-encre-faible)]">
+          <h2 className="titre-bloc m-0 font-bold">
             Présentation
           </h2>
 
@@ -479,7 +479,7 @@ function Blocs({
             className="rounded-[var(--radius-champ)] border border-[color:var(--color-bordure)] p-3"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-[length:var(--text-aide)] uppercase tracking-[0.06em] text-[color:var(--color-encre-tres-faible)]">
+              <span className="etiquette-etat" data-ton="rose">
                 {bloc.type}
                 {bloc.origine ? ` · page ${bloc.origine.page}` : ""}
               </span>

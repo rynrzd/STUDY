@@ -245,6 +245,7 @@ const ECRANS: Record<string, Ecran> = {
   A19b: { titre: "Demandes personnelles", ctx: ELEVE, chemin: "/app/demandes", rendu: () => <VueDemandes lignes={[...F.demandes]} noms={NOMS_FICTIFS} moi={CONTEXTE_FICTIF.personne.profileId} eleve /> },
   A20: { titre: "Réglages", ctx: ELEVE, chemin: "/app/reglages", rendu: () => <VueReglages onglet="compte" ctx={ELEVE} p={{}} initiales="CE" role="Élève" /> },
   A20b: { titre: "Réglages · affichage", ctx: ELEVE, chemin: "/app/reglages", rendu: () => <VueReglages onglet="affichage" ctx={ELEVE} p={{}} initiales="CE" role="Élève" /> },
+  A20c: { titre: "Réglages · confidentialité", ctx: ELEVE, chemin: "/app/reglages", rendu: () => <VueReglages onglet="donnees" ctx={ELEVE} p={{}} initiales="CE" role="Élève" /> },
   A21: { titre: "Hors ligne", ctx: ELEVE, chemin: "/app/hors-ligne", rendu: () => <PageHorsLigne /> },
   T01: {
     titre: "Accueil professeur",

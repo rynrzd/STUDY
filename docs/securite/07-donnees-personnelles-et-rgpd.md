@@ -120,7 +120,7 @@ l'outille.
 | Accès | Un élève voit dans son espace l'ensemble de ce qui le concerne : devoirs, remises, corrections, preuves de remise. Un administrateur d'établissement dispose d'un export des accès. |
 | Rectification | Les données d'identité proviennent de l'établissement et se corrigent par lui (écrans d'administration, import de rentrée). |
 | Effacement | Sur décision de l'établissement. Les suppressions passent par les écrans d'administration ; le journal d'audit en garde la trace. |
-| Portabilité | Export au format tableur des accès et des listes. **Point ouvert** : il n'existe pas aujourd'hui d'export complet, en un geste, de l'ensemble des données d'un élève — copies comprises. |
+| Portabilité | Export au format tableur des accès et des listes. **Depuis le 8 octobre 2026** (branche `refonte-r2`, non déployée) : chaque personne télécharge elle-même, en un geste, ses données au format JSON (« Réglages › Confidentialité », route `/app/reglages/export`), copies, versions et appréciations publiées comprises. Lectures sous sa session, vérifiées par `tests/db/export-personnel.test.mjs`. |
 | Opposition, limitation | À traiter par l'établissement au cas par cas. |
 
 > **Point ouvert, à inscrire au plan d'action.** L'export complet des données

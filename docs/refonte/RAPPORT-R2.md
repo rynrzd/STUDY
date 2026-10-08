@@ -11,24 +11,22 @@ Le rapport précédent annonçait **26 écrans « coque seule »** : A01, A04, A
 A08–A19, A21 (17), T01–T05 (5), D01, D03, D04, D05 (4). Sa liste « reste à faire »
 en nommait 27 parce qu'elle citait « personnes » (qui appartient à D02, alors
 partiellement fait) et comptait « les deux studios » (T02 couvre les deux routes).
-Ces 26 écrans ont tous été retravaillés dans ce lot : 22 entièrement, 4
-partiellement (A08, A13, T03, T05). Le détail par écran, avec les quatre
+Ces 26 écrans ont tous été retravaillés. Le détail par écran, avec les quatre
 statuts séparés, est dans `mapping.csv`.
 
 ## 2. Bilan par statut
 
 | Statut | Écrans |
 |---|---|
-| Présentation refaite en R2 | 38 |
-| Refaite partiellement | A08, A13, A22, T03, T05, D02 (6) — détail dans `mapping.csv` |
-| Héritée de la coque R2 sans recomposition propre | P04, P05, P06, P07, P09, P10, P11 (AuthShell de la maquette), P17 (gabarit public) — 8 |
+| Présentation refaite en R2 | 44 |
+| Reprennent la coque R2 sans mise en page propre | P04, P05, P06, P07, P09, P10, P11 (coque de connexion, comme le demande la lecture des maquettes), P17 (gabarit public) — 8 |
 | Fonction absente, non inventée | P08 (réinitialisation en libre-service) |
 | Actions raccordées | Toutes : mêmes actions serveur qu'avant, aucune logique métier modifiée |
 | Actions exercées de bout en bout | Aucune (voir §4) |
-| Vérification visuelle | 41 écrans capturés à 1440 et 390 px (`captures/`) ; non capturés : P04, P07, A22 (jeton ou session requis), P08 (absent) |
+| Vérification visuelle | 51 vues capturées à 1440 et 390 px, 102 captures sans défaut (`captures/resultats.json`) ; non capturés : P04, P07, A22 (jeton ou session requis), P08 (absent), éditeur de document de T03 (document importé requis) |
 | Parcours testé avec un vrai compte | **Aucun** |
 
-Le décompte 38 / 6 / 8 / 1 est recalculé depuis `mapping.csv` (colonne
+Le décompte 44 / 8 / 1 est recalculé depuis `mapping.csv` (colonne
 `presentation_refaite`) ; s'y reporter en cas d'écart.
 
 ## 3. Ce qui a été vérifié, et comment
@@ -53,3 +51,14 @@ ce poste n'a ni Docker ni Supabase local. La configuration isolée est prête
 chaîne Postgres). Avec lui, les parcours connectés, C02/C07/C08 et la recette
 connectée existante se jouent en local, sans toucher la production et sans
 désactiver la protection CSRF.
+
+## 5. Tentatives du 8 octobre 2026 pour lever le blocage
+
+- **Projet Supabase de recette** : l'organisation Supabase accessible
+  (plan gratuit, un seul projet actif) permettait d'en créer un sans coût. La
+  création a été **refusée par le garde-fou d'autorisation** de l'agent
+  (modification d'une ressource partagée) ; elle n'a pas été contournée. Le
+  projet de production de Study n'est pas dans cette organisation.
+- **Vercel** : le connecteur n'a pas accès à l'équipe qui héberge le projet
+  `study` (erreur 403) ; ni les variables de prévisualisation ni les
+  déploiements n'ont pu être lus.

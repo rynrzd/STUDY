@@ -159,8 +159,8 @@ export function VerificationRentree({
 
 function Compteurs({ lot }: { lot: LotComplet }) {
   return (
-    <>
-      <dl className="m-0 grid grid-cols-2 gap-4 sm:grid-cols-4">
+    <div>
+      <dl className="m-0 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Chiffre terme="Fichiers lus" valeur={lot.compte.fichiersLus} />
         <Chiffre
           terme="Fichiers rejetés"
@@ -184,7 +184,7 @@ function Compteurs({ lot }: { lot: LotComplet }) {
           première suffit, et créer la seconde ferait deux comptes pour une seule personne.
         </p>
       ) : null}
-    </>
+    </div>
   );
 }
 
@@ -622,7 +622,7 @@ function Chiffre({
   alerte?: boolean;
 }) {
   return (
-    <div>
+    <div className="rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-4">
       <dt className="m-0 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
         {terme}
       </dt>

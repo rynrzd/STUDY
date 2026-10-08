@@ -45,7 +45,7 @@
     certification, ni une homologation, ni un test d'intrusion indépendant.</p>
     <p>Nouh Tifouti — entrepreneur individuel — AvecStudy<br>
     SIREN 979 992 443 · 1 avenue d'Alsace, 90000 Belfort<br>
-    Document généré le 2026-09-23</p>
+    Document généré le 2026-10-08</p>
   </div>
 </div>
 <section class="doc" id="00-index">
@@ -345,7 +345,7 @@ tache_planifiee · purge_des_tentatives · moderation_des_signalements</code></p
 <blockquote><p><strong>Point à trancher avec le DPO.</strong> Une durée de conservation doit être <strong>déterminée</strong>, y compris pour un journal. « Conservé » n'est pas une durée. Il faut fixer une borne — trois ans, cinq ans, la durée de scolarité plus un an — et l'appliquer. C'est porté aux risques résiduels.</p></blockquote>
 <h2>Droits des personnes</h2>
 <p>L'établissement est l'interlocuteur des élèves et des familles. AvecStudy l'outille.</p>
-<table><thead><tr><th>Droit</th><th>Ce qui existe aujourd'hui</th></tr></thead><tbody><tr><td>Accès</td><td>Un élève voit dans son espace l'ensemble de ce qui le concerne : devoirs, remises, corrections, preuves de remise. Un administrateur d'établissement dispose d'un export des accès.</td></tr><tr><td>Rectification</td><td>Les données d'identité proviennent de l'établissement et se corrigent par lui (écrans d'administration, import de rentrée).</td></tr><tr><td>Effacement</td><td>Sur décision de l'établissement. Les suppressions passent par les écrans d'administration ; le journal d'audit en garde la trace.</td></tr><tr><td>Portabilité</td><td>Export au format tableur des accès et des listes. <strong>Point ouvert</strong> : il n'existe pas aujourd'hui d'export complet, en un geste, de l'ensemble des données d'un élève — copies comprises.</td></tr><tr><td>Opposition, limitation</td><td>À traiter par l'établissement au cas par cas.</td></tr></tbody></table>
+<table><thead><tr><th>Droit</th><th>Ce qui existe aujourd'hui</th></tr></thead><tbody><tr><td>Accès</td><td>Un élève voit dans son espace l'ensemble de ce qui le concerne : devoirs, remises, corrections, preuves de remise. Un administrateur d'établissement dispose d'un export des accès.</td></tr><tr><td>Rectification</td><td>Les données d'identité proviennent de l'établissement et se corrigent par lui (écrans d'administration, import de rentrée).</td></tr><tr><td>Effacement</td><td>Sur décision de l'établissement. Les suppressions passent par les écrans d'administration ; le journal d'audit en garde la trace.</td></tr><tr><td>Portabilité</td><td>Export au format tableur des accès et des listes. <strong>Depuis le 8 octobre 2026</strong> (branche <code>refonte-r2</code>, non déployée) : chaque personne télécharge elle-même, en un geste, ses données au format JSON (« Réglages › Confidentialité », route <code>/app/reglages/export</code>), copies, versions et appréciations publiées comprises. Lectures sous sa session, vérifiées par <code>tests/db/export-personnel.test.mjs</code>.</td></tr><tr><td>Opposition, limitation</td><td>À traiter par l'établissement au cas par cas.</td></tr></tbody></table>
 <blockquote><p><strong>Point ouvert, à inscrire au plan d'action.</strong> L'export complet des données d'un élève n'existe pas sous forme d'une commande unique. Les données sont toutes accessibles et exportables, mais l'opération demande aujourd'hui une intervention de l'éditeur. Pour un délai d'un mois, c'est tenable ; ce n'est pas satisfaisant.</p></blockquote>
 <h2>Minimisation, en pratique</h2>
 <p>Trois choix concrets, vérifiables :</p>
@@ -479,6 +479,7 @@ tache_planifiee · purge_des_tentatives · moderation_des_signalements</code></p
 <p>Par ordre de valeur décroissante, et sans prétendre que c'est en place :</p>
 <ol><li><strong>Une sonde de disponibilité externe</strong> sur <code>/</code> et sur <code>/connexion</code>, qui alerte par message. C'est le moins coûteux et le plus utile.</li><li><strong>Une alerte sur le bilan de la tâche planifiée</strong> : elle rend déjà le nombre de travaux traités et de tentatives purgées ; il suffirait de la faire crier quand la file stagne.</li><li><strong>Une alerte sur le compteur de balayage</strong>, qui existe désormais en base et qu'il suffirait de lire.</li><li>Un agrégateur de journaux hébergé en Europe, si la question des sous-traitants est traitée.</li></ol>
 <p>Ces quatre points sont le plan d'action de ce chapitre. Ils ne sont pas faits, et ce dossier ne prétend pas qu'ils le sont.</p>
+<blockquote><p><strong>Avancée du 8 octobre 2026</strong> (branche <code>refonte-r2</code>, non déployée) : la sonde <code>/api/v1/etat</code> existe. Sans secret, elle répond <code>200 {&quot;etat&quot;:&quot;ok&quot;}</code> si l'application et la base répondent, <code>503</code> sinon — de quoi brancher la recommandation 1. Avec <code>Authorization: Bearer &lt;CRON_SECRET&gt;</code>, elle ajoute le nombre de travaux en attente depuis plus de 15 minutes et d'échecs sur 24 h, et répond <code>503</code> si la file stagne — recommandation 2. <strong>Aucune sonde externe n'est encore branchée</strong> : il faut choisir un service (hébergé en Europe de préférence) et lui confier l'adresse. Tant que ce n'est pas fait, R-09 reste entier.</p></blockquote>
 <h2>Traçabilité côté établissement</h2>
 <p>Ce qu'un établissement peut établir aujourd'hui, sans l'éditeur :</p>
 <ul><li>qui a réinitialisé un accès, quand, et pour quel compte ;</li><li>qui a suspendu ou réactivé un compte ;</li><li>qui a modéré quel signalement ;</li><li>quelles classes et quels comptes ont été créés par un import de rentrée, avec le rapport de l'import.</li></ul>
@@ -846,11 +847,13 @@ tache_planifiee · purge_des_tentatives · moderation_des_signalements</code></p
 <h2>R-08 — Pas d'export complet des données d'un élève en un geste</h2>
 <p>Toutes les données d'un élève sont accessibles et exportables, mais rassembler l'ensemble — identité, inscriptions, remises, corrections, notes — demande aujourd'hui une intervention de l'éditeur.</p>
 <p>Pour un délai légal d'un mois, c'est tenable. Ce n'est pas satisfaisant, et c'est d'autant moins satisfaisant que R-01 rappelle que cette intervention dépend d'une seule personne.</p>
+<blockquote><p><strong>Réduit le 8 octobre 2026, une fois déployé</strong> (branche <code>refonte-r2</code>) : chaque personne télécharge elle-même ses données en JSON depuis ses réglages. Reste à la charge de l'éditeur : l'instantané complet d'un <strong>établissement</strong> (clause de réversibilité, <code>docs/vente/clause-reversibilite.md</code>).</p></blockquote>
 <hr>
 <h2>R-09 — Pas de supervision ni d'alerte automatique</h2>
 <p>Aucun service de surveillance d'erreurs tiers n'est branché, par choix : cela éviterait d'envoyer des traces d'exécution — qui peuvent contenir des fragments de données — à un destinataire de plus.</p>
 <p>Le revers est net : <strong>personne n'est prévenu automatiquement</strong> si le taux d'erreur monte, si la file de travaux cesse d'avancer, ou si un balayage de connexion est détecté. Le nouveau compteur de balayage (F-07) <strong>ralentit</strong> l'attaque ; il ne <strong>prévient</strong> personne.</p>
 <p>C'est le manque le plus structurant qui reste après cet audit. Voir <code>10-journalisation-et-alertes.md</code>.</p>
+<blockquote><p><strong>8 octobre 2026</strong> : la sonde <code>/api/v1/etat</code> existe (branche <code>refonte-r2</code>, non déployée). R-09 reste entier tant qu'aucune sonde externe ne l'interroge.</p></blockquote>
 <hr>
 <h2>R-10 — La tâche planifiée ne s'exécute qu'une fois par jour</h2>
 <p><code>vercel.json</code> programme le drain de la file à 3 h du matin. Un travail qui échoue n'est donc réessayé que le lendemain — et c'est aussi la fréquence à laquelle la purge des tentatives de connexion s'exécute.</p>

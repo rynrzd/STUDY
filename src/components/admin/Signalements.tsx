@@ -98,7 +98,7 @@ export function Signalements({ signalements }: { signalements: readonly Signalem
                   type="button"
                   aria-pressed={choisi?.id === l.id}
                   onClick={() => setSelection(l.id)}
-                  className={`ligne-r2 w-full cursor-pointer border-0 text-left ${choisi?.id === l.id ? "bg-[color:var(--color-rose-clair)]" : "bg-transparent hover:bg-[color:var(--color-surface-douce)]"}`}
+                  className={`ligne-r2 w-full cursor-pointer text-left ${choisi?.id === l.id ? "bg-[color:var(--color-rose-clair)]" : "bg-transparent hover:bg-[color:var(--color-surface-douce)]"}`}
                 >
                   <span className="tuile" aria-hidden="true">
                     {l.cible === "fil" ? <Flag size={20} strokeWidth={1.75} /> : l.cible === "message" ? <MessageCircle size={20} strokeWidth={1.75} /> : <MessageSquareReply size={20} strokeWidth={1.75} />}

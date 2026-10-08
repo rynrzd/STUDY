@@ -67,7 +67,7 @@ export function Publication({
       {choisi !== null ? <input type="hidden" name="cours" value={choisi} /> : null}
       {revue ? <input type="hidden" name="revue" value="oui" /> : null}
 
-      <h2 className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.08em] text-[color:var(--color-encre-faible)]">
+      <h2 className="titre-bloc m-0 font-bold">
         Publier dans
       </h2>
 

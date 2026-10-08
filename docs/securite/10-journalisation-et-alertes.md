@@ -102,6 +102,16 @@ Par ordre de valeur décroissante, et sans prétendre que c'est en place :
 Ces quatre points sont le plan d'action de ce chapitre. Ils ne sont pas faits, et
 ce dossier ne prétend pas qu'ils le sont.
 
+> **Avancée du 8 octobre 2026** (branche `refonte-r2`, non déployée) : la sonde
+> `/api/v1/etat` existe. Sans secret, elle répond `200 {"etat":"ok"}` si
+> l'application et la base répondent, `503` sinon — de quoi brancher la
+> recommandation 1. Avec `Authorization: Bearer <CRON_SECRET>`, elle ajoute le
+> nombre de travaux en attente depuis plus de 15 minutes et d'échecs sur 24 h, et
+> répond `503` si la file stagne — recommandation 2. **Aucune sonde externe n'est
+> encore branchée** : il faut choisir un service (hébergé en Europe de
+> préférence) et lui confier l'adresse. Tant que ce n'est pas fait, R-09 reste
+> entier.
+
 ## Traçabilité côté établissement
 
 Ce qu'un établissement peut établir aujourd'hui, sans l'éditeur :

@@ -181,6 +181,11 @@ Pour un délai légal d'un mois, c'est tenable. Ce n'est pas satisfaisant, et
 c'est d'autant moins satisfaisant que R-01 rappelle que cette intervention
 dépend d'une seule personne.
 
+> **Réduit le 8 octobre 2026, une fois déployé** (branche `refonte-r2`) : chaque
+> personne télécharge elle-même ses données en JSON depuis ses réglages. Reste
+> à la charge de l'éditeur : l'instantané complet d'un **établissement**
+> (clause de réversibilité, `docs/vente/clause-reversibilite.md`).
+
 ---
 
 ## R-09 — Pas de supervision ni d'alerte automatique
@@ -196,6 +201,9 @@ l'attaque ; il ne **prévient** personne.
 
 C'est le manque le plus structurant qui reste après cet audit. Voir
 `10-journalisation-et-alertes.md`.
+
+> **8 octobre 2026** : la sonde `/api/v1/etat` existe (branche `refonte-r2`, non
+> déployée). R-09 reste entier tant qu'aucune sonde externe ne l'interroge.
 
 ---
 

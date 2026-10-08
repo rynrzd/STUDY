@@ -76,7 +76,7 @@ export function SuiviTraitement({ document: id, titre }: { document: string; tit
 
   return (
     <div className="mt-6 max-w-[var(--spacing-lecture)]">
-      <h1 className="m-0 text-[length:var(--text-h1-app)] leading-[var(--text-h1-app--line-height)]">
+      <h1 className="titre-page m-0">
         {titre}
       </h1>
 

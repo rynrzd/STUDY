@@ -296,7 +296,7 @@ function BlocEditable({
       className="bloc border border-[color:var(--color-bordure)] p-4"
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <span className="text-[0.625rem] font-semibold uppercase tracking-[0.07em] text-[color:var(--color-encre-tres-faible)]">
+        <span className="etiquette-etat" data-ton="rose">
           {LIBELLES[bloc.kind] ?? bloc.kind}
         </span>
 

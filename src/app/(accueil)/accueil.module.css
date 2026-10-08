@@ -1,0 +1,127 @@
+/*
+ * Landing — copie conforme de `code/landing-reference.html` et `code/tokens.css`
+ * du dossier R2 (« refonte complète, sans 3D »). Mêmes valeurs, portée limitée à
+ * cette page (module CSS) pour ne concurrencer aucun style global.
+ */
+
+.page {
+  --page: #f8f7f9;
+  --surface: #fff;
+  --ink: #29282e;
+  --muted: #64616d;
+  --primary: #81445b;
+  --blush: #f9e7ed;
+  --rose: #f5dce5;
+  --rose-light: #fcf2f5;
+  --line: #e5dfe5;
+  --radius: 16px;
+  --content: 1200px;
+  --fast: 160ms;
+  min-height: 100vh;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-texte), Manrope, Arial, sans-serif;
+  line-height: 1.5;
+}
+
+.page * { box-sizing: border-box; }
+.page a { color: inherit; text-decoration: underline; }
+.page a.button,
+.page a.brand { text-decoration: none; }
+.page a:focus-visible,
+.page button:focus-visible,
+.page summary:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 4px;
+}
+.page h1,
+.page h2,
+.page h3,
+.page p { margin: 0; }
+.page h1,
+.page h2 {
+  font-family: var(--font-texte), Manrope, Arial, sans-serif;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+}
+.page h1 { font-size: clamp(40px, 4.8vw, 68px); }
+.page h2 { font-size: clamp(30px, 3.3vw, 46px); }
+.page h3 { font-size: 1.17em; font-weight: 700; letter-spacing: normal; }
+.page p { max-width: 60ch; }
+
+.button {
+  min-height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: white;
+  padding: 12px 20px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--fast);
+}
+.page a.button { color: white; }
+.page a.secondary { color: var(--primary); background: transparent; }
+.page a.button:hover { background: #69374a; color: white; }
+
+.wrap { width: min(var(--content), calc(100% - 64px)); margin-inline: auto; }
+.topbar { min-height: 72px; display: flex; align-items: center; gap: 28px; }
+.brand { font-size: 28px; font-weight: 800; letter-spacing: -0.06em; text-decoration: none; }
+.brand span { color: var(--primary); }
+.nav { display: flex; align-items: center; gap: 24px; margin-left: auto; }
+.section { padding-block: 88px; }
+.split { display: grid; grid-template-columns: 5fr 7fr; gap: 64px; align-items: center; }
+.copy { display: grid; gap: 24px; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.muted { color: var(--muted); }
+.panel { padding: 32px; border-radius: 24px; }
+.rose { background: var(--rose); }
+.blush { background: var(--blush); }
+.roseLight { background: var(--rose-light); }
+.card { padding: 24px; background: white; border: 1px solid var(--line); border-radius: var(--radius); }
+.stack { display: grid; gap: 16px; }
+.row { padding-block: 14px; border-bottom: 1px solid var(--line); }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.number { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--blush); margin-bottom: 16px; }
+.cta { background: var(--primary); color: white; }
+.page .cta a.button { background: white; color: var(--primary); }
+.page details { border-bottom: 1px solid var(--line); padding: 20px 0; }
+.page summary { cursor: pointer; font-weight: 700; min-height: 28px; }
+.page details p { margin-top: 16px; }
+.footer { padding: 40px 0; }
+.footer .wrap { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
+.sample { font-size: 12px; color: var(--muted); }
+.white { background: white; }
+.primaryText { color: var(--primary); }
+
+@media (max-width: 767px) {
+  .wrap { width: calc(100% - 40px); }
+  .topbar { min-height: 64px; gap: 16px; }
+  .topbar .nav { gap: 16px; }
+  .desktop { display: none; }
+  .section { padding-block: 48px; }
+  .split,
+  .steps { grid-template-columns: 1fr; gap: 32px; }
+  .panel { padding: 20px; border-radius: 18px; }
+  .card { padding: 20px; }
+  .actions .button { flex: 1; }
+  .page h1 { font-size: 40px; }
+  .cta .split { gap: 24px; }
+  .footer .wrap { align-items: flex-start; flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page *,
+  .page *::before,
+  .page *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

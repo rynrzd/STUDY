@@ -264,7 +264,9 @@ async function verifierMiseEnPage() {
 
     // Les cibles tactiles : les boutons du systeme de design portent .bouton,
     // qui impose 44 px. On verifie qu aucun lien d action ne s en affranchit.
-    const boutons = (html.match(/class="[^"]*\bbouton\b/g) ?? []).length;
+    // La landing reprend la reference R2 a l identique, avec sa propre classe
+    // .button (module CSS, hauteur minimale 48 px).
+    const boutons = (html.match(/class="[^"]*(\bbouton\b|__button\b)/g) ?? []).length;
     verifier(boutons > 0 || route.startsWith("/mentions"), `${etiquette} : boutons du systeme de design`, `${boutons}`);
   }
 

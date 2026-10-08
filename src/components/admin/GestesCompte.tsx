@@ -100,14 +100,14 @@ export function GestesCompte({
           <button
             type="button"
             onClick={() => setDemande("reinitialiser")}
-            className="rounded-[6px] border border-[color:var(--color-bordure)] px-2.5 py-1.5 text-[length:var(--text-aide)] hover:border-[color:var(--color-bordure-forte)]"
+            className="bouton bouton-secondaire bouton-compact"
           >
             Réinitialiser l&apos;accès
           </button>
           <button
             type="button"
             onClick={() => setDemande("etat")}
-            className="rounded-[6px] border border-[color:var(--color-bordure)] px-2.5 py-1.5 text-[length:var(--text-aide)] hover:border-[color:var(--color-bordure-forte)]"
+            className="bouton bouton-secondaire bouton-compact"
           >
             {actif ? "Désactiver" : "Réactiver"}
           </button>

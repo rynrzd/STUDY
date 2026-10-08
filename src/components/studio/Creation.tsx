@@ -131,7 +131,7 @@ export function NouveauChapitre({ cours }: { cours: string }) {
       data-testid="chapitre-nouveau"
       className="bloc border border-[color:var(--color-bordure)] p-4"
     >
-      <h2 className="m-0 text-[length:var(--text-tableau)] font-semibold uppercase tracking-[0.06em] text-[color:var(--color-encre-faible)]">
+      <h2 className="titre-bloc m-0 font-bold">
         Nouveau chapitre
       </h2>
       <p className="m-0 mt-2 text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-faible)]">

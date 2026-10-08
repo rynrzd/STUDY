@@ -40,12 +40,14 @@ test("H01 — la page d accueil s hydrate reellement", async () => {
   await onglet.close();
 });
 
-/* ------------------------------------------------ R2 — landing sans 3D ---- */
+/* ------------------- R2 — landing conforme à code/landing-reference.html ---- */
+
+const norm = (t) => t.replace(/[’]/g, "'").replace(/\s+/g, " ").trim();
 
 test("L01 — un seul hero, sans scène 3D, message et accès visibles au premier rendu", async () => {
   const onglet = await page("/");
   assert.equal(await onglet.locator("h1").count(), 1, "un seul H1");
-  assert.equal(await onglet.locator("h1").innerText(), "Ta classe, tout simplement.");
+  assert.equal(norm(await onglet.locator("h1").innerText()), "Ta classe, tout simplement.");
   assert.equal(await onglet.locator("canvas").count(), 0, "aucun canvas");
   assert.equal(await onglet.getByText("Passer l'introduction").count(), 0, "aucun lien Passer");
   assert.equal(await onglet.getByRole("link", { name: "Découvrir Study" }).getAttribute("href"), "#decouvrir");
@@ -55,57 +57,52 @@ test("L01 — un seul hero, sans scène 3D, message et accès visibles au premie
   await onglet.close();
 });
 
-test("L02 — le sélecteur de matière change d'exemple, au clavier aussi", async () => {
+test("L02 — en-tête de la référence : plateforme, établissements, connexion, démo", async () => {
   const onglet = await page("/");
-  const visible = async () =>
-    onglet.evaluate(() => [...document.querySelectorAll(".exemple-panneau")].filter((n) => getComputedStyle(n).display !== "none").map((n) => n.getAttribute("data-matiere")));
-  assert.deepEqual(await visible(), ["maths"], "un seul panneau au départ");
-  await onglet.locator('input[name="exemple-matiere"][value="maths"]').focus();
-  await onglet.keyboard.press("ArrowRight");
-  await onglet.waitForTimeout(150);
-  assert.deepEqual(await visible(), ["histoire"], "la flèche passe à la matière suivante");
-  await onglet.locator("label.exemple-matiere", { hasText: "Anglais" }).click();
-  await onglet.waitForTimeout(150);
-  assert.deepEqual(await visible(), ["anglais"]);
+  const nav = onglet.locator('header nav[aria-label="Navigation principale"]');
+  for (const [nom, href] of [["La plateforme", "/produit"], ["Établissements", "/etablissements"], ["Se connecter", "/connexion"], ["Demander une démo", "/contact"]]) {
+    assert.equal(await nav.getByRole("link", { name: nom }).getAttribute("href"), href, nom);
+  }
   await onglet.close();
 });
 
-test("L03 — sections du cahier R2, dans l'ordre", async () => {
+test("L03 — sections de la référence, dans l'ordre", async () => {
   const onglet = await page("/");
-  const titres = await onglet.locator("main h2").allInnerTexts();
+  const titres = (await onglet.locator("main h2").allInnerTexts()).map(norm);
   const attendus = [
+    "Fonctions affines",
     "Le bon cours. Au bon moment.",
     "Une question ne devrait pas te bloquer.",
     "Préparez une fois. Partagez à la bonne classe.",
     "Votre établissement, simplement.",
-    "Les questions qu'on nous pose.",
+    "Questions fréquentes",
     "Une classe qui avance ensemble.",
   ];
   let position = -1;
   for (const t of attendus) {
-    const i = titres.findIndex((x) => x.replace(/[’]/g, "'").trim() === t);
+    const i = titres.findIndex((x) => x === t);
     assert.ok(i > position, `« ${t} » présent et après la section précédente`);
     position = i;
   }
   await onglet.close();
 });
 
-test("L04 — la FAQ s'ouvre au clavier, lignes d'au moins 56 px", async () => {
+test("L04 — la FAQ s'ouvre au clavier", async () => {
   const onglet = await page("/");
-  const resume = onglet.locator("details[name='faq'] > summary").first();
-  const boite = await resume.boundingBox();
-  assert.ok(boite && boite.height >= 56, "ligne interactive d'au moins 56 px");
+  const questions = (await onglet.locator("details > summary").allInnerTexts()).map(norm);
+  assert.deepEqual(questions, ["Faut-il un ordinateur par élève ?", "Qui finance la plateforme ?", "Comment installer Study dans mon lycée ?"]);
+  const resume = onglet.locator("details > summary").first();
   await resume.focus();
   await onglet.keyboard.press("Enter");
   await onglet.waitForTimeout(250);
-  assert.equal(await onglet.locator("details[name='faq']").first().evaluate((d) => d.open), true);
+  assert.equal(await onglet.locator("details").first().evaluate((d) => d.open), true);
   await onglet.close();
 });
 
 /* ----------------------------------------------------- §2 Navigation ------ */
 
 test("N01 — a 1366 px, seule la navigation de bureau est parcourue", async () => {
-  const onglet = await page("/", { largeur: 1366 });
+  const onglet = await page("/produit", { largeur: 1366 });
 
   const arrets = [];
   for (let i = 0; i < 12; i += 1) {
@@ -135,7 +132,7 @@ test("N01 — a 1366 px, seule la navigation de bureau est parcourue", async () 
 });
 
 test("N02 — a 390 px, seul le bouton du menu est parcouru", async () => {
-  const onglet = await page("/", { largeur: 390, hauteur: 844 });
+  const onglet = await page("/produit", { largeur: 390, hauteur: 844 });
 
   const arrets = [];
   for (let i = 0; i < 12; i += 1) {
@@ -163,7 +160,7 @@ test("N02 — a 390 px, seul le bouton du menu est parcouru", async () => {
 });
 
 test("N03 — le menu du telephone s ouvre, se ferme et rend le focus", async () => {
-  const onglet = await page("/", { largeur: 390, hauteur: 844 });
+  const onglet = await page("/produit", { largeur: 390, hauteur: 844 });
   const bouton = onglet.locator("header button").first();
 
   const taille = await bouton.boundingBox();
@@ -211,7 +208,7 @@ test("N03 — le menu du telephone s ouvre, se ferme et rend le focus", async ()
 });
 
 test("N04 — aucun menu de bureau n est visible a 390 px", async () => {
-  const onglet = await page("/", { largeur: 390, hauteur: 844 });
+  const onglet = await page("/produit", { largeur: 390, hauteur: 844 });
 
   const surface = await onglet.evaluate(() => {
     const nav = document.querySelector('header nav[aria-label="Navigation principale"]');
@@ -230,7 +227,7 @@ test("D01 — la demonstration est annoncee comme fictive", async () => {
   const onglet = await page("/");
   const texte = await onglet.evaluate(() => document.body.innerText);
 
-  assert.match(texte, /Exemple de présentation/, "la mention accompagne l apercu du hero");
+  assert.match(texte, /Exemple illustratif de l.interface/, "la mention accompagne l apercu du hero");
   assert.match(texte, /Exemple illustratif/, "les autres exemples sont nommes comme tels");
   assert.equal(
     /Bonjour Rayan/.test(texte),

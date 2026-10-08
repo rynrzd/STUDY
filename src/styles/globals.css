@@ -34,7 +34,7 @@
   --color-bordure: #e5dfe5;
   --color-bordure-forte: #d3c9d2;
   /* Bordure de champ : 3:1 minimum (WCAG 1.4.11). */
-  --color-bordure-champ: #8e8894;
+  --color-bordure-champ: #847e8a;
   --color-survol: #f4eff3;
   --color-primaire: #81445b;        /* action principale : baie */
   --color-primaire-survol: #69374a;
@@ -1464,7 +1464,16 @@
   }
   a.ligne-r2 { transition: background-color 160ms ease; }
   a.ligne-r2:hover { background: var(--color-surface-douce); }
-  a.ligne-r2[aria-current="true"] { background: var(--color-rose-clair); }
+  a.ligne-r2[aria-current="true"], .ligne-r2[aria-pressed="true"] {
+    background: var(--color-rose-clair);
+    /* L'état sélectionné ne repose pas sur le seul fond (WCAG 1.4.11) : un
+       filet baie à gauche le marque à plus de 3:1. */
+    box-shadow: inset 4px 0 0 var(--color-accent);
+  }
+  /* Ligne-bouton (file de modération) : bordure transparente au repos, baie
+     quand elle est choisie — la frontière du composant sélectionné dépasse 3:1. */
+  button.ligne-r2 { border: 1px solid transparent; }
+  button.ligne-r2[aria-pressed="true"] { border-color: var(--color-accent); }
   .ligne-r2 .chevron { margin-left: auto; flex-shrink: 0; color: var(--color-encre-faible); }
 
   /* Encadré : information ou avertissement sur fond blush. */

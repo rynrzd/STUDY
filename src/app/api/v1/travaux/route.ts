@@ -1,8 +1,7 @@
-import { timingSafeEqual } from "node:crypto";
-import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { drainer } from "@/lib/travaux";
 import { purgerTentatives } from "@/lib/depot-authentification";
+import { secretTacheValide as secretValide } from "@/lib/secret-tache";
 
 /**
  * Traitement de la file — cahier « Refonte fidèle », T03 et T04.
@@ -30,20 +29,6 @@ export const dynamic = "force-dynamic";
 // c'est arrivé. Le drain s'aligne donc sur la borne la plus basse (10 s) et
 // rend la main bien avant. Sur un plan plus large, augmenter le budget ici
 // suffit ; rien d'autre ne change.
-
-function secretValide(entete: string | null): boolean {
-  const attendu = (process.env.CRON_SECRET ?? "").trim();
-  if (attendu === "") return false;
-
-  const fourni = (entete ?? "").replace(/^Bearer\s+/i, "").trim();
-  if (fourni === "") return false;
-
-  // Les empreintes ont toujours la même longueur : `timingSafeEqual` refuse
-  // deux tampons de tailles différentes, ce qui fuirait déjà la longueur.
-  const a = createHash("sha256").update(attendu, "utf8").digest();
-  const b = createHash("sha256").update(fourni, "utf8").digest();
-  return timingSafeEqual(a, b);
-}
 
 export async function POST(requete: Request) {
   if (!secretValide(requete.headers.get("authorization"))) {
