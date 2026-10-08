@@ -70,8 +70,10 @@ test("L03 — sections de la référence, dans l'ordre", async () => {
   const onglet = await page("/");
   const titres = (await onglet.locator("main h2").allInnerTexts()).map(norm);
   const attendus = [
-    "Fonctions affines",
+    "On reprend là où tu en étais.",
     "Le bon cours. Au bon moment.",
+    "Fonctions affines",
+    "Un petit déclic. Un vrai pas en avant.",
     "Une question ne devrait pas te bloquer.",
     "Préparez une fois. Partagez à la bonne classe.",
     "Votre établissement, simplement.",

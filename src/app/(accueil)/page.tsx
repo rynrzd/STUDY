@@ -10,15 +10,7 @@ export const metadata: Metadata = pagePublique({
   description: "Tes cours, le travail à faire et les échanges de ta classe, au même endroit. Une plateforme pédagogique pour les lycées, financée par l'établissement.",
 });
 
-/**
- * Landing — reproduction exacte de `code/landing-reference.html` (dossier R2).
- * Structure, textes, couleurs et dimensions de la référence ; aucune
- * animation, aucun script : la page est complète sans JavaScript.
- *
- * Seule adaptation, demandée par la référence elle-même (« reprendre les
- * réponses officielles existantes après vérification ») : les réponses de la
- * FAQ sont celles déjà publiées par Study.
- */
+/** Landing R2 : aperçu pédagogique, sans 3D, contenu disponible sans JavaScript. */
 export default function Accueil() {
   return (
     <div className={s.page}>
@@ -42,8 +34,9 @@ export default function Accueil() {
       </header>
 
       <main id="contenu">
-        <section className={`${s.section} ${s.wrap} ${s.split}`}>
+        <section className={`${s.section} ${s.wrap} ${s.split} ${s.hero}`}>
           <div className={s.copy}>
+            <p className={s.eyebrow}>Moins de dispersion. Plus de place pour apprendre.</p>
             <h1>
               Ta classe,
               <br />
@@ -59,33 +52,30 @@ export default function Accueil() {
               </Link>
             </div>
           </div>
-          <div className={`${s.panel} ${s.rose} ${s.stack}`}>
-            <div className={`${s.card} ${s.stack}`}>
-              <p className={s.eyebrow}>Mathématiques · Seconde</p>
-              <h2 style={{ fontSize: 28 }}>Fonctions affines</h2>
-              <div className={s.row}>
-                Cours <span className={s.muted}>/ Exercices / Documents</span>
+          <figure className={s.workspace} aria-label="Exemple de l’espace élève">
+            <div className={s.workspaceBar}><span className={s.brand}>study<span>.</span></span><span className={s.pill}>Seconde 1</span></div>
+            <div className={s.workspaceBody}>
+              <div className={s.workspaceHeading}><div><p className={s.eyebrow}>Mon espace</p><h2 className={s.previewTitle}>On reprend là où tu en étais.</h2></div><span className={s.avatar} aria-hidden="true">L</span></div>
+              <div className={s.previewGrid}>
+                <div className={`${s.lesson} ${s.stack}`}>
+                  <p className={s.eyebrow}>Reprendre mon cours · Maths</p>
+                  <h3>Fonctions affines</h3>
+                  <p>Comprendre, puis s’entraîner.</p>
+                  <div className={s.formula}>f(x) = ax + b</div>
+                  <span className={s.sample}>Chapitre 3 · Cours et exercices</span>
+                </div>
+                <div className={s.today}><p className={s.eyebrow}>À faire en premier</p><strong>Exercices 1 à 3</strong><p>Mathématiques</p><span className={s.pill}>Pour demain</span><div className={s.miniDivider}/><strong>Relire le chapitre</strong><p>Histoire · Pour vendredi</p></div>
               </div>
-              <h3>Reconnaître une fonction affine</h3>
-              <p>
-                Une fonction affine s’écrit <strong>f(x) = ax + b</strong>.
-              </p>
-              <div className={`${s.panel} ${s.blush}`}>
-                <p>
-                  Exemple : f(x) = 2x + 1.
-                  <br />
-                  Pour x = 3, f(3) = 7.
-                </p>
-              </div>
-              <p className={s.row}>À faire · Exercices 1 à 3</p>
+              <div className={s.classNote}><span className={s.avatar} aria-hidden="true">MB</span><p><strong>Une question sur le cours ?</strong><br/><span className={s.muted}>Retrouve les échanges de ta classe.</span></p></div>
             </div>
-            <p className={s.sample}>Exemple illustratif de l’interface</p>
-          </div>
+            <figcaption className={s.previewCaption}>Exemple illustratif · aucune donnée d’élève réelle</figcaption>
+          </figure>
         </section>
 
         <section id="decouvrir" className={`${s.section} ${s.white}`}>
           <div className={`${s.wrap} ${s.split}`}>
             <div className={s.copy}>
+              <p className={s.eyebrow}>01 / Retrouver ses repères</p>
               <h2>
                 Le bon cours.
                 <br />
@@ -96,7 +86,7 @@ export default function Accueil() {
             </div>
             <div className={`${s.card} ${s.stack}`}>
               <p className={s.eyebrow}>Un cours bien organisé</p>
-              <h3>Fonctions affines</h3>
+              <h2 className={s.previewTitle}>Fonctions affines</h2>
               <p className={s.row}>01 · Comprendre la définition</p>
               <p className={s.row}>02 · Lire une représentation graphique</p>
               <p className={s.row}>03 · S’entraîner avec les exercices</p>
@@ -105,13 +95,19 @@ export default function Accueil() {
           </div>
         </section>
 
+        <section className={`${s.section} ${s.wrap} ${s.revisionSection}`} aria-labelledby="revision-titre">
+          <div className={s.copy}><p className={s.eyebrow}>02 / Comprendre et retenir</p><h2 id="revision-titre">Un petit déclic.<br/>Un vrai pas en avant.</h2><p>Reviens sur une notion, essaie de répondre, puis vérifie ce que tu as compris. Les révisions ont aussi leur place dans Study.</p><Link href="/produit#travail">Explorer le travail et les révisions →</Link></div>
+          <div className={s.revisionCard}><div className={s.revisionTop}><span className={s.pill}>Carte de révision</span><span className={s.sample}>Mathématiques</span></div><p className={s.question}>Dans f(x) = 2x + 1,<br/>quelle est l’image de 3 ?</p><details className={s.answer}><summary>Voir la réponse</summary><div><strong>7. Tu avais trouvé ?</strong><p>On remplace x par 3 :<br/>2 × 3 + 1 = 7.</p></div></details><p className={s.sample}>Exemple interactif · ta réponse n’est pas enregistrée</p></div>
+        </section>
+
         <section className={`${s.section} ${s.blush}`}>
           <div className={`${s.wrap} ${s.split}`}>
             <div className={s.copy}>
+              <p className={s.eyebrow}>03 / Avancer ensemble</p>
               <h2>Une question ne devrait pas te bloquer.</h2>
               <p>Un espace commun pour échanger avec ta classe et ton professeur, autour des cours et du travail à faire.</p>
             </div>
-            <div className={s.stack}>
+            <div className={s.conversation}>
               <div className={s.card}>
                 <strong>Lina · Élève</strong>
                 <p>Je ne comprends pas pourquoi on remplace x par 3 dans cet exemple.</p>
@@ -135,6 +131,10 @@ export default function Accueil() {
             </h2>
             <p>Composez votre contenu, choisissez ses destinataires et publiez votre séance.</p>
           </div>
+          <figure className={s.studio}>
+            <div className={s.studioSidebar}><p className={s.eyebrow}>Studio professeur</p><strong>Votre séance</strong><p className={s.studioSelected}>01 · Le cours</p><p>02 · Les exercices</p><p>03 · Les documents</p></div>
+            <div className={s.studioContent}><div className={s.revisionTop}><span className={s.eyebrow}>Mathématiques</span><span className={s.pill}>Brouillon</span></div><h3>Fonctions affines</h3><p>Objectif : reconnaître une fonction affine et calculer une image.</p><div className={s.studioBlock}><strong>Définition et exemple</strong><p>Une fonction affine s’écrit f(x) = ax + b.</p></div><div className={s.publication}><span>Destinataires <strong>Seconde 1</strong></span><span className={s.publishLabel}>Prête à publier</span></div><figcaption className={s.sample}>Exemple illustratif du parcours de préparation</figcaption></div>
+          </figure>
           <div className={s.steps}>
             <article className={s.card}>
               <span className={s.number}>1</span>
