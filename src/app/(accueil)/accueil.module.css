@@ -159,3 +159,71 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Direction mobile 01, validée : une composition propre au petit écran. */
+.mobileOnly { display: none; }
+@media (max-width: 767px) {
+  .desktopOnly { display: none !important; }
+  .mobileOnly { display: block; }
+  .page { background: #fcfafb; }
+  .wrap { width: calc(100% - 40px); }
+  .topbar { min-height: 76px; gap: 12px; }
+  .brand { font-size: 30px; }
+  .topbar .nav { gap: 14px; }
+  .nav > a { font-size: 13px; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+  .nav .desktop { display: none; }
+  .page .menuMobile { padding: 0; border: 0; }
+  .page .menuMobile > summary { min-width: 44px; padding: 0 9px; font-size: 12px; border-color: var(--line); background: transparent; }
+  .menuPanneau { box-shadow: 0 12px 24px #29282e0b; }
+  .hero { padding-top: 32px; padding-bottom: 40px; gap: 24px; }
+  .hero .copy { gap: 18px; }
+  .hero .eyebrow { color: var(--primary); font-size: 10px; letter-spacing: .16em; }
+  .hero h1 { font-size: clamp(30px, 8.2vw, 43px); line-height: 1.12; letter-spacing: -.045em; font-weight: 800; }
+  .hero .copy > p:not(.eyebrow) { font-size: 17px; line-height: 1.55; }
+  .hero .actions { margin-top: 2px; }
+  .hero .actions .secondary { display: none; }
+  .hero .actions .button { justify-content: space-between; min-height: 54px; padding: 14px 20px; border-radius: 13px; font-size: 16px; }
+  .page figure.mobilePreview { margin: 0; background: var(--blush); border: 1px solid #eedbe2; border-radius: 20px; padding: 22px 16px 12px; overflow: hidden; }
+  .page .mobilePreview h2 { font-size: 26px; letter-spacing: -.04em; margin: 0 4px 18px; }
+  .mobileCourse { position: relative; background: #fff; border: 1px solid #eee6e9; border-radius: 15px; padding: 18px; box-shadow: 0 8px 20px #81445b08; }
+  .courseTitle { display: flex; align-items: center; gap: 12px; }
+  .courseIcon { display: grid; place-items: center; flex-shrink: 0; width: 42px; height: 42px; border-radius: 10px; background: var(--blush); color: var(--primary); }
+  .page .courseTitle h3 { font-size: 16px; letter-spacing: -.02em; }
+  .courseTitle p, .homework p { color: var(--muted); font-size: 12px; }
+  .page a.resumeCourse { display: flex; gap: 10px; align-items: center; min-height: 48px; font-size: 13px; font-weight: 700; color: var(--primary); text-decoration: none; margin-block: 6px 10px; }
+  .resumeCourse svg:last-child { margin-left: auto; }
+  .homework { display: flex; align-items: center; gap: 16px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; }
+  .homework > svg { flex-shrink: 0; }
+  .notebook { margin: 18px -16px 0; padding: 14px 24px 10px; background: repeating-linear-gradient(to bottom, #fff9fc 0px, #fff9fc 23px, #eadce3 24px); color: var(--primary); display: grid; grid-template-columns: 1fr 100px; gap: 8px; }
+  .notebook > span:first-child { grid-column: 1 / -1; font-size: 11px; letter-spacing: .06em; }
+  .notebook > span:nth-child(2) { font-family: Georgia, serif; font-size: 24px; font-style: italic; align-self: center; }
+  .notebook svg { width: 100%; height: 48px; }
+  .mobilePreview figcaption { padding-top: 10px; color: var(--muted); font-size: 10px; }
+  .section { padding-block: 44px; }
+  .section .copy { gap: 18px; }
+  .page h2 { font-size: clamp(29px, 7.8vw, 36px); line-height: 1.12; letter-spacing: -.04em; text-wrap: balance; }
+  .page .brandStory { border-left: 2px solid var(--primary); padding-left: 16px; font-size: 15px; line-height: 1.65; }
+  .card { border-radius: 16px; padding: 20px; }
+  .blush .stack > .card:nth-child(2) { margin-left: 18px; border-left: 3px solid var(--primary); }
+  .steps { gap: 0; }
+  .steps .card { display: grid; grid-template-columns: 32px 1fr; column-gap: 14px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; padding: 20px 0; }
+  .steps .number { grid-row: span 2; width: 30px; height: 30px; margin: 0; font-size: 13px; }
+  .steps p { grid-column: 2; font-size: 14px; color: var(--muted); margin-top: 4px; }
+  .page summary { min-height: 44px; display: list-item; align-content: center; }
+  .cta .button { width: 100%; min-height: 52px; }
+  .footer .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+  .footer .brand { grid-column: 1 / -1; margin-bottom: 12px; }
+  .footer a:not(.brand) { font-size: 13px; min-height: 44px; display: inline-flex; align-items: center; }
+  .page a.button { transition: background 160ms, transform 160ms; }
+  .page a.button:active { transform: translateY(1px); }
+}
+@media (max-width: 359px) {
+  .wrap { width: calc(100% - 32px); }
+  .topbar .nav { gap: 8px; }
+  .hero .copy > p:not(.eyebrow) { font-size: 16px; }
+  .mobileCourse { padding: 14px; }
+  .page a.resumeCourse { font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page a.button { transition: none; transform: none; }
+}

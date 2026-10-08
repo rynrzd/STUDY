@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowRight, BookOpen, ChartNoAxesCombined, FileText } from "lucide-react";
 import { pagePublique } from "@/lib/metadonnees";
 import s from "./accueil.module.css";
 import { MenuMobile } from "./MenuMobile";
@@ -10,15 +11,7 @@ export const metadata: Metadata = pagePublique({
   description: "Tes cours, le travail à faire et les échanges de ta classe, au même endroit. Une plateforme pédagogique pour les lycées, financée par l'établissement.",
 });
 
-/**
- * Landing — reproduction exacte de `code/landing-reference.html` (dossier R2).
- * Structure, textes, couleurs et dimensions de la référence ; aucune
- * animation, aucun script : la page est complète sans JavaScript.
- *
- * Seule adaptation, demandée par la référence elle-même (« reprendre les
- * réponses officielles existantes après vérification ») : les réponses de la
- * FAQ sont celles déjà publiées par Study.
- */
+/** Landing : présentation bureau R2 et composition mobile éditoriale. */
 export default function Accueil() {
   return (
     <div className={s.page}>
@@ -42,24 +35,34 @@ export default function Accueil() {
       </header>
 
       <main id="contenu">
-        <section className={`${s.section} ${s.wrap} ${s.split}`}>
+        <section className={`${s.section} ${s.wrap} ${s.split} ${s.hero}`}>
           <div className={s.copy}>
+            <p className={`${s.mobileOnly} ${s.eyebrow}`}>La classe continue ici</p>
             <h1>
-              Ta classe,
-              <br />
-              <span className={s.primaryText}>tout simplement.</span>
+              <span className={s.desktopOnly}>Ta classe,<br /><span className={s.primaryText}>tout simplement.</span></span>
+              <span className={s.mobileOnly}>Le cours se termine.<br /><span className={s.primaryText}>L’apprentissage continue.</span></span>
             </h1>
-            <p>Tes cours, le travail à faire et les échanges de ta classe. Enfin au même endroit.</p>
+            <p><span className={s.desktopOnly}>Tes cours, le travail à faire et les échanges de ta classe. Enfin au même endroit.</span><span className={s.mobileOnly}>Tes cours, tes révisions et ta classe. Un même endroit pour avancer.</span></p>
             <div className={s.actions}>
               <a className={s.button} href="#decouvrir">
-                Découvrir Study
+                Découvrir Study <ArrowRight className={s.mobileOnly} size={20} aria-hidden="true" />
               </a>
               <Link className={`${s.button} ${s.secondary}`} href="/connexion">
                 Se connecter
               </Link>
             </div>
           </div>
-          <div className={`${s.panel} ${s.rose} ${s.stack}`}>
+          <figure className={`${s.mobileOnly} ${s.mobilePreview}`} aria-label="Aperçu illustratif des cours">
+            <h2>À toi de jouer.</h2>
+            <div className={s.mobileCourse}>
+              <div className={s.courseTitle}><span className={s.courseIcon}><ChartNoAxesCombined size={25} aria-hidden="true" /></span><div><p>Mathématiques</p><h3>Fonctions affines</h3></div></div>
+              <Link href="/produit#cours" className={s.resumeCourse}><BookOpen size={20} aria-hidden="true" /> Découvrir les cours <ArrowRight size={17} aria-hidden="true" /></Link>
+              <div className={s.homework}><FileText size={22} aria-hidden="true" /><div><strong>Exercices 1 à 3</strong><p>Pour demain</p></div></div>
+            </div>
+            <div className={s.notebook} aria-hidden="true"><span>Un cours. Un déclic.</span><span>f(x) = ax + b</span><svg viewBox="0 0 160 60" fill="none"><path d="M8 50H152M22 58V5" stroke="currentColor" strokeWidth="1.5"/><path d="M28 46L140 10" stroke="currentColor" strokeWidth="2.5"/></svg></div>
+            <figcaption>Exemple illustratif · aucune donnée réelle</figcaption>
+          </figure>
+          <div className={`${s.panel} ${s.rose} ${s.stack} ${s.desktopOnly}`}>
             <div className={`${s.card} ${s.stack}`}>
               <p className={s.eyebrow}>Mathématiques · Seconde</p>
               <h2 style={{ fontSize: 28 }}>Fonctions affines</h2>
@@ -87,11 +90,11 @@ export default function Accueil() {
           <div className={`${s.wrap} ${s.split}`}>
             <div className={s.copy}>
               <h2>
-                Le bon cours.
-                <br />
-                Au bon moment.
+                <span className={s.desktopOnly}>Le bon cours.<br />Au bon moment.</span>
+                <span className={s.mobileOnly}>Moins chercher.<br /><span className={s.primaryText}>Mieux avancer.</span></span>
               </h2>
               <p>Retrouve les ressources partagées par tes professeurs, les consignes et les documents de ta classe.</p>
+              <p className={`${s.mobileOnly} ${s.brandStory}`}>Study rapproche les moments où tu apprends : en classe, à la maison, et quand une question te bloque.</p>
               <Link href="/produit">Découvrir les cours →</Link>
             </div>
             <div className={`${s.card} ${s.stack}`}>
