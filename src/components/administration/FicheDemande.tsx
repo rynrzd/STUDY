@@ -7,7 +7,7 @@ import { useFormStatus } from "react-dom";
 import { majDemande } from "@/app/administration/actions";
 import { ETAT_ACTION_INITIAL, type EtatAction } from "@/app/administration/etats";
 import type { DemandeCommerciale } from "@/lib/administration";
-import { ETATS, libelleEtat } from "@/lib/demande-commerciale";
+import { ETATS, libelleEtat } from "@/lib/demande-commerciale-libelles";
 
 /**
  * Une demande commerciale, avec son suivi.

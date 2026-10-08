@@ -22,8 +22,19 @@ export const dynamic = "force-dynamic";
 const ENTETES = { "cache-control": "no-store", "x-content-type-options": "nosniff" };
 const RETARD_MINUTES = 15;
 
+// La réponse publique est gardée 15 s en mémoire : une sonde (ou n'importe
+// qui) peut l'appeler en boucle sans transformer chaque appel en requête à la
+// base. Le mode détaillé, réservé au porteur du secret, lit toujours la base.
+const DUREE_CACHE_MS = 15_000;
+let dernierEtatPublic: { ok: boolean; le: number } | null = null;
+
 export async function GET(requete: Request) {
   const detaille = secretTacheValide(requete.headers.get("authorization"));
+  if (!detaille && dernierEtatPublic !== null && Date.now() - dernierEtatPublic.le < DUREE_CACHE_MS) {
+    return dernierEtatPublic.ok
+      ? NextResponse.json({ etat: "ok" }, { headers: ENTETES })
+      : NextResponse.json({ etat: "degrade" }, { status: 503, headers: ENTETES });
+  }
   let client: ReturnType<typeof clientExploitation>;
   try {
     client = clientExploitation("tache_planifiee");
@@ -34,9 +45,13 @@ export async function GET(requete: Request) {
   const ping = await client.from("jobs").select("id", { count: "exact", head: true }).limit(1);
   if (ping.error !== null) {
     console.error(JSON.stringify({ niveau: "erreur", contexte: "etat.base", code: ping.error.code ?? "inconnu" }));
+    if (!detaille) dernierEtatPublic = { ok: false, le: Date.now() };
     return NextResponse.json({ etat: "degrade" }, { status: 503, headers: ENTETES });
   }
-  if (!detaille) return NextResponse.json({ etat: "ok" }, { headers: ENTETES });
+  if (!detaille) {
+    dernierEtatPublic = { ok: true, le: Date.now() };
+    return NextResponse.json({ etat: "ok" }, { headers: ENTETES });
+  }
 
   const limite = new Date(Date.now() - RETARD_MINUTES * 60_000).toISOString();
   const veille = new Date(Date.now() - 24 * 3_600_000).toISOString();

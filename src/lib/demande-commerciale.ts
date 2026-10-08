@@ -1,3 +1,4 @@
+import "server-only";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 
@@ -20,11 +21,10 @@ import { z } from "zod";
 
 const texteCourt = z.string().trim().min(1).max(120);
 
-export const TYPES_ETABLISSEMENT = [
-  { valeur: "public", libelle: "Établissement public" },
-  { valeur: "prive", libelle: "Établissement privé sous contrat" },
-  { valeur: "autre", libelle: "Autre structure" },
-] as const;
+// Liste importable côté client : elle vit dans un module sans dépendance, pour
+// que la signature HMAC et la validation ci-dessous ne partent jamais dans le
+// navigateur (elles y étaient embarquées par FormulaireDemande, 792 Ko).
+export { ETATS, TYPES_ETABLISSEMENT, libelleEtat, type Etat } from "./demande-commerciale-libelles.ts";
 
 export const schemaDemande = z.object({
   etablissement: texteCourt.describe("Nom de l'établissement"),
@@ -180,20 +180,3 @@ export function empreinteDeduplication(demande: Pick<Demande, "etablissement" | 
   return createHash("sha256").update(normalise).digest("hex");
 }
 
-/* -------------------------------------------------------------------------- */
-/* États                                                                       */
-/* -------------------------------------------------------------------------- */
-
-export const ETATS = [
-  { valeur: "nouvelle", libelle: "Nouvelle" },
-  { valeur: "contactee", libelle: "Contactée" },
-  { valeur: "devis_envoye", libelle: "Devis envoyé" },
-  { valeur: "gagnee", libelle: "Gagnée" },
-  { valeur: "perdue", libelle: "Perdue" },
-] as const;
-
-export type Etat = (typeof ETATS)[number]["valeur"];
-
-export function libelleEtat(etat: string): string {
-  return ETATS.find((element) => element.valeur === etat)?.libelle ?? etat;
-}

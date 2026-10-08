@@ -4,7 +4,7 @@ import { useActionState, useEffect, useId, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { deposerDemande } from "@/app/(public)/(site)/etablissements/actions";
 import { ETAT_INITIAL, type EtatFormulaire } from "@/app/(public)/(site)/etablissements/etats";
-import { TYPES_ETABLISSEMENT } from "@/lib/demande-commerciale";
+import { TYPES_ETABLISSEMENT } from "@/lib/demande-commerciale-libelles";
 
 /**
  * Formulaire de demande de démonstration ou de devis.

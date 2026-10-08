@@ -1474,6 +1474,10 @@
      quand elle est choisie — la frontière du composant sélectionné dépasse 3:1. */
   button.ligne-r2 { border: 1px solid transparent; }
   button.ligne-r2[aria-pressed="true"] { border-color: var(--color-accent); }
+  /* Ligne-bouton (file de modération) : bordure transparente au repos, baie
+     quand elle est choisie — la frontière du composant sélectionné dépasse 3:1. */
+  button.ligne-r2 { border: 1px solid transparent; }
+  button.ligne-r2[aria-pressed="true"] { border-color: var(--color-accent); }
   .ligne-r2 .chevron { margin-left: auto; flex-shrink: 0; color: var(--color-encre-faible); }
 
   /* Encadré : information ou avertissement sur fond blush. */

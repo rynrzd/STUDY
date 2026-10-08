@@ -52,7 +52,9 @@
     "verifier:requetes": "node scripts/recette/requetes.mjs",
     "verifier:journal": "node scripts/recette/journal.mjs",
     "verifier:landing": "node scripts/verifier-landing.mjs",
-    "verifier:responsive": "node scripts/verifier-responsive.mjs"
+    "verifier:responsive": "node scripts/verifier-responsive.mjs",
+    "verifier:fuites-client": "node scripts/refonte/fuites-client.mjs",
+    "mesurer:fluidite": "node scripts/refonte/mesurer-fluidite.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.116.0",

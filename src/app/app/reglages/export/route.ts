@@ -25,6 +25,11 @@ export const dynamic = "force-dynamic";
 const PAGE = 1000;
 const MAX = 20_000;
 
+// Un export par personne et par minute (par instance) : l'export enchaîne une
+// vingtaine de lectures, il ne doit pas devenir un moyen de charger la base.
+const INTERVALLE_MS = 60_000;
+const derniersExports = new Map<string, number>();
+
 type Client = ReturnType<typeof clientUtilisateur>;
 type Requete = (debut: number, fin: number) => PromiseLike<{ data: unknown[] | null; error: { code?: string } | null }>;
 
@@ -46,6 +51,19 @@ export async function GET() {
   const jeton = await jetonAccesDe(personne);
   if (jeton === null) return NextResponse.json({ error: { code: "UNAUTHENTICATED" } }, { status: 401 });
   const moi = personne.profileId;
+  const maintenant = Date.now();
+  const precedent = derniersExports.get(moi);
+  if (precedent !== undefined && maintenant - precedent < INTERVALLE_MS) {
+    const attente = Math.ceil((INTERVALLE_MS - (maintenant - precedent)) / 1000);
+    return NextResponse.json(
+      { error: { code: "TOO_MANY_REQUESTS", message: `Un export vient d'être préparé. Réessaie dans ${attente} s.` } },
+      { status: 429, headers: { "retry-after": String(attente), "cache-control": "no-store" } },
+    );
+  }
+  derniersExports.set(moi, maintenant);
+  if (derniersExports.size > 5000) {
+    for (const [cle, quand] of derniersExports) if (maintenant - quand >= INTERVALLE_MS) derniersExports.delete(cle);
+  }
   const c: Client = clientUtilisateur(jeton);
 
   const sections: Record<string, unknown> = {};
