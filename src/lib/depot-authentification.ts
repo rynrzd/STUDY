@@ -133,7 +133,10 @@ export class DepotSupabase implements DepotAuthentification {
       p_profile: profileId,
       p_motif: motif,
     });
-    if (error !== null) journaliser("revocation_sessions", error.code);
+    if (error !== null) {
+      journaliser("revocation_sessions", error.code);
+      throw new Error("La révocation de session n’a pas pu être confirmée.");
+    }
   }
 
   /** Révoque une session précise, à partir de l'empreinte de son cookie. */
@@ -142,7 +145,10 @@ export class DepotSupabase implements DepotAuthentification {
       p_empreinte: enHexa(empreinte),
       p_motif: motif,
     });
-    if (error !== null) journaliser("revocation_session", error.code);
+    if (error !== null) {
+      journaliser("revocation_session", error.code);
+      throw new Error("La révocation de session n’a pas pu être confirmée.");
+    }
   }
 
   async lireSession(empreinte: Buffer): Promise<LigneSession | null> {

@@ -75,7 +75,16 @@ export function ServiceHorsLigne({ autorise }: { autorise: boolean }) {
     if (autorise) {
       void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined);
     } else {
-      void navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => void r.unregister()));
+      void navigator.serviceWorker.getRegistrations()
+        .then((rs) => Promise.all(rs.filter((r) =>
+          [r.active, r.waiting, r.installing].some((w) => w && new URL(w.scriptURL).pathname === "/sw.js"),
+        ).map((r) => r.unregister())))
+        .catch(() => undefined);
+      if ("caches" in window) {
+        void caches.keys().then((cles) => Promise.all(
+          cles.filter((c) => c.startsWith("study-")).map((c) => caches.delete(c)),
+        )).catch(() => undefined);
+      }
     }
   }, [autorise]);
 

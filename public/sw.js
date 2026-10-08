@@ -1,54 +1,40 @@
-/*
- * Study — service worker « hors ligne borné » (dossier V6, §10).
- *
- * Il n'est enregistré que si la personne a autorisé les copies locales et
- * que l'appareil n'est pas déclaré partagé. Il ne met en cache que :
- *   - la page /app/hors-ligne (qui lit les copies choisies dans le stockage
- *     local) ;
- *   - les fichiers statiques versionnés de l'application (_next/static).
- * Aucune réponse d'API, aucun salon, aucune consultation, aucune donnée
- * d'un autre utilisateur n'est conservée ici. « Effacer cet appareil » le
- * désinscrit et vide son cache.
+/* Cache public uniquement. Aucun HTML connecté, payload RSC ou réponse API.
+ * Les copies choisies restent lisibles dans une page déjà ouverte. Une nouvelle
+ * navigation hors réseau présente un message neutre, jamais une ancienne session.
  */
-const CACHE = "study-hors-ligne-v1";
-
-self.addEventListener("install", () => self.skipWaiting());
+const CACHE = "study-statique-v2";
+self.addEventListener("install", (event) => event.waitUntil(self.skipWaiting()));
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cles) => Promise.all(cles.filter((c) => c.startsWith("study-") && c !== CACHE).map((c) => caches.delete(c)))).then(() => self.clients.claim()),
+    caches.keys()
+      .then((cles) => Promise.all(cles.filter((c) => c.startsWith("study-") && c !== CACHE).map((c) => caches.delete(c))))
+      .then(() => self.clients.claim()),
   );
 });
-
 self.addEventListener("fetch", (event) => {
   const requete = event.request;
   if (requete.method !== "GET") return;
   const url = new URL(requete.url);
   if (url.origin !== self.location.origin) return;
-
   if (url.pathname.startsWith("/_next/static/")) {
-    event.respondWith(
-      caches.open(CACHE).then(async (cache) => {
-        const enCache = await cache.match(requete);
-        if (enCache) return enCache;
-        const reponse = await fetch(requete);
-        if (reponse.ok) cache.put(requete, reponse.clone());
-        return reponse;
-      }),
-    );
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      const copie = await cache.match(requete);
+      if (copie) return copie;
+      const reponse = await fetch(requete);
+      if (reponse.ok && !reponse.redirected && reponse.type !== "opaque") {
+        event.waitUntil(cache.put(requete, reponse.clone()));
+      }
+      return reponse;
+    })());
     return;
   }
-
-  if (requete.mode === "navigate") {
-    event.respondWith(
-      fetch(requete)
-        .then((reponse) => {
-          if (url.pathname === "/app/hors-ligne" && reponse.ok) {
-            const copie = reponse.clone();
-            caches.open(CACHE).then((cache) => cache.put("/app/hors-ligne", copie));
-          }
-          return reponse;
-        })
-        .catch(() => caches.match("/app/hors-ligne").then((r) => r || Response.error())),
-    );
+  // Ne pas remplacer connexion, activation et autres pages publiques par une
+  // page de l'application. La réponse de secours ne comporte aucune identité.
+  if (requete.mode === "navigate" && (url.pathname === "/app" || url.pathname.startsWith("/app/"))) {
+    event.respondWith(fetch(requete).catch(() => new Response(
+      '<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Study — Hors ligne</title><main><h1>Connexion indisponible</h1><p>Pour protéger tes données, cette page ne conserve pas de copie de ta session.</p><p>Les copies de cours restent consultables dans un onglet Study déjà ouvert. Sinon, reconnecte-toi au réseau puis recharge cette page.</p><a href="/app/hors-ligne">Réessayer</a></main></html>',
+      { status: 503, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "Content-Security-Policy": "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'" } },
+    )));
   }
 });

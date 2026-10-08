@@ -67,12 +67,15 @@ export function GardienBrouillons({ proprietaire, children }: { proprietaire: st
     if (typeof window === "undefined") return true;
     try {
       const precedent = window.localStorage.getItem(CLE_PROPRIETAIRE);
-      // Pas encore de marque (premier passage après la mise en service) : on la
-      // pose sans rien effacer, pour ne pas perdre un brouillon en cours.
-      if (precedent !== null && precedent !== proprietaire) {
+      // Sans propriétaire connu, aucun brouillon historique n'est attribuable.
+      // Ne jamais le donner au prochain compte connecté.
+      if (precedent !== proprietaire) {
         viderStockage([CLE_PROPRIETAIRE]);
-        window.localStorage.setItem(CLE_PROPRIETAIRE, proprietaire);
-      } else if (precedent === null) {
+        if ("caches" in window) {
+          void caches.keys().then((cles) => Promise.all(
+            cles.filter((c) => c.startsWith(PREFIXE)).map((c) => caches.delete(c)),
+          )).catch(() => undefined);
+        }
         window.localStorage.setItem(CLE_PROPRIETAIRE, proprietaire);
       }
     } catch {

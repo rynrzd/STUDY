@@ -1,5 +1,7 @@
 "use client";
 
+import { TAILLE_MAX_PIECE, LIMITE_PIECE_LIBELLE } from "@/lib/v6/limites-pieces";
+
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -670,8 +672,8 @@ function Joindre({ message, fermer, apres }: { message: string; fermer: () => vo
           setEtat({ phase: "erreur", texte: "Choisissez un fichier." });
           return;
         }
-        if (fichier.size > 10 * 1024 * 1024) {
-          setEtat({ phase: "erreur", texte: "Ce fichier dépasse 10 Mo." });
+        if (fichier.size > TAILLE_MAX_PIECE) {
+          setEtat({ phase: "erreur", texte: `Ce fichier dépasse ${LIMITE_PIECE_LIBELLE}.` });
           return;
         }
         setEtat({ phase: "envoi" });
@@ -694,7 +696,7 @@ function Joindre({ message, fermer, apres }: { message: string; fermer: () => vo
           } catch {
             /* réponse illisible : message générique */
           }
-          setEtat({ phase: "erreur", texte: reponse.statut === 401 ? "Session terminée : reconnectez-vous, puis réessayez." : texte });
+          setEtat({ phase: "erreur", texte: reponse.statut === 413 ? `Ce fichier dépasse la limite d’envoi (${LIMITE_PIECE_LIBELLE}).` : reponse.statut === 401 ? "Session terminée : reconnectez-vous, puis réessayez." : texte });
           return;
         }
         setEtat({ phase: "fait" });
@@ -706,7 +708,7 @@ function Joindre({ message, fermer, apres }: { message: string; fermer: () => vo
         Joindre un fichier
       </label>
       <input id={`piece-${message}`} name="fichier" type="file" accept="application/pdf,image/png,image/jpeg,image/webp" className="champ" required />
-      <p className="meta m-0">PDF ou image (PNG, JPEG, WebP), 10 Mo au plus. Visible par les membres du salon une fois vérifié.</p>
+      <p className="meta m-0">PDF ou image (PNG, JPEG, WebP), {LIMITE_PIECE_LIBELLE} au plus. Visible par les membres du salon une fois vérifié.</p>
       {etat.phase === "erreur" ? (
         <p role="alert" className="m-0 text-[0.75rem] text-[color:var(--color-erreur)]">
           {etat.texte}

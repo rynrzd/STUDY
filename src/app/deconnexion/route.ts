@@ -36,18 +36,27 @@ export async function POST(requete: Request) {
     ?.slice(NOM_COOKIE_SESSION.length + 1);
 
   const depot = new DepotSupabase();
-  try {
-    if (partout) {
+  let resultat: "1" | "partout" | "locale" = "1";
+  if (partout) {
+    try {
       const personne = await sessionCourante();
-      if (personne !== null) await depot.revoquerSessions(personne.profileId, "deconnexion_partout");
+      if (personne === null) throw new Error("Session non vérifiable");
+      await depot.revoquerSessions(personne.profileId, "deconnexion_partout");
+      resultat = "partout";
+    } catch {
+      resultat = "locale";
     }
-    if (jeton) await depot.revoquerSession(empreinteJeton(decodeURIComponent(jeton)), "deconnexion");
-  } catch {
-    // Le cookie est retiré quoi qu'il arrive : on ne laisse pas un écran
-    // connecté parce que la base a hoqueté.
+  }
+  // Même si la révocation globale échoue, essayer de révoquer cette session.
+  if (jeton && resultat !== "partout") {
+    try {
+      await depot.revoquerSession(empreinteJeton(decodeURIComponent(jeton)), "deconnexion");
+    } catch {
+      resultat = "locale";
+    }
   }
 
-  const reponse = NextResponse.redirect(new URL(`/connexion?fin=${partout ? "partout" : "1"}`, requete.url), 303);
+  const reponse = NextResponse.redirect(new URL(`/connexion?fin=${resultat}`, requete.url), 303);
   const supprime = cookieSessionSupprime();
   reponse.cookies.set(supprime.name, "", { httpOnly: true, secure: supprime.secure, sameSite: "lax", path: "/", maxAge: 0 });
   reponse.headers.set("Clear-Site-Data", '"cache", "storage"');

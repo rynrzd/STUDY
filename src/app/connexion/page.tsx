@@ -73,7 +73,7 @@ export default async function PageConnexion({
   }
 
   const contexte = await lireContexteEtablissement();
-  const fin = p.fin === "1" || p.fin === "partout";
+  const fin = p.fin === "1" || p.fin === "partout" || p.fin === "locale";
 
   return (
     <CadreConnexion
@@ -116,6 +116,14 @@ function Messages({ motif, fin, invitation, sessionInutilisable }: { motif?: str
       <p role="status" className={`${boite} bg-[color:var(--color-attention-fond)] text-[color:var(--color-attention)]`}>
         Ta session a pris fin. Reconnecte-toi : tu reviendras sur la page que tu consultais, et les brouillons enregistrés sur cet
         appareil t&apos;attendent — rien n&apos;a été publié à ta place.
+      </p>
+    );
+  }
+  if (fin === "locale") {
+    return (
+      <p role="alert" className={`${boite} bg-[color:var(--color-attention-fond)] text-[color:var(--color-attention)]`}>
+        Tu es déconnecté de ce navigateur, mais la fermeture des sessions côté serveur n’a pas pu être confirmée.
+        Reconnecte-toi lorsque le service est disponible, puis réessaie « Se déconnecter de tous mes appareils ».
       </p>
     );
   }

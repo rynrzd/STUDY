@@ -18,10 +18,12 @@ export async function seDeconnecter(): Promise<void> {
   const magasin = await cookies();
   const jeton = magasin.get(NOM_COOKIE_SESSION)?.value;
 
+  let revocationConfirmee = true;
   if (jeton !== undefined && jeton !== "") {
     try {
       await new DepotSupabase().revoquerSession(empreinteJeton(jeton), "deconnexion");
     } catch {
+      revocationConfirmee = false;
       // La suppression du cookie a lieu quoi qu'il arrive : on ne laisse pas
       // une personne devant un écran connecté parce que la base a hoqueté.
     }
@@ -36,5 +38,5 @@ export async function seDeconnecter(): Promise<void> {
     maxAge: 0,
   });
 
-  redirect("/connexion?fin=1");
+  redirect(`/connexion?fin=${revocationConfirmee ? "1" : "locale"}`);
 }

@@ -1,3 +1,4 @@
+import { TAILLE_MAX_PIECE, CORPS_MAX_PIECE, LIMITE_PIECE_LIBELLE } from "@/lib/v6/limites-pieces";
 import { NextResponse } from "next/server";
 import { deposerPieceJointe, retirerPieceJointe } from "@/lib/documents";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
@@ -21,7 +22,6 @@ import { traduire } from "@/lib/v6/erreurs";
 export const dynamic = "force-dynamic";
 
 const ENTETES = { "cache-control": "private, no-store" };
-const TAILLE_MAX = 10 * 1024 * 1024;
 const TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp"]);
 
 function refus(status: number, code: string, message: string, requestId: string) {
@@ -52,6 +52,10 @@ export async function POST(requete: Request, { params }: { params: Promise<{ mes
     return refus(403, "NOT_ACCESSIBLE", "Ce contenu n'est pas accessible.", requestId);
   }
 
+  const longueur = Number(requete.headers.get("content-length"));
+  if (Number.isFinite(longueur) && longueur > CORPS_MAX_PIECE) {
+    return refus(413, "VALIDATION_FAILED", `Le fichier dépasse ${LIMITE_PIECE_LIBELLE}.`, requestId);
+  }
   let donnees: FormData;
   try {
     donnees = await requete.formData();
@@ -62,8 +66,8 @@ export async function POST(requete: Request, { params }: { params: Promise<{ mes
   if (!(fichier instanceof File) || fichier.size === 0) {
     return refus(400, "VALIDATION_FAILED", "Choisissez un fichier.", requestId);
   }
-  if (fichier.size > TAILLE_MAX) {
-    return refus(400, "VALIDATION_FAILED", "Ce fichier dépasse 10 Mo.", requestId);
+  if (fichier.size > TAILLE_MAX_PIECE) {
+    return refus(400, "VALIDATION_FAILED", `Ce fichier dépasse ${LIMITE_PIECE_LIBELLE}.`, requestId);
   }
 
   const depot = await deposerPieceJointe({
