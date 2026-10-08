@@ -1,12 +1,17 @@
-import { EnTetePage, EtatVide, Panneau } from "@/components/study/ui";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 import { contexteApp } from "@/lib/v6/contexte";
-import { FormulaireNouvelleDemande } from "../formulaires";
+import { VueNouvelleDemande } from "./vue";
 
 export const metadata = { title: "Écrire à un adulte" };
 export const dynamic = "force-dynamic";
 
-/** « Poser discrètement » (§8.4) : le destinataire est choisi parmi les adultes qui encadrent l'élève. */
+/**
+ * A19 — Demander à un adulte (maquette R2 n° 5, « Demande de rendez-vous ») :
+ * l'encadré de confidentialité en tête dit exactement qui lit, puis à gauche
+ * pourquoi écrire ici, à droite le message. Le destinataire est choisi parmi
+ * les adultes qui encadrent l'élève (RPC demande_destinataires). Aucun
+ * créneau de rendez-vous : la fonction n'existe pas côté serveur.
+ */
 export default async function PageNouvelleDemande({ searchParams }: { searchParams: Promise<{ seance?: string; sujet?: string }> }) {
   const ctx = await contexteApp();
   const q = await searchParams;
@@ -16,16 +21,7 @@ export default async function PageNouvelleDemande({ searchParams }: { searchPara
     nom: `${d.prenom} ${d.nom}`,
     qualite: d.qualite,
   }));
-  return (
-    <div className="mx-auto max-w-[680px]">
-      <EnTetePage filAriane={[{ href: "/app/demandes", libelle: "Demandes personnelles" }]} titre="Écrire à un adulte" />
-      {destinataires.length === 0 ? (
-        <EtatVide titre="Aucun destinataire disponible" texte="Les professeurs de tes classes apparaîtront ici. En attendant, adresse-toi à la vie scolaire." />
-      ) : (
-        <Panneau>
-          <FormulaireNouvelleDemande destinataires={destinataires} lecon={q.seance && /^[0-9a-f-]{36}$/iu.test(q.seance) ? q.seance : undefined} sujetInitial={q.sujet?.slice(0, 140)} />
-        </Panneau>
-      )}
-    </div>
-  );
+  const lecon = q.seance && /^[0-9a-f-]{36}$/iu.test(q.seance) ? q.seance : undefined;
+  const sujetInitial = q.sujet?.slice(0, 140);
+  return <VueNouvelleDemande destinataires={destinataires} lecon={lecon} sujetInitial={sujetInitial} />;
 }

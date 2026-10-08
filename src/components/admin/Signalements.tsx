@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronRight, Flag, MessageCircle, MessageSquareReply } from "lucide-react";
 import { useActionState, useId, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { deciderDUnSignalement } from "@/app/admin/moderation/actions";
@@ -63,7 +64,7 @@ export function Signalements({ signalements }: { signalements: readonly Signalem
         {ouverts.length === 0 ? "Aucun signalement à regarder." : ouverts.length === 1 ? "1 signalement à regarder." : `${ouverts.length} signalements à regarder.`}
       </p>
 
-      <div role="tablist" aria-label="File des signalements" className="mt-4 flex flex-wrap gap-2">
+      <div role="tablist" aria-label="File des signalements" className="onglets-liens mt-4">
         {ONGLETS.map((o) => {
           const n = signalements.filter((l) => (o.etats as readonly string[]).includes(l.etat)).length;
           return (
@@ -76,9 +77,9 @@ export function Signalements({ signalements }: { signalements: readonly Signalem
                 setOnglet(o.cle);
                 setSelection(null);
               }}
-              className={`bouton bouton-compact ${onglet === o.cle ? "bouton-primaire" : "bouton-secondaire"}`}
+              className="onglet-bouton"
             >
-              {o.libelle} · {n}
+              {o.libelle} <span className="nombre">{n}</span>
             </button>
           );
         })}
@@ -89,19 +90,25 @@ export function Signalements({ signalements }: { signalements: readonly Signalem
           {onglet === "a_traiter" ? "Rien à traiter. Le bouton de signalement est discret, et il sert rarement." : "Aucun signalement dans cette file."}
         </p>
       ) : (
-        <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-          <ul className="m-0 grid list-none content-start gap-2 p-0" aria-label={actif.libelle}>
+        <div className="liste-detail mt-5">
+          <ul className="liste-r2" aria-label={actif.libelle}>
             {visibles.map((l) => (
               <li key={l.id}>
                 <button
                   type="button"
                   aria-pressed={choisi?.id === l.id}
                   onClick={() => setSelection(l.id)}
-                  className={`w-full cursor-pointer rounded-[12px] border p-4 text-left ${choisi?.id === l.id ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)] bg-[color:var(--color-surface)]"}`}
+                  className={`ligne-r2 w-full cursor-pointer border-0 text-left ${choisi?.id === l.id ? "bg-[color:var(--color-rose-clair)]" : "bg-transparent hover:bg-[color:var(--color-surface-douce)]"}`}
                 >
-                  <span className="block font-semibold">{l.cible === "fil" ? "Question signalée" : l.cible === "message" ? "Message de salon signalé" : "Réponse signalée"}</span>
-                  <span className="meta block truncate">{l.cours}</span>
-                  <span className="meta block">{instantLisible(l.signaleLe)}</span>
+                  <span className="tuile" aria-hidden="true">
+                    {l.cible === "fil" ? <Flag size={20} strokeWidth={1.75} /> : l.cible === "message" ? <MessageCircle size={20} strokeWidth={1.75} /> : <MessageSquareReply size={20} strokeWidth={1.75} />}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold">{l.cible === "fil" ? "Question signalée" : l.cible === "message" ? "Message de salon signalé" : "Réponse signalée"}</span>
+                    <span className="meta block truncate">{l.cours}</span>
+                    <span className="meta block">{instantLisible(l.signaleLe)}</span>
+                  </span>
+                  <ChevronRight size={18} strokeWidth={1.75} aria-hidden="true" className="chevron" />
                 </button>
               </li>
             ))}
@@ -126,21 +133,21 @@ function Fiche({ signalement }: { signalement: Signalement }) {
       data-testid="signalement"
       data-etat={signalement.etat}
       data-masque={signalement.masque ? "oui" : "non"}
-      className="carte p-5"
+      className="panneau"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <p className="m-0 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
           {signalement.cible === "fil" ? "Une question" : signalement.cible === "message" ? "Un message de salon" : "Une réponse"} · {signalement.cours} ·
           signalé le {instantLisible(signalement.signaleLe)}
         </p>
-        <span className="rounded-full bg-[color:var(--color-surface-douce)] px-2.5 py-0.5 text-[0.7rem] font-semibold">
+        <span className="etiquette-etat" data-ton={signalement.etat === "ouvert" ? "rose" : signalement.etat === "en_examen" ? "attention" : undefined}>
           {ETATS[signalement.etat] ?? signalement.etat}
         </span>
       </div>
 
       <blockquote
         data-testid="signalement-contenu"
-        className="m-0 mt-3 border-l-2 border-[color:var(--color-bordure)] pl-4 whitespace-pre-line"
+        className="m-0 mt-3 rounded-[12px] border-l-[3px] border-[color:var(--color-accent)] bg-[color:var(--color-surface-douce)] py-3 pl-4 pr-3 whitespace-pre-line"
       >
         {signalement.contenu === "" ? (
           <span className="text-[color:var(--color-encre-faible)] italic">
@@ -266,7 +273,7 @@ function Bouton({
       value={decision}
       data-testid={marque}
       disabled={pending}
-      className={`bouton bouton-compact ${secondaire ? "bouton-discret" : "bouton-secondaire"}`}
+      className={`bouton bouton-compact ${secondaire ? "bouton-secondaire" : "bouton-primaire"}`}
     >
       {pending ? "…" : libelle}
     </button>

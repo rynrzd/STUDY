@@ -39,7 +39,7 @@ export default async function PageNotifications({ searchParams }: { searchParams
                 Tout marquer comme lu
               </button>
             </form>
-            <Link href="/app/reglages#notifications" className="bouton bouton-discret" aria-label="Préférences de notification">
+            <Link href="/app/reglages?onglet=affichage#notifications" className="bouton bouton-discret" aria-label="Préférences de notification">
               <Settings {...ICONE} />
             </Link>
           </>

@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { OngletsSeance } from "@/components/studio/OngletsSeance";
 import { Dupliquer } from "@/components/studio/Dupliquer";
 import { Editeur } from "@/components/studio/Editeur";
 import { chapitresDuCours, coursDuProfesseur, seanceComplete } from "@/lib/studio";
@@ -36,20 +36,7 @@ export default async function PageSeance({
 
   return (
     <>
-      <nav aria-label="Fil d'Ariane" className="mb-6">
-        <Link href="/studio" className="lien-fleche text-[length:var(--text-tableau)]">
-          <span aria-hidden="true">←</span> Retour au Studio
-        </Link>
-      </nav>
-
-      <div className="mb-6 flex flex-wrap gap-2">
-        <Link href={`/studio/${id}/exercices`} className="bouton bouton-secondaire">
-          Exercices et notions
-        </Link>
-        <Link href={`/app/seances/${id}`} className="bouton bouton-discret">
-          Aperçu élève
-        </Link>
-      </div>
+      <OngletsSeance seance={id} titre={ensemble.cours?.libelle ?? "Cours"} actif="contenu" />
 
       <Editeur
         seance={ensemble.seance}

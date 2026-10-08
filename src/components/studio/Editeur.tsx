@@ -80,7 +80,7 @@ export function Editeur({
         <Publication seance={seance} publiee={publiee} />
 
         <div className="bloc border border-[color:var(--color-bordure)] p-4">
-          <h2 className="m-0 text-[length:var(--text-tableau)] font-semibold uppercase tracking-[0.06em] text-[color:var(--color-encre-faible)]">
+          <h2 className="titre-bloc m-0 font-bold">
             Aperçu
           </h2>
           <p className="m-0 mt-2 text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-faible)]">
@@ -116,7 +116,7 @@ function EnteteSeance({
     <form
       action={action}
       data-testid="seance-entete"
-      className="bloc border border-[color:var(--color-bordure)] p-5"
+      className="panneau"
     >
       <input type="hidden" name="id" value={seance.id} />
 
@@ -124,9 +124,7 @@ function EnteteSeance({
         <p className="m-0 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
           {libelleCours}
         </p>
-        <span
-          className={`pastille ${seance.state === "publiee" ? "pastille-publie" : "pastille-brouillon"}`}
-        >
+        <span className="etiquette-etat" data-ton={seance.state === "publiee" ? "succes" : "attention"}>
           {seance.state === "publiee" ? "Publiée" : "Brouillon"}
         </span>
       </div>
@@ -213,12 +211,12 @@ function Publication({ seance, publiee }: { seance: Seance; publiee: boolean }) 
       action={action}
       data-testid="publication"
       data-publiee={publiee ? "oui" : "non"}
-      className="bloc border border-[color:var(--color-bordure)] p-4"
+      className="rounded-[var(--radius-carte)] bg-[color:var(--color-rose-clair)] p-5"
     >
       <input type="hidden" name="id" value={seance.id} />
       <input type="hidden" name="publier" value={publiee ? "non" : "oui"} />
 
-      <h2 className="m-0 text-[length:var(--text-tableau)] font-semibold uppercase tracking-[0.06em] text-[color:var(--color-encre-faible)]">
+      <h2 className="titre-bloc m-0 font-bold">
         Publication
       </h2>
 
@@ -599,7 +597,7 @@ function AjoutBloc({ seance }: { seance: string }) {
   if (type === null) {
     return (
       <div className="bloc border border-[color:var(--color-bordure)] p-4">
-        <h2 className="m-0 text-[length:var(--text-tableau)] font-semibold uppercase tracking-[0.06em] text-[color:var(--color-encre-faible)]">
+        <h2 className="titre-bloc m-0 font-bold">
           Ajouter au cours
         </h2>
         <div className="mt-3 flex flex-wrap gap-2">

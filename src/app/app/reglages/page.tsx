@@ -1,108 +1,29 @@
-import Link from "next/link";
-import { KeyRound, ShieldCheck } from "lucide-react";
-import { CopiesLocales } from "@/components/study/HorsLigne";
-import { PreferencesMouvement } from "@/components/study/PreferencesMouvement";
-import { EnTetePage, ICONE, Panneau } from "@/components/study/ui";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 import { contexteApp } from "@/lib/v6/contexte";
-import { FormulairePreferences } from "./FormulairePreferences";
+import { ONGLETS } from "./vue";
+import { VueReglages } from "./vue";
 
 export const metadata = { title: "Réglages" };
 export const dynamic = "force-dynamic";
 
 /**
- * E28 — Réglages : alertes et horaires calmes, copies locales, sécurité et
- * confidentialité. Se déconnecter n'est pas supprimer son compte : les deux
- * gestes sont séparés et nommés.
+ * A20 — Réglages (maquette R2 n° 5, « Paramètres ») : quatre onglets servis
+ * par le serveur (sans script), une carte de profil, puis les mêmes
+ * formulaires qu'avant — alertes et horaires calmes, mouvement, copies
+ * locales, sécurité, données. Se déconnecter n'est pas supprimer son
+ * compte : les deux gestes sont séparés et nommés.
  */
-export default async function PageReglages() {
+export default async function PageReglages({ searchParams }: { searchParams: Promise<{ onglet?: string }> }) {
   const ctx = await contexteApp();
+  const { onglet: demande } = await searchParams;
+  const onglet = ONGLETS.find((o) => o.cle === demande)?.cle ?? "compte";
   const { data } = await clientUtilisateur(ctx.jeton)
     .from("preferences_notifications")
     .select("categories, calme_debut, calme_fin, copies_locales")
     .maybeSingle();
   const p = (data ?? {}) as { categories?: Record<string, boolean>; calme_debut?: string; calme_fin?: string; copies_locales?: boolean };
+  const initiales = `${ctx.personne.prenom[0] ?? ""}${ctx.personne.nom[0] ?? ""}`.toUpperCase();
+  const role = ctx.roles.admin ? "Administration" : ctx.roles.professeur ? "Professeur" : "Élève";
 
-  return (
-    <div className="mx-auto max-w-[820px]">
-      <EnTetePage titre="Réglages" sousTitre={`${ctx.personne.prenom} ${ctx.personne.nom}${ctx.personne.organisation ? ` · ${ctx.personne.organisation}` : ""}`} />
-      <div className="grid gap-6">
-        <Panneau id="notifications" titre="Notifications">
-          <FormulairePreferences
-            initiales={{
-              categories: p.categories ?? { travail: true, classe: true, messages: true, revisions: true },
-              calme_debut: p.calme_debut ?? "21:00",
-              calme_fin: p.calme_fin ?? "07:00",
-              copies_locales: p.copies_locales ?? false,
-            }}
-            appareilPartage={ctx.personne.appareil === "partage"}
-          />
-        </Panneau>
-
-        <Panneau id="effets" titre="Effets visuels">
-          <PreferencesMouvement />
-        </Panneau>
-
-        <Panneau id="appareil" titre="Copies sur cet appareil">
-          {ctx.copiesLocales ? (
-            <CopiesLocales />
-          ) : (
-            <p className="m-0 text-[color:var(--color-encre-faible)]">
-              Les copies hors ligne sont désactivées sur cet appareil. Active-les ci-dessus pour garder une séance lisible sans réseau.
-            </p>
-          )}
-        </Panneau>
-
-        <Panneau id="securite" titre="Sécurité">
-          <div className="flex flex-wrap gap-2">
-            <Link href="/parametres" className="bouton bouton-secondaire">
-              <KeyRound {...ICONE} /> Mot de passe et sessions
-            </Link>
-            {ctx.roles.admin || ctx.roles.professeur ? (
-              <Link href="/second-facteur" className="bouton bouton-secondaire">
-                <ShieldCheck {...ICONE} /> Double authentification
-              </Link>
-            ) : null}
-            <form method="post" action="/deconnexion">
-              <button type="submit" className="bouton bouton-discret">
-                Se déconnecter de cet appareil
-              </button>
-            </form>
-            <form method="post" action="/deconnexion">
-              <input type="hidden" name="partout" value="oui" />
-              <button type="submit" className="bouton bouton-discret">
-                Se déconnecter de tous mes appareils
-              </button>
-            </form>
-          </div>
-          <p className="meta m-0 mt-3">
-            Sur ordinateur partagé, la session se ferme à la fermeture du navigateur ou après 30 minutes sans activité (8 heures au plus).
-            Sur ton appareil, après 2 heures sans activité (12 heures au plus). À la déconnexion, les brouillons et copies de Study
-            enregistrés dans ce navigateur sont effacés ; les fichiers que tu as téléchargés restent dans ton dossier de
-            téléchargements.
-          </p>
-        </Panneau>
-
-        <Panneau id="donnees" titre="Mes données">
-          <ul className="m-0 grid gap-2 pl-5">
-            <li>
-              <a href="/app/erreurs/export">Exporter mon carnet d&apos;erreurs (CSV)</a>
-            </li>
-            <li>Tes notes, fiches, carnet et projets personnels ne sont lus ni par tes professeurs ni par l&apos;administration.</li>
-            <li>
-              Les messages des salons ne sont pas chiffrés de bout en bout : ils sont conservés par l&apos;établissement et lisibles par la
-              modération en cas de signalement.
-            </li>
-            <li>
-              La suppression d&apos;un compte se demande à l&apos;établissement, qui vérifie l&apos;identité et les obligations de conservation.
-              Ce n&apos;est pas la même chose que se déconnecter.
-            </li>
-          </ul>
-          <Link href="/confidentialite" className="meta mt-3 inline-block">
-            Politique de confidentialité
-          </Link>
-        </Panneau>
-      </div>
-    </div>
-  );
+  return <VueReglages onglet={onglet} ctx={ctx} p={p} initiales={initiales} role={role} />;
 }

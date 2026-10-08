@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, MessageCircle, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileText, Lightbulb, Link2, MessageCircle, Trash2 } from "lucide-react";
 import { Confirmer } from "@/components/study/Dialogue";
-import { AccesIndisponible, EnTetePage, Etiquette, ICONE, Panneau, dateLisible } from "@/components/study/ui";
+import { AccesIndisponible, EnTetePage, Etiquette, ICONE, Panneau, TuileIcone, dateLisible } from "@/components/study/ui";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 import { contexteApp } from "@/lib/v6/contexte";
 import { membres as membresClasse, nomsAffichables } from "@/lib/v6/classe";
@@ -59,6 +59,7 @@ export default async function PageProjet({ params, searchParams }: { params: Pro
     <>
       <EnTetePage
         filAriane={[{ href: "/app/projets", libelle: "Mes projets" }]}
+        sourcil="Projet"
         titre={projet.titre}
         sousTitre={projet.description}
         actions={
@@ -82,9 +83,9 @@ export default async function PageProjet({ params, searchParams }: { params: Pro
         {COLONNES.map((col, ci) => {
           const liste = lesTaches.filter((t) => t.statut === col.cle);
           return (
-            <section key={col.cle} className="rounded-[14px] bg-[color:var(--color-surface-douce)] p-4" aria-labelledby={`col-${col.cle}`}>
-              <h2 id={`col-${col.cle}`} className="titre-bloc mb-3">
-                {col.libelle} <span className="meta">({liste.length})</span>
+            <section key={col.cle} className="rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-4" aria-labelledby={`col-${col.cle}`}>
+              <h2 id={`col-${col.cle}`} className="titre-bloc mb-3 flex items-center gap-2 font-bold">
+                {col.libelle} <span className="nombre">{liste.length}</span>
               </h2>
               {liste.length === 0 ? <p className="meta m-0">Rien ici.</p> : null}
               <ul className="m-0 grid list-none gap-3 p-0">
@@ -157,11 +158,12 @@ export default async function PageProjet({ params, searchParams }: { params: Pro
               <FormulaireTache projet={id} membres={actifs.map((m) => ({ id: m.profile_id, nom: nom(m.profile_id) }))} />
             </Panneau>
           ) : null}
-          <Panneau titre="Documents et décisions">
+          <Panneau titre="Documents et livrables" compte={lesNotes.length}>
             {lesNotes.length === 0 ? <p className="m-0 mb-4 text-[color:var(--color-encre-faible)]">Aucun document pour l&apos;instant.</p> : null}
             <ul className="m-0 mb-4 list-none p-0">
               {lesNotes.map((n) => (
                 <li key={n.id} className="ligne items-start">
+                  <TuileIcone icone={n.kind === "decision" ? Lightbulb : n.kind === "lien" ? Link2 : FileText} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
                       <Etiquette>{n.kind === "decision" ? "Décision" : n.kind === "lien" ? "Lien" : "Document"}</Etiquette>
@@ -184,12 +186,15 @@ export default async function PageProjet({ params, searchParams }: { params: Pro
           </Panneau>
         </div>
         <aside className="grid content-start gap-6">
-          <Panneau titre="Participants">
+          <Panneau titre="Équipe" compte={actifs.length}>
             <ul className="m-0 list-none p-0">
               {lesMembres
                 .filter((m) => m.etat === "actif" || m.etat === "invite")
                 .map((m) => (
                   <li key={m.profile_id} className="ligne">
+                    <span className="avatar" aria-hidden="true">
+                      {nom(m.profile_id).split(" ").map((x) => x[0] ?? "").join("").slice(0, 2).toUpperCase()}
+                    </span>
                     <span className="min-w-0 flex-1">
                       <span className="block font-semibold">{nom(m.profile_id)}</span>
                       <span className="meta">

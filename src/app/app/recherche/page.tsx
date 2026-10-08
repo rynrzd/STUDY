@@ -15,7 +15,7 @@ export default async function PageRecherche({ searchParams }: { searchParams: Pr
   const q = await searchParams;
   return (
     <div className="mx-auto max-w-[920px]">
-      <EnTetePage titre="Recherche" sousTitre="Dans tes cours, tes fiches, les échanges de tes classes et tes projets." />
+      <EnTetePage sourcil="Recherche" titre="Trouver dans Study" sousTitre="Dans tes cours, tes fiches, les échanges de tes classes et tes projets." />
       <Recherche
         initiale={{ q: (q.q ?? "").slice(0, 500), types: (q.types ?? "").split(",").filter(Boolean), classe: q.classe ?? "" }}
         classes={ctx.contextes.map((c) => ({ id: c.classe, libelle: c.libelle }))}

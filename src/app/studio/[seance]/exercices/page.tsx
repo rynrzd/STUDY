@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Etiquette, Panneau } from "@/components/study/ui";
+import { OngletsSeance } from "@/components/studio/OngletsSeance";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { seance as lireSeance } from "@/lib/studio";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
@@ -44,12 +45,7 @@ export default async function PageExercicesStudio({ params, searchParams }: { pa
 
   return (
     <>
-      <nav className="mb-6">
-        <Link href={`/studio/${id}`} className="lien-fleche text-[0.875rem]">
-          ← {s.title}
-        </Link>
-      </nav>
-      <h1 className="titre-page mb-6">Exercices et notions</h1>
+      <OngletsSeance seance={id} titre={s.title} actif="exercices" />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
         <div className="grid content-start gap-4">
           {liste.length === 0 ? <p className="panneau m-0">Aucun exercice pour cette séance. Ceux que vous publiez alimentent l&apos;entraînement, les quiz et Débloque-moi.</p> : null}

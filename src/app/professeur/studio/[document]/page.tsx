@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { FileWarning } from "lucide-react";
+import { FilAriane } from "@/components/study/ui";
 import { EditeurDocument } from "@/components/studio/EditeurDocument";
 import { SuiviTraitement } from "@/components/studio/SuiviTraitement";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
@@ -41,12 +43,15 @@ export default async function PageMiseEnPage({
     return (
       <>
         <Retour />
-        <div className="mt-6 max-w-[var(--spacing-lecture)] rounded-[var(--radius-carte)] border border-[color:var(--color-erreur)] bg-[color:var(--color-erreur-fond)] p-6">
-          <h1 className="m-0 text-[length:var(--text-h1-app)] leading-[var(--text-h1-app--line-height)] text-[color:var(--color-erreur)]">
+        <div className="panneau mt-2 max-w-[720px] text-center">
+          <span className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-[color:var(--color-erreur-fond)] text-[color:var(--color-erreur)]" aria-hidden="true">
+            <FileWarning size={24} strokeWidth={1.75} />
+          </span>
+          <h1 className="titre-section m-0">
             Ce document n&apos;a pas pu être converti
           </h1>
           <p className="m-0 mt-3">{doc.erreur}</p>
-          <p className="m-0 mt-5 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
+          <p className="meta m-0 mt-4">
             Le fichier que vous avez déposé est conservé. Vous pouvez corriger le
             document à la source puis le réimporter.
           </p>
@@ -90,14 +95,5 @@ export default async function PageMiseEnPage({
 }
 
 function Retour() {
-  return (
-    <p className="m-0">
-      <Link
-        href="/professeur/studio"
-        className="text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)] no-underline hover:text-[color:var(--color-accent)]"
-      >
-        ← Studio
-      </Link>
-    </p>
-  );
+  return <FilAriane etapes={[{ href: "/professeur/studio", libelle: "Studio" }]} />;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { creerLesComptes, fixerClasse, reparerLigne } from "@/app/admin/import/actions";
 import {
@@ -403,54 +403,72 @@ function LigneCorrigeable({ ligne, lot }: { ligne: LigneDuLot; lot: string }) {
   );
 }
 
+const VUES_LIGNES = [
+  { cle: "valide", libelle: "Valides" },
+  { cle: "a_corriger", libelle: "À corriger" },
+  { cle: "ignoree", libelle: "En double" },
+] as const;
+
+/**
+ * D02 — les lignes lues, en trois onglets (maquette R2 n° 4 : Valides, À
+ * corriger, En double). Les compteurs et les états viennent du lot relu en
+ * base ; l’onglet ne change que l’affichage.
+ */
 function ListeComplete({ lignes }: { lignes: readonly LigneDuLot[] }) {
+  const [vue, setVue] = useState<(typeof VUES_LIGNES)[number]["cle"]>(lignes.some((l) => l.etat === "a_corriger") ? "a_corriger" : "valide");
   if (lignes.length === 0) return null;
+  const visibles = lignes.filter((l) => l.etat === vue);
 
   return (
-    <details className="carte p-5">
-      <summary className="cursor-pointer text-[length:var(--text-tableau)] font-semibold">
-        Voir les {lignes.length} lignes lues
-      </summary>
-      <div className="mt-4 max-h-[26rem] overflow-auto rounded-[var(--radius-champ)] border border-[color:var(--color-bordure)]">
-        <table className="w-full min-w-[34rem] border-collapse text-[length:var(--text-tableau)]">
-          <caption className="sr-only">Toutes les lignes lues dans les fichiers déposés</caption>
-          <thead className="sticky top-0 bg-[color:var(--color-surface-douce)]">
-            <tr className="text-left">
-              <th scope="col" className="p-2.5 font-semibold">Élève</th>
-              <th scope="col" className="p-2.5 font-semibold">Classe</th>
-              <th scope="col" className="p-2.5 font-semibold">Fichier</th>
-              <th scope="col" className="p-2.5 font-semibold">État</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lignes.map((ligne) => (
-              <tr key={ligne.id} className="border-t border-[color:var(--color-bordure)]">
-                <td className="p-2.5">
-                  {ligne.prenom} {ligne.nom}
-                </td>
-                <td className="p-2.5 text-[color:var(--color-encre-faible)]">{ligne.classe}</td>
-                <td className="max-w-[12rem] truncate p-2.5 text-[color:var(--color-encre-faible)]">
-                  {ligne.fichier}
-                </td>
-                <td className="p-2.5">
-                  {ligne.etat === "valide" ? (
-                    <span className="text-[color:var(--color-encre-faible)]">prêt</span>
-                  ) : ligne.etat === "ignoree" ? (
-                    <span className="text-[color:var(--color-encre-tres-faible)]">
-                      en double, ignorée
-                    </span>
-                  ) : (
-                    <span className="text-[color:var(--color-erreur)]">
-                      {ligne.probleme ?? "à corriger"}
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <section aria-labelledby="titre-lignes" className="panneau">
+      <h2 id="titre-lignes" className="titre-section">
+        Les {lignes.length} lignes lues
+      </h2>
+      <div role="tablist" aria-label="Lignes par état" className="onglets-liens mt-2">
+        {VUES_LIGNES.map((o) => (
+          <button key={o.cle} type="button" role="tab" aria-selected={vue === o.cle} onClick={() => setVue(o.cle)} className="onglet-bouton">
+            {o.libelle} <span className="nombre">{lignes.filter((l) => l.etat === o.cle).length}</span>
+          </button>
+        ))}
       </div>
-    </details>
+      {visibles.length === 0 ? (
+        <p className="meta m-0 mt-4">Aucune ligne dans cet onglet.</p>
+      ) : (
+        <div className="mt-4 max-h-[26rem] overflow-auto rounded-[12px] border border-[color:var(--color-bordure)]">
+          <table className="tableau-r2 min-w-[34rem]">
+            <caption className="sr-only">Lignes « {VUES_LIGNES.find((o) => o.cle === vue)?.libelle} » lues dans les fichiers déposés</caption>
+            <thead className="sticky top-0">
+              <tr>
+                <th scope="col">Élève</th>
+                <th scope="col">Classe</th>
+                <th scope="col">Fichier</th>
+                <th scope="col">État</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibles.map((ligne) => (
+                <tr key={ligne.id}>
+                  <td>
+                    {ligne.prenom} {ligne.nom}
+                  </td>
+                  <td className="text-[color:var(--color-encre-faible)]">{ligne.classe}</td>
+                  <td className="max-w-[12rem] truncate text-[color:var(--color-encre-faible)]">{ligne.fichier}</td>
+                  <td>
+                    {ligne.etat === "valide" ? (
+                      <span className="etiquette-etat" data-ton="succes">Valide</span>
+                    ) : ligne.etat === "ignoree" ? (
+                      <span className="etiquette-etat">En double, ignorée</span>
+                    ) : (
+                      <span className="etiquette-etat" data-ton="attention">{ligne.probleme ?? "À corriger"}</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
 

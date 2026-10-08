@@ -142,7 +142,7 @@ export function Recherche({
         <label htmlFor="perimetre" className="sr-only">
           Périmètre
         </label>
-        <select id="perimetre" className="champ w-auto min-h-[36px] py-1" value={classe} onChange={(e) => setClasse(e.target.value)}>
+        <select id="perimetre" className="champ w-auto min-h-[36px] rounded-full py-1" value={classe} onChange={(e) => setClasse(e.target.value)}>
           <option value="">Toutes mes classes</option>
           {classes.map((c) => (
             <option key={c.id} value={c.id}>
@@ -156,8 +156,7 @@ export function Recherche({
             type="button"
             aria-pressed={types.includes(g.cle)}
             onClick={() => basculer(g.cle)}
-            className="etiquette-etat cursor-pointer border-0"
-            data-ton={types.includes(g.cle) ? "rose" : undefined}
+            className="pilule cursor-pointer"
           >
             {g.libelle}
             {etat.type === "resultats" && etat.reponse.facettes[g.cle] ? ` · ${etat.reponse.facettes[g.cle]}` : ""}
@@ -240,11 +239,13 @@ export function Recherche({
 function ResultatVu({ r }: { r: Resultat }) {
   const g = GENRES.find((x) => x.cle === r.kind)!;
   return (
-    <Link href={r.href} className="panneau block no-underline transition-colors hover:border-[color:var(--color-bordure-forte)]">
+    <Link href={r.href} className="panneau flex gap-4 no-underline transition-colors hover:border-[color:var(--color-accent)]">
+      <span className="tuile" aria-hidden="true">
+        <g.icone size={20} strokeWidth={1.75} />
+      </span>
+      <span className="min-w-0 flex-1">
       <span className="flex flex-wrap items-center gap-2">
-        <span className="etiquette-etat">
-          <g.icone size={14} strokeWidth={1.75} aria-hidden="true" /> {g.libelle.replace(/s$/u, "")}
-        </span>
+        <span className="etiquette-etat" data-ton="rose">{g.libelle.replace(/s$/u, "")}</span>
         <span className="meta">{VALIDATION[r.validation]}</span>
         <span className="meta">· {new Date(r.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}</span>
       </span>
@@ -263,6 +264,7 @@ function ResultatVu({ r }: { r: Resultat }) {
           )}
         </span>
       ))}
+      </span>
     </Link>
   );
 }

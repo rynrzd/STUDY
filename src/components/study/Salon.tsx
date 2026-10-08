@@ -292,7 +292,7 @@ export function Salon({
                 key={m.id}
                 type="button"
                 onClick={() => document.getElementById(`m-${m.id}`)?.scrollIntoView({ block: "center" })}
-                className="flex w-full items-start gap-2 rounded-[10px] bg-[color:var(--color-attention-fond)] p-3 text-left"
+                className="flex w-full items-start gap-2 rounded-[10px] bg-[color:var(--color-rose-clair)] p-3 text-left"
               >
                 <Pin size={16} strokeWidth={1.75} aria-hidden="true" className="mt-0.5 shrink-0" />
                 <span className="min-w-0">

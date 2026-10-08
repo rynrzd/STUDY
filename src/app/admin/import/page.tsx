@@ -28,6 +28,7 @@ export default async function PageImport() {
 
   return (
     <div className="max-w-[72rem]">
+      <p className="sourcil">Administration</p>
       <h1 className="titre-page m-0">
         Import de rentrée
       </h1>
@@ -106,7 +107,7 @@ export default async function PageImport() {
             Imports passés
           </h2>
           <div className="mt-4 overflow-x-auto rounded-[var(--radius-champ)] border border-[color:var(--color-bordure)]">
-            <table className="w-full min-w-[30rem] border-collapse text-[length:var(--text-tableau)]">
+            <table className="tableau-r2 min-w-[30rem]">
               <caption className="sr-only">Historique des imports de l&apos;établissement</caption>
               <thead className="bg-[color:var(--color-surface-douce)]">
                 <tr className="text-left">

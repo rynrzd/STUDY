@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Clock3, RefreshCw } from "lucide-react";
+import { Clock3, Hourglass, RefreshCw } from "lucide-react";
 import { CarteAcces } from "@/components/study/CarteAcces";
 import { Confirmer } from "@/components/study/Dialogue";
 import { Etiquette, ICONE, dateLisible } from "@/components/study/ui";
@@ -50,6 +50,18 @@ export default async function PageAccesEnAttente({ searchParams }: { searchParam
         <p role="status" className="m-0 mb-4 rounded-[10px] bg-[color:var(--color-succes-fond)] p-3 text-[0.8125rem] font-medium text-[color:var(--color-succes)]">
           Demande envoyée.
         </p>
+      ) : null}
+
+      {enAttente.length > 0 ? (
+        <div className="mb-5 flex items-center gap-4 rounded-[var(--radius-carte)] bg-[color:var(--color-rose-clair)] p-5">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[color:var(--color-surface)] text-[color:var(--color-accent)]" aria-hidden="true">
+            <Hourglass size={24} strokeWidth={1.75} />
+          </span>
+          <p className="m-0 text-[0.9375rem]">
+            <span className="block font-bold">En attente de validation</span>
+            Tant que la demande n&apos;est pas validée, aucun cours ni membre de la classe n&apos;est visible. Actualise pour connaître la décision.
+          </p>
+        </div>
       ) : null}
 
       {lignes.length === 0 ? (

@@ -13,6 +13,14 @@ const FORMATS = [
   { cle: "controle", libelle: "Préparer un contrôle", aide: "L'essentiel, une liste de vérification et les exercices." },
 ] as const;
 
+function Pastille({ n }: { n: number }) {
+  return (
+    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[color:var(--color-accent)] text-[0.875rem] font-extrabold text-white" aria-hidden="true">
+      {n}
+    </span>
+  );
+}
+
 interface SeanceDispo {
   readonly id: string;
   readonly titre: string;
@@ -42,7 +50,7 @@ export function FormulaireFiche({ seances, preselection, formatInitial }: { sean
       <div className="grid content-start gap-6">
         <RetourFormulaire etat={etat} />
         <fieldset className="panneau">
-          <legend className="titre-section px-1">1. Sources</legend>
+          <legend className="titre-section flex items-center gap-2 px-1"><Pastille n={1} /> Sources</legend>
           {etat.champs?.seance ? (
             <p role="alert" className="m-0 mb-3 text-[0.8125rem] text-[color:var(--color-erreur)]">
               {etat.champs.seance.join(" ")}
@@ -89,10 +97,10 @@ export function FormulaireFiche({ seances, preselection, formatInitial }: { sean
         </fieldset>
 
         <fieldset className="panneau">
-          <legend className="titre-section px-1">2. Format</legend>
+          <legend className="titre-section flex items-center gap-2 px-1"><Pastille n={2} /> Format</legend>
           <div className="grid gap-2 sm:grid-cols-2">
             {FORMATS.map((f) => (
-              <label key={f.cle} className={`flex cursor-pointer gap-3 rounded-[10px] border p-3 ${format === f.cle ? "border-[color:var(--color-focus)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)]"}`}>
+              <label key={f.cle} className={`flex cursor-pointer gap-3 rounded-[10px] border p-3 ${format === f.cle ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)]"}`}>
                 <input type="radio" name="format" value={f.cle} checked={format === f.cle} onChange={() => setFormat(f.cle)} />
                 <span>
                   <span className="block font-semibold">{f.libelle}</span>
@@ -115,8 +123,8 @@ export function FormulaireFiche({ seances, preselection, formatInitial }: { sean
         </fieldset>
       </div>
 
-      <aside className="panneau grid content-start gap-4 lg:sticky lg:top-24">
-        <h2 className="titre-section">3. Avant de lancer</h2>
+      <aside className="grid content-start gap-4 rounded-[var(--radius-carte)] bg-[color:var(--color-rose-clair)] p-6 lg:sticky lg:top-24">
+        <h2 className="titre-section flex items-center gap-2"><Pastille n={3} /> Avant de lancer</h2>
         {selection.length === 0 ? (
           <p className="m-0 text-[color:var(--color-encre-faible)]">Choisis au moins une séance.</p>
         ) : (

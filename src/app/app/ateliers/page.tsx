@@ -1,7 +1,6 @@
-import Link from "next/link";
-import { EnTetePage, EtatVide, Etiquette, Panneau, dateLisible } from "@/components/study/ui";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 import { contexteApp } from "@/lib/v6/contexte";
+import { VueAteliers } from "./vue";
 
 export const metadata = { title: "Ateliers" };
 export const dynamic = "force-dynamic";
@@ -29,46 +28,5 @@ export default async function PageAteliers({ searchParams }: { searchParams: Pro
     { cle: "actualite", libelle: "Actualité" },
     { cle: "verifier_ia", libelle: "Vérifier une réponse d'IA" },
   ];
-  return (
-    <div className="mx-auto max-w-[960px]">
-      <EnTetePage titre="Ateliers" sousTitre="Lire des sources datées, puis répondre. Proposés par tes professeurs." />
-      <nav aria-label="Filtrer les ateliers" className="mb-5 flex flex-wrap gap-2">
-        {filtres.map((f) => (
-          <Link
-            key={f.libelle}
-            href={f.cle ? `/app/ateliers?type=${f.cle}` : "/app/ateliers"}
-            aria-current={(type ?? null) === f.cle ? "page" : undefined}
-            className={`bouton bouton-compact ${(type ?? null) === f.cle ? "bouton-primaire" : "bouton-secondaire"}`}
-          >
-            {f.libelle}
-          </Link>
-        ))}
-      </nav>
-      {error !== null ? (
-        <p role="alert" className="text-[color:var(--color-erreur)]">
-          Les ateliers n&apos;ont pas pu être chargés. Réessaie dans un instant.
-        </p>
-      ) : ateliers.length === 0 ? (
-        <EtatVide titre="Aucun atelier pour l'instant" texte="Quand un professeur en publiera un pour l'une de tes classes, il apparaîtra ici." />
-      ) : (
-        <Panneau>
-          <ul className="m-0 list-none p-0">
-            {ateliers.map((a) => (
-              <li key={a.id} className="ligne">
-                <span className="min-w-0 flex-1">
-                  <Link href={`/app/ateliers/${a.id}`} className="block font-semibold">
-                    {a.titre}
-                  </Link>
-                  <span className="meta block truncate">{a.question}</span>
-                </span>
-                <Etiquette ton={a.kind === "actualite" ? "rose" : "neutre"}>{a.kind === "actualite" ? "Actualité" : "Vérifier l'IA"}</Etiquette>
-                {a.etat === "clos" ? <Etiquette>Clos</Etiquette> : null}
-                {a.published_at ? <span className="meta hidden sm:inline">{dateLisible(a.published_at, { day: "numeric", month: "short" })}</span> : null}
-              </li>
-            ))}
-          </ul>
-        </Panneau>
-      )}
-    </div>
-  );
+  return <VueAteliers type={type} error={error} ateliers={ateliers} filtres={filtres} />;
 }

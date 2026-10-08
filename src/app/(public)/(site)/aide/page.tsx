@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
-import { Prose, Section, TitrePage } from "@/components/site/Ui";
+import { Mail } from "lucide-react";
+import { Faq } from "@/components/site/Onglets";
+import { Section, TitrePage } from "@/components/site/Ui";
 
 export const metadata: Metadata = pagePublique({
   chemin: "/aide",
@@ -37,37 +39,39 @@ const QUESTIONS = [
   },
 ] as const;
 
+/**
+ * P12 — Aide (maquette R2 n° 2, « Comment pouvons-nous vous aider ? ») : les
+ * questions fréquentes en accordéon (details natif, lisible sans script) et,
+ * à côté, à qui s’adresser. Textes alignés sur ce que le produit fait
+ * réellement.
+ */
 export default function Aide() {
   return (
     <>
       <TitrePage
         surtitre="Aide"
-        titre="Questions fréquentes."
-        chapeau="Ces réponses valent pour les élèves et les enseignants. Pour une question sur votre compte, votre établissement est le bon interlocuteur : c'est lui qui gère les accès."
+        titre="Comment pouvons-nous vous aider ?"
+        chapeau="Ces réponses valent pour les élèves et les enseignants. Pour une question sur votre compte, votre établissement est le bon interlocuteur : c’est lui qui gère les accès."
       />
 
       <Section>
-        <dl className="m-0 max-w-[var(--spacing-lecture)] space-y-8 p-0">
-          {QUESTIONS.map((item) => (
-            <div key={item.q} className="border-b border-[color:var(--color-bordure)] pb-8">
-              <dt className="text-[length:var(--text-h3)] font-bold leading-[var(--text-h3--line-height)]">
-                {item.q}
-              </dt>
-              <dd className="m-0 mt-3 text-[color:var(--color-encre-faible)]">{item.r}</dd>
-            </div>
-          ))}
-        </dl>
-
-        <div className="mt-12">
-          <Prose>
-            <h2>Vous n&apos;avez pas trouvé votre réponse</h2>
-            <p>
-              La page <Link href="/contact">contact</Link> indique à qui
-              s&apos;adresser selon votre situation. Pour une question sur un
-              compte, votre établissement répond plus vite que nous : c&apos;est
-              lui qui gère les accès.
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] lg:items-start">
+          <div className="rounded-[var(--radius-grand)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] px-6 py-2">
+            <h2 className="m-0 pt-4 pb-2 text-[1.125rem] font-bold">Questions fréquentes</h2>
+            <Faq questions={QUESTIONS.map((x) => ({ question: x.q, reponse: x.r }))} />
+          </div>
+          <aside className="flex flex-col items-center rounded-[var(--radius-grand)] bg-[color:var(--color-rose-clair)] p-8 text-center">
+            <span className="grid h-14 w-14 place-items-center rounded-full bg-[color:var(--color-surface)] text-[color:var(--color-accent)]" aria-hidden="true">
+              <Mail size={24} strokeWidth={1.75} />
+            </span>
+            <h2 className="m-0 mt-4 text-[1.125rem] font-bold">Contacter votre établissement</h2>
+            <p className="m-0 mt-2 text-[0.9375rem] text-[color:var(--color-encre-faible)]">
+              Pour un compte, une classe ou un accès : l’équipe de votre lycée (vie scolaire, professeur principal, administration) répond plus vite que nous.
             </p>
-          </Prose>
+            <Link href="/contact" className="bouton bouton-secondaire mt-5">
+              Autres situations
+            </Link>
+          </aside>
         </div>
       </Section>
     </>

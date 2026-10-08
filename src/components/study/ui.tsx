@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CircleAlert, FileText, Lock, type LucideIcon } from "lucide-react";
+import { Check, ChevronRight, CircleAlert, FileText, Lock, type LucideIcon } from "lucide-react";
 
 /**
  * Composants d'affichage partagés — dossier Study V6, §3.4.
@@ -207,6 +207,7 @@ export function AvisVisibilite({ children }: { children: React.ReactNode }) {
 
 export function Panneau({
   titre,
+  compte,
   action,
   children,
   className = "",
@@ -214,6 +215,8 @@ export function Panneau({
   id,
 }: {
   titre?: string;
+  /** Compteur affiché à côté du titre (maquettes R2 : « Équipe (4) »). */
+  compte?: number | null;
   action?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
@@ -226,8 +229,9 @@ export function Panneau({
       {titre || action ? (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           {titre ? (
-            <h2 id={idTitre} className="titre-section">
+            <h2 id={idTitre} className="titre-section flex items-center gap-2">
               {titre}
+              {compte != null ? <span className="nombre">{compte}</span> : null}
             </h2>
           ) : (
             <span />
@@ -237,5 +241,179 @@ export function Panneau({
       ) : null}
       {children}
     </Balise>
+  );
+}
+
+/* --- R2 : primitives des cinq maquettes (listes, onglets, étapes) -------- */
+
+/** Tuile d'icône plate, 40 px : carré blush, pictogramme baie. */
+export function TuileIcone({ icone: Icone, ton, grande = false }: { icone: LucideIcon; ton?: "neutre"; grande?: boolean }) {
+  return (
+    <span className={`tuile${grande ? " tuile-grande" : ""}`} data-ton={ton} aria-hidden="true">
+      <Icone size={grande ? 22 : 20} strokeWidth={1.75} />
+    </span>
+  );
+}
+
+/** Liste de lignes dans une carte blanche. Les enfants sont des <li>. */
+export function ListeLignes({ children, etiquette }: { children: React.ReactNode; etiquette?: string }) {
+  return (
+    <ul className="liste-r2" aria-label={etiquette}>
+      {children}
+    </ul>
+  );
+}
+
+/**
+ * Ligne de liste : tuile, titre, détail, et à droite une étiquette ou un
+ * chevron. Avec href, toute la ligne est le lien (cible de 64 px).
+ */
+export function Ligne({
+  href,
+  icone,
+  titre,
+  detail,
+  fin,
+  courante = false,
+}: {
+  href?: string;
+  icone?: LucideIcon;
+  titre: React.ReactNode;
+  detail?: React.ReactNode;
+  fin?: React.ReactNode;
+  courante?: boolean;
+}) {
+  const corps = (
+    <>
+      {icone ? <TuileIcone icone={icone} /> : null}
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold">{titre}</span>
+        {detail ? <span className="meta block">{detail}</span> : null}
+      </span>
+      {fin ? <span className="flex shrink-0 items-center gap-2">{fin}</span> : null}
+      {href ? <ChevronRight size={18} strokeWidth={1.75} aria-hidden="true" className="chevron" /> : null}
+    </>
+  );
+  return (
+    <li>
+      {href ? (
+        <Link href={href} className="ligne-r2" aria-current={courante ? "true" : undefined}>
+          {corps}
+        </Link>
+      ) : (
+        <div className="ligne-r2">{corps}</div>
+      )}
+    </li>
+  );
+}
+
+/** Onglets en liens, soulignés en baie, avec compteur facultatif. */
+export function OngletsLiens({
+  onglets,
+  etiquette,
+}: {
+  onglets: readonly { href: string; libelle: string; compte?: number | null; actif: boolean }[];
+  etiquette: string;
+}) {
+  return (
+    <nav aria-label={etiquette} className="onglets-liens mb-5">
+      {onglets.map((o) => (
+        <Link key={o.href} href={o.href} aria-current={o.actif ? "page" : undefined}>
+          {o.libelle}
+          {o.compte != null ? <span className="nombre">{o.compte}</span> : null}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+/** Indicateur d'étapes : l'état est écrit, pas seulement porté par la couleur. */
+export function Etapes({
+  etapes,
+  courante,
+  etiquette,
+}: {
+  etapes: readonly { titre: string; detail?: string }[];
+  courante: number;
+  etiquette: string;
+}) {
+  return (
+    <ol className="m-0 grid list-none gap-3 p-0 sm:auto-cols-fr sm:grid-flow-col" aria-label={etiquette}>
+      {etapes.map((e, i) => {
+        const n = i + 1;
+        const etat = n < courante ? "faite" : n === courante ? "en cours" : "à venir";
+        return (
+          <li key={e.titre} aria-current={n === courante ? "step" : undefined} className="flex items-center gap-3">
+            <span
+              className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-[0.9375rem] font-extrabold ${n <= courante ? "bg-[color:var(--color-accent)] text-white" : "border border-[color:var(--color-bordure-forte)] bg-[color:var(--color-surface)] text-[color:var(--color-encre-faible)]"}`}
+              aria-hidden="true"
+            >
+              {n < courante ? <Check size={18} strokeWidth={2.25} /> : n}
+            </span>
+            <span className="min-w-0">
+              <span className="block font-bold">{e.titre}</span>
+              <span className="meta block">
+                {e.detail ? `${e.detail} · ` : null}
+                <span className="font-semibold">{etat}</span>
+              </span>
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/** Encadré blush : ce qu'il faut savoir avant d'agir. */
+export function Encadre({
+  icone: Icone = CircleAlert,
+  titre,
+  children,
+  ton,
+}: {
+  icone?: LucideIcon;
+  titre?: string;
+  children: React.ReactNode;
+  ton?: "neutre";
+}) {
+  return (
+    <div className="encadre" data-ton={ton}>
+      <Icone size={20} strokeWidth={1.75} aria-hidden="true" className="mt-0.5 shrink-0 text-[color:var(--color-accent)]" />
+      <div className="min-w-0 text-[0.9375rem] leading-[1.55]">
+        {titre ? <p className="m-0 font-bold">{titre}</p> : null}
+        <div className={titre ? "mt-1 text-[color:var(--color-encre-faible)]" : ""}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/** Carte de chiffre : tuile, libellé, valeur réelle (ou tiret si inconnue). */
+export function CarteChiffre({
+  icone,
+  libelle,
+  valeur,
+  detail,
+  href,
+}: {
+  icone: LucideIcon;
+  libelle: string;
+  valeur: React.ReactNode;
+  detail?: string;
+  href?: string;
+}) {
+  const corps = (
+    <>
+      <TuileIcone icone={icone} />
+      <span className="font-bold">{libelle}</span>
+      <span className="text-[1.75rem] font-extrabold leading-none tracking-[-0.02em]">{valeur}</span>
+      {detail ? <span className="meta">{detail}</span> : null}
+    </>
+  );
+  return href ? (
+    <Link href={href} className="carte-chiffre">
+      {corps}
+    </Link>
+  ) : (
+    <div className="carte-chiffre">{corps}</div>
   );
 }

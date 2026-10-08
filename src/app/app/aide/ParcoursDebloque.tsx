@@ -4,6 +4,10 @@ import Link from "next/link";
 import { BookOpen, Lightbulb, MessageCircleQuestion, MessageSquareLock, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { demanderAide, lancerEntrainement, variante } from "@/app/app/reviser/actions";
+import { Etapes } from "@/components/study/ui";
+
+const ETAPES = [{ titre: "Ton essai" }, { titre: "Indice, exemple" }, { titre: "Vérifier" }, { titre: "Demander" }] as const;
+const NUMERO: Record<Etape, number> = { essai: 1, indice: 2, exemple: 2, verification: 3, relais: 4 };
 
 interface ExerciceAide {
   readonly versionId: string;
@@ -59,6 +63,9 @@ export function ParcoursDebloque({ exercices, salon }: { exercices: readonly Exe
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="panneau lg:col-span-2" aria-live="polite">
+        <Etapes etapes={ETAPES} courante={NUMERO[etape]} etiquette="Progression de l'aide" />
+      </div>
       <div className="grid content-start gap-4">
         {exercices.length > 1 ? (
           <div className="panneau">
@@ -85,9 +92,9 @@ export function ParcoursDebloque({ exercices, salon }: { exercices: readonly Exe
           </div>
         ) : null}
 
-        <section className="panneau">
-          <p className="sourcil">Exercice</p>
-          <p className="m-0 font-medium">{choisi.enonce}</p>
+        <section className="rounded-[var(--radius-carte)] bg-[color:var(--color-rose-clair)] p-6">
+          <p className="sourcil">Exercice{choisi.titreSeance ? ` · ${choisi.titreSeance}` : ""}</p>
+          <p className="m-0 text-[1.0625rem] font-semibold">{choisi.enonce}</p>
         </section>
 
         <section className="panneau" aria-live="polite">
@@ -112,7 +119,7 @@ export function ParcoursDebloque({ exercices, salon }: { exercices: readonly Exe
               ) : null}
             </li>
             {aides.map((a, i) => (
-              <li key={i} className="rounded-[10px] bg-[color:var(--color-attention-fond)] p-4">
+              <li key={i} className="rounded-[12px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-4">
                 <p className="m-0 mb-1 font-semibold">{a.niveau === "indice" ? "2. Indice" : "3. Un exemple proche"}</p>
                 <p className="m-0">{a.texte}</p>
               </li>
@@ -151,12 +158,12 @@ export function ParcoursDebloque({ exercices, salon }: { exercices: readonly Exe
         </section>
 
         {etape === "relais" || aides.length >= 2 ? (
-          <section className="panneau panneau-vert" aria-labelledby="relais">
+          <section className="panneau border-[color:var(--color-accent)]" aria-labelledby="relais">
             <h2 id="relais" className="titre-section">
               Demander à quelqu&apos;un
             </h2>
             <p className="m-0 mt-2">Voici exactement ce qui sera envoyé — rien d&apos;autre, et surtout pas tes notes privées :</p>
-            <pre className="mt-3 whitespace-pre-wrap rounded-[10px] bg-[color:var(--color-surface)] p-3 font-[family-name:var(--font-texte)] text-[0.875rem]">{message}</pre>
+            <pre className="mt-3 whitespace-pre-wrap rounded-[10px] bg-[color:var(--color-rose-clair)] p-3 font-[family-name:var(--font-texte)] text-[0.875rem]">{message}</pre>
             <div className="mt-4 flex flex-wrap gap-2">
               {salon ? (
                 <Link

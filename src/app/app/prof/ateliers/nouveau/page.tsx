@@ -13,7 +13,7 @@ export default async function PageNouvelAtelier() {
   const espaces = await espacesEnseignes(ctx.jeton);
   return (
     <div className="mx-auto max-w-[900px]">
-      <EnTetePage filAriane={[{ href: "/app/prof/ateliers", libelle: "Ateliers" }]} titre="Nouvel atelier" sousTitre="Croiser une question, des documents datés et, si besoin, une réponse à vérifier." />
+      <EnTetePage filAriane={[{ href: "/app/prof/ateliers", libelle: "Ateliers" }]} sourcil="Éditeur d’atelier" titre="Nouvel atelier" sousTitre="Croiser une question, des documents datés et, si besoin, une réponse à vérifier." />
       <AssistantAtelier
         etape={1}
         espaces={espaces}

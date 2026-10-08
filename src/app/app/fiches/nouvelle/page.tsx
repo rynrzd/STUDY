@@ -1,3 +1,4 @@
+import { BookOpen } from "lucide-react";
 import { EnTetePage, EtatVide } from "@/components/study/ui";
 import { contexteApp } from "@/lib/v6/contexte";
 import { disponibilites, FORMATS, seancesChoisissables } from "@/lib/v6/fiches";
@@ -23,9 +24,9 @@ export default async function PageNouvelleFiche({ searchParams }: { searchParams
 
   return (
     <div className="mx-auto max-w-[1100px]">
-      <EnTetePage filAriane={[{ href: "/app/reviser", libelle: "Réviser" }]} titre="Créer une révision" sousTitre="Choisis tes sources : la fiche ne contiendra que des extraits de ces séances, cités." />
+      <EnTetePage filAriane={[{ href: "/app/reviser", libelle: "Réviser" }]} sourcil="Fiche à la demande" titre="Créer une révision" sousTitre="Choisis tes sources : la fiche ne contiendra que des extraits de ces séances, cités." />
       {seances.length === 0 ? (
-        <EtatVide titre="Aucune séance disponible" texte="Les fiches se construisent à partir des séances publiées dans tes cours. Il n'y en a pas encore." />
+        <EtatVide icone={BookOpen} titre="Aucune séance disponible" texte="Les fiches se construisent à partir des séances publiées dans tes cours. Il n'y en a pas encore." />
       ) : (
         <FormulaireFiche
           seances={seances.map((s) => ({ ...s, passages: dispo.get(s.id)?.passages ?? 0, exercices: dispo.get(s.id)?.exercices ?? 0 }))}

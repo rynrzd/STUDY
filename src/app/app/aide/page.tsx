@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { EnTetePage, EtatVide, Panneau } from "@/components/study/ui";
+import { Camera, LifeBuoy } from "lucide-react";
+import { EnTetePage, Encadre, EtatVide } from "@/components/study/ui";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 import { contexteApp } from "@/lib/v6/contexte";
 import { exercicesDeLaSeance, seanceDetail } from "@/lib/v6/cours";
@@ -53,12 +54,14 @@ export default async function PageDebloque({ searchParams }: { searchParams: Pro
     <div className="mx-auto max-w-[1000px]">
       <EnTetePage
         filAriane={[{ href: "/app/reviser", libelle: "Réviser" }]}
-        titre="Débloque-moi"
+        sourcil="Débloque-moi"
+        titre="Bloqué sur un exercice ?"
         sousTitre="Une aide graduelle, tirée de ce que ton professeur a préparé : un indice, un exemple, puis quelqu'un pour t'aider."
       />
       {exercices.length === 0 ? (
         <div className="grid gap-6">
           <EtatVide
+            icone={LifeBuoy}
             titre="Sur quel exercice bloques-tu ?"
             texte="Ouvre Débloque-moi depuis une séance (onglet Exercices) ou depuis un entraînement : les aides sont attachées à chaque exercice."
             action={
@@ -67,15 +70,15 @@ export default async function PageDebloque({ searchParams }: { searchParams: Pro
               </Link>
             }
           />
-          <Panneau titre="Une photo d'exercice ?">
-            <p className="m-0 text-[color:var(--color-encre-faible)]">
+          <Encadre icone={Camera} titre="Une photo d'exercice ?" ton="neutre">
+            <p className="m-0">
               La lecture automatique des photos n&apos;est pas disponible dans Study. Recopie l&apos;énoncé dans une question au salon de la
               matière, ou écris à ton professeur : une formule mal lue serait une mauvaise aide.
             </p>
-            <Link href="/app/demandes/nouvelle" className="bouton bouton-secondaire mt-4">
+            <Link href="/app/demandes/nouvelle" className="bouton bouton-secondaire mt-3">
               Écrire à un professeur
             </Link>
-          </Panneau>
+          </Encadre>
         </div>
       ) : (
         <ParcoursDebloque exercices={exercices} salon={salon} />

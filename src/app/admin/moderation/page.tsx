@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { TitreEspace, Vide } from "@/components/app/Cadre";
+import { ShieldCheck } from "lucide-react";
+import { EnTetePage, EtatVide } from "@/components/study/ui";
 import { Signalements } from "@/components/admin/Signalements";
 import { assuranceSuffisante } from "@/lib/garde-assurance";
 import { pagePrivee } from "@/lib/metadonnees";
@@ -44,13 +45,12 @@ export default async function PageModeration() {
   if (personne.organizationId === null) {
     return (
       <>
-        <TitreEspace titre="Modération" />
-        <div className="mt-8">
-          <Vide
-            titre="Votre compte n'administre aucun établissement actif."
-            texte="Les signalements apparaîtront ici dès que votre établissement sera actif."
-          />
-        </div>
+        <EnTetePage sourcil="Administration" titre="Modération" />
+        <EtatVide
+          icone={ShieldCheck}
+          titre="Votre compte n'administre aucun établissement actif."
+          texte="Les signalements apparaîtront ici dès que votre établissement sera actif."
+        />
       </>
     );
   }
@@ -59,12 +59,9 @@ export default async function PageModeration() {
 
   return (
     <>
-      <TitreEspace
-        titre="Modération"
-        sousTitre={personne.organisation ?? "Établissement"}
-      />
+      <EnTetePage sourcil={personne.organisation ?? "Établissement"} titre="Modération" sousTitre="Traitez les contenus signalés par la communauté." />
 
-      <p className="m-0 mt-4 max-w-[var(--spacing-lecture)] text-[color:var(--color-encre-faible)]">
+      <p className="m-0 max-w-[70ch] text-[color:var(--color-encre-faible)]">
         Un signalement, seul, ne masque rien — et dix non plus. Un message ne
         disparaît que par une décision écrite, prise ici, et conservée au journal
         d&apos;audit. Le nom de la personne qui a signalé ne sort pas de cette
