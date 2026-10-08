@@ -18,8 +18,15 @@ l'aide à l'AIPD par le DPO de l'établissement. Aucun prix n'est fixé.
 
 ## Avant d'envoyer quoi que ce soit, côté éditeur
 
+**À lire en premier : [hebergement-et-plans.md](hebergement-et-plans.md).** Le DPA
+de Vercel ne couvre que les plans Pro et Enterprise, le plan gratuit de Vercel
+est réservé à un usage non commercial, et le plan gratuit de Supabase n'offre
+pas de sauvegarde restaurable. Le plan actuel des comptes de Study n'a pas pu
+être vérifié.
+
 Ces actions ne peuvent être faites que par le titulaire des comptes :
 
+0. Vérifier le plan des projets Vercel et Supabase ; passer en Pro si besoin.
 1. Vérifier les consoles Vercel et Supabase, second facteur compris
    (`../securite/annexe-controles-manuels.md`) — risque R-03.
 2. Télécharger les DPA de Vercel et de Supabase et les joindre à l'annexe de

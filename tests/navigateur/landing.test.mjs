@@ -89,13 +89,37 @@ test("L03 — sections de la référence, dans l'ordre", async () => {
 
 test("L04 — la FAQ s'ouvre au clavier", async () => {
   const onglet = await page("/");
-  const questions = (await onglet.locator("details > summary").allInnerTexts()).map(norm);
+  const questions = (await onglet.locator("main details > summary").allInnerTexts()).map(norm);
   assert.deepEqual(questions, ["Faut-il un ordinateur par élève ?", "Qui finance la plateforme ?", "Comment installer Study dans mon lycée ?"]);
-  const resume = onglet.locator("details > summary").first();
+  const resume = onglet.locator("main details > summary").first();
   await resume.focus();
   await onglet.keyboard.press("Enter");
   await onglet.waitForTimeout(250);
-  assert.equal(await onglet.locator("details").first().evaluate((d) => d.open), true);
+  assert.equal(await onglet.locator("main details").first().evaluate((d) => d.open), true);
+  await onglet.close();
+});
+
+test("L05 — menu du téléphone : ouverture, trois destinations, Échap rend le focus", async () => {
+  const onglet = await page("/", { largeur: 390, hauteur: 844 });
+  const bouton = onglet.locator("header summary", { hasText: "Menu" });
+  assert.equal(await bouton.isVisible(), true, "le bouton Menu est visible");
+  const boite = await bouton.boundingBox();
+  assert.ok(boite && boite.height >= 44, "cible d au moins 44 px");
+  await bouton.click();
+  for (const [nom, href] of [["La plateforme", "/produit"], ["Établissements", "/etablissements"], ["Demander une démo", "/contact"]]) {
+    const lien = onglet.locator("header details").getByRole("link", { name: nom });
+    assert.equal(await lien.isVisible(), true, nom);
+    assert.equal(await lien.getAttribute("href"), href);
+  }
+  await onglet.keyboard.press("Escape");
+  assert.equal(await onglet.locator("header details").evaluate((d) => d.open), false, "Échap referme");
+  assert.equal(await onglet.evaluate(() => document.activeElement?.tagName), "SUMMARY", "le focus revient au bouton");
+  await onglet.close();
+});
+
+test("L06 — sur bureau, le menu du téléphone n est pas affiché", async () => {
+  const onglet = await page("/", { largeur: 1366 });
+  assert.equal(await onglet.locator("header summary", { hasText: "Menu" }).isVisible(), false);
   await onglet.close();
 });
 

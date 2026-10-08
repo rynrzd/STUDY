@@ -88,6 +88,13 @@ raisons, et la seconde compte davantage :
 **Tant que ces pièces ne sont pas au dossier, la ligne « transferts hors EEE »
 porte la mention NON VÉRIFIÉ**, et non « conforme ».
 
+> **Où les obtenir (relevé du 8 octobre 2026)** — Vercel : DPA sur
+> https://vercel.com/dpa, applicable **aux seuls plans Pro et Enterprise** ;
+> sous-traitants sur https://security.vercel.com. Supabase : DPA sur
+> https://supabase.com/legal/dpa ; sous-traitants sur
+> https://supabase.com/legal/subprocessor-list/. Conditions de plan et
+> conséquences : `docs/vente/hebergement-et-plans.md`.
+
 ### Ce que nous pouvons affirmer dès maintenant
 
 - Le calcul est déclaré à Paris et un contrôle automatique le vérifie.

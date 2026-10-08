@@ -98,6 +98,39 @@
 .footer .wrap { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
 .sample { font-size: 12px; color: var(--muted); }
 .white { background: white; }
+
+/* Menu du téléphone (intégration demandée par le README de la référence). */
+.topbar { position: relative; }
+.menuMobile { display: none; }
+.page .menuMobile > summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+.page .menuMobile > summary::-webkit-details-marker { display: none; }
+.page .menuMobile[open] > summary { border-color: var(--primary); color: var(--primary); }
+.menuPanneau {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.page .menuPanneau a:not(.button) { display: flex; align-items: center; min-height: 44px; padding: 0 8px; text-decoration: none; font-weight: 600; }
+.page .menuPanneau .button { margin-top: 4px; }
 .primaryText { color: var(--primary); }
 
 @media (max-width: 767px) {
@@ -105,6 +138,7 @@
   .topbar { min-height: 64px; gap: 16px; }
   .topbar .nav { gap: 16px; }
   .desktop { display: none; }
+  .menuMobile { display: block; }
   .section { padding-block: 48px; }
   .split,
   .steps { grid-template-columns: 1fr; gap: 32px; }

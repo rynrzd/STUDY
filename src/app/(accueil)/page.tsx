@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { pagePublique } from "@/lib/metadonnees";
 import s from "./accueil.module.css";
+import { MenuMobile } from "./MenuMobile";
 
 export const metadata: Metadata = pagePublique({
   chemin: "/",
@@ -36,6 +37,7 @@ export default function Accueil() {
           <Link className={`${s.button} ${s.desktop}`} href="/contact">
             Demander une démo
           </Link>
+          <MenuMobile />
         </nav>
       </header>
 
