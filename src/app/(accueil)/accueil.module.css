@@ -1,9 +1,3 @@
-/*
- * Landing — copie conforme de `code/landing-reference.html` et `code/tokens.css`
- * du dossier R2 (« refonte complète, sans 3D »). Mêmes valeurs, portée limitée à
- * cette page (module CSS) pour ne concurrencer aucun style global.
- */
-
 .page {
   --page: #f8f7f9;
   --surface: #fff;
@@ -45,7 +39,7 @@
   line-height: 1.08;
   letter-spacing: -0.045em;
 }
-.page h1 { font-size: clamp(40px, 4.8vw, 68px); }
+.page h1 { font-size: clamp(38px, 4.1vw, 58px); text-wrap: balance; }
 .page h2 { font-size: clamp(30px, 3.3vw, 46px); }
 .page h3 { font-size: 1.17em; font-weight: 700; letter-spacing: normal; }
 .page p { max-width: 60ch; }
@@ -75,7 +69,7 @@
 .brand span { color: var(--primary); }
 .nav { display: flex; align-items: center; gap: 24px; margin-left: auto; }
 .section { padding-block: 88px; }
-.split { display: grid; grid-template-columns: 5fr 7fr; gap: 64px; align-items: center; }
+.split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 64px; align-items: center; }
 .copy { display: grid; gap: 24px; }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; }
 .muted { color: var(--muted); }
@@ -133,7 +127,7 @@
 .page .menuPanneau .button { margin-top: 4px; }
 .primaryText { color: var(--primary); }
 
-@media (max-width: 767px) {
+@media (max-width: 900px) {
   .wrap { width: calc(100% - 40px); }
   .topbar { min-height: 64px; gap: 16px; }
   .topbar .nav { gap: 16px; }
@@ -145,7 +139,7 @@
   .panel { padding: 20px; border-radius: 18px; }
   .card { padding: 20px; }
   .actions .button { flex: 1; }
-  .page h1 { font-size: 40px; }
+  .page h1 { font-size: clamp(32px, 8.8vw, 44px); }
   .cta .split { gap: 24px; }
   .footer .wrap { align-items: flex-start; flex-direction: column; }
 }
@@ -158,4 +152,99 @@
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Finitions : les aperçus restent du HTML lisible et ne simulent aucun compte. */
+.hero { gap: 40px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); padding-block: 72px 80px; }
+.hero .copy { gap: 24px; }
+.hero .copy > p:not(.eyebrow) { max-width: 42ch; font-size: 18px; line-height: 1.65; }
+.hero .eyebrow { color: var(--primary); letter-spacing: .075em; }
+.page figure { margin: 0; }
+.workspace { border: 1px solid var(--line); border-radius: 24px; background: var(--surface); box-shadow: 0 18px 54px #29282e0b; overflow: hidden; }
+.workspaceBar { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--line); }
+.workspaceBar .brand { font-size: 22px; }
+.pill { display: inline-flex; align-items: center; width: fit-content; padding: 5px 10px; border-radius: 8px; background: var(--blush); color: var(--primary); font-size: 12px; font-weight: 700; }
+.workspaceBody { padding: 24px; }
+.workspaceHeading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+.page .previewTitle { font-size: 24px; letter-spacing: -.03em; line-height: 1.25; margin-top: 8px; }
+.avatar { flex: 0 0 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: var(--blush); color: var(--primary); font-size: 12px; font-weight: 700; }
+.previewGrid { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,1fr); gap: 14px; }
+.lesson { padding: 20px; border-radius: 16px; background: var(--blush); gap: 12px; }
+.lesson .eyebrow { font-size: 10px; }
+.lesson p:not(.eyebrow) { font-size: 14px; }
+.formula { padding: 14px 0; font-size: 27px; font-weight: 700; letter-spacing: -.04em; }
+.today { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 18px 14px; border: 1px solid var(--line); border-radius: 16px; font-size: 13px; }
+.today .eyebrow { font-size: 10px; margin-bottom: 6px; }
+.miniDivider { width: 100%; border-top: 1px solid var(--line); margin: 6px 0; }
+.classNote { display: flex; align-items: center; gap: 12px; margin-top: 20px; font-size: 13px; }
+.previewCaption { padding: 12px 24px; background: var(--page); color: var(--muted); font-size: 11px; border-top: 1px solid var(--line); }
+.revisionSection { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); align-items: center; gap: 80px; }
+.revisionCard { background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--primary); padding: 32px; border-radius: 20px; box-shadow: 0 12px 36px #29282e08; }
+.revisionTop { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.page .question { font-size: clamp(22px,2.5vw,30px); font-weight: 700; letter-spacing: -.03em; line-height: 1.4; padding-block: 32px; }
+.page .answer { border: 0; padding: 0 0 22px; }
+.answer summary { padding: 12px 16px; background: var(--blush); color: var(--primary); border-radius: 10px; }
+.answer > div { padding: 18px 16px 0; }
+.page .answer p { margin-top: 8px; }
+.conversation { display: grid; gap: 16px; }
+.conversation .card:first-child { margin-right: 40px; }
+.conversation .card:nth-child(2) { margin-left: 40px; border-left: 3px solid var(--primary); }
+.studio { display: grid; grid-template-columns: 220px minmax(0,1fr); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; background: white; }
+.studioSidebar { padding: 28px 20px; background: var(--blush); display: flex; flex-direction: column; gap: 20px; font-size: 14px; }
+.studioSelected { padding: 10px 12px; background: white; border-radius: 8px; color: var(--primary); font-weight: 700; }
+.studioContent { padding: 28px; display: grid; gap: 18px; }
+.page .studioContent h3 { font-size: 28px; letter-spacing: -.03em; }
+.studioBlock { border: 1px solid var(--line); padding: 20px; border-radius: 12px; }
+.publication { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; font-size: 14px; }
+.publication strong { margin-left: 8px; }
+.publishLabel { padding: 8px 12px; border-radius: 8px; background: var(--page); color: var(--primary); font-weight: 700; }
+.studio + .steps { margin-top: 28px; }
+.studio + .steps .card { background: transparent; border: 0; padding: 12px 0; }
+.studio + .steps .number { width: 28px; height: 28px; margin-bottom: 12px; font-size: 13px; }
+.page h2 { text-wrap: balance; }
+.nav > a:not(.button) { text-decoration: none; font-size: 14px; }
+.nav > a:not(.button):hover { text-decoration: underline; text-underline-offset: 5px; }
+.page a.button { transition: background 160ms, transform 160ms; }
+.page a.button:hover { transform: translateY(-2px); }
+.page a.button:active { transform: translateY(0); }
+.page main section[id] { scroll-margin-top: 24px; }
+@media (min-width: 1100px) {
+  .hero h1 .primaryText { white-space: nowrap; }
+}
+@media (max-width: 1099px) and (min-width: 901px) {
+  .hero { gap: 28px; }
+  .hero h1 { font-size: 40px; }
+  .workspaceBody { padding: 18px; }
+  .previewGrid { grid-template-columns: 1fr; }
+  .today { display: none; }
+}
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; padding-block: 40px 56px; gap: 36px; }
+  .hero .copy { max-width: 600px; }
+  .hero .copy > p:not(.eyebrow) { font-size: 16px; }
+  .workspace { max-width: 620px; width: 100%; }
+  .revisionSection { grid-template-columns: 1fr; gap: 28px; }
+  .studio { grid-template-columns: 1fr; }
+  .studioSidebar { padding: 16px 20px; }
+  .studioSidebar > :not(.eyebrow) { display: none; }
+  .studioContent { padding: 20px; }
+  .revisionCard { padding: 24px; }
+  .footer .wrap { flex-direction: row; gap: 18px 24px; }
+  .footer a:not(.brand) { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; }
+  .footer .brand { width: 100%; }
+}
+@media (max-width: 420px) {
+  .wrap { width: calc(100% - 32px); }
+  .topbar .nav { gap: 12px; }
+  .nav > a:not(.button) { font-size: 13px; }
+  .hero .eyebrow { font-size: 10px; }
+  .workspaceBody { padding: 16px; }
+  .workspaceBar { padding: 12px 16px; }
+  .previewGrid { grid-template-columns: 1fr; }
+  .today { display: grid; grid-template-columns: 1fr; }
+  .today .miniDivider, .today .miniDivider ~ * { display: none; }
+  .page .previewTitle { font-size: 22px; }
+  .conversation .card:first-child { margin-right: 16px; }
+  .conversation .card:nth-child(2) { margin-left: 16px; }
+  .button { padding-inline: 14px; }
 }
