@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import m from "@/components/study/connexion/connexion-mobile.module.css";
 import { Loader2 } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -29,7 +30,7 @@ import { ETAT_INITIAL, type EtatConnexion } from "@/app/connexion/etats";
 type Champ = "identifiant" | "motDePasse";
 const MANQUE: Record<Champ, string> = { identifiant: "Indique ton identifiant.", motDePasse: "Indique ton mot de passe." };
 
-export function FormulaireConnexion({ suite = null, code = null }: { suite?: string | null; code?: string | null }) {
+export function FormulaireConnexion({ suite = null, code = null, mobileDesign = false }: { suite?: string | null; code?: string | null; mobileDesign?: boolean }) {
   const [etat, action] = useActionState<EtatConnexion, FormData>(async (precedent, donnees) => {
     const identifiant = String(donnees.get("identifiant") ?? "").slice(0, 40);
     if (typeof navigator !== "undefined" && !navigator.onLine) {
@@ -165,7 +166,7 @@ export function FormulaireConnexion({ suite = null, code = null }: { suite?: str
             <label className="etiquette" htmlFor="motDePasse">
               Mot de passe
             </label>
-            <Link href="/acces-oublie" className="text-[0.875rem] font-semibold text-[color:var(--color-accent)]">
+            <Link href="/acces-oublie" className={`text-[0.875rem] font-semibold text-[color:var(--color-accent)] ${mobileDesign ? m.desktop : ""}`}>
               Mot de passe oublié ?
             </Link>
           </div>
@@ -212,10 +213,11 @@ export function FormulaireConnexion({ suite = null, code = null }: { suite?: str
         <label className="flex min-h-[48px] cursor-pointer items-start gap-3 rounded-[12px] border border-[color:var(--color-bordure)] px-4 py-3">
           <input type="checkbox" name="postePartage" value="oui" className="mt-1 size-5 shrink-0 accent-[color:var(--color-accent)]" aria-describedby="aide-poste-partage" />
           <span>
-            <span className="block font-semibold">Appareil partagé</span>
+            <span className="block font-semibold"><span className={mobileDesign ? m.desktop : undefined}>Appareil partagé</span>{mobileDesign ? <span className={m.mobile}>J’utilise un appareil partagé</span> : null}</span>
             <span id="aide-poste-partage" className="aide-champ m-0 mt-0.5">
-              Pour un ordinateur du lycée ou utilisé par plusieurs personnes. La session se ferme à la fermeture du navigateur
-              ou après 30 minutes sans activité, et ton établissement n&apos;est pas mémorisé.
+              <span className={mobileDesign ? m.desktop : undefined}>Pour un ordinateur du lycée ou utilisé par plusieurs personnes. La session se ferme à la fermeture du navigateur
+              ou après 30 minutes sans activité, et ton établissement n&apos;est pas mémorisé.</span>
+              {mobileDesign ? <span className={m.mobile}>Sur un ordinateur du lycée, par exemple. L’établissement ne sera pas mémorisé.</span> : null}
             </span>
           </span>
         </label>

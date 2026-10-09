@@ -77,6 +77,7 @@ export default async function PageConnexion({
 
   return (
     <CadreConnexion
+      etapeMobile={contexte ? 2 : 1}
       titre={contexte ? "Connecte-toi à Study." : "Quel est ton établissement ?"}
       sousTitre={contexte ? undefined : "Étape 1 sur 2 — ton identifiant n'existe que dans ton établissement."}
     >
@@ -96,11 +97,11 @@ export default async function PageConnexion({
               </form>
             }
           />
-          <FormulaireConnexion suite={suite} code={contexte.code} />
+          <FormulaireConnexion mobileDesign suite={suite} code={contexte.code} />
         </>
       ) : (
         <>
-          <FormulaireEtablissement suite={suite} codeInitial={normaliserCode(p.etablissement ?? p.code)} />
+          <FormulaireEtablissement mobileDesign suite={suite} codeInitial={normaliserCode(p.etablissement ?? p.code)} />
         </>
       )}
 

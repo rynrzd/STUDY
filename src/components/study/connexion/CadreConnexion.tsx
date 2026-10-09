@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { BookOpen, CalendarCheck, MessagesSquare } from "lucide-react";
+import { BookOpen, CalendarCheck, MessagesSquare, School, ArrowLeft, Check, UserRound, Users, ChevronRight } from "lucide-react";
+import m from "./connexion-mobile.module.css";
 import { MotSymbole } from "@/components/site/MotSymbole";
 import { ConteneurEffets } from "@/components/study/ConteneurEffets";
 
@@ -17,7 +18,9 @@ export function CadreConnexion({
   titre,
   sousTitre,
   children,
+  etapeMobile,
 }: {
+  etapeMobile?: 1 | 2;
   titre: string;
   sousTitre?: React.ReactNode;
   children: React.ReactNode;
@@ -26,11 +29,12 @@ export function CadreConnexion({
 }) {
   return (
     <ConteneurEffets>
-      <div className="sans-debordement min-h-dvh bg-[color:var(--color-fond)]">
+      <div className={`sans-debordement min-h-dvh bg-[color:var(--color-fond)] ${etapeMobile ? m.root : ""}`} data-etape={etapeMobile}>
         <header className="mx-auto flex h-16 w-full max-w-[1200px] items-center px-5 sm:px-8 lg:h-[72px]">
           <Link href="/" className="inline-flex min-h-[44px] items-center text-[color:var(--color-encre)]">
             <MotSymbole titre="Study, retour au site" className="block h-auto w-[80px] lg:w-[92px]" />
           </Link>
+          {etapeMobile ? <Link href="/" className={m.back}><ArrowLeft size={16} aria-hidden="true" /> Retour au site</Link> : null}
         </header>
         <div className="mx-auto grid w-full max-w-[1200px] gap-10 px-5 pb-[max(40px,env(safe-area-inset-bottom))] sm:px-8 lg:grid-cols-[2fr_3fr] lg:items-center lg:gap-16 lg:py-10">
           <aside className="hidden rounded-[var(--radius-grand)] bg-[color:var(--color-rose-clair)] p-12 lg:block" aria-label="Study en bref">
@@ -56,9 +60,21 @@ export function CadreConnexion({
 
           <main id="contenu" className="w-full">
             <div className="mx-auto w-full max-w-[440px] lg:rounded-[var(--radius-carte)] lg:border lg:border-[color:var(--color-bordure)] lg:bg-[color:var(--color-surface)] lg:p-8">
-              <h1 className="m-0 mt-4 text-[1.75rem] font-extrabold leading-[1.15] tracking-[-0.035em] sm:text-[2rem] lg:mt-0">{titre}</h1>
-              {sousTitre ? <p className="m-0 mt-2 text-[1rem] text-[color:var(--color-encre-faible)]">{sousTitre}</p> : null}
+              {etapeMobile ? <div className={m.mobile}>
+                <ol className={m.progress} aria-label="Étapes de connexion">
+                  <li aria-current={etapeMobile === 1 ? "step" : undefined}><span className={m.active}>{etapeMobile === 2 ? <Check size={16} aria-hidden="true" /> : "1"}</span>Établissement</li>
+                  <li aria-current={etapeMobile === 2 ? "step" : undefined}><span className={etapeMobile === 2 ? m.active : ""}>2</span>Connexion</li>
+                </ol>
+                {etapeMobile === 1 ? <div className={m.school}><School size={32} strokeWidth={1.5} aria-hidden="true" /></div> : null}
+              </div> : null}
+              <h1 className="m-0 mt-4 text-[1.75rem] font-extrabold leading-[1.15] tracking-[-0.035em] sm:text-[2rem] lg:mt-0">
+                <span className={etapeMobile ? m.desktop : undefined}>{titre}</span>
+                {etapeMobile ? <span className={m.mobile}>{etapeMobile === 1 ? <>Retrouve <em>ta classe.</em></> : <>Heureux de <em>te revoir.</em></>}</span> : null}
+              </h1>
+              {etapeMobile ? <p className={m.intro}>{etapeMobile === 1 ? "Commence par le code remis par ton établissement." : "Connecte-toi avec les accès de ton établissement."}</p> : null}
+              {sousTitre ? <p className={`m-0 mt-2 text-[1rem] text-[color:var(--color-encre-faible)] ${etapeMobile ? m.desktop : ""}`}>{sousTitre}</p> : null}
               <div className="mt-7">{children}</div>
+              {etapeMobile ? <div className={m.mobileFooter}>{etapeMobile === 2 ? <><Link href="/acces-oublie">Accès oublié ?</Link><p>Besoin d’aide ? Contacte ton établissement.</p></> : <p>Les cours. La classe. Le lien.</p>}</div> : null}
             </div>
           </main>
         </div>
@@ -85,17 +101,19 @@ export function BandeauEtablissement({ nom, changer }: { nom: string; changer: R
 /** Liens secondaires sous les formulaires d'accès. */
 export function LiensAcces() {
   return (
-    <ul className="m-0 mt-8 grid list-none gap-3 border-t border-[color:var(--color-bordure)] p-0 pt-6 text-[0.9375rem]">
+    <ul className={`${m.accessLinks} m-0 mt-8 grid list-none gap-3 border-t border-[color:var(--color-bordure)] p-0 pt-6 text-[0.9375rem]`}>
       <li>
+        <UserRound className={m.accessIcon} size={22} aria-hidden="true" />
         Première connexion ?{" "}
         <Link href="/activer" className="font-semibold text-[color:var(--color-accent)]">
-          Activer mon accès
+          Activer mon accès<ChevronRight className={m.accessArrow} size={18} aria-hidden="true" />
         </Link>
       </li>
       <li>
+        <Users className={m.accessIcon} size={22} aria-hidden="true" />
         Un code de classe ?{" "}
         <Link href="/rejoindre" className="font-semibold text-[color:var(--color-accent)]">
-          Rejoindre ma classe
+          Rejoindre ma classe<ChevronRight className={m.accessArrow} size={18} aria-hidden="true" />
         </Link>
       </li>
     </ul>

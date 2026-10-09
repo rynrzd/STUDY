@@ -1,5 +1,6 @@
 "use client";
 
+import m from "./connexion-mobile.module.css";
 import { Loader2 } from "lucide-react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
@@ -13,7 +14,7 @@ import { ETAT_ETABLISSEMENT_INITIAL, type EtatEtablissement } from "@/app/connex
  * d'invitation collé tel quel. Ne propose ni liste ni recherche par nom :
  * on ne découvre un établissement qu'en connaissant son code.
  */
-export function FormulaireEtablissement({ suite, codeInitial }: { suite: string | null; codeInitial: string | null }) {
+export function FormulaireEtablissement({ suite, codeInitial, mobileDesign = false }: { mobileDesign?: boolean; suite: string | null; codeInitial: string | null }) {
   const [etat, action] = useActionState<EtatEtablissement, FormData>(async (precedent, donnees) => {
     // Champ vide : rien ne part au serveur, aucun essai n'est consommé.
     if (String(donnees.get("code") ?? "").trim() === "") return { etat: "refus", message: "Indique le code de ton établissement." };
@@ -55,9 +56,11 @@ export function FormulaireEtablissement({ suite, codeInitial }: { suite: string 
         </p>
       ) : null}
       <p id="aide-code-etablissement" className="aide-champ m-0">
-        Il figure sur la fiche remise par ton lycée, par exemple <span className="font-mono">LYC-4821</span>. Il ne donne accès à aucun compte.
+        <span className={mobileDesign ? m.desktop : undefined}>Il figure sur la fiche remise par ton lycée, par exemple <span className="font-mono">LYC-4821</span>. Il ne donne accès à aucun compte.</span>
+        {mobileDesign ? <span className={m.mobile}>Tu peux aussi coller ton lien d’invitation.</span> : null}
       </p>
       <Continuer />
+      {mobileDesign ? <details className={m.codeHelp}><summary>Où trouver mon code ?</summary><p>Il figure sur la fiche remise par ton lycée, par exemple LYC-4821. Si tu ne l’as pas, demande-le à ton établissement. Ce code seul ne donne accès à aucun compte.</p></details> : null}
     </form>
   );
 }

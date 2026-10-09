@@ -1,0 +1,49 @@
+/* Connexion seulement : toutes les modifications visuelles sont mobiles. */
+.mobile, .back, .intro, .mobileFooter, .codeHelp, .accessIcon, .accessArrow { display: none; }
+@media (max-width: 767px) {
+  .root { background: #fcfafb; color: #29282e; }
+  .root > header { height: 80px; justify-content: space-between; gap: 12px; }
+  .root > header > a:first-child { flex-shrink: 0; }
+  .root .back { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 12px; color: #64616d; text-decoration: none; }
+  .root .desktop { display: none; }
+  .root .mobile { display: block; }
+  .root main { max-width: 440px; margin-inline: auto; }
+  .root h1 { font-size: clamp(28px, 7.6vw, 34px); letter-spacing: -.045em; line-height: 1.15; margin-top: 0; }
+  .root h1 em { font-style: normal; color: #81445b; }
+  .root .intro { display: block; margin: 12px 0 0; font-size: 16px; line-height: 1.55; color: #64616d; }
+  .progress { display: flex; gap: 14px; align-items: center; padding: 0; margin: 8px 0 28px; list-style: none; font-size: 12px; }
+  .progress li { display: flex; align-items: center; gap: 8px; color: #64616d; }
+  .progress li + li::before { content: ''; width: 24px; height: 1px; background: #ddd7db; margin-right: 6px; }
+  .progress li[aria-current] { color: #81445b; font-weight: 700; }
+  .progress li > span { display: grid; place-items: center; width: 30px; height: 30px; flex-shrink: 0; border: 1px solid #ddd7db; border-radius: 50%; }
+  .progress li > .active { background: #81445b; color: white; border-color: #81445b; }
+  .school { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 16px; background: #f9e7ed; color: #81445b; margin-bottom: 18px; }
+  .root :global(.champ-acces) { min-height: 52px; font-size: 16px; border-radius: 12px; border-color: #d8d1d7; background: #fff; }
+  .root :global(.champ-acces):focus-visible { outline: 2px solid #81445b; outline-offset: 2px; }
+  .root :global(.etiquette) { font-size: 14px; margin-bottom: 8px; }
+  .root :global(.bouton-acces) { min-height: 52px; border-radius: 12px; font-size: 16px; }
+  .root :global(.bouton-primaire) { background: #81445b; border-color: #81445b; color: white; }
+  .root :global(.aide-champ) { font-size: 12px; line-height: 1.5; margin-top: 6px; }
+  .root input[type=checkbox] { accent-color: #81445b; }
+  .root input { scroll-margin-block: 24px; }
+  .root .codeHelp { display: block; margin-top: 10px; border: 1px solid #ddd7db; border-radius: 12px; }
+  .codeHelp summary { padding: 13px 16px; min-height: 48px; cursor: pointer; font-size: 14px; }
+  .codeHelp p { margin: 0; padding: 0 16px 16px; color: #64616d; font-size: 13px; line-height: 1.6; }
+  .root .accessLinks { gap: 0; margin-top: 24px; padding-top: 0; }
+  .root .accessLinks li { position: relative; display: grid; grid-template-columns: 40px 1fr; column-gap: 12px; align-items: center; padding: 16px 28px 16px 0; border-bottom: 1px solid #ddd7db; font-size: 14px; font-weight: 600; }
+  .root .accessIcon { display: block; grid-row: span 2; border-radius: 50%; padding: 10px; width: 40px; height: 40px; background: #f9e7ed; color: #81445b; }
+  .root .accessLinks a { grid-column: 2; min-height: 28px; color: #64616d; font-size: 13px; font-weight: 400; }
+  .root .accessLinks a::after { content: ''; position: absolute; inset: 0; }
+  .root .accessArrow { display: block; position: absolute; right: 2px; top: 28px; color: #81445b; }
+  .root .mobileFooter { display: block; text-align: center; font-size: 12px; color: #64616d; margin-top: 24px; }
+  .mobileFooter p { margin: 0; }
+  .root[data-etape='2'] .accessLinks { display: none; }
+  .root[data-etape='2'] .mobileFooter > a { display: inline-flex; align-items: center; min-height: 44px; color: #81445b; font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  .root[data-etape='2'] .mobileFooter p { border-top: 1px solid #ddd7db; padding-top: 22px; margin-top: 16px; }
+}
+@media (max-width: 359px) {
+  .progress { gap: 8px; font-size: 11px; }
+  .progress li { gap: 6px; }
+  .progress li + li::before { width: 12px; margin-right: 0; }
+  .root .back { font-size: 11px; }
+}
