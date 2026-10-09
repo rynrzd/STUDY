@@ -1,8 +1,11 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { BoutonEnvoi, Champ, Liste, RetourFormulaire, ZoneTexte, type EtatFormulaire } from "@/components/study/formulaire";
+import { EchangeExercice } from "./EchangeExercice";
 import { creerExercice } from "./actions";
+import { lireExercice } from "@/lib/revision/validation-exercice";
+import { TestExercice, type ExerciceATester } from "./TestExercice";
 
 export function FormulaireExercice({
   seance,
@@ -15,29 +18,41 @@ export function FormulaireExercice({
   base?: { exercice: string; kind: string; enonce: string; choix: readonly string[]; notion: string | null };
 }) {
   const [etat, action] = useActionState<EtatFormulaire, FormData>(creerExercice.bind(null, seance), {});
-  const v = etat.valeurs ?? {};
+  const [importe, setImporte] = useState<{ valeurs: Record<string, string>; numero: number } | null>(null);
+  const v = importe?.valeurs ?? etat.valeurs ?? {};
   const [kind, setKind] = useState(v.kind ?? base?.kind ?? "qcm");
   const [nbChoix, setNbChoix] = useState(Math.max(3, base?.choix.length ?? 0));
   const choix = (v.choix ?? base?.choix.join("\n") ?? "").split("\n");
-  const cle = useMemo(() => (etat.ok ? crypto.randomUUID() : "saisie"), [etat]);
+  const formulaire = useRef<HTMLFormElement>(null);
+  const [test, setTest] = useState<{ exercice: ExerciceATester; numero: number } | null>(null);
 
   return (
-    <form action={action} key={cle}>
+    <form action={action} ref={formulaire} key={importe?.numero ?? 0}>
+      <EchangeExercice autoriserImport={!base} lire={() => formulaire.current ? lireExercice(new FormData(formulaire.current)) : null} appliquer={(e) => {
+        setKind(e.valeurs.kind);
+        setNbChoix(Math.max(3, e.choix.length));
+        setTest(null);
+        setImporte((precedent) => ({ valeurs: e.valeurs, numero: (precedent?.numero ?? 0) + 1 }));
+      }} />
       <RetourFormulaire etat={etat} />
       {base ? <input type="hidden" name="exercice" value={base.exercice} /> : null}
       <Liste
         libelle="Type"
-        nom="kind"
-        valeur={kind}
+        nom="format"
+        value={kind}
         onChange={(e) => setKind(e.target.value)}
         options={[
-          { valeur: "qcm", libelle: "Choix multiple (corrigé automatiquement)" },
+          { valeur: "qcm", libelle: "QCM à une bonne réponse (corrigé automatiquement)" },
+          { valeur: "vrai_faux", libelle: "Vrai / faux (corrigé automatiquement)" },
           { valeur: "numerique", libelle: "Réponse numérique (corrigée automatiquement)" },
           { valeur: "texte", libelle: "Réponse rédigée (pas de correction automatique)" },
         ]}
       />
+      <input type="hidden" name="kind" value={kind === "vrai_faux" ? "qcm" : kind} />
       <ZoneTexte libelle="Énoncé" nom="enonce" requis lignes={3} maxLength={4000} valeur={v.enonce ?? base?.enonce} erreurs={etat.champs?.enonce} />
-      {kind === "qcm" ? (
+      {kind === "vrai_faux" ? (
+        <fieldset className="mb-4"><legend className="etiquette">Réponse attendue</legend><input type="hidden" name="choix" value="Vrai" /><input type="hidden" name="choix" value="Faux" /><Liste libelle="Bonne réponse" nom="bonne" options={[{ valeur: "1", libelle: "Vrai" }, { valeur: "2", libelle: "Faux" }]} valeur={v.bonne ?? "1"} /><p className="meta">Ce format utilise un QCM à deux réponses, compatible avec les révisions existantes.</p></fieldset>
+      ) : kind === "qcm" ? (
         <fieldset className="mb-4">
           <legend className="mb-2 text-[0.8125rem] font-semibold">Choix</legend>
           {Array.from({ length: nbChoix }, (_, i) => (
@@ -60,7 +75,7 @@ export function FormulaireExercice({
       ) : kind === "numerique" ? (
         <div className="grid gap-x-3 sm:grid-cols-2">
           <Champ libelle="Bonne réponse" nom="bonne" requis inputMode="decimal" valeur={v.bonne} erreurs={etat.champs?.bonne} />
-          <Champ libelle="Tolérance" nom="tolerance" inputMode="decimal" valeur={v.tolerance ?? "0"} aide="Écart accepté (0 = valeur exacte)." />
+          <Champ libelle="Tolérance" nom="tolerance" inputMode="decimal" valeur={v.tolerance ?? "0"} aide="Écart accepté (0 = valeur exacte)." erreurs={etat.champs?.tolerance} />
         </div>
       ) : null}
       <ZoneTexte libelle="Explication (montrée après la réponse)" nom="explication" requis lignes={3} maxLength={4000} valeur={v.explication} erreurs={etat.champs?.explication} />
@@ -76,6 +91,11 @@ export function FormulaireExercice({
         />
         <Champ libelle="Nouvelle notion" nom="nouvelle_notion" maxLength={120} valeur={v.nouvelleNotion} aide="Sert aux révisions proposées aux élèves." />
       </div>
+      <button type="button" className="bouton bouton-secondaire mb-4" onClick={() => {
+        if (!formulaire.current) return;
+        const exercice = lireExercice(new FormData(formulaire.current));
+        setTest((precedent) => ({ exercice, numero: (precedent?.numero ?? 0) + 1 }));
+      }}>Tester avant de publier</button>
       <div className="flex flex-wrap gap-2">
         <BoutonEnvoi name="publier" value="oui" enCours="Publication…">
           {base ? "Publier la nouvelle version" : "Publier l'exercice"}
@@ -84,6 +104,7 @@ export function FormulaireExercice({
           Garder en brouillon
         </BoutonEnvoi>
       </div>
+      {test && <TestExercice key={test.numero} exercice={test.exercice} />}
     </form>
   );
 }

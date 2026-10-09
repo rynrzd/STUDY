@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { lireExercice } from "@/lib/revision/validation-exercice";
 import type { EtatFormulaire } from "@/components/study/formulaire";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 import { contexteApp, idRequete } from "@/lib/v6/contexte";
@@ -16,40 +17,11 @@ import { traduire } from "@/lib/v6/erreurs";
 
 const uuid = z.string().uuid();
 
-function lireChoix(donnees: FormData): string[] {
-  return donnees
-    .getAll("choix")
-    .map((c) => String(c).trim())
-    .filter(Boolean)
-    .slice(0, 8);
-}
-
 export async function creerExercice(seance: string, _p: EtatFormulaire, donnees: FormData): Promise<EtatFormulaire> {
-  const kind = String(donnees.get("kind") ?? "qcm");
-  const valeurs = {
-    kind,
-    enonce: String(donnees.get("enonce") ?? "").trim(),
-    bonne: String(donnees.get("bonne") ?? "").trim(),
-    tolerance: String(donnees.get("tolerance") ?? "0"),
-    explication: String(donnees.get("explication") ?? "").trim(),
-    indice: String(donnees.get("indice") ?? "").trim(),
-    exemple: String(donnees.get("exemple") ?? "").trim(),
-    notion: String(donnees.get("notion") ?? ""),
-    nouvelleNotion: String(donnees.get("nouvelle_notion") ?? "").trim(),
-    exercice: String(donnees.get("exercice") ?? ""),
-  };
-  const choix = lireChoix(donnees);
-  const champs: Record<string, string[]> = {};
-  if (!["qcm", "numerique", "texte"].includes(kind)) champs.kind = ["Type inconnu."];
-  if (valeurs.enonce.length < 3) champs.enonce = ["Énoncé requis."];
-  if (valeurs.explication.length < 3) champs.explication = ["L'explication est montrée après la réponse : elle est obligatoire."];
-  if (kind === "qcm") {
-    if (choix.length < 2) champs.choix = ["Deux choix au moins."];
-    const i = Number(valeurs.bonne);
-    if (!Number.isInteger(i) || i < 1 || i > choix.length) champs.bonne = ["Indique le numéro du bon choix."];
-  }
-  if (kind === "numerique" && !/^-?\d+([.,]\d+)?$/u.test(valeurs.bonne)) champs.bonne = ["Une valeur numérique."];
-  if (Object.keys(champs).length > 0) return { ok: false, message: "Certains champs sont à corriger.", champs, valeurs: { ...valeurs, choix: choix.join("\n") } };
+  const validation = lireExercice(donnees);
+  const { valeurs, choix, champs } = validation;
+  const kind = valeurs.kind;
+  if (!validation.valide) return { ok: false, message: "Certains champs sont à corriger.", champs, valeurs };
 
   const requestId = idRequete();
   const { jeton, personne } = await contexteApp();
@@ -102,12 +74,7 @@ export async function creerExercice(seance: string, _p: EtatFormulaire, donnees:
   if (v.error !== null) return { ok: false, message: traduire(v.error, requestId).message, requestId, valeurs };
   const version = (v.data as { id: string }).id;
 
-  const bonne =
-    kind === "qcm"
-      ? { index: Number(valeurs.bonne) - 1 }
-      : kind === "numerique"
-        ? { valeur: Number(valeurs.bonne.replace(",", ".")), tolerance: Math.abs(Number(valeurs.tolerance.replace(",", ".")) || 0) }
-        : null;
+  const bonne = validation.bonne;
   const c = await client.from("exercice_corriges").insert({
     exercice_version_id: version,
     organization_id: l.organization_id,
@@ -121,7 +88,7 @@ export async function creerExercice(seance: string, _p: EtatFormulaire, donnees:
 
   if (donnees.get("publier") === "oui") {
     const p = await client.rpc("exercice_publier", { p_version: version });
-    if (p.error !== null) return { ok: false, message: traduire(p.error, requestId).message, requestId };
+    if (p.error !== null) return { ok: false, message: traduire(p.error, requestId).message, requestId, valeurs };
   }
   revalidatePath(`/studio/${seance}/exercices`);
   return { ok: true, message: donnees.get("publier") === "oui" ? `Version ${numero} publiée.` : `Version ${numero} enregistrée en brouillon.` };
