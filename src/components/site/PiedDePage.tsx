@@ -47,6 +47,7 @@ const GROUPES: readonly {
       ["/securite", "Sécurité et données"],
       ["/confidentialite", "Confidentialité"],
       ["/conditions", "Conditions d'utilisation"],
+      ["/accessibilite", "Accessibilité"],
     ],
   },
   {

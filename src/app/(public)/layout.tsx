@@ -1,3 +1,4 @@
+import s from "@/components/site/public-pages.module.css";
 import { Entete } from "@/components/site/Entete";
 import { PiedDePage } from "@/components/site/PiedDePage";
 
@@ -14,7 +15,7 @@ import { PiedDePage } from "@/components/site/PiedDePage";
  */
 export default function GabaritPublic({ children }: { children: React.ReactNode }) {
   return (
-    <div className="sans-debordement flex min-h-screen flex-col">
+    <div className={`${s.site} sans-debordement flex min-h-screen flex-col`}>
       <Entete />
       <div className="flex-1">{children}</div>
       <PiedDePage />

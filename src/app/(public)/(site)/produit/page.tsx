@@ -44,8 +44,8 @@ export default function PageProduit() {
     <>
       <TitrePage
         surtitre="La plateforme"
-        titre="Tout ce qui aide la classe à avancer."
-        chapeau="Les cours, le travail à faire et les échanges, publiés par les professeurs pour leurs classes. Cette page décrit ce qui fonctionne aujourd'hui, et dit aussi clairement ce qui n'existe pas."
+        titre="Le cours, le travail, la classe. Enfin reliés."
+        chapeau="Retrouver une séance, comprendre une consigne, poser une question : Study accompagne le travail de la classe, même après la sonnerie."
         actions={
           <>
             <Link href="/contact" className="bouton bouton-primaire bouton-grand">

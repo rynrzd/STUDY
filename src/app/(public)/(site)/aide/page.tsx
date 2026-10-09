@@ -1,3 +1,4 @@
+import { RaccourcisPublics } from "@/components/site/RaccourcisPublics";
 import type { Metadata } from "next";
 import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
@@ -40,7 +41,7 @@ const QUESTIONS = [
 ] as const;
 
 /**
- * P12 — Aide (maquette R2 n° 2, « Comment pouvons-nous vous aider ? ») : les
+ * P12 — Aide (maquette R2 n° 2, « Un doute ? On vous guide. ») : les
  * questions fréquentes en accordéon (details natif, lisible sans script) et,
  * à côté, à qui s’adresser. Textes alignés sur ce que le produit fait
  * réellement.
@@ -50,11 +51,12 @@ export default function Aide() {
     <>
       <TitrePage
         surtitre="Aide"
-        titre="Comment pouvons-nous vous aider ?"
+        titre="Un doute ? On vous guide."
         chapeau="Ces réponses valent pour les élèves et les enseignants. Pour une question sur votre compte, votre établissement est le bon interlocuteur : c’est lui qui gère les accès."
       />
 
       <Section>
+        <div className="mb-10"><RaccourcisPublics /></div>
         <div className="grid gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] lg:items-start">
           <div className="rounded-[var(--radius-grand)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] px-6 py-2">
             <h2 className="m-0 pt-4 pb-2 text-[1.125rem] font-bold">Questions fréquentes</h2>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CadreConnexion } from "@/components/study/connexion/CadreConnexion";
+import { CadreAccesPublic as CadreConnexion } from "@/components/site/CadreAccesPublic";
 import { pagePrivee } from "@/lib/metadonnees";
 import { baseConfiguree, clientExploitation } from "@/lib/supabase-serveur";
 import { empreinteInvitation, FORME_JETON } from "@/lib/v6/invitations";

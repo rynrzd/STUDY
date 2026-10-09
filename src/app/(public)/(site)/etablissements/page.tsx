@@ -36,8 +36,8 @@ export default function PageEtablissements() {
     <>
       <TitrePage
         surtitre="Pour les établissements"
-        titre="Votre établissement, simplement."
-        chapeau="Les cours, le travail et les échanges de chaque classe au même endroit, gérés par votre établissement. Nous répondons avec une démonstration et un devis, pas avec une relance commerciale."
+        titre="Un espace commun. Chaque classe à sa place."
+        chapeau="Rassemblez les cours et les échanges dans un espace géré par vos équipes. Préparons une mise en place adaptée à vos classes et à votre organisation."
         actions={
           <a href="#demande" className="bouton bouton-primaire bouton-grand">
             Demander une démonstration

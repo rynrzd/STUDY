@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BandeauEtablissement, CadreConnexion } from "@/components/study/connexion/CadreConnexion";
+import { BandeauEtablissement } from "@/components/study/connexion/CadreConnexion";
+import { CadreAccesPublic as CadreConnexion } from "@/components/site/CadreAccesPublic";
 import { pagePrivee } from "@/lib/metadonnees";
 import { lireContexteEtablissement } from "@/lib/v6/connexion-serveur";
 import { FormulaireRecuperation } from "./FormulaireRecuperation";

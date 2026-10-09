@@ -1,3 +1,4 @@
+import s from "@/components/site/public-pages.module.css";
 import type { Metadata } from "next";
 import { pagePublique } from "@/lib/metadonnees";
 import Link from "next/link";
@@ -62,8 +63,8 @@ export default function PageOffre() {
     <>
       <TitrePage
         surtitre="Offre"
-        titre="Une licence annuelle pour l'établissement."
-        chapeau="Un seul contrat, souscrit par le lycée. Les élèves et les enseignants ne paient jamais, n'ont pas de carte à saisir et n'ont aucune option à acheter."
+        titre="Une offre pour le lycée. Un accès pour la classe."
+        chapeau="Une licence annuelle sur devis, financée par votre établissement. Aucun abonnement individuel pour les élèves ou les enseignants."
       />
 
       <Section>
@@ -130,7 +131,7 @@ export default function PageOffre() {
           </h2>
         </Reveler>
 
-        <div className="mt-10 overflow-x-auto">
+        <div className={`${s.desktopCircuits} mt-10 overflow-x-auto`}>
           <table className="w-full min-w-[42rem] border-collapse text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)]">
             <caption className="sr-only">
               Circuit de règlement selon le type d&apos;acheteur
@@ -152,6 +153,10 @@ export default function PageOffre() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className={s.mobileCircuits}>
+          {CIRCUITS.map((ligne) => <article key={ligne.acheteur}><h3>{ligne.acheteur}</h3><dl><dt>Circuit</dt><dd>{ligne.circuit}</dd><dt>Activation</dt><dd>{ligne.activation}</dd></dl></article>)}
         </div>
 
         <div className="mt-10 max-w-[var(--spacing-lecture)] space-y-4 text-[color:var(--color-encre-faible)]">

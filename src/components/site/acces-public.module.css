@@ -1,0 +1,32 @@
+.page { min-height:100dvh; background:#fcfafb; color:#29282e; }
+.header { max-width:1120px; margin:auto; padding:20px 32px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.header a { display:inline-flex; align-items:center; min-height:44px; color:inherit; }
+.back { font-size:13px; gap:8px; text-decoration:none; color:#64616d; }
+.layout { max-width:1120px; margin:auto; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); gap:72px; align-items:start; padding:36px 32px 64px; }
+.aside { padding:40px; border-radius:24px; background:#f9e7ed; }
+.eyebrow { font-size:10px; letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:#81445b; margin:0 0 22px; }
+.aside h2 { font-size:40px; line-height:1.1; font-weight:800; letter-spacing:-.045em; text-wrap:balance; margin:0; }
+.aside > p:not(.eyebrow) { margin:22px 0 32px; line-height:1.7; color:#64616d; }
+.aside > div { display:flex; gap:12px; align-items:center; padding-top:18px; font-size:14px; }
+.aside svg { color:#81445b; flex-shrink:0; }
+.main { min-width:0; background:white; padding:32px; border:1px solid #e4dce1; border-radius:24px; }
+.icon { width:52px; height:52px; background:#f9e7ed; color:#81445b; display:grid; place-items:center; border-radius:14px; margin-bottom:22px; }
+.main h1 { margin:0; font-size:32px; line-height:1.14; font-weight:800; letter-spacing:-.04em; text-wrap:balance; }
+.lead { margin:14px 0 0; font-size:16px; line-height:1.6; color:#64616d; }
+.body { margin-top:26px; overflow-wrap:anywhere; }
+.help { border-top:1px solid #e4dce1; padding-top:20px; margin:26px 0 0; font-size:13px; color:#64616d; }
+.help a { display:inline-flex; align-items:center; min-height:44px; font-weight:650; color:#81445b; }
+.page :global(.champ) { font-size:16px; min-height:52px; border-radius:12px; }
+.page :global(.bouton) { min-height:48px; border-radius:12px; white-space:normal; text-align:center; }
+.page :global(.bouton-primaire) { background:#81445b; color:white; border-color:#81445b; }
+.page a:focus-visible,.page button:focus-visible,.page input:focus-visible,.page summary:focus-visible { outline:2px solid #81445b; outline-offset:3px; }
+@media(max-width:767px) {
+ .header { padding:14px 20px; }
+ .layout { display:block; padding:16px 20px max(40px,env(safe-area-inset-bottom)); }
+ .aside { display:none; }
+ .main { max-width:480px; margin:auto; padding:0; background:transparent; border:0; }
+ .main h1 { font-size:clamp(29px,8vw,36px); }
+ .back { font-size:12px; }
+ .body { margin-top:24px; }
+ .page :global(.bouton) { font-size:14px; }
+}

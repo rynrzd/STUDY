@@ -1,3 +1,4 @@
+import { CadreAccesPublic } from "@/components/site/CadreAccesPublic";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AvisVisibilite } from "@/components/study/ui";
@@ -22,7 +23,7 @@ export default async function PageRejoindre({ searchParams }: { searchParams: Pr
   if (personne === null) {
     const suite = `/rejoindre${codePropre ? `?code=${codePropre}` : ""}`;
     return (
-      <CarteAcces titre="Rejoindre une classe" sousTitre="Connectez-vous d'abord : un code de classe ne remplace pas votre compte.">
+      <CadreAccesPublic titre="Rejoindre une classe" sousTitre="Connectez-vous d'abord : un code de classe ne remplace pas votre compte.">
         <p className="m-0">
           Votre établissement vous a remis un code établissement, un identifiant et un mot de passe, ou un lien d&apos;invitation.
           Une fois connecté, saisissez le code de classe : votre demande partira vers la classe.
@@ -30,7 +31,7 @@ export default async function PageRejoindre({ searchParams }: { searchParams: Pr
         <Link href={`/connexion?suite=${encodeURIComponent(suite)}`} className="bouton bouton-primaire mt-6 w-full">
           Se connecter pour continuer
         </Link>
-      </CarteAcces>
+      </CadreAccesPublic>
     );
   }
 

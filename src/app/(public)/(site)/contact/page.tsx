@@ -1,3 +1,4 @@
+import { RaccourcisPublics } from "@/components/site/RaccourcisPublics";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { pagePublique } from "@/lib/metadonnees";
@@ -37,8 +38,8 @@ export default function PageContact() {
     <>
       <TitrePage
         surtitre="Contact"
-        titre="À qui s'adresser."
-        chapeau="Study est fourni à des établissements. Selon votre situation, l'interlocuteur n'est pas le même — et ce n'est pas toujours nous."
+        titre="Parlons de votre établissement."
+        chapeau="Une démonstration, un projet pour votre lycée ou une question sur vos accès ? Retrouvez ici le bon interlocuteur."
         actions={
           <a href="#demande" className="bouton bouton-primaire bouton-grand">
             Demander une démonstration
@@ -47,6 +48,7 @@ export default function PageContact() {
       />
 
       <Section>
+        <div className="mb-10"><RaccourcisPublics /></div>
         <div className="grid gap-4 md:grid-cols-2 md:gap-6">
           {CAS.map(([titre, texte]) => (
             <article key={titre} className="carte p-6 md:p-7">

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { BandeauEtablissement, CadreConnexion } from "@/components/study/connexion/CadreConnexion";
+import { BandeauEtablissement } from "@/components/study/connexion/CadreConnexion";
+import { CadreAccesPublic as CadreConnexion } from "@/components/site/CadreAccesPublic";
 import { FormulaireInvitation } from "./FormulaireInvitation";
 
 /** Rendu d'une invitation selon son état — partagé par la page et les aperçus. */

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CadreConnexion } from "@/components/study/connexion/CadreConnexion";
+import { CadreAccesPublic as CadreConnexion } from "@/components/site/CadreAccesPublic";
 import { pagePrivee } from "@/lib/metadonnees";
 import { ouvrirInvitation } from "./actions";
 import { FormulaireLien } from "./FormulaireLien";

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { MotSymbole } from "./MotSymbole";
@@ -23,6 +24,7 @@ const LIENS = [
 ] as const;
 
 export function Entete() {
+  const chemin = usePathname();
   const [ouvert, setOuvert] = useState(false);
 
   const bouton = useRef<HTMLButtonElement>(null);
@@ -84,17 +86,18 @@ export function Entete() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-[color:var(--color-bordure)] bg-[color:var(--color-surface)]">
-      <div className="contenu-site flex h-16 items-center justify-between gap-4 md:h-[72px] md:gap-8">
+      <div className="contenu-site flex h-16 items-center justify-between gap-4 lg:h-[72px] lg:gap-8">
         <div className="flex items-center gap-10">
           <Link href="/" className="inline-flex min-h-[var(--spacing-cible)] items-center text-[color:var(--color-encre)] no-underline">
-            <MotSymbole titre="Study, accueil" className="block h-auto w-[84px] md:w-[100px]" />
+            <MotSymbole titre="Study, accueil" className="block h-auto w-[84px] lg:w-[100px]" />
           </Link>
 
-          <nav aria-label="Navigation principale" className="hidden items-center gap-8 md:flex">
+          <nav aria-label="Navigation principale" className="hidden items-center gap-8 lg:flex">
             {LIENS.map((lien) => (
               <Link
                 key={lien.href}
                 href={lien.href}
+                aria-current={chemin === lien.href ? "page" : undefined}
                 className="inline-flex min-h-[var(--spacing-cible)] items-center text-[0.9375rem] font-semibold text-[color:var(--color-encre-faible)] no-underline transition-colors duration-[120ms] hover:text-[color:var(--color-encre)]"
               >
                 {lien.libelle}
@@ -103,7 +106,7 @@ export function Entete() {
           </nav>
         </div>
 
-        <div className="hidden items-center gap-6 md:flex">
+        <div className="hidden items-center gap-6 lg:flex">
           <Link
             href="/connexion"
             className="inline-flex min-h-[var(--spacing-cible)] items-center text-[0.9375rem] font-bold text-[color:var(--color-encre)] no-underline hover:text-[color:var(--color-accent)]"
@@ -115,7 +118,7 @@ export function Entete() {
           </Link>
         </div>
 
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-2 lg:hidden">
           <Link href="/connexion" className="bouton bouton-primaire min-h-11 px-4 text-[0.9375rem]">
             Connexion
           </Link>
@@ -134,12 +137,13 @@ export function Entete() {
       </div>
 
       {/* Liste déroulante sous l'en-tête : pas un nouvel écran opaque. */}
-      <div ref={panneau} id={identifiantMenu} hidden={!ouvert} className="border-t border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] md:hidden">
+      <div ref={panneau} id={identifiantMenu} hidden={!ouvert} className="border-t border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] lg:hidden">
         <nav aria-label="Menu" className="contenu-site grid py-2">
           {LIENS.map((lien) => (
             <Link
               key={lien.href}
               href={lien.href}
+                aria-current={chemin === lien.href ? "page" : undefined}
               onClick={() => fermer()}
               className="flex min-h-12 items-center border-b border-[color:var(--color-bordure)] text-[1rem] font-semibold no-underline"
             >
