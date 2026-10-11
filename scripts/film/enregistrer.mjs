@@ -1,21 +1,25 @@
-// Enregistre le film AvecStudy (/apercu/film) image par image, puis l'encode
-// en WebM (VP8) avec le ffmpeg installé par Playwright.
+// Enregistre le film AvecStudy (/apercu/film) image par image.
 //
-//   node scripts/film/enregistrer.mjs <base> <sortie.webm> [16x9|9x16] [ips]
+//   node scripts/film/enregistrer.mjs <base> <sortie.mp4|sortie.webm> [16x9|9x16] [ips] [debit]
+//
+// Sortie .mp4 : H.264 encodé par Edge (WebCodecs), assemblé en MP4 classique.
+// Sortie .webm : VP8 encodé par le ffmpeg installé par Playwright.
 //
 // L'horloge est fixée à chaque image : pas de saccade, quel que soit le temps
 // que met une capture. Règle (voir film.module.css) : un élément marqué
 // `data-debut` suit le temps du film ; ses descendants suivent le temps local
 // de leur bloc le plus proche.
 import { spawn } from "node:child_process";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { chromium } from "playwright-core";
+import { ouvrirEncodeur } from "./encodeur-h264.mjs";
 
-const [base = "http://localhost:3108", sortie = "avecstudy.webm", format = "16x9", ipsTexte = "30"] = process.argv.slice(2);
+const [base = "http://localhost:3108", sortie = "avecstudy.mp4", format = "16x9", ipsTexte = "30", debitTexte = "2400000"] = process.argv.slice(2);
 const ips = Number(ipsTexte);
 const [largeur, hauteur] = format === "9x16" ? [1080, 1920] : [1920, 1080];
+const enMp4 = sortie.toLowerCase().endsWith(".mp4");
 
 function trouverFfmpeg() {
   const racine = join(process.env.LOCALAPPDATA ?? join(homedir(), "AppData", "Local"), "ms-playwright");
@@ -29,6 +33,34 @@ function trouverFfmpeg() {
   throw new Error("ffmpeg de Playwright introuvable (npx playwright install ffmpeg)");
 }
 
+/** La destination des images : l'encodeur H.264 d'Edge ou ffmpeg (VP8). */
+async function ouvrirSortie(nav) {
+  if (enMp4) {
+    const encodeur = await ouvrirEncodeur(nav, { largeur, hauteur, ips, debit: Number(debitTexte) });
+    return {
+      ajouter: (image, i) => encodeur.ajouter(image, i),
+      fermer: async (n) => writeFileSync(sortie, await encodeur.terminer(n)),
+    };
+  }
+  const ffmpeg = spawn(
+    trouverFfmpeg(),
+    ["-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", String(ips), "-c:v", "mjpeg", "-i", "pipe:0",
+     "-c:v", "libvpx", "-b:v", format === "9x16" ? "9M" : "10M", "-crf", "4", "-qmin", "0", "-qmax", "28",
+     "-deadline", "good", "-cpu-used", "1", "-auto-alt-ref", "0", "-pix_fmt", "yuv420p", sortie],
+    { stdio: ["pipe", "inherit", "inherit"] },
+  );
+  const fin = new Promise((ok, ko) => ffmpeg.on("close", (code) => (code === 0 ? ok() : ko(new Error(`ffmpeg a échoué (${code})`)))));
+  return {
+    ajouter: async (image) => {
+      if (!ffmpeg.stdin.write(image)) await new Promise((r) => ffmpeg.stdin.once("drain", r));
+    },
+    fermer: async () => {
+      ffmpeg.stdin.end();
+      await fin;
+    },
+  };
+}
+
 const nav = await chromium.launch({ channel: "msedge" });
 const page = await (await nav.newContext({ viewport: { width: largeur, height: hauteur }, deviceScaleFactor: 1 })).newPage();
 await page.goto(`${base}/apercu/film?format=${format}`, { waitUntil: "load", timeout: 180000 });
@@ -38,15 +70,7 @@ const duree = await page.evaluate(() => Number(document.querySelector("[data-fil
 if (!duree) throw new Error("durée du film introuvable");
 
 const images = Math.round((duree / 1000) * ips);
-const ffmpeg = spawn(
-  trouverFfmpeg(),
-  ["-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", String(ips), "-c:v", "mjpeg", "-i", "pipe:0",
-   "-c:v", "libvpx", "-b:v", format === "9x16" ? "9M" : "10M", "-crf", "4", "-qmin", "0", "-qmax", "28",
-   "-deadline", "good", "-cpu-used", "1", "-auto-alt-ref", "0", "-pix_fmt", "yuv420p", sortie],
-  { stdio: ["pipe", "inherit", "inherit"] },
-);
-const fin = new Promise((ok, ko) => ffmpeg.on("close", (code) => (code === 0 ? ok() : ko(new Error(`ffmpeg a échoué (${code})`)))));
-
+const destination = await ouvrirSortie(nav);
 const scene = page.locator("[data-film-duree]");
 const debut = Date.now();
 for (let i = 0; i < images; i++) {
@@ -63,11 +87,9 @@ for (let i = 0; i < images; i++) {
       a.currentTime = Math.max(0, local);
     }
   }, t);
-  const image = await scene.screenshot({ type: "jpeg", quality: 92 });
-  if (!ffmpeg.stdin.write(image)) await new Promise((r) => ffmpeg.stdin.once("drain", r));
+  await destination.ajouter(await scene.screenshot({ type: "jpeg", quality: 92 }), i);
   if (i % ips === 0) process.stdout.write(`\r${Math.round((i / images) * 100)} %  (${Math.round((Date.now() - debut) / 1000)} s)`);
 }
-ffmpeg.stdin.end();
-await fin;
+await destination.fermer(images);
 await nav.close();
 console.log(`\n${sortie} : ${images} images, ${duree / 1000} s, ${largeur}×${hauteur}`);
