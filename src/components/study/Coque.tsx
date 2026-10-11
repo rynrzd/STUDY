@@ -3,6 +3,7 @@ import {
   Bell,
   BookOpen,
   CalendarDays,
+  ClipboardCheck,
   ClipboardList,
   Compass,
   FolderKanban,
@@ -85,6 +86,7 @@ function navigation(ctx: ContexteApp, espace: Espace): { principales: Destinatio
         { href: "/app/agenda", libelle: "Agenda", icone: CalendarDays },
       ],
       secondaires: [
+        { href: "/app/evaluations", libelle: "Évaluations", icone: ClipboardCheck },
         { href: "/app/projets", libelle: "Projets", icone: FolderKanban },
         { href: "/app/orientation", libelle: "Orientation", icone: Compass },
         { href: "/app/ateliers", libelle: "Ateliers", icone: NotebookPen },
@@ -104,6 +106,7 @@ function navigation(ctx: ContexteApp, espace: Espace): { principales: Destinatio
         { href: "/app/agenda", libelle: "Agenda", icone: CalendarDays },
       ],
       secondaires: [
+        { href: "/professeur/evaluations", libelle: "Évaluations", court: "Évals", icone: ClipboardCheck },
         { href: "/studio/exercices", libelle: "Banque d’exercices", court: "Exercices", icone: ClipboardList },
         { href: "/app/prof/ateliers", libelle: "Ateliers", icone: Library },
         { href: "/professeur/devoirs", libelle: "Devoirs et copies", court: "Copies", icone: ClipboardList },

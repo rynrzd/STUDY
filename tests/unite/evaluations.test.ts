@@ -146,3 +146,13 @@ test("analyse : la mauvaise réponse la plus choisie est retrouvée malgré le m
   assert.ok(csv.includes("Dan;Dan;Abs;Abs"));
   assert.ok(csv.includes("Ana;Ana;20;Très bonne maîtrise"));
 });
+
+test("heures de Paris : saisie et affichage, été comme hiver, sur un serveur en UTC", async () => {
+  const { isoVersParis, parisVersIso } = await import("../../src/lib/evaluations/dates.ts");
+  assert.equal(parisVersIso("2026-10-12T08:00"), "2026-10-12T06:00:00.000Z", "heure d'été : UTC+2");
+  assert.equal(parisVersIso("2026-12-14T08:00"), "2026-12-14T07:00:00.000Z", "heure d'hiver : UTC+1");
+  assert.equal(isoVersParis("2026-10-12T06:00:00.000Z"), "2026-10-12T08:00");
+  assert.equal(isoVersParis(parisVersIso("2026-03-29T10:30")), "2026-03-29T10:30", "le jour du changement d'heure");
+  assert.equal(parisVersIso(""), null);
+  assert.equal(parisVersIso("demain"), null);
+});

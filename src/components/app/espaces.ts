@@ -18,6 +18,7 @@ export const LIENS_PROFESSEUR: readonly LienEspace[] = [
   { href: "/professeur/studio", libelle: "Studio" },
   { href: "/studio/exercices", libelle: "Banque d’exercices" },
   { href: "/app/prof/ateliers", libelle: "Ateliers" },
+  { href: "/professeur/evaluations", libelle: "Évaluations" },
   { href: "/professeur/devoirs", libelle: "Devoirs" },
   { href: "/parametres", libelle: "Paramètres" },
 ];

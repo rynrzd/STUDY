@@ -34,6 +34,11 @@ export function noteSur20(points: number, maximum: number, pas = 0.5): number | 
   return Math.round(((points / maximum) * 20) / pas) * pas;
 }
 
+/** Un énoncé à variantes, lisible sans valeurs : « f(x) = {a}x + {b} » → « f(x) = ax + b ». */
+export function texteModele(t: string): string {
+  return t.replace(/\{([^{}]+)\}/g, "$1");
+}
+
 export function formaterNote(n: number | null): string {
   return n === null ? "—" : String(n).replace(".", ",");
 }
