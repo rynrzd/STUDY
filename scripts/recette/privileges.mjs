@@ -167,6 +167,12 @@ const EXECUTABLES_PAR_AUTHENTICATED = new Set([
   "mes_salons",
   "noms_affichables",
   "note_enregistrer",
+  // 0062 — « Je n'ai pas compris ce passage » : signalement privé, nombres pour le professeur.
+  "passage_empreinte",
+  "passage_incompris_compris",
+  "passage_incompris_marquer",
+  "passages_incompris_resume",
+  "passages_incompris_seance",
   "notification_lue",
   "orientation_modifier",
   "orientation_partager",
