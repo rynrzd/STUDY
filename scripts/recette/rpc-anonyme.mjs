@@ -81,6 +81,16 @@ const FONCTIONS = [
   { nom: "peut_moderer", corps: { p_org: "00000000-0000-4000-8000-000000000000" } },
   { nom: "session_mfa_verifiee", corps: {} },
   { nom: "current_user_id", corps: {} },
+
+  // 0062 — « Je n'ai pas compris ». Un signalement anonyme vers le professeur
+  // serait précisément ce qu'on veut interdire : la fonction d'écriture, celle
+  // qui clôt un passage et les deux lectures d'agrégat doivent toutes refuser
+  // sans compte. Paramètres inertes ; sans droit EXECUTE, rien ne s'exécute.
+  { nom: "passage_incompris_marquer", corps: { p_lecon: "00000000-0000-4000-8000-000000000000", p_extrait: "sonde anonyme" } },
+  { nom: "passage_incompris_compris", corps: { p_passage: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "passages_incompris_seance", corps: { p_lecon: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "passages_incompris_resume", corps: {} },
+  { nom: "passage_empreinte", corps: { p_extrait: "sonde anonyme" } },
 ];
 
 let defauts = 0;
