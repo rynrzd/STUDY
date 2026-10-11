@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ConteneurEffets } from "@/components/study/ConteneurEffets";
 import { Coque } from "@/components/study/Coque";
+import { IntroConnexion } from "@/components/study/IntroConnexion";
 import { contexteApp } from "@/lib/v6/contexte";
 
 export const metadata: Metadata = {
@@ -28,6 +29,7 @@ export default async function GabaritApp({ children }: { children: React.ReactNo
 
   return (
     <ConteneurEffets>
+      <IntroConnexion />
       <Coque ctx={ctx}>{children}</Coque>
     </ConteneurEffets>
   );

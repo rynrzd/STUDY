@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Cadre } from "@/components/app/Cadre";
 import { LIENS_PROFESSEUR } from "@/components/app/espaces";
+import { IntroConnexion } from "@/components/study/IntroConnexion";
 import { estEnseignant, sessionCourante } from "@/lib/session-serveur";
 
 export const metadata: Metadata = {
@@ -26,8 +27,11 @@ export default async function GabaritProfesseur({ children }: { children: React.
   if (!estEnseignant(personne)) redirect("/app");
 
   return (
-    <Cadre liens={LIENS_PROFESSEUR} personne={personne} contexte={personne.organisation}>
-      {children}
-    </Cadre>
+    <>
+      <IntroConnexion />
+      <Cadre liens={LIENS_PROFESSEUR} personne={personne} contexte={personne.organisation}>
+        {children}
+      </Cadre>
+    </>
   );
 }

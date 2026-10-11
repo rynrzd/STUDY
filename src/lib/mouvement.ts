@@ -47,6 +47,12 @@ export type PreferenceEffets = "auto" | "reduits" | "desactives";
 
 export const COOKIE_EFFETS = "study_effets";
 
+/**
+ * Posé par la connexion réussie, effacé par la première page de l'espace
+ * connecté qui joue l'intro de marque. Purement visuel : n'ouvre aucun droit.
+ */
+export const COOKIE_INTRO = "study_intro";
+
 export function lirePreference(valeur: string | null | undefined): PreferenceEffets {
   return valeur === "reduits" || valeur === "desactives" ? valeur : "auto";
 }

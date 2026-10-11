@@ -53,13 +53,23 @@ export default function Accueil() {
             </div>
           </div>
           <figure className={`${s.mobileOnly} ${s.mobilePreview}`} aria-label="Aperçu illustratif des cours">
-            <h2>À toi de jouer.</h2>
-            <div className={s.mobileCourse}>
-              <div className={s.courseTitle}><span className={s.courseIcon}><ChartNoAxesCombined size={25} aria-hidden="true" /></span><div><p>Mathématiques</p><h3>Fonctions affines</h3></div></div>
-              <Link href="/produit#cours" className={s.resumeCourse}><BookOpen size={20} aria-hidden="true" /> Découvrir les cours <ArrowRight size={17} aria-hidden="true" /></Link>
-              <div className={s.homework}><FileText size={22} aria-hidden="true" /><div><strong>Exercices 1 à 3</strong><p>Pour demain</p></div></div>
+            <div className={s.phone} aria-hidden="true">
+              <div className={s.phoneScreen}>
+                <div className={s.phoneBar}>
+                  <span className={s.phoneBrand}>study<span>.</span></span>
+                  <span className={s.phoneDots}><i /><i /><i /></span>
+                </div>
+                <div className={s.phoneBody}>
+                  <p className={s.phoneHello}>Mardi · Seconde 2</p>
+                  <div className={s.mobileCourse}>
+                    <div className={s.courseTitle}><span className={s.courseIcon}><ChartNoAxesCombined size={24} aria-hidden="true" /></span><div><p>Mathématiques</p><h3>Fonctions affines</h3></div></div>
+                    <div className={s.resumeCourse}><BookOpen size={19} aria-hidden="true" /> Reprendre le cours <ArrowRight size={16} aria-hidden="true" /></div>
+                    <div className={s.homework}><FileText size={21} aria-hidden="true" /><div><strong>Exercices 1 à 3</strong><p>Pour demain</p></div></div>
+                  </div>
+                  <div className={s.phoneChip}><span className={s.phoneTick}>✓</span> Révision du jour · 5 min</div>
+                </div>
+              </div>
             </div>
-            <div className={s.notebook} aria-hidden="true"><span>Un cours. Un déclic.</span><span>f(x) = ax + b</span><svg viewBox="0 0 160 60" fill="none"><path d="M8 50H152M22 58V5" stroke="currentColor" strokeWidth="1.5"/><path d="M28 46L140 10" stroke="currentColor" strokeWidth="2.5"/></svg></div>
             <figcaption>Exemple illustratif · aucune donnée réelle</figcaption>
           </figure>
           <div className={`${s.panel} ${s.rose} ${s.stack} ${s.desktopOnly}`}>
@@ -114,7 +124,7 @@ export default function Accueil() {
               <h2>Une question ne devrait pas te bloquer.</h2>
               <p>Un espace commun pour échanger avec ta classe et ton professeur, autour des cours et du travail à faire.</p>
             </div>
-            <div className={s.stack}>
+            <div className={`${s.stack} ${s.desktopOnly}`}>
               <div className={s.card}>
                 <strong>Lina · Élève</strong>
                 <p>Je ne comprends pas pourquoi on remplace x par 3 dans cet exemple.</p>
@@ -124,6 +134,23 @@ export default function Accueil() {
                 <p>On cherche l’image de 3. On calcule donc f(3) = 2 × 3 + 1 = 7.</p>
               </div>
               <p className={s.sample}>Échange illustratif · salon collectif de classe</p>
+            </div>
+            <div className={`${s.chat} ${s.mobileOnly}`} aria-hidden="true">
+              <div className={s.chatMeta}>Salon de la classe · Mathématiques</div>
+              <div className={s.bubbleRow}>
+                <span className={s.avatar}>L</span>
+                <div className={s.bubble}>
+                  <strong>Lina</strong>
+                  <p>Je ne comprends pas pourquoi on remplace x par 3 ici.</p>
+                </div>
+              </div>
+              <div className={`${s.bubbleRow} ${s.fromProf}`}>
+                <div className={`${s.bubble} ${s.bubbleProf}`}>
+                  <strong>Mme Bernard · Professeure</strong>
+                  <p>On cherche l’image de 3. Donc f(3) = 2 × 3 + 1 = 7.</p>
+                </div>
+              </div>
+              <div className={s.chatReacts}><span>👍 4</span><span className={s.chatSame}>J’avais la même question</span></div>
             </div>
           </div>
         </section>

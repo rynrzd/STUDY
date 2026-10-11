@@ -160,57 +160,106 @@
   }
 }
 
-/* Direction mobile 01, validée : une composition propre au petit écran. */
+/* Direction mobile 02 : éditoriale, angles vifs. Pas de cartes arrondies :
+ * des filets, de grands numéros berry et la typographie font la structure. */
 .mobileOnly { display: none; }
 @media (max-width: 767px) {
   .desktopOnly { display: none !important; }
   .mobileOnly { display: block; }
   .page { background: #fcfafb; }
   .wrap { width: calc(100% - 40px); }
-  .topbar { min-height: 76px; gap: 12px; }
+  .topbar { min-height: 72px; gap: 12px; }
   .brand { font-size: 30px; }
   .topbar .nav { gap: 14px; }
   .nav > a { font-size: 13px; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
   .nav .desktop { display: none; }
   .page .menuMobile { padding: 0; border: 0; }
-  .page .menuMobile > summary { min-width: 44px; padding: 0 9px; font-size: 12px; border-color: var(--line); background: transparent; }
-  .menuPanneau { box-shadow: 0 12px 24px #29282e0b; }
-  .hero { padding-top: 32px; padding-bottom: 40px; gap: 24px; }
+  .page .menuMobile > summary { min-width: 44px; padding: 0 12px; font-size: 12px; border-color: var(--ink); border-radius: 4px; background: transparent; }
+  .menuPanneau { border-radius: 4px; box-shadow: 0 12px 24px #29282e14; }
+  .button { border-radius: 4px; }
+
+  /* Héros */
+  .hero { padding-top: 36px; padding-bottom: 0; gap: 32px; }
   .hero .copy { gap: 18px; }
-  .hero .eyebrow { color: var(--primary); font-size: 10px; letter-spacing: .16em; }
-  .hero h1 { font-size: clamp(30px, 8.2vw, 43px); line-height: 1.12; letter-spacing: -.045em; font-weight: 800; }
-  .hero .copy > p:not(.eyebrow) { font-size: 17px; line-height: 1.55; }
-  .hero .actions { margin-top: 2px; }
+  .hero .eyebrow { display: flex; align-items: center; gap: 10px; color: var(--primary); font-size: 11px; letter-spacing: .16em; }
+  .hero .eyebrow::before { content: ""; width: 28px; height: 2px; background: var(--primary); }
+  .hero h1 { font-size: clamp(32px, 9vw, 44px); line-height: 1.06; letter-spacing: -.05em; font-weight: 800; }
+  .hero .copy > p:not(.eyebrow) { font-size: 17px; line-height: 1.55; color: var(--muted); }
   .hero .actions .secondary { display: none; }
-  .hero .actions .button { justify-content: space-between; min-height: 54px; padding: 14px 20px; border-radius: 13px; font-size: 16px; }
-  .page figure.mobilePreview { margin: 0; background: var(--blush); border: 1px solid #eedbe2; border-radius: 20px; padding: 22px 16px 12px; overflow: hidden; }
-  .page .mobilePreview h2 { font-size: 26px; letter-spacing: -.04em; margin: 0 4px 18px; }
-  .mobileCourse { position: relative; background: #fff; border: 1px solid #eee6e9; border-radius: 15px; padding: 18px; box-shadow: 0 8px 20px #81445b08; }
-  .courseTitle { display: flex; align-items: center; gap: 12px; }
-  .courseIcon { display: grid; place-items: center; flex-shrink: 0; width: 42px; height: 42px; border-radius: 10px; background: var(--blush); color: var(--primary); }
-  .page .courseTitle h3 { font-size: 16px; letter-spacing: -.02em; }
-  .courseTitle p, .homework p { color: var(--muted); font-size: 12px; }
-  .page a.resumeCourse { display: flex; gap: 10px; align-items: center; min-height: 48px; font-size: 13px; font-weight: 700; color: var(--primary); text-decoration: none; margin-block: 6px 10px; }
+  .hero .actions .button { justify-content: space-between; min-height: 56px; padding: 14px 20px; font-size: 16px; }
+
+  /* L'application dans un téléphone, posée sur une feuille quadrillée pleine largeur. */
+  .page figure.mobilePreview {
+    margin: 0 -20px;
+    padding: 36px 20px 18px;
+    text-align: center;
+    background-color: var(--blush);
+    background-image: linear-gradient(#81445b14 1px, transparent 1px), linear-gradient(90deg, #81445b14 1px, transparent 1px);
+    background-size: 24px 24px;
+    border-block: 1px solid #ecd3dc;
+  }
+  .phone { width: min(250px, 74%); margin-inline: auto; background: var(--ink); border-radius: 32px; padding: 7px; box-shadow: 18px 22px 0 #81445b26; }
+  .phoneScreen { position: relative; background: #fff; border-radius: 26px; overflow: hidden; text-align: left; }
+  .phoneScreen::before { content: ""; position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 64px; height: 5px; border-radius: 3px; background: #0000001a; }
+  .phoneBar { display: flex; align-items: center; justify-content: space-between; padding: 22px 16px 10px; border-bottom: 1px solid var(--line); }
+  .phoneBrand { font-weight: 800; font-size: 17px; letter-spacing: -.05em; }
+  .phoneBrand span { color: var(--primary); }
+  .phoneDots { display: inline-flex; gap: 4px; }
+  .phoneDots i { width: 6px; height: 6px; background: var(--rose); }
+  .phoneBody { padding: 12px 14px 18px; display: grid; gap: 12px; }
+  .phoneHello { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+  .mobileCourse { background: #fff; border-left: 3px solid var(--primary); padding: 2px 0 2px 12px; }
+  .courseTitle { display: flex; align-items: center; gap: 11px; }
+  .courseIcon { display: grid; place-items: center; flex-shrink: 0; width: 38px; height: 38px; border-radius: 4px; background: var(--blush); color: var(--primary); }
+  .page .courseTitle h3 { font-size: 15px; letter-spacing: -.02em; }
+  .courseTitle p, .homework p { color: var(--muted); font-size: 11px; }
+  .resumeCourse { display: flex; gap: 9px; align-items: center; min-height: 40px; font-size: 12px; font-weight: 700; color: var(--primary); margin-block: 6px 6px; }
   .resumeCourse svg:last-child { margin-left: auto; }
-  .homework { display: flex; align-items: center; gap: 16px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; }
-  .homework > svg { flex-shrink: 0; }
-  .notebook { margin: 18px -16px 0; padding: 14px 24px 10px; background: repeating-linear-gradient(to bottom, #fff9fc 0px, #fff9fc 23px, #eadce3 24px); color: var(--primary); display: grid; grid-template-columns: 1fr 100px; gap: 8px; }
-  .notebook > span:first-child { grid-column: 1 / -1; font-size: 11px; letter-spacing: .06em; }
-  .notebook > span:nth-child(2) { font-family: Georgia, serif; font-size: 24px; font-style: italic; align-self: center; }
-  .notebook svg { width: 100%; height: 48px; }
-  .mobilePreview figcaption { padding-top: 10px; color: var(--muted); font-size: 10px; }
-  .section { padding-block: 44px; }
+  .homework { display: flex; align-items: center; gap: 13px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 13px; }
+  .homework > svg { flex-shrink: 0; color: var(--primary); }
+  .phoneChip { display: flex; align-items: center; gap: 8px; background: var(--primary); color: #fff; border-radius: 4px; padding: 11px 13px; font-size: 12px; font-weight: 700; }
+  .phoneTick { display: grid; place-items: center; width: 18px; height: 18px; background: #fff; color: var(--primary); font-size: 11px; flex-shrink: 0; }
+  .mobilePreview figcaption { padding-top: 26px; color: var(--muted); font-size: 10px; }
+
+  /* Sections */
+  .section { padding-block: 52px; }
   .section .copy { gap: 18px; }
-  .page h2 { font-size: clamp(29px, 7.8vw, 36px); line-height: 1.12; letter-spacing: -.04em; text-wrap: balance; }
-  .page .brandStory { border-left: 2px solid var(--primary); padding-left: 16px; font-size: 15px; line-height: 1.65; }
-  .card { border-radius: 16px; padding: 20px; }
-  .blush .stack > .card:nth-child(2) { margin-left: 18px; border-left: 3px solid var(--primary); }
-  .steps { gap: 0; }
-  .steps .card { display: grid; grid-template-columns: 32px 1fr; column-gap: 14px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; padding: 20px 0; }
-  .steps .number { grid-row: span 2; width: 30px; height: 30px; margin: 0; font-size: 13px; }
+  .page h2 { font-size: clamp(30px, 8vw, 38px); line-height: 1.08; letter-spacing: -.045em; text-wrap: balance; }
+  .page .brandStory { border-left: 3px solid var(--primary); padding-left: 16px; font-size: 15px; line-height: 1.65; }
+  .card { border-radius: 0; padding: 20px; }
+
+  /* « Un cours bien organisé » : un sommaire, pas une boîte. */
+  .white .card { border: 0; border-top: 3px solid var(--ink); background: transparent; padding: 18px 0 0; }
+
+  /* « Une question » : un fil de discussion à angles vifs. */
+  .chat { display: grid; gap: 12px; background: #fff; border-top: 3px solid var(--primary); padding: 16px; box-shadow: 10px 10px 0 #81445b1f; }
+  .chatMeta { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .bubbleRow { display: flex; align-items: flex-end; gap: 9px; }
+  .bubbleRow.fromProf { flex-direction: row-reverse; }
+  .avatar { display: grid; place-items: center; flex-shrink: 0; width: 30px; height: 30px; background: var(--ink); color: #fff; font-weight: 800; font-size: 13px; }
+  .bubble { background: #f2eff2; border-radius: 0 6px 6px 6px; padding: 11px 13px; max-width: 82%; }
+  .bubble strong { display: block; font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+  .bubble p { font-size: 14px; line-height: 1.45; }
+  .bubbleProf { background: var(--blush); border-radius: 6px 0 6px 6px; }
+  .bubbleProf strong { color: var(--primary); }
+  .chatReacts { display: flex; align-items: center; gap: 12px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+  .chatSame { margin-left: auto; color: var(--primary); font-weight: 700; }
+
+  /* Étapes professeur : grands numéros, filets. */
+  .steps { gap: 0; border-top: 3px solid var(--ink); }
+  .steps .card { display: grid; grid-template-columns: 56px 1fr; column-gap: 12px; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 20px 0; }
+  .steps .number { grid-row: span 2; width: auto; height: auto; margin: 0; background: none; border-radius: 0; place-items: start; font-size: 44px; line-height: .9; font-weight: 800; letter-spacing: -.06em; color: var(--primary); }
+  .page .steps h3 { font-size: 18px; }
   .steps p { grid-column: 2; font-size: 14px; color: var(--muted); margin-top: 4px; }
+
+  /* Établissement : trois lignes numérotées. */
+  .roseLight .stack { gap: 0; border-top: 3px solid var(--ink); }
+  .roseLight .row { padding: 16px 0; }
+  .roseLight .row strong { color: var(--primary); }
+  .roseLight .row p { font-size: 14px; color: var(--muted); margin-top: 3px; }
+
   .page summary { min-height: 44px; display: list-item; align-content: center; }
-  .cta .button { width: 100%; min-height: 52px; }
+  .cta .button { width: 100%; min-height: 54px; }
   .footer .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
   .footer .brand { grid-column: 1 / -1; margin-bottom: 12px; }
   .footer a:not(.brand) { font-size: 13px; min-height: 44px; display: inline-flex; align-items: center; }
@@ -219,11 +268,25 @@
 }
 @media (max-width: 359px) {
   .wrap { width: calc(100% - 32px); }
+  .page figure.mobilePreview { margin-inline: -16px; }
   .topbar .nav { gap: 8px; }
   .hero .copy > p:not(.eyebrow) { font-size: 16px; }
-  .mobileCourse { padding: 14px; }
-  .page a.resumeCourse { font-size: 12px; }
 }
+
+/* Entrée en scène : le point du logo tourne et se pose, le héros monte en
+ * cascade, le téléphone arrive. Rien ne bloque la page ; la règle « moins
+ * d'animations » plus haut coupe tout. */
+@keyframes montee { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes pointLogo { from { transform: scale(0) rotate(-270deg); } to { transform: none; } }
+@keyframes telephone { from { opacity: 0; transform: translateY(40px) rotate(-4deg); } to { opacity: 1; transform: none; } }
+.topbar .brand span { display: inline-block; transform-origin: 50% 80%; animation: pointLogo .8s .15s cubic-bezier(.16,.84,.44,1) both; }
+.hero .copy > * { animation: montee .6s cubic-bezier(.2,.7,.2,1) both; }
+.hero .copy > :nth-child(1) { animation-delay: .05s; }
+.hero .copy > :nth-child(2) { animation-delay: .12s; }
+.hero .copy > :nth-child(3) { animation-delay: .2s; }
+.hero .copy > :nth-child(4) { animation-delay: .28s; }
+.hero > :not(.copy) { animation: montee .7s .3s cubic-bezier(.2,.7,.2,1) both; }
+.hero .phone { animation: telephone .8s .35s cubic-bezier(.2,.7,.2,1) both; }
 @media (prefers-reduced-motion: reduce) {
   .page a.button { transition: none; transform: none; }
 }

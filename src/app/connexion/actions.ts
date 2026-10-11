@@ -7,6 +7,7 @@ import { tenterConnexion } from "@/lib/authentification";
 import { chiffrer, lireCles } from "@/lib/chiffrement";
 import { DepotSupabase } from "@/lib/depot-authentification";
 import { FournisseurSupabase } from "@/lib/fournisseur-supabase";
+import { COOKIE_INTRO } from "@/lib/mouvement";
 import { cookieSession, empreinteJeton, NOM_COOKIE_SESSION } from "@/lib/session";
 import { baseConfiguree } from "@/lib/supabase-serveur";
 import { jetonDepuisLien, normaliserCode } from "@/lib/v6/contexte-etablissement";
@@ -155,6 +156,10 @@ export async function seConnecter(_precedent: EtatConnexion, donnees: FormData):
   } catch {
     // Sans importance : la purge périodique s'en charge.
   }
+
+  // Intro de marque à l'arrivée dans l'espace (cosmétique, sans droit) ; cinq
+  // minutes laissent le temps d'un second facteur.
+  magasin.set(COOKIE_INTRO, "1", { path: "/", maxAge: 300, sameSite: "lax", secure: cookie.secure, httpOnly: false });
 
   // Une activation en attente passe toujours avant la reprise du parcours.
   const suite = suiteSure(String(donnees.get("suite") ?? ""));

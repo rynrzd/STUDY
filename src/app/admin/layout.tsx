@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Cadre } from "@/components/app/Cadre";
 import { LIENS_ADMIN } from "@/components/app/espaces";
+import { IntroConnexion } from "@/components/study/IntroConnexion";
 import { etapeSecondFacteur } from "@/lib/second-facteur";
 import { sessionCourante } from "@/lib/session-serveur";
 
@@ -33,12 +34,15 @@ export default async function GabaritAdmin({ children }: { children: React.React
   if (etape === "a_enroler" || etape === "a_verifier") redirect("/second-facteur");
 
   return (
-    <Cadre
-      liens={LIENS_ADMIN}
-      personne={personne}
-      contexte={personne.organisation ?? "Établissement"}
-    >
-      {children}
-    </Cadre>
+    <>
+      <IntroConnexion />
+      <Cadre
+        liens={LIENS_ADMIN}
+        personne={personne}
+        contexte={personne.organisation ?? "Établissement"}
+      >
+        {children}
+      </Cadre>
+    </>
   );
 }

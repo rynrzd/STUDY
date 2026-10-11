@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Signalements } from "@/components/admin/Signalements";
 import { Coque } from "@/components/study/Coque";
+import { VueIntro } from "@/components/study/IntroConnexion";
 import { EtapesImport } from "@/components/admin/EtapesImport";
 import { VerificationRentree } from "@/components/admin/VerificationRentree";
 import { EnTetePage } from "@/components/study/ui";
@@ -75,6 +76,17 @@ const membresClasse = [...F.membres];
 
 const ECRANS: Record<string, Ecran> = {
   A01: { titre: "Bienvenue", ctx: ELEVE, chemin: "/app", rendu: () => <VueBienvenue prenom="Camille" classe="Seconde 2" role="élève" matieres={["Mathématiques", "Français", "Histoire-géographie"]} nbDevoirs={2} /> },
+  INTRO: {
+    titre: "Intro de connexion",
+    ctx: ELEVE,
+    chemin: "/app",
+    rendu: () => (
+      <>
+        <VueIntro />
+        <VueBienvenue prenom="Camille" classe="Seconde 2" role="élève" matieres={["Mathématiques", "Français", "Histoire-géographie"]} nbDevoirs={2} />
+      </>
+    ),
+  },
   A03: {
     titre: "Mes cours",
     ctx: ELEVE,
