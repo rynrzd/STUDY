@@ -335,8 +335,8 @@ const ECRANS: Record<string, Ecran> = {
         questions={
           <VuePointsBloquants
             points={[
-              { seance: "s1", titre: "Lire une image sur un graphique", questions: 3, sansReponse: 2, elevesConcernes: 7, passagesIncompris: 2, exemple: "Pourquoi on part de l'axe horizontal ?", href: "/app/seances/s1?onglet=questions" },
-              { seance: "s2", titre: "La fonction carré", questions: 1, sansReponse: 0, elevesConcernes: 2, passagesIncompris: 0, exemple: "Le carré d'un négatif est positif ?", href: "/app/seances/s2?onglet=questions" },
+              { seance: "s1", titre: "Lire une image sur un graphique", questions: 3, sansReponse: 2, memeQuestion: 4, passagesIncompris: 2, elevesPassages: 3, exemple: "Pourquoi on part de l'axe horizontal ?", href: "/app/seances/s1?onglet=questions" },
+              { seance: "s2", titre: "La fonction carré", questions: 1, sansReponse: 0, memeQuestion: 1, passagesIncompris: 0, elevesPassages: 0, exemple: "Le carré d'un négatif est positif ?", href: "/app/seances/s2?onglet=questions" },
             ]}
           />
         }

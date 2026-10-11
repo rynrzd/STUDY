@@ -100,8 +100,13 @@ function Question({ q }: { q: QuestionDeSeance }) {
         <Link href={q.href} className="bouton bouton-secondaire bouton-compact">
           Voir la discussion{q.reponses > 0 ? ` (${q.reponses} réponse${q.reponses > 1 ? "s" : ""})` : ""}
         </Link>
-        {!q.deMoi && !q.reponseAdulte ? <BoutonMemeQuestion message={q.id} actif={q.moiAussi} nombre={q.memeQuestion} /> : null}
-        {q.deMoi || q.reponseAdulte ? (q.memeQuestion > 0 ? <span className="meta">{q.memeQuestion} élève{q.memeQuestion > 1 ? "s ont" : " a"} la même question</span> : null) : null}
+        {!q.deMoi && !q.reponseAdulte ? (
+          <BoutonMemeQuestion message={q.id} actif={q.moiAussi} nombre={q.memeQuestion} />
+        ) : q.memeQuestion > 0 ? (
+          <span className="meta">
+            {q.memeQuestion} élève{q.memeQuestion > 1 ? "s ont" : " a"} la même question
+          </span>
+        ) : null}
       </div>
     </li>
   );

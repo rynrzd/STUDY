@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { extraitDuTexte } from "@/lib/document-cours";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
+import { paragraphesDeLaSeance, seanceDetail } from "@/lib/v6/cours";
 import { contexteApp, idRequete } from "@/lib/v6/contexte";
 import { traduire } from "@/lib/v6/erreurs";
 
@@ -89,13 +91,17 @@ export interface EtatIncompris {
 /**
  * « Je n'ai pas compris ce passage » (0062). Privé : le professeur ne verra
  * qu'un nombre d'élèves par passage, jamais de nom. La fonction revérifie que
- * la séance est publiée et lisible par la personne.
+ * la séance est publiée et lisible par la personne ; l'extrait doit venir du
+ * cours (`extraitDuTexte`).
  */
 export async function marquerIncompris(seance: string, extrait: string): Promise<EtatIncompris> {
   const requestId = idRequete();
   const texte = extrait.replace(/\s+/g, " ").trim().slice(0, 500);
   if (!uuid.safeParse(seance).success || texte.length < 3) return { ok: false, message: "Sélectionne au moins quelques mots du cours." };
   const { jeton } = await contexteApp();
+  const s = await seanceDetail(jeton, seance);
+  if (s === null || s.etat !== "publiee") return { ok: false, message: "Cette séance n'est pas accessible." };
+  if (!extraitDuTexte(texte, paragraphesDeLaSeance(s))) return { ok: false, message: "Sélectionne un passage du cours lui-même." };
   const { error } = await clientUtilisateur(jeton).rpc("passage_incompris_marquer", { p_lecon: seance, p_extrait: texte });
   if (error !== null) {
     if (/TROP_DE_PASSAGES/.test(error.message)) return { ok: false, message: "Tu as déjà signalé 30 passages sur cette séance." };

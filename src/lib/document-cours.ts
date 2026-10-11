@@ -147,6 +147,19 @@ export function texteIntegral(document: DocumentCours): string {
     .trim();
 }
 
+/**
+ * L'extrait vient-il de ce texte ? Comparaison sur les lettres et chiffres
+ * seuls : la mise en page (puces, tabulations, retours, ponctuation rendue)
+ * ne compte pas, mais un texte inventé est refusé. Sert à « Je n'ai pas
+ * compris » : le professeur lit l'extrait sans savoir qui l'a envoyé, un
+ * texte libre serait donc un message anonyme.
+ */
+export function extraitDuTexte(extrait: string, paragraphes: readonly string[]): boolean {
+  const comparable = (t: string) => t.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+  const cherche = comparable(extrait);
+  return cherche.length >= 3 && comparable(paragraphes.join(" ")).includes(cherche);
+}
+
 /** Les titres, pour le sommaire (S09). */
 export function sommaire(document: DocumentCours): { niveau: NiveauTitre; texte: string; index: number }[] {
   const entrees: { niveau: NiveauTitre; texte: string; index: number }[] = [];

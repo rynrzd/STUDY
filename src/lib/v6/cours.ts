@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { DocumentCours, ReglagesPresentation } from "../document-cours.ts";
+import { texteDuBloc, type DocumentCours, type ReglagesPresentation } from "../document-cours.ts";
 import { revision } from "../studio-documents.ts";
 import { blocsDeLaSeance, type Bloc } from "../studio.ts";
 import { clientUtilisateur } from "../supabase-serveur.ts";
@@ -170,6 +170,14 @@ export async function seanceDetail(jeton: string, id: string): Promise<SeanceDet
     blocs,
     document: doc === null || doc.document.blocs.length === 0 ? null : { document: doc.document, reglages: doc.reglages },
   };
+}
+
+/** Le texte lisible d'une séance, paragraphe par paragraphe (copie hors ligne, contrôle d'un extrait). */
+export function paragraphesDeLaSeance(s: SeanceDetail): string[] {
+  return [
+    ...(s.document?.document.blocs.map((b) => texteDuBloc(b)) ?? []),
+    ...s.blocs.map((b) => String(b.contenu.texte ?? b.contenu.consigne ?? b.contenu.titre ?? "")),
+  ].filter((t) => t.trim().length > 0);
 }
 
 export interface ExerciceAffiche {

@@ -1,7 +1,3 @@
-import { MesPassagesIncompris, PassagesIncomprisClasse } from "@/components/study/PassagesIncompris";
-import { mesPassagesIncompris, passagesIncomprisDeLaSeance } from "@/lib/v6/passages";
-import { QuestionsDeLaSeance } from "@/components/study/QuestionsDeLaSeance";
-import { questionsDeLaSeance } from "@/lib/v6/questions-seance";
 import Link from "next/link";
 import { Bookmark, BookmarkCheck, Dumbbell, FileText, HandHelping, Sparkles } from "lucide-react";
 import { Entraide } from "@/components/app/Entraide";
@@ -10,12 +6,16 @@ import { RenduDocument } from "@/components/studio/RenduDocument";
 import { BoutonHorsLigne } from "@/components/study/HorsLigne";
 import { LectureSeance } from "@/components/study/LectureSeance";
 import { NotePrivee } from "@/components/study/NotePrivee";
+import { MesPassagesIncompris, PassagesIncomprisClasse } from "@/components/study/PassagesIncompris";
+import { QuestionsDeLaSeance } from "@/components/study/QuestionsDeLaSeance";
 import { AccesIndisponible, EnTetePage, Etiquette, EtatVide, ICONE, Panneau, dateLisible } from "@/components/study/ui";
 import { dejaSignales } from "@/lib/moderation";
 import { filsDeLaSeance } from "@/lib/parcours-eleve";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 import { contexteApp } from "@/lib/v6/contexte";
 import { exercicesDeLaSeance, notePersonnelle, reperesDeLaSeance, seanceDetail } from "@/lib/v6/cours";
+import { mesPassagesIncompris, passagesIncomprisDeLaSeance } from "@/lib/v6/passages";
+import { questionsDeLaSeance } from "@/lib/v6/questions-seance";
 import { basculerRepere, sEntrainer } from "../actions";
 
 export const metadata = { title: "Séance" };

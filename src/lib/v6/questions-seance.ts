@@ -99,9 +99,11 @@ export interface PointBloquant {
   readonly titre: string;
   readonly questions: number;
   readonly sansReponse: number;
-  readonly elevesConcernes: number;
-  /** Passages signalés « pas compris » (0062), en nombre ; 0 si aucun. */
+  /** Total des « j'ai la même question » sur ces questions (une personne peut en cocher plusieurs). */
+  readonly memeQuestion: number;
+  /** Passages signalés « pas compris » (0062), et élèves distincts qui les ont signalés. */
   readonly passagesIncompris: number;
+  readonly elevesPassages: number;
   readonly exemple: string;
   readonly href: string;
 }
@@ -109,64 +111,58 @@ export interface PointBloquant {
 /**
  * Côté professeur : les séances qui font buter les élèves. Regroupe les
  * questions des salons lisibles par le professeur par séance citée ; compte
- * celles sans réponse et les « j'ai la même question » (nombre de personnes,
- * jamais leurs noms). Sert à décider quoi reprendre en classe.
+ * celles sans réponse et les « j'ai la même question » (des nombres, jamais
+ * de noms), puis ajoute les passages « pas compris ». Chaque nombre est
+ * affiché tel quel : on n'additionne pas des grandeurs différentes.
  */
 export async function pointsBloquants(jeton: string, limite = 5): Promise<PointBloquant[] | null> {
   const client = clientUtilisateur(jeton);
   const depuis = new Date(Date.now() - 30 * 86_400_000).toISOString();
-  const { data, error } = await client
-    .from("messages_salon")
-    .select("id, lesson_id, body, created_at, lessons(title)")
-    .eq("kind", "question")
-    .not("lesson_id", "is", null)
-    .is("parent_id", null)
-    .is("deleted_at", null)
-    .is("hidden_at", null)
-    .gte("created_at", depuis)
-    .order("created_at", { ascending: false })
-    .limit(200);
+  const [{ data, error }, passages] = await Promise.all([
+    client
+      .from("messages_salon")
+      .select("id, lesson_id, body, created_at, lessons(title)")
+      .eq("kind", "question")
+      .not("lesson_id", "is", null)
+      .is("parent_id", null)
+      .is("deleted_at", null)
+      .is("hidden_at", null)
+      .gte("created_at", depuis)
+      .order("created_at", { ascending: false })
+      .limit(200),
+    resumePassagesIncompris(jeton),
+  ]);
   if (error !== null) return null;
-  const lignes = (data ?? []) as unknown as { id: string; lesson_id: string; body: string; created_at: string; lessons: { title: string } | null }[];
-  const passages = await resumePassagesIncompris(jeton);
-  if (lignes.length === 0 && passages.size === 0) return [];
-  const compteurs = (await client.rpc("salon_compteurs", { p_messages: lignes.map((l) => l.id) })).data ?? [];
-  const parId = new Map((compteurs as { message_id: string; meme_question: number; reponses: number }[]).map((c) => [c.message_id, c]));
+  const lignes = (data ?? []) as unknown as { id: string; lesson_id: string; body: string; lessons: { title: string } | null }[];
+  const compteurs =
+    lignes.length === 0 ? [] : (((await client.rpc("salon_compteurs", { p_messages: lignes.map((l) => l.id) })).data ?? []) as { message_id: string; meme_question: number; reponses: number }[]);
+  const parId = new Map(compteurs.map((c) => [c.message_id, c]));
 
-  const parSeance = new Map<string, PointBloquant & { poids: number }>();
+  type Point = { -readonly [K in keyof PointBloquant]: PointBloquant[K] };
+  const parSeance = new Map<string, Point>();
+  const point = (seance: string, titre: string): Point => {
+    let p = parSeance.get(seance);
+    if (p === undefined) {
+      p = { seance, titre, questions: 0, sansReponse: 0, memeQuestion: 0, passagesIncompris: 0, elevesPassages: 0, exemple: "", href: `/app/seances/${seance}?onglet=questions` };
+      parSeance.set(seance, p);
+    }
+    return p;
+  };
   for (const l of lignes) {
     const c = parId.get(l.id);
-    const actuel = parSeance.get(l.lesson_id);
-    const sansReponse = (c?.reponses ?? 0) === 0 ? 1 : 0;
-    const concernes = 1 + (c?.meme_question ?? 0);
-    parSeance.set(l.lesson_id, {
-      seance: l.lesson_id,
-      titre: l.lessons?.title ?? "Séance",
-      questions: (actuel?.questions ?? 0) + 1,
-      sansReponse: (actuel?.sansReponse ?? 0) + sansReponse,
-      elevesConcernes: (actuel?.elevesConcernes ?? 0) + concernes,
-      passagesIncompris: 0,
-      exemple: actuel?.exemple ?? l.body,
-      href: `/app/seances/${l.lesson_id}?onglet=questions`,
-      poids: (actuel?.poids ?? 0) + concernes + sansReponse * 2,
-    });
+    const p = point(l.lesson_id, l.lessons?.title ?? "Séance");
+    p.questions += 1;
+    if ((c?.reponses ?? 0) === 0) p.sansReponse += 1;
+    p.memeQuestion += c?.meme_question ?? 0;
+    p.exemple ||= l.body; // la plus récente (tri décroissant)
   }
   for (const [seance, r] of passages) {
-    const actuel = parSeance.get(seance);
-    parSeance.set(seance, {
-      seance,
-      titre: actuel?.titre ?? r.titre,
-      questions: actuel?.questions ?? 0,
-      sansReponse: actuel?.sansReponse ?? 0,
-      elevesConcernes: Math.max(actuel?.elevesConcernes ?? 0, r.eleves),
-      passagesIncompris: r.passages,
-      exemple: actuel?.exemple ?? "",
-      href: `/app/seances/${seance}`,
-      poids: (actuel?.poids ?? 0) + r.eleves + r.passages,
-    });
+    const p = point(seance, r.titre);
+    p.passagesIncompris = r.passages;
+    p.elevesPassages = r.eleves;
+    if (p.questions === 0) p.href = `/app/seances/${seance}`;
   }
-  return [...parSeance.values()]
-    .sort((a, b) => b.poids - a.poids)
-    .slice(0, limite)
-    .map(({ poids: _poids, ...p }) => p);
+  // Ordre : ce qui attend une réponse d'abord, puis l'ampleur.
+  const poids = (p: Point) => p.sansReponse * 3 + p.questions + p.memeQuestion + p.elevesPassages;
+  return [...parSeance.values()].sort((a, b) => poids(b) - poids(a)).slice(0, limite);
 }

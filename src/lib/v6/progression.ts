@@ -79,19 +79,18 @@ export async function maProgression(jeton: string, moi: string): Promise<Matiere
     const recentes = recentesPar.get(n.id) ?? [];
     const statut: Statut = etat?.statut ?? (recentes.length > 0 ? "en_cours" : "a_decouvrir");
     const matiere = n.teaching_spaces?.subjects?.label ?? "Autres";
-    parMatiere.set(matiere, [
-      ...(parMatiere.get(matiere) ?? []),
-      {
-        id: n.id,
-        notion: n.label,
-        statut,
-        libelleStatut: LIBELLE_STATUT[statut] ?? statut,
-        reussitesRecentes: recentes.filter((r) => r.correct && !r.aide).length,
-        tentativesRecentes: recentes.length,
-        prochaineRevision: etat?.prochaine_revision ?? null,
-        rappelsActifs: etat?.rappels_actifs ?? true,
-      },
-    ]);
+    const liste = parMatiere.get(matiere) ?? [];
+    parMatiere.set(matiere, liste);
+    liste.push({
+      id: n.id,
+      notion: n.label,
+      statut,
+      libelleStatut: LIBELLE_STATUT[statut] ?? statut,
+      reussitesRecentes: recentes.filter((r) => r.correct && !r.aide).length,
+      tentativesRecentes: recentes.length,
+      prochaineRevision: etat?.prochaine_revision ?? null,
+      rappelsActifs: etat?.rappels_actifs ?? true,
+    });
   }
 
   return [...parMatiere.entries()]

@@ -1,7 +1,6 @@
 "use client";
 
 import { CircleHelp, MessageCircleQuestion, NotebookPen } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { marquerIncompris, noterLecture } from "@/app/app/seances/actions";
 
@@ -28,9 +27,9 @@ export function LectureSeance({
 }) {
   const zone = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<{ texte: string; x: number; y: number } | null>(null);
-  const [retour, setRetour] = useState<{ ok: boolean; message: string } | null>(null);
+  // Le retour s'affiche là où était la sélection : en bas de l'article, il passerait inaperçu.
+  const [retour, setRetour] = useState<{ ok: boolean; message: string; x: number; y: number } | null>(null);
   const [envoi, demarrer] = useTransition();
-  const router = useRouter();
 
   useEffect(() => {
     void noterLecture(seance).catch(() => undefined);
@@ -51,6 +50,12 @@ export function LectureSeance({
     document.addEventListener("selectionchange", surSelection);
     return () => document.removeEventListener("selectionchange", surSelection);
   }, []);
+
+  useEffect(() => {
+    if (retour === null) return;
+    const t = window.setTimeout(() => setRetour(null), 6000);
+    return () => window.clearTimeout(t);
+  }, [retour]);
 
   const citer = (texte: string) => `« ${texte} »`;
 
@@ -78,13 +83,12 @@ export function LectureSeance({
               className="bouton bouton-discret bouton-compact"
               disabled={envoi}
               onClick={() => {
-                const texte = selection.texte;
+                const { texte, x, y } = selection;
                 demarrer(async () => {
                   const r = await marquerIncompris(seance, texte);
-                  setRetour(r);
+                  setRetour({ ...r, x, y });
                   setSelection(null);
                   window.getSelection()?.removeAllRanges();
-                  if (r.ok) router.refresh();
                 });
               }}
             >
@@ -109,11 +113,17 @@ export function LectureSeance({
           </button>
         </div>
       ) : null}
-      {retour ? (
-        <p role="status" className={`mt-4 rounded-[10px] p-3 text-[0.875rem] ${retour.ok ? "bg-[color:var(--color-rose-clair)]" : "bg-[color:var(--color-erreur-fond)] text-[color:var(--color-erreur)]"}`}>
-          {retour.message}
-        </p>
-      ) : null}
+      {/* Région toujours présente : un lecteur d'écran n'annonce pas une région créée en même temps que son texte. */}
+      <div role="status">
+        {retour ? (
+          <p
+            style={{ left: Math.max(0, retour.x), top: retour.y }}
+            className={`absolute z-20 max-w-[32rem] rounded-[10px] p-3 text-[0.875rem] shadow-[var(--shadow-flottant)] ${retour.ok ? "bg-[color:var(--color-rose-clair)]" : "bg-[color:var(--color-erreur-fond)] text-[color:var(--color-erreur)]"}`}
+          >
+            {retour.message}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }

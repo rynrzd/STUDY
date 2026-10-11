@@ -1176,30 +1176,6 @@
     "ok": true
   },
   {
-    "id": "A04q",
-    "chemin": "/apercu/ecrans?ecran=A04q",
-    "largeur": 1440,
-    "statut": 200,
-    "debordement": 0,
-    "h1": 0,
-    "canvas": 0,
-    "hauteur": 900,
-    "erreurs": [],
-    "ok": true
-  },
-  {
-    "id": "A04q",
-    "chemin": "/apercu/ecrans?ecran=A04q",
-    "largeur": 390,
-    "statut": 200,
-    "debordement": 0,
-    "h1": 0,
-    "canvas": 0,
-    "hauteur": 920,
-    "erreurs": [],
-    "ok": true
-  },
-  {
     "id": "A06",
     "chemin": "/apercu/ecrans?ecran=A06",
     "largeur": 1440,
@@ -1220,6 +1196,18 @@
     "h1": 1,
     "canvas": 0,
     "hauteur": 2720,
+    "erreurs": [],
+    "ok": true
+  },
+  {
+    "id": "A04q",
+    "chemin": "/apercu/ecrans?ecran=A04q",
+    "largeur": 1440,
+    "statut": 200,
+    "debordement": 0,
+    "h1": 0,
+    "canvas": 0,
+    "hauteur": 900,
     "erreurs": [],
     "ok": true
   },
@@ -1248,6 +1236,18 @@
     "ok": true
   },
   {
+    "id": "A04q",
+    "chemin": "/apercu/ecrans?ecran=A04q",
+    "largeur": 390,
+    "statut": 200,
+    "debordement": 0,
+    "h1": 0,
+    "canvas": 0,
+    "hauteur": 920,
+    "erreurs": [],
+    "ok": true
+  },
+  {
     "id": "A04p",
     "chemin": "/apercu/ecrans?ecran=A04p",
     "largeur": 390,
@@ -1267,7 +1267,7 @@
     "debordement": 0,
     "h1": 1,
     "canvas": 0,
-    "hauteur": 2610,
+    "hauteur": 2630,
     "erreurs": [],
     "ok": true
   }

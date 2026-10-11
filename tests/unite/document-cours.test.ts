@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   deplacerBloc,
+  extraitDuTexte,
   relireDocument,
   relireReglages,
   remplacerBloc,
@@ -148,4 +149,15 @@ test("les réglages hors bornes sont ramenés, pas refusés", () => {
   assert.equal(relireReglages(undefined).modele, "classique");
   assert.equal(relireReglages({ sommaire: true }).sommaire, true);
   assert.equal(relireReglages({ numerosDePage: false }).numerosDePage, false);
+});
+
+test("« Je n'ai pas compris » : seul un extrait du cours est accepté, quelle que soit la mise en page", () => {
+  const cours = ["La dérivée de x² est 2x.", "Exemples\n- f(x) = 3x\n- g(x) = x²", "Pente\tSigne"];
+  assert.equal(extraitDuTexte("dérivée de x² est 2x", cours), true);
+  assert.equal(extraitDuTexte("  LA  DÉRIVÉE\nde x²  ", cours), true);
+  assert.equal(extraitDuTexte("f(x) = 3x g(x)", cours), true, "une sélection à cheval sur deux puces");
+  assert.equal(extraitDuTexte("est 2x. Exemples", cours), true, "une sélection à cheval sur deux paragraphes");
+  assert.equal(extraitDuTexte("Le professeur est nul", cours), false, "un texte inventé");
+  assert.equal(extraitDuTexte("...", cours), false, "de la ponctuation seule");
+  assert.equal(extraitDuTexte("x²", cours), false, "trop court pour désigner un passage");
 });

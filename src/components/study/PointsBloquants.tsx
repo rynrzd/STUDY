@@ -4,10 +4,10 @@ import { pointsBloquants, type PointBloquant } from "@/lib/v6/questions-seance";
 
 /**
  * Accueil professeur — « Ce qui bloque vos élèves ». Les questions des
- * trente derniers jours, regroupées par séance citée : combien de questions,
- * combien sans réponse, combien d'élèves concernés (auteurs et « même
- * question »). Des nombres, jamais des noms : c'est un repère pour décider
- * quoi reprendre en classe, pas un classement.
+ * trente derniers jours et les passages « pas compris », regroupés par
+ * séance : questions, sans réponse, « même question », passages et élèves
+ * qui les ont signalés. Des nombres, jamais des noms : c'est un repère pour
+ * décider quoi reprendre en classe, pas un classement.
  */
 export async function PointsBloquants({ jeton }: { jeton: string }) {
   return <VuePointsBloquants points={await pointsBloquants(jeton)} />;
@@ -39,9 +39,11 @@ export function VuePointsBloquants({ points }: { points: readonly PointBloquant[
                   <span className="meta block">
                     {[
                       p.questions > 0 ? `${p.questions} question${p.questions > 1 ? "s" : ""}` : null,
-                      p.passagesIncompris > 0 ? `${p.passagesIncompris} passage${p.passagesIncompris > 1 ? "s" : ""} pas compris` : null,
-                      `${p.elevesConcernes} élève${p.elevesConcernes > 1 ? "s" : ""} concerné${p.elevesConcernes > 1 ? "s" : ""}`,
-                      p.questions > 0 ? (p.sansReponse > 0 ? `${p.sansReponse} sans réponse` : "questions répondues") : null,
+                      p.sansReponse > 0 ? `${p.sansReponse} sans réponse` : p.questions > 0 ? "toutes répondues" : null,
+                      p.memeQuestion > 0 ? `${p.memeQuestion} « même question »` : null,
+                      p.passagesIncompris > 0
+                        ? `${p.passagesIncompris} passage${p.passagesIncompris > 1 ? "s" : ""} pas compris (${p.elevesPassages} élève${p.elevesPassages > 1 ? "s" : ""})`
+                        : null,
                     ]
                       .filter(Boolean)
                       .join(" · ")}

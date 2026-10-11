@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { CircleHelp } from "lucide-react";
 import { memeQuestion } from "@/app/app/messagerie/actions";
@@ -11,7 +10,6 @@ import { memeQuestion } from "@/app/app/messagerie/actions";
  * est celui que le serveur renvoie, pas une supposition.
  */
 export function BoutonMemeQuestion({ message, actif, nombre }: { message: string; actif: boolean; nombre: number }) {
-  const router = useRouter();
   const [etat, setEtat] = useState({ actif, nombre });
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, demarrer] = useTransition();
@@ -32,7 +30,6 @@ export function BoutonMemeQuestion({ message, actif, nombre }: { message: string
               return;
             }
             setEtat({ actif: !etat.actif, nombre: typeof r.valeur === "number" ? r.valeur : etat.nombre });
-            router.refresh();
           })
         }
       >
