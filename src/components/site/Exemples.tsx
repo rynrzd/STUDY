@@ -50,7 +50,7 @@ export function ExempleCours() {
             <p className="m-0 mt-2 text-[1rem]">
               Elle s&apos;écrit <strong>f(x) = ax + b</strong>, où <em>a</em> est le coefficient directeur et <em>b</em> l&apos;ordonnée à l&apos;origine.
             </p>
-            <p className="m-0 mt-3 rounded-[12px] bg-[color:var(--color-fond)] px-4 py-3 text-[0.9375rem]">
+            <p className="m-0 mt-3 rounded-[4px] bg-[color:var(--color-fond)] px-4 py-3 text-[0.9375rem]">
               Exemple : f(x) = 2x + 1. Pour x = 3, f(3) = 2 × 3 + 1 = 7.
             </p>
           </div>

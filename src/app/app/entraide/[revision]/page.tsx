@@ -60,7 +60,7 @@ export default async function PageRevisionCollective({
         sousTitre={`${dateHeure(r.debut)} · ${r.duree_minutes} min · organisée par ${noms.get(r.organisateur_id)?.affichage ?? "un membre de la classe"}`}
       />
       {erreur ? (
-        <p role="alert" className="mb-4 rounded-[10px] bg-[color:var(--color-erreur-fond)] p-3 text-[color:var(--color-erreur)]">
+        <p role="alert" className="mb-4 rounded-[4px] bg-[color:var(--color-erreur-fond)] p-3 text-[color:var(--color-erreur)]">
           {erreur === "COMPLET" ? "La séance est complète." : "L'inscription n'a pas pu être enregistrée."}
         </p>
       ) : null}

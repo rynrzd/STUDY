@@ -17,16 +17,16 @@
   .progress li[aria-current] { color: #81445b; font-weight: 700; }
   .progress li > span { display: grid; place-items: center; width: 30px; height: 30px; flex-shrink: 0; border: 1px solid #ddd7db; border-radius: 50%; }
   .progress li > .active { background: #81445b; color: white; border-color: #81445b; }
-  .school { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 16px; background: #f9e7ed; color: #81445b; margin-bottom: 18px; }
-  .root :global(.champ-acces) { min-height: 52px; font-size: 16px; border-radius: 12px; border-color: #d8d1d7; background: #fff; }
+  .school { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 4px; background: #f9e7ed; color: #81445b; margin-bottom: 18px; }
+  .root :global(.champ-acces) { min-height: 52px; font-size: 16px; border-radius: 4px; border-color: #d8d1d7; background: #fff; }
   .root :global(.champ-acces):focus-visible { outline: 2px solid #81445b; outline-offset: 2px; }
   .root :global(.etiquette) { font-size: 14px; margin-bottom: 8px; }
-  .root :global(.bouton-acces) { min-height: 52px; border-radius: 12px; font-size: 16px; }
+  .root :global(.bouton-acces) { min-height: 52px; border-radius: 4px; font-size: 16px; }
   .root :global(.bouton-primaire) { background: #81445b; border-color: #81445b; color: white; }
   .root :global(.aide-champ) { font-size: 12px; line-height: 1.5; margin-top: 6px; }
   .root input[type=checkbox] { accent-color: #81445b; }
   .root input { scroll-margin-block: 24px; }
-  .root .codeHelp { display: block; margin-top: 10px; border: 1px solid #ddd7db; border-radius: 12px; }
+  .root .codeHelp { display: block; margin-top: 10px; border: 1px solid #ddd7db; border-radius: 4px; }
   .codeHelp summary { padding: 13px 16px; min-height: 48px; cursor: pointer; font-size: 14px; }
   .codeHelp p { margin: 0; padding: 0 16px 16px; color: #64616d; font-size: 13px; line-height: 1.6; }
   .root .accessLinks { gap: 0; margin-top: 24px; padding-top: 0; }

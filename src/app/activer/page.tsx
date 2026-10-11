@@ -16,7 +16,7 @@ export const metadata: Metadata = pagePrivee({ titre: "Première connexion", des
 export default function PageActiver() {
   return (
     <CadreConnexion titre="Première connexion" sousTitre="Ton compte a été créé par ton établissement. Choisis ce que tu as reçu.">
-      <section aria-labelledby="lien" className="rounded-[12px] border border-[color:var(--color-bordure)] p-4">
+      <section aria-labelledby="lien" className="rounded-[4px] border border-[color:var(--color-bordure)] p-4">
         <h2 id="lien" className="m-0 text-[1.125rem]">
           Un lien d&apos;invitation
         </h2>
@@ -24,7 +24,7 @@ export default function PageActiver() {
         <FormulaireLien action={ouvrirInvitation} />
       </section>
 
-      <section aria-labelledby="fiche" className="mt-4 rounded-[12px] border border-[color:var(--color-bordure)] p-4">
+      <section aria-labelledby="fiche" className="mt-4 rounded-[4px] border border-[color:var(--color-bordure)] p-4">
         <h2 id="fiche" className="m-0 text-[1.125rem]">
           Une fiche avec un mot de passe temporaire
         </h2>

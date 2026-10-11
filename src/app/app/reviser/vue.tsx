@@ -1,9 +1,11 @@
-import { Progression } from "@/components/study/Progression";
-import type { MatiereSuivie } from "@/lib/v6/progression";
 import Link from "next/link";
 import { BookOpen, ClipboardCheck, FileText, Layers, LifeBuoy, Lightbulb, NotebookText, Sparkles, Target } from "lucide-react";
+import { MaSemaine } from "@/components/study/Celebrations";
+import { Progression } from "@/components/study/Progression";
 import { EnTetePage, Etiquette, EtatVide, ICONE, Ligne, ListeLignes, TuileIcone, dateLisible } from "@/components/study/ui";
+import type { Semaine } from "@/lib/semaine";
 import { ETATS_FICHE, FORMATS, type mesFiches } from "@/lib/v6/fiches";
+import type { MatiereSuivie } from "@/lib/v6/progression";
 import { LIBELLE_STATUT, type suggestionsDeRevision } from "@/lib/v6/revision";
 import { lancerEntrainement } from "./actions";
 
@@ -20,11 +22,13 @@ export function VueReviser({
   fiches,
   priorites,
   progression,
+  semaine = null,
 }: {
   erreur?: string;
   fiches: Awaited<ReturnType<typeof mesFiches>>;
   priorites: Awaited<ReturnType<typeof suggestionsDeRevision>>;
   progression: readonly MatiereSuivie[] | null;
+  semaine?: Semaine | null;
 }) {
   return (
     <div className="mx-auto max-w-[1100px]">
@@ -44,7 +48,7 @@ export function VueReviser({
         }
       />
       {erreur ? (
-        <p role="alert" className="mb-4 rounded-[10px] bg-[color:var(--color-erreur-fond)] p-3 text-[color:var(--color-erreur)]">
+        <p role="alert" className="mb-4 rounded-[4px] bg-[color:var(--color-erreur-fond)] p-3 text-[color:var(--color-erreur)]">
           {erreur === "aucun-exercice" ? "Aucun exercice disponible pour cet entraînement." : "L'entraînement n'a pas pu être ouvert."}
         </p>
       ) : null}
@@ -92,6 +96,12 @@ export function VueReviser({
           Ces propositions combinent les contrôles annoncés, tes réponses récentes et les révisions prévues.
         </p>
       </section>
+
+      {semaine ? (
+        <section aria-label="Ta semaine" className="panneau mb-8">
+          <MaSemaine semaine={semaine} />
+        </section>
+      ) : null}
 
       <Progression matieres={progression} />
 

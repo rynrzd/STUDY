@@ -46,7 +46,7 @@ export function CadreConnexion({
                 { icone: MessagesSquare, titre: "Échanges", texte: "Le salon de ta classe, avec ton professeur." },
               ].map((l) => (
                 <li key={l.titre} className="flex items-start gap-4">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[12px] bg-[color:var(--color-surface)] text-[color:var(--color-accent)]">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[4px] bg-[color:var(--color-surface)] text-[color:var(--color-accent)]">
                     <l.icone size={22} strokeWidth={1.75} aria-hidden="true" />
                   </span>
                   <span>
@@ -86,7 +86,7 @@ export function CadreConnexion({
 /** Le contexte établissement au-dessus du formulaire, avec « Changer ». */
 export function BandeauEtablissement({ nom, changer }: { nom: string; changer: React.ReactNode }) {
   return (
-    <div className="mb-6 flex items-center justify-between gap-3 rounded-[12px] border border-[color:var(--color-bordure)] bg-[color:var(--color-rose-clair)] px-4 py-3">
+    <div className="mb-6 flex items-center justify-between gap-3 rounded-[4px] border border-[color:var(--color-bordure)] bg-[color:var(--color-rose-clair)] px-4 py-3">
       <div className="min-w-0">
         <p className="m-0 text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[color:var(--color-encre-faible)]">Établissement</p>
         <p className="m-0 font-semibold [overflow-wrap:anywhere]" data-testid="etablissement-nom">

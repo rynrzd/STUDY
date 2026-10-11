@@ -168,6 +168,7 @@ const ECRANS: Record<string, Ecran> = {
       <VueReviser
         fiches={[...F.fiches]}
         priorites={{ suggestions: [...F.suggestions], parametres: "" }}
+        semaine={{ jours: [true, true, false, true, true, false, false], aujourdHui: 4, actifs: 4 }}
         progression={[
           {
             matiere: "Mathématiques",

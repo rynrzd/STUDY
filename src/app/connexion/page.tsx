@@ -51,7 +51,7 @@ export default async function PageConnexion({
     if (utilisable) {
       return (
         <CadreConnexion titre="Changer de compte" sousTitre="Une session est déjà ouverte dans ce navigateur.">
-          <div className="rounded-[12px] border border-[color:var(--color-bordure)] p-4">
+          <div className="rounded-[4px] border border-[color:var(--color-bordure)] p-4">
             <p className="m-0 text-[0.875rem] text-[color:var(--color-encre-faible)]">Session ouverte</p>
             <p className="m-0 mt-0.5 font-semibold">
               {personne.prenom} {personne.nom}
@@ -111,7 +111,7 @@ export default async function PageConnexion({
 }
 
 function Messages({ motif, fin, invitation, sessionInutilisable }: { motif?: string; fin?: string; invitation?: string; sessionInutilisable: boolean }) {
-  const boite = "mb-5 rounded-[12px] p-4 text-[0.9375rem]";
+  const boite = "mb-5 rounded-[4px] p-4 text-[0.9375rem]";
   if (motif === "expiree" || sessionInutilisable) {
     return (
       <p role="status" className={`${boite} bg-[color:var(--color-attention-fond)] text-[color:var(--color-attention)]`}>

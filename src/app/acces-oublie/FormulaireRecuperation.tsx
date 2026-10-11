@@ -14,7 +14,7 @@ export function FormulaireRecuperation({ etablissement, etatInitial }: { etablis
 
   if (etat.etat === "envoyee") {
     return (
-      <section aria-labelledby="accuse" className="rounded-[12px] border border-[color:var(--color-bordure)] p-5">
+      <section aria-labelledby="accuse" className="rounded-[4px] border border-[color:var(--color-bordure)] p-5">
         <h2 id="accuse" ref={titre} tabIndex={-1} className="m-0 text-[1.25rem] outline-none">
           Demande enregistrée
         </h2>
@@ -45,7 +45,7 @@ export function FormulaireRecuperation({ etablissement, etatInitial }: { etablis
   return (
     <form action={action} noValidate className="grid gap-5">
       {etat.etat === "refus" && !etat.champs ? (
-        <p role="alert" className="m-0 rounded-[12px] bg-[color:var(--color-attention-fond)] p-4 font-semibold text-[color:var(--color-attention)]">
+        <p role="alert" className="m-0 rounded-[4px] bg-[color:var(--color-attention-fond)] p-4 font-semibold text-[color:var(--color-attention)]">
           {etat.message}
         </p>
       ) : null}

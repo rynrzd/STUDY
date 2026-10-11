@@ -99,7 +99,7 @@ function Carte({
   accent?: boolean;
 }) {
   return (
-    <div className="min-w-0 rounded-lg border border-[color:var(--color-bordure)] p-2.5">
+    <div className="min-w-0 rounded-[4px] border border-[color:var(--color-bordure)] p-2.5">
       <p className="m-0 text-[0.5625rem] uppercase tracking-[0.08em] text-[color:var(--color-encre-tres-faible)]">
         {titre}
       </p>
@@ -148,7 +148,7 @@ export function ApercuEleve() {
             composition de la référence, et elle a une raison — l'élève voit
             d'abord où il en est, puis ce qu'on lui dit. */}
         <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-          <div className="flex min-h-[86px] items-end rounded-lg bg-gradient-to-br from-[color:var(--color-rose-clair)] to-[color:var(--color-rose-decor)] p-3">
+          <div className="flex min-h-[86px] items-end rounded-[4px] bg-gradient-to-br from-[color:var(--color-rose-clair)] to-[color:var(--color-rose-decor)] p-3">
             <p className="m-0 max-w-[16ch] text-[0.8125rem] font-semibold leading-snug">
               Une nouvelle semaine pour aller plus loin.
             </p>
@@ -161,7 +161,7 @@ export function ApercuEleve() {
             ].map((note) => (
               <li
                 key={note}
-                className="flex-1 rounded-lg border border-[color:var(--color-bordure)] p-2 text-[0.5625rem] leading-snug text-[color:var(--color-encre-faible)]"
+                className="flex-1 rounded-[4px] border border-[color:var(--color-bordure)] p-2 text-[0.5625rem] leading-snug text-[color:var(--color-encre-faible)]"
               >
                 « {note} »
               </li>
@@ -174,7 +174,7 @@ export function ApercuEleve() {
           <Carte titre="Devoir à rendre" detail="Exercices n° 3 à 5" marque="Pour demain" accent />
         </div>
 
-        <div className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-[color:var(--color-bordure)] p-2.5">
+        <div className="mt-2 flex items-center justify-between gap-3 rounded-[4px] border border-[color:var(--color-bordure)] p-2.5">
           <span className="min-w-0">
             <span className="block text-[0.5625rem] uppercase tracking-[0.08em] text-[color:var(--color-succes)]">
               Correction reçue

@@ -1,6 +1,7 @@
 import { AccesIndisponible, EnTetePage, EtatVide } from "@/components/study/ui";
 import { contexteApp } from "@/lib/v6/contexte";
 import { etatEntrainement } from "@/lib/v6/fiches";
+import { maSemaine, notionsConsolidees } from "@/lib/v6/semaine";
 import { Entrainement } from "./Entrainement";
 
 export const metadata = { title: "Entraînement" };
@@ -10,7 +11,11 @@ export const dynamic = "force-dynamic";
 export default async function PageEntrainement({ params }: { params: Promise<{ session: string }> }) {
   const ctx = await contexteApp();
   const { session } = await params;
-  const etat = await etatEntrainement(ctx.jeton, session);
+  const [etat, semaine, consolidees] = await Promise.all([
+    etatEntrainement(ctx.jeton, session),
+    maSemaine(ctx.jeton, ctx.personne.profileId),
+    notionsConsolidees(ctx.jeton, ctx.personne.profileId),
+  ]);
   if (etat === null) return <AccesIndisponible retour="/app/reviser" />;
   return (
     <div className="mx-auto max-w-[760px]">
@@ -18,7 +23,7 @@ export default async function PageEntrainement({ params }: { params: Promise<{ s
       {etat.questions.length === 0 ? (
         <EtatVide titre="Ces exercices ne sont plus disponibles" texte="Ils ont été retirés ou ne font plus partie de tes cours." />
       ) : (
-        <Entrainement session={session} questions={etat.questions} />
+        <Entrainement session={session} questions={etat.questions} semaine={semaine} dejaConsolidees={consolidees} />
       )}
     </div>
   );

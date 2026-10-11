@@ -121,7 +121,7 @@ export function VueReglages({ onglet, ctx, p, initiales, role }: {
 
       {onglet === "donnees" ? (
         <Panneau id="donnees" titre="Mes données">
-          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[12px] bg-[color:var(--color-rose-clair)] p-4">
+          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[4px] bg-[color:var(--color-rose-clair)] p-4">
             <p className="m-0 min-w-0 flex-1 text-[0.9375rem]">
               <span className="block font-bold">Télécharger toutes mes données</span>
               Un fichier JSON (format ouvert) : profil, classes, copies et appréciations reçues, notes, messages écrits, révisions, projets, orientation, demandes.

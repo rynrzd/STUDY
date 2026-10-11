@@ -331,7 +331,7 @@ export function ApercuEntraide() {
 
         <div className="mt-3">
           <Panneau base={base} nom="Devoir" actif={vue}>
-            <div className="rounded-lg bg-[color:var(--color-rose-clair)] p-3">
+            <div className="rounded-[4px] bg-[color:var(--color-rose-clair)] p-3">
               <p className="m-0 text-[0.5625rem] uppercase tracking-[0.08em] text-[color:var(--color-accent)]">
                 Mathématiques · Exercice 3
               </p>
@@ -360,7 +360,7 @@ export function ApercuEntraide() {
           </Panneau>
 
           <Panneau base={base} nom="Ma copie" actif={vue}>
-            <div className="rounded-lg border border-[color:var(--color-bordure)] p-3">
+            <div className="rounded-[4px] border border-[color:var(--color-bordure)] p-3">
               <p className="m-0 flex items-center justify-between gap-2 text-[0.5625rem] uppercase tracking-[0.08em] text-[color:var(--color-encre-tres-faible)]">
                 Brouillon
                 <span className="rounded-full bg-[color:var(--color-succes-fond)] px-2 py-0.5 text-[0.5rem] font-semibold normal-case tracking-normal text-[color:var(--color-succes)]">

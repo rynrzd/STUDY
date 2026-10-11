@@ -60,7 +60,7 @@ export function FormulaireAtelier({
         <legend className="mb-2 text-[0.8125rem] font-semibold">{kind === "actualite" ? "Sources datées (2 à 5)" : "Sources du cours"}</legend>
         {etat.champs?.sources ? <p className="m-0 mb-2 text-[0.8125rem] text-[color:var(--color-erreur)]">{etat.champs.sources.join(" ")}</p> : null}
         {sources.map((s, i) => (
-          <div key={i} className="mb-3 grid gap-2 rounded-[10px] border border-[color:var(--color-bordure)] p-3 sm:grid-cols-2">
+          <div key={i} className="mb-3 grid gap-2 rounded-[4px] border border-[color:var(--color-bordure)] p-3 sm:grid-cols-2">
             <input name="source_titre" className="champ" placeholder="Titre" defaultValue={s.titre} aria-label={`Source ${i + 1} : titre`} />
             <input name="source_auteur" className="champ" placeholder="Auteur ou média" defaultValue={s.auteur} aria-label={`Source ${i + 1} : auteur`} />
             <input name="source_date" type="date" className="champ" defaultValue={s.date} aria-label={`Source ${i + 1} : date`} />
@@ -128,7 +128,7 @@ export function FormulaireReponseAtelier({
       <RetourFormulaire etat={etat} />
       {!clos
         ? lignes.map((l, i) => (
-            <fieldset key={i} className="mb-4 rounded-[10px] border border-[color:var(--color-bordure)] p-3">
+            <fieldset key={i} className="mb-4 rounded-[4px] border border-[color:var(--color-bordure)] p-3">
               <legend className="px-1 text-[0.8125rem] font-semibold">Annotation {i + 1}</legend>
               <label className="mb-1 block text-[0.8125rem]" htmlFor={`passage-${i}`}>
                 {kind === "actualite" ? "Affirmation relevée" : "Passage du texte"}

@@ -48,7 +48,7 @@ export function FormulaireCode({ classe }: { classe: string }) {
   if (etat.ok && etat.message) {
     const [code, echeance] = etat.message.split("|");
     return (
-      <div role="status" className="rounded-[12px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-4">
+      <div role="status" className="rounded-[4px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-4">
         <p className="meta m-0">Code de classe — affiché une seule fois</p>
         <p className="m-0 mt-1 font-mono text-[1.75rem] font-bold tracking-[0.18em]">{code}</p>
         <p className="meta m-0 mt-1">Valable jusqu&apos;au {echeance}. Le code ne donne aucun accès : chaque demande arrivera ici pour validation.</p>
@@ -86,7 +86,7 @@ export function FormulaireInvitationEleve({ classe, profil, nom }: { classe: str
   const [etat, action] = useActionState<EtatFormulaire, FormData>(creerInvitation.bind(null, classe), {});
   if (etat.ok && etat.message) {
     return (
-      <div className="fiche-impression rounded-[12px] border border-[color:var(--color-bordure)] p-4">
+      <div className="fiche-impression rounded-[4px] border border-[color:var(--color-bordure)] p-4">
         <p className="m-0 font-semibold">Invitation de {nom}</p>
         <p className="m-0 mt-2 break-all font-mono text-[0.8125rem]">{etat.message}</p>
         <p className="meta m-0 mt-2">Valable 7 jours, une seule fois. Il ne sera plus affiché : copiez-le ou imprimez-le maintenant.</p>
@@ -325,7 +325,7 @@ export function FormulaireChangerDecision({
   const [statut, setStatut] = useState(suivants[0] ?? "");
   if (suivants.length === 0) return null;
   return (
-    <form action={action} className="mt-3 rounded-[10px] bg-[color:var(--color-surface-douce)] p-3">
+    <form action={action} className="mt-3 rounded-[4px] bg-[color:var(--color-surface-douce)] p-3">
       <RetourFormulaire etat={etat} />
       <input type="hidden" name="decision" value={decision} />
       <input type="hidden" name="version" value={version} />

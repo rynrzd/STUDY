@@ -35,7 +35,7 @@ export default async function PageAccesActive() {
         Bonjour {personne.prenom}. Retiens ton identifiant et ton mot de passe : ils te serviront à chaque connexion.
       </p>
       {enAttente ? (
-        <p role="status" className="m-0 mt-5 rounded-[12px] bg-[color:var(--color-attention-fond)] p-4 text-[0.9375rem] text-[color:var(--color-attention)]">
+        <p role="status" className="m-0 mt-5 rounded-[4px] bg-[color:var(--color-attention-fond)] p-4 text-[0.9375rem] text-[color:var(--color-attention)]">
           Ton compte est prêt, mais aucune classe n&apos;y est encore associée. Ton établissement doit valider ton appartenance ;
           tu peux aussi saisir un code de classe donné par un professeur.
         </p>

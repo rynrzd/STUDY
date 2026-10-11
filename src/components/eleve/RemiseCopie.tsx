@@ -3,6 +3,7 @@
 import { useActionState, useId, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { remettreUneCopie } from "@/app/app/devoirs/actions";
+import { EnteteRemise } from "@/components/study/Celebrations";
 import { ETAT_REMISE_INITIAL, type EtatRemiseAction } from "@/app/app/devoirs/etats";
 import { instantLisible } from "@/lib/horodatage";
 import { tailleLisible } from "@/lib/formats-documents";
@@ -156,15 +157,17 @@ function BoutonRemettre({ dejaRemis }: { dejaRemis: boolean }) {
  * serveur a enregistré : une référence, un instant, un état. Laisser croire à
  * une valeur probante serait promettre ce qu'on ne peut pas tenir.
  */
-function AccuseDeRemise({ etat }: { etat: Extract<EtatRemiseAction, { etat: "remis" }> }) {
+export function AccuseDeRemise({ etat }: { etat: Extract<EtatRemiseAction, { etat: "remis" }> }) {
   return (
     <div
       data-testid="remise-accuse"
-      className="carte border-[color:var(--color-succes)] bg-[color:var(--color-succes-fond)] p-5"
+      className="relative overflow-hidden border border-t-[3px] border-[color:var(--color-succes)] bg-[color:var(--color-succes-fond)] p-5 shadow-[8px_8px_0_rgba(47,106,69,0.12)]"
     >
-      <h3 className="m-0 text-[length:var(--text-h3)] leading-[var(--text-h3--line-height)] text-[color:var(--color-succes)]">
-        Copie remise
+      <EnteteRemise />
+      <h3 className="m-0 mt-3 text-center text-[length:var(--text-h3)] leading-[var(--text-h3--line-height)] text-[color:var(--color-succes)]">
+        Copie remise !
       </h3>
+      <p className="m-0 mt-1 text-center text-[color:var(--color-encre-faible)]">Ton devoir a bien été envoyé.</p>
 
       <dl className="m-0 mt-3 grid gap-x-6 gap-y-1 text-[length:var(--text-tableau)] sm:grid-cols-[auto_minmax(0,1fr)]">
         <dt className="font-semibold">Référence</dt>

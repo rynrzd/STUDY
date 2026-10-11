@@ -198,7 +198,7 @@ export function SourceCitee({ titre, detail, href }: { titre: string; detail?: s
 /** Avis de visibilité : qui verra ce qui est saisi, avant la saisie. */
 export function AvisVisibilite({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex gap-3 rounded-[12px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-4">
+    <div className="flex gap-3 rounded-[4px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-4">
       <Lock size={18} strokeWidth={1.75} aria-hidden="true" className="mt-0.5 shrink-0 text-[color:var(--color-accent)]" />
       <div className="text-[0.8125rem] leading-[1.5]">{children}</div>
     </div>

@@ -203,7 +203,7 @@ export function Coque({ ctx, children }: { ctx: ContexteApp; children: React.Rea
 
         {espaces.length > 1 ? (
           <nav aria-label="Changer d'espace" className="barre-detail mt-4 px-1">
-            <ul className="m-0 grid list-none gap-1 rounded-[12px] bg-[color:var(--color-fond)] p-1">
+            <ul className="m-0 grid list-none gap-1 rounded-[4px] bg-[color:var(--color-fond)] p-1">
               {espaces.map((e) => (
                 <li key={e.espace}>
                   <Link
@@ -228,7 +228,7 @@ export function Coque({ ctx, children }: { ctx: ContexteApp; children: React.Rea
 
         <div className="mt-auto pt-6">
           <details className="menu-deroulant">
-            <summary className="flex min-h-[48px] items-center gap-2.5 rounded-[10px] px-2 hover:bg-[color:var(--color-survol)]">
+            <summary className="flex min-h-[48px] items-center gap-2.5 rounded-[4px] px-2 hover:bg-[color:var(--color-survol)]">
               <span className="avatar" aria-hidden="true">
                 {sigle}
               </span>
@@ -260,7 +260,7 @@ export function Coque({ ctx, children }: { ctx: ContexteApp; children: React.Rea
             <MotSymbole titre="Study, accueil" className="block h-auto w-[76px]" />
           </Link>
           {espace !== "admin" ? (
-            <form action="/app/recherche" method="get" role="search" className="app-seulement-bureau mr-auto flex h-11 max-w-[520px] flex-1 items-center gap-3 rounded-[12px] border border-[color:var(--color-bordure)] bg-[color:var(--color-fond)] px-3 focus-within:border-[color:var(--color-accent)]">
+            <form action="/app/recherche" method="get" role="search" className="app-seulement-bureau mr-auto flex h-11 max-w-[520px] flex-1 items-center gap-3 rounded-[4px] border border-[color:var(--color-bordure)] bg-[color:var(--color-fond)] px-3 focus-within:border-[color:var(--color-accent)]">
               <label htmlFor="recherche-globale" className="sr-only">
                 Rechercher dans tes cours, fiches et échanges
               </label>

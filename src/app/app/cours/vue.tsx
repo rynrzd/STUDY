@@ -26,7 +26,7 @@ export function VueCours({ classes, filtre, visibles, listeAteliers }: {
         <label htmlFor="recherche-cours" className="sr-only">
           Rechercher dans mes cours
         </label>
-        <div className="flex h-12 flex-1 items-center gap-2 rounded-[12px] border border-[color:var(--color-bordure-champ)] bg-[color:var(--color-surface)] px-3 focus-within:border-[color:var(--color-accent)]">
+        <div className="flex h-12 flex-1 items-center gap-2 rounded-[4px] border border-[color:var(--color-bordure-champ)] bg-[color:var(--color-surface)] px-3 focus-within:border-[color:var(--color-accent)]">
           <Search size={18} strokeWidth={1.75} aria-hidden="true" className="shrink-0 text-[color:var(--color-encre-faible)]" />
           <input id="recherche-cours" name="q" type="search" maxLength={500} placeholder="Un cours, un chapitre, une notion…" className="w-full border-0 bg-transparent text-[1rem] outline-none" />
         </div>

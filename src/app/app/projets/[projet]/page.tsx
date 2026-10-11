@@ -74,7 +74,7 @@ export default async function PageProjet({ params, searchParams }: { params: Pro
         }
       />
       {conflit === "1" ? (
-        <p role="alert" className="mb-4 rounded-[10px] bg-[color:var(--color-attention-fond)] p-3 text-[color:var(--color-attention)]">
+        <p role="alert" className="mb-4 rounded-[4px] bg-[color:var(--color-attention-fond)] p-3 text-[color:var(--color-attention)]">
           Quelqu&apos;un a modifié cette tâche entre-temps : le tableau a été rechargé avec la dernière version. Refais ton changement si besoin.
         </p>
       ) : null}

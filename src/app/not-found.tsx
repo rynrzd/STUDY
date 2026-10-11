@@ -26,7 +26,7 @@ export default function Introuvable() {
       <Entete />
       <main id="contenu" className="flex-1">
         <div className="contenu py-16 md:py-24">
-          <span className="grid h-12 w-12 place-items-center rounded-[14px] bg-[color:var(--color-rose-clair)] text-[color:var(--color-accent)]" aria-hidden="true">
+          <span className="grid h-12 w-12 place-items-center rounded-[4px] bg-[color:var(--color-rose-clair)] text-[color:var(--color-accent)]" aria-hidden="true">
             <SearchX size={26} strokeWidth={1.75} />
           </span>
           <p className="surtitre m-0 mt-6">Erreur 404</p>

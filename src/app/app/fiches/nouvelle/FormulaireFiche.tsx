@@ -100,7 +100,7 @@ export function FormulaireFiche({ seances, preselection, formatInitial }: { sean
           <legend className="titre-section flex items-center gap-2 px-1"><Pastille n={2} /> Format</legend>
           <div className="grid gap-2 sm:grid-cols-2">
             {FORMATS.map((f) => (
-              <label key={f.cle} className={`flex cursor-pointer gap-3 rounded-[10px] border p-3 ${format === f.cle ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)]"}`}>
+              <label key={f.cle} className={`flex cursor-pointer gap-3 rounded-[4px] border p-3 ${format === f.cle ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)]"}`}>
                 <input type="radio" name="format" value={f.cle} checked={format === f.cle} onChange={() => setFormat(f.cle)} />
                 <span>
                   <span className="block font-semibold">{f.libelle}</span>

@@ -84,10 +84,10 @@
   --text-h2-app--line-height: 1.75rem;
 
   /* -- Géométrie ----------------------------------------------------------- */
-  --radius-champ: 10px;
-  --radius-bouton: 12px;
-  --radius-carte: 16px;
-  --radius-grand: 24px;
+  --radius-champ: 4px;
+  --radius-bouton: 4px;
+  --radius-carte: 4px;
+  --radius-grand: 6px;
 
   /* Une seule ombre, pour ce qui flotte réellement (menus, dialogues). */
   --shadow-flottant: 0 1px 2px rgba(41, 40, 46, 0.05), 0 8px 24px rgba(41, 40, 46, 0.08);
@@ -1063,7 +1063,7 @@
     place-items: center;
     width: 44px;
     height: 44px;
-    border-radius: 10px;
+    border-radius: 4px;
     color: var(--color-encre);
     text-decoration: none;
     background: transparent;
@@ -1297,7 +1297,7 @@
     max-height: calc(100dvh - 32px);
     padding: 28px;
     border: 1px solid var(--color-bordure);
-    border-radius: 16px;
+    border-radius: 4px;
     color: var(--color-encre);
     background: var(--color-surface);
     box-shadow: var(--shadow-flottant);
@@ -1350,7 +1350,7 @@
     min-width: 240px;
     padding: 8px;
     border: 1px solid var(--color-bordure);
-    border-radius: 12px;
+    border-radius: 4px;
     background: var(--color-surface);
     box-shadow: var(--shadow-flottant);
   }
@@ -1435,12 +1435,12 @@
     place-items: center;
     width: 40px;
     height: 40px;
-    border-radius: 10px;
+    border-radius: 4px;
     background: var(--color-rose-clair);
     color: var(--color-accent);
   }
   .tuile[data-ton="neutre"] { background: var(--color-survol); color: var(--color-encre); }
-  .tuile-grande { width: 48px; height: 48px; border-radius: 12px; }
+  .tuile-grande { width: 48px; height: 48px; border-radius: 4px; }
 
   /* Liste de lignes dans une carte blanche : séparateurs fins, ligne entière cliquable. */
   .liste-r2 {
@@ -1486,7 +1486,7 @@
     align-self: start;
     gap: 12px;
     padding: 16px;
-    border-radius: 12px;
+    border-radius: 4px;
     background: var(--color-rose-clair);
     color: var(--color-encre);
   }

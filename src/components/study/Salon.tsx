@@ -279,7 +279,7 @@ export function Salon({
         </div>
 
         {acces === "session" ? (
-          <div role="alert" className="mx-4 mt-3 rounded-[10px] bg-[color:var(--color-attention-fond)] p-3 text-[0.8125rem] text-[color:var(--color-attention)]">
+          <div role="alert" className="mx-4 mt-3 rounded-[4px] bg-[color:var(--color-attention-fond)] p-3 text-[0.8125rem] text-[color:var(--color-attention)]">
             Ta session a pris fin. Ton brouillon est gardé sur cet appareil.{" "}
             <a href={`/connexion?motif=expiree&suite=${encodeURIComponent(typeof window === "undefined" ? "/app/messagerie" : window.location.pathname)}`} className="font-semibold">
               Se reconnecter
@@ -294,7 +294,7 @@ export function Salon({
                 key={m.id}
                 type="button"
                 onClick={() => document.getElementById(`m-${m.id}`)?.scrollIntoView({ block: "center" })}
-                className="flex w-full items-start gap-2 rounded-[10px] bg-[color:var(--color-rose-clair)] p-3 text-left"
+                className="flex w-full items-start gap-2 rounded-[4px] bg-[color:var(--color-rose-clair)] p-3 text-left"
               >
                 <Pin size={16} strokeWidth={1.75} aria-hidden="true" className="mt-0.5 shrink-0" />
                 <span className="min-w-0">
@@ -663,7 +663,7 @@ function Joindre({ message, fermer, apres }: { message: string; fermer: () => vo
   const [etat, setEtat] = useState<{ phase: "saisie" | "envoi" | "verification" | "fait" | "erreur"; texte?: string }>({ phase: "saisie" });
   return (
     <form
-      className="mt-2 grid gap-2 rounded-[10px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-3 text-left"
+      className="mt-2 grid gap-2 rounded-[4px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-3 text-left"
       onSubmit={async (e) => {
         e.preventDefault();
         const donnees = new FormData(e.currentTarget);
@@ -733,7 +733,7 @@ function Signalement({ id, fermer }: { id: string; fermer: () => void }) {
   const [etat, setEtat] = useState<"saisie" | "envoi" | "fait" | string>("saisie");
   if (etat === "fait") {
     return (
-      <p role="status" className="m-0 mt-2 rounded-[10px] bg-[color:var(--color-succes-fond)] p-3 text-left text-[0.8125rem] text-[color:var(--color-succes)]">
+      <p role="status" className="m-0 mt-2 rounded-[4px] bg-[color:var(--color-succes-fond)] p-3 text-left text-[0.8125rem] text-[color:var(--color-succes)]">
         Signalement reçu. Il est transmis à l&apos;administration de l&apos;établissement (et pas seulement au professeur du salon). La personne
         signalée ne saura pas qui l&apos;a signalée.{" "}
         <button type="button" className="underline" onClick={fermer}>
@@ -744,7 +744,7 @@ function Signalement({ id, fermer }: { id: string; fermer: () => void }) {
   }
   return (
     <form
-      className="mt-2 rounded-[10px] border border-[color:var(--color-bordure)] p-3 text-left"
+      className="mt-2 rounded-[4px] border border-[color:var(--color-bordure)] p-3 text-left"
       onSubmit={async (e) => {
         e.preventDefault();
         const d = new FormData(e.currentTarget);

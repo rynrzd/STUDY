@@ -92,7 +92,7 @@ export function PaquetCartes({ fiche, cartes }: { fiche: string; cartes: readonl
           type="button"
           aria-pressed={retournee}
           onClick={() => setRetournee((r) => !r)}
-          className="block w-full cursor-pointer rounded-[16px] border-0 bg-transparent p-0 text-center"
+          className="block w-full cursor-pointer rounded-[4px] border-0 bg-transparent p-0 text-center"
         >
           <span className="carte-memoire-interieur">
             <span className="carte-memoire-face carte-memoire-recto bg-[color:var(--color-rose-clair)]" aria-hidden={retournee}>

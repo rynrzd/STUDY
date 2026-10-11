@@ -115,7 +115,7 @@ export function AssistantAtelier({ etape, donnees, espaces }: { etape: number; d
               <legend className="mb-2 text-[0.875rem] font-semibold">{kind === "actualite" ? "Documents datés (2 à 5)" : "Documents de référence"}</legend>
               {etat.champs?.sources ? <p role="alert" className="m-0 mb-2 text-[0.875rem] text-[color:var(--color-erreur)]">{etat.champs.sources.join(" ")}</p> : null}
               {sources.map((s, i) => (
-                <div key={i} className="mb-3 grid gap-2 rounded-[12px] border border-[color:var(--color-bordure)] p-3 sm:grid-cols-2">
+                <div key={i} className="mb-3 grid gap-2 rounded-[4px] border border-[color:var(--color-bordure)] p-3 sm:grid-cols-2">
                   <input name="source_titre" className="champ" placeholder="Titre du document" defaultValue={s.titre} aria-label={`Document ${i + 1} : titre`} />
                   <input name="source_auteur" className="champ" placeholder="Auteur, média ou institution" defaultValue={s.auteur} aria-label={`Document ${i + 1} : auteur`} />
                   <input name="source_date" type="date" className="champ" defaultValue={s.date} aria-label={`Document ${i + 1} : date`} required />
@@ -151,7 +151,7 @@ export function AssistantAtelier({ etape, donnees, espaces }: { etape: number; d
         {etape === 4 ? (
           <>
             <ZoneTexte libelle="Corrigé (visible des élèves après la clôture)" nom="corrige" lignes={6} maxLength={8000} valeur={v.corrige ?? donnees.corrige} />
-            <div className="mb-4 rounded-[12px] bg-[color:var(--color-surface-douce)] p-4 text-[0.875rem]">
+            <div className="mb-4 rounded-[4px] bg-[color:var(--color-surface-douce)] p-4 text-[0.875rem]">
               <p className="m-0 font-semibold">Relecture</p>
               <ul className="m-0 mt-1 grid gap-1 pl-5">
                 <li>Destinataires : les élèves de {donnees.cours ?? "ce cours"}.</li>

@@ -47,7 +47,7 @@ export default async function PageAccesEnAttente({ searchParams }: { searchParam
       retour={null}
     >
       {envoyee === "1" ? (
-        <p role="status" className="m-0 mb-4 rounded-[10px] bg-[color:var(--color-succes-fond)] p-3 text-[0.8125rem] font-medium text-[color:var(--color-succes)]">
+        <p role="status" className="m-0 mb-4 rounded-[4px] bg-[color:var(--color-succes-fond)] p-3 text-[0.8125rem] font-medium text-[color:var(--color-succes)]">
           Demande envoyée.
         </p>
       ) : null}

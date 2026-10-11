@@ -148,7 +148,7 @@ export function VueAnnees({ etape, erreurAnnees, courante, cible, classesCourant
                     <dd className="m-0 font-semibold">{resume.inscriptions_cible}</dd>
                   </dl>
                   {eleves.length > 0 ? (
-                    <div className="mt-4 rounded-[12px] border border-[color:var(--color-attention)] p-4">
+                    <div className="mt-4 rounded-[4px] border border-[color:var(--color-attention)] p-4">
                       <p className="m-0 font-semibold text-[color:var(--color-attention)]">
                         {eleves.length} élève{eleves.length > 1 ? "s" : ""} actif{eleves.length > 1 ? "s" : ""} sans classe en {cible.label}
                       </p>

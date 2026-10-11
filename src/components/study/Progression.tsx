@@ -1,4 +1,5 @@
 import { CircleCheck } from "lucide-react";
+import { REMPLISSAGE } from "./Celebrations";
 import type { MatiereSuivie, Statut } from "@/lib/v6/progression";
 import { Etiquette, type Ton, dateLisible } from "./ui";
 
@@ -38,20 +39,21 @@ export function Progression({ matieres }: { matieres: readonly MatiereSuivie[] |
                   {m.compte.a_decouvrir > 0 ? ` · ${m.compte.a_decouvrir} à découvrir` : ""}
                 </span>
                 <span className="ml-auto flex h-2 w-40 max-w-full overflow-hidden rounded-full bg-[color:var(--color-survol)]" aria-hidden="true">
-                  <span className="h-full bg-[color:var(--color-accent)]" style={{ width: `${(m.compte.consolide / m.notions.length) * 100}%` }} />
-                  <span className="h-full bg-[color:var(--color-surlignage)]" style={{ width: `${(m.compte.en_cours / m.notions.length) * 100}%` }} />
+                  <span className={`h-full bg-[color:var(--color-accent)] ${REMPLISSAGE}`} style={{ width: `${(m.compte.consolide / m.notions.length) * 100}%` }} />
+                  <span className={`h-full bg-[color:var(--color-surlignage)] ${REMPLISSAGE}`} style={{ width: `${(m.compte.en_cours / m.notions.length) * 100}%` }} />
                 </span>
               </summary>
               <ul className="m-0 list-none border-t border-[color:var(--color-bordure)] p-0">
                 {m.notions.map((n) => (
-                  <li key={n.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-[color:var(--color-bordure)] px-5 py-3 last:border-0">
+                  <li key={n.id} className="grid grid-cols-[18px_minmax(0,1fr)_auto] items-start gap-x-3 border-b border-[color:var(--color-bordure)] px-5 py-3 last:border-0">
                     {n.statut === "consolide" ? (
-                      <CircleCheck size={18} strokeWidth={1.75} aria-hidden="true" className="shrink-0 text-[color:var(--color-succes)]" />
+                      <CircleCheck size={18} strokeWidth={1.75} aria-hidden="true" className="mt-0.5 text-[color:var(--color-succes)]" />
                     ) : (
-                      <span className="w-[18px] shrink-0" aria-hidden="true" />
+                      <span aria-hidden="true" />
                     )}
-                    <span className="min-w-0 flex-1 font-semibold">{n.notion}</span>
-                    <span className="meta">
+                    <span className="min-w-0">
+                      <span className="block font-semibold">{n.notion}</span>
+                      <span className="meta block">
                       {n.tentativesRecentes > 0 ? `${n.reussitesRecentes} réussite${n.reussitesRecentes > 1 ? "s" : ""} sans aide sur ${n.tentativesRecentes}` : "Pas encore essayée"}
                       {n.statut !== "consolide"
                         ? !n.rappelsActifs
@@ -60,6 +62,7 @@ export function Progression({ matieres }: { matieres: readonly MatiereSuivie[] |
                             ? ` · à revoir le ${dateLisible(`${n.prochaineRevision}T12:00:00Z`, { day: "numeric", month: "short" })}`
                             : ""
                         : ""}
+                      </span>
                     </span>
                     <Etiquette ton={TON[n.statut]}>{n.libelleStatut}</Etiquette>
                   </li>

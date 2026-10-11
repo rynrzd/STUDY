@@ -73,7 +73,7 @@ export function FormulaireBascule({ annee, label, sansClasse }: { annee: string;
     <form action={action} noValidate className="grid gap-3">
       <RetourFormulaire etat={etat} />
       {sansClasse > 0 ? (
-        <label className="flex items-start gap-3 rounded-[12px] bg-[color:var(--color-attention-fond)] p-4 text-[color:var(--color-attention)]">
+        <label className="flex items-start gap-3 rounded-[4px] bg-[color:var(--color-attention-fond)] p-4 text-[color:var(--color-attention)]">
           <input type="checkbox" name="confirmerSansClasse" value="oui" className="mt-1 size-5 shrink-0" />
           <span>
             Je confirme : {sansClasse} élève{sansClasse > 1 ? "s" : ""} actif{sansClasse > 1 ? "s" : ""} n&apos;

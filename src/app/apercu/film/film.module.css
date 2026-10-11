@@ -1,0 +1,167 @@
+/* ===========================================================================
+   Film AvecStudy — motion design, rendu image par image.
+
+   Chaque scène et chaque bloc porte `data-debut` (ms, temps absolu du film).
+   L'enregistreur fixe l'horloge : les animations d'un élément marqué suivent
+   le temps du film (leur délai encode le début) ; celles de ses descendants
+   suivent le temps local du bloc (temps du film − début). Les composants de
+   l'application gardent donc leurs propres délais, relatifs à leur entrée.
+   =========================================================================== */
+
+.stage {
+  --berry: #81445b;
+  --berry-fonce: #5d2e41;
+  --blush: #f9e7ed;
+  --rose: #f5dce5;
+  --encre: #29282e;
+  --faible: #64616d;
+  position: relative;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background: #fcfafb;
+  color: var(--encre);
+  font-family: var(--font-titre);
+}
+.stage[data-format="9x16"] { width: 1080px; height: 1920px; }
+
+/* --- Scènes et blocs --------------------------------------------------------- */
+.scene {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  animation: scene var(--duree) var(--debut) linear both;
+}
+.bloc { animation: bloc var(--duree) var(--debut) cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.entre { animation: entre 700ms var(--d, 0ms) cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+
+@keyframes scene {
+  0% { opacity: 0; transform: scale(1.02); visibility: visible; }
+  7% { opacity: 1; transform: none; }
+  93% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: scale(0.99); visibility: hidden; }
+}
+@keyframes bloc {
+  0% { opacity: 0; transform: translateY(24px); visibility: visible; }
+  10% { opacity: 1; transform: none; }
+  92% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(-12px); visibility: hidden; }
+}
+@keyframes entre { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+
+/* --- Fonds --------------------------------------------------------------------- */
+.fondBerry { background: radial-gradient(circle at 50% 42%, #9a5470 0%, var(--berry) 45%, var(--berry-fonce) 100%); color: #fff; }
+.fondPapier {
+  background-color: var(--blush);
+  background-image: linear-gradient(#81445b16 1px, transparent 1px), linear-gradient(90deg, #81445b16 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+.fondClair { background: #fcfafb; }
+
+/* --- Logo ---------------------------------------------------------------------- */
+.logoScene { display: grid; place-content: center; justify-items: center; gap: 36px; height: 100%; }
+.marque { position: relative; display: grid; place-items: center; width: 220px; height: 220px; animation: approche 900ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.anneau { position: absolute; inset: 0; width: 100%; height: 100%; animation: tourne 1400ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.anneau circle { fill: none; stroke: var(--blush); stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 100; animation: dessine 1200ms 100ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.lettre { font-size: 120px; font-weight: 800; letter-spacing: -0.06em; line-height: 1; transform: translateY(-8px); animation: apparait 600ms 450ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.mot { margin: 0; font-size: 96px; font-weight: 800; letter-spacing: -0.06em; line-height: 1; animation: entre 800ms 700ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.mot span { display: inline-block; color: var(--blush); animation: point 900ms 1000ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.accroche { margin: 0; font-size: 40px; font-weight: 700; letter-spacing: -0.02em; text-align: center; opacity: 0.92; }
+
+@keyframes approche { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: none; } }
+@keyframes tourne { from { transform: rotate(-260deg); } to { transform: rotate(-90deg); } }
+@keyframes dessine { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+@keyframes apparait { from { opacity: 0; transform: translateY(-8px) scale(0.5); } to { opacity: 1; transform: translateY(-8px); } }
+@keyframes point { from { transform: scale(0) rotate(-300deg); } to { transform: none; } }
+
+/* --- Typographie cinétique ------------------------------------------------------ */
+.cinetique { display: grid; align-content: center; height: 100%; padding: 0 180px; gap: 4px; }
+.stage[data-format="9x16"] .cinetique { padding: 0 90px; }
+.ligne { overflow: hidden; }
+.ligne > span {
+  display: block;
+  font-size: 150px;
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 1.02;
+  animation: revele 800ms var(--d) cubic-bezier(0.16, 0.84, 0.44, 1) both;
+}
+.stage[data-format="9x16"] .ligne > span { font-size: 128px; }
+.ligne:last-of-type > span { color: var(--berry); }
+.sousCinetique { margin: 28px 0 0; font-size: 44px; font-weight: 700; color: var(--faible); animation: entre 800ms 2100ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.filet { display: block; width: 180px; height: 6px; margin-top: 36px; background: var(--berry); transform-origin: left; animation: trait 900ms 2400ms cubic-bezier(0.65, 0, 0.35, 1) both; }
+@keyframes revele { from { transform: translateY(105%); } to { transform: none; } }
+@keyframes trait { from { transform: scaleX(0); } to { transform: none; } }
+
+/* --- Composition : légende + téléphone ------------------------------------------ */
+.compo {
+  display: grid;
+  grid-template-columns: 1fr 520px;
+  align-items: center;
+  gap: 120px;
+  height: 100%;
+  padding: 0 180px;
+}
+.stage[data-format="9x16"] .compo { grid-template-columns: 1fr; grid-template-rows: auto 1fr; align-items: start; gap: 40px; padding: 150px 90px 0; }
+.legende { display: grid; gap: 24px; }
+.sourcil { display: flex; align-items: center; gap: 16px; margin: 0; color: var(--berry); font-size: 26px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
+.sourcil::before { content: ""; width: 56px; height: 4px; background: var(--berry); }
+.titre { margin: 0; font-size: 84px; font-weight: 800; letter-spacing: -0.05em; line-height: 1.02; }
+.stage[data-format="9x16"] .titre { font-size: 76px; }
+.titre em { font-style: normal; color: var(--berry); }
+.texte { margin: 0; max-width: 30ch; font-size: 32px; line-height: 1.45; color: var(--faible); font-family: var(--font-texte, var(--font-titre)); }
+
+/* --- Téléphone -------------------------------------------------------------------- */
+.telephone {
+  position: relative;
+  justify-self: center;
+  width: 430px;
+  padding: 14px;
+  background: var(--encre);
+  border-radius: 64px;
+  box-shadow: 36px 40px 0 rgba(129, 68, 91, 0.18);
+  animation: arrive 900ms 150ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
+}
+.stage[data-format="9x16"] .telephone { transform-origin: top center; scale: 1.42; }
+.ecran { position: relative; height: 780px; overflow: hidden; background: #f8f7f9; border-radius: 50px; }
+.statut { display: flex; justify-content: space-between; align-items: center; padding: 18px 30px 6px; font-size: 15px; font-weight: 700; }
+.encoche { position: absolute; top: 12px; left: 50%; width: 110px; height: 30px; margin-left: -55px; background: var(--encre); border-radius: 20px; }
+.barreApp { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px 12px; background: #fff; border-bottom: 1px solid #e5dfe5; }
+.marqueApp { font-size: 24px; font-weight: 800; letter-spacing: -0.06em; }
+.marqueApp span { color: var(--berry); }
+.pastilles { display: flex; gap: 8px; }
+.pastilles i { width: 26px; height: 26px; background: var(--blush); }
+.contenu { padding: 18px 16px; display: grid; gap: 14px; font-family: var(--font-texte, var(--font-titre)); font-size: 16px; zoom: 1.08; }
+/* Les écrans de l'application tiennent dans la largeur du téléphone. */
+.contenu > * { min-width: 0; }
+.question { margin: 0; font-size: 19px; font-weight: 800; line-height: 1.3; }
+.choix { position: relative; display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 16px; background: #fff; border: 1px solid #e5dfe5; font-size: 17px; }
+.choix b { display: grid; place-items: center; width: 26px; height: 26px; border: 1.5px solid currentColor; font-size: 13px; }
+.choixJuste { position: absolute; inset: -1px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border: 2px solid var(--color-succes); background: var(--color-succes-fond); color: var(--color-succes); font-weight: 700; animation: selection 300ms var(--d) cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.choixJuste b { border-color: currentColor; }
+.tap {
+  position: absolute;
+  left: 60%;
+  top: 50%;
+  width: 70px;
+  height: 70px;
+  margin: -35px 0 0 -35px;
+  border-radius: 50%;
+  background: rgba(129, 68, 91, 0.28);
+  opacity: 0;
+  animation: tap 700ms var(--d) cubic-bezier(0.16, 0.84, 0.44, 1) both;
+}
+.sousBloc { animation: entre 600ms var(--d) cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.enTeteEntrainement span { white-space: nowrap; }
+.enTeteEntrainement { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; color: var(--faible); }
+
+@keyframes arrive { from { opacity: 0; transform: translateY(80px) rotate(-3deg); } to { opacity: 1; transform: none; } }
+@keyframes selection { from { opacity: 0; } to { opacity: 1; } }
+@keyframes tap { 0% { opacity: 0; transform: scale(0.3); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(1.6); } }
+
+/* --- Fin ---------------------------------------------------------------------------- */
+.fin { display: grid; place-content: center; justify-items: center; gap: 30px; height: 100%; text-align: center; }
+.finMot { margin: 0; font-size: 150px; font-weight: 800; letter-spacing: -0.06em; line-height: 1; animation: entre 900ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.finMot span { display: inline-block; color: var(--blush); animation: point 900ms 300ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.adresse { margin: 0; padding: 16px 34px; background: #fff; color: var(--berry); font-size: 44px; font-weight: 800; letter-spacing: -0.02em; animation: entre 800ms 700ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.mentions { margin: 0; font-size: 30px; font-weight: 600; opacity: 0.9; animation: entre 800ms 1100ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }

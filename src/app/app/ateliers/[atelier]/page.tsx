@@ -46,7 +46,7 @@ export default async function PageAtelier({ params }: { params: Promise<{ atelie
           <Panneau titre="Sources">
             <ul className="m-0 grid list-none gap-3 p-0">
               {at.sources.map((s, i) => (
-                <li key={i} className="rounded-[10px] border border-[color:var(--color-bordure)] p-3">
+                <li key={i} className="rounded-[4px] border border-[color:var(--color-bordure)] p-3">
                   <p className="m-0 font-semibold">{s.titre}</p>
                   <p className="meta m-0">
                     {s.auteur}

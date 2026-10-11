@@ -66,7 +66,7 @@ export function LectureSeance({
         <div
           role="toolbar"
           aria-label="Actions sur le passage sélectionné"
-          className="absolute z-20 flex gap-1 rounded-[10px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-1 shadow-[var(--shadow-flottant)]"
+          className="absolute z-20 flex gap-1 rounded-[4px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-1 shadow-[var(--shadow-flottant)]"
           style={{ left: Math.max(0, selection.x), top: selection.y }}
         >
           {salonQuestion ? (
@@ -118,7 +118,7 @@ export function LectureSeance({
         {retour ? (
           <p
             style={{ left: Math.max(0, retour.x), top: retour.y }}
-            className={`absolute z-20 max-w-[32rem] rounded-[10px] p-3 text-[0.875rem] shadow-[var(--shadow-flottant)] ${retour.ok ? "bg-[color:var(--color-rose-clair)]" : "bg-[color:var(--color-erreur-fond)] text-[color:var(--color-erreur)]"}`}
+            className={`absolute z-20 max-w-[32rem] rounded-[4px] p-3 text-[0.875rem] shadow-[var(--shadow-flottant)] ${retour.ok ? "bg-[color:var(--color-rose-clair)]" : "bg-[color:var(--color-erreur-fond)] text-[color:var(--color-erreur)]"}`}
           >
             {retour.message}
           </p>

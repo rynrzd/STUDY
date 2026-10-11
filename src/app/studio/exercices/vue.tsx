@@ -166,7 +166,7 @@ export function VueBanque({ p, miens, total, exercices, erreur, ouvert, corrige,
                     ))}
                   </ol>
                 ) : null}
-                <div className="mt-4 rounded-[12px] bg-[color:var(--color-rose-clair)] p-3 text-[0.875rem]">
+                <div className="mt-4 rounded-[4px] bg-[color:var(--color-rose-clair)] p-3 text-[0.875rem]">
                   <p className="m-0 font-semibold">Corrigé — visible des professeurs seulement</p>
                   {corrige ? (
                     <>

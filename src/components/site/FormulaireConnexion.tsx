@@ -122,7 +122,7 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
           tabIndex={-1}
           role="alert"
           data-type={general.type}
-          className="mb-5 rounded-[12px] border border-[color:var(--color-attention)] bg-[color:var(--color-attention-fond)] p-4 text-[color:var(--color-attention)]"
+          className="mb-5 rounded-[4px] border border-[color:var(--color-attention)] bg-[color:var(--color-attention-fond)] p-4 text-[color:var(--color-attention)]"
         >
           <p className="m-0 font-semibold">{general.message}</p>
           {general.reprendreDansSecondes ? (
@@ -210,7 +210,7 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
           ) : null}
         </div>
 
-        <label className="flex min-h-[48px] cursor-pointer items-start gap-3 rounded-[12px] border border-[color:var(--color-bordure)] px-4 py-3">
+        <label className="flex min-h-[48px] cursor-pointer items-start gap-3 rounded-[4px] border border-[color:var(--color-bordure)] px-4 py-3">
           <input type="checkbox" name="postePartage" value="oui" className="mt-1 size-5 shrink-0 accent-[color:var(--color-accent)]" aria-describedby="aide-poste-partage" />
           <span>
             <span className="block font-semibold"><span className={mobileDesign ? m.desktop : undefined}>Appareil partagé</span>{mobileDesign ? <span className={m.mobile}>J’utilise un appareil partagé</span> : null}</span>

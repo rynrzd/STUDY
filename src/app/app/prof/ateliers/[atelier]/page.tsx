@@ -40,7 +40,7 @@ export default async function PageAtelierProf({ params, searchParams }: { params
     <>
       <EnTetePage filAriane={[{ href: "/app/prof/ateliers", libelle: "Ateliers" }]} titre={at.titre} sousTitre={at.question} />
       {erreur ? (
-        <p role="alert" className="mb-4 rounded-[10px] bg-[color:var(--color-erreur-fond)] p-3 text-[color:var(--color-erreur)]">
+        <p role="alert" className="mb-4 rounded-[4px] bg-[color:var(--color-erreur-fond)] p-3 text-[color:var(--color-erreur)]">
           {erreur === "sources" ? "Pour publier : deux à cinq sources datées (actualité), ou un texte à vérifier." : "Ce changement d'état n'est pas possible."}
         </p>
       ) : null}

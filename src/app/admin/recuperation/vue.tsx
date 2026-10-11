@@ -78,7 +78,7 @@ export function VueRecuperation({ error, demandes, choisie }: { error: unknown |
                 <dt className="meta">Référence</dt>
                 <dd className="m-0">{choisie.reference ? "Portée par la demande — à faire annoncer, sans la dire" : "Aucune (demande antérieure)"}</dd>
               </dl>
-              <div className="mt-5 rounded-[12px] bg-[color:var(--color-rose-clair)] p-4 text-[0.875rem]">
+              <div className="mt-5 rounded-[4px] bg-[color:var(--color-rose-clair)] p-4 text-[0.875rem]">
                 <h3 className="titre-bloc m-0 font-bold">Vérification, hors application</h3>
                 <ul className="m-0 mt-2 grid list-none gap-1.5 p-0">
                   {[

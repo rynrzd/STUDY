@@ -4,7 +4,8 @@ import Link from "next/link";
 import { CheckCircle2, HandHelping, Lightbulb, XCircle } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { demanderAide, tenter } from "@/app/app/reviser/actions";
-import { CocheFin } from "@/components/study/CocheFin";
+import { BarreProgression, BilanEntrainement, EnteteRetour, IndiceDevoile, NotionConsolidee, RetourReponse } from "@/components/study/Celebrations";
+import type { Semaine } from "@/lib/semaine";
 import type { QuestionSession } from "@/lib/v6/fiches";
 
 interface Correction {
@@ -13,6 +14,13 @@ interface Correction {
   readonly source_lesson_id: string | null;
   readonly source_block_id: string | null;
   readonly statut: string | null;
+  readonly rejouee?: boolean | null;
+}
+
+interface Aide {
+  readonly texte: string;
+  /** Prévue par le professeur (sinon : un message qui dit qu'il n'y en a pas). */
+  readonly prevue: boolean;
 }
 
 /**
@@ -21,8 +29,23 @@ interface Correction {
  * réseau garde la réponse sans faire avancer la progression ; le même
  * identifiant client est réutilisé, donc rien n'est compté deux fois.
  * Pas de note : un bilan, et des liens vers le cours.
+ *
+ * Les célébrations saluent de vrais événements : réponse juste, notion qui
+ * passe réellement à « consolidée » (jamais celle qui l'était déjà), jours
+ * d'entraînement de la semaine.
  */
-export function Entrainement({ session, questions }: { session: string; questions: readonly QuestionSession[] }) {
+export function Entrainement({
+  session,
+  questions,
+  semaine = null,
+  dejaConsolidees = null,
+}: {
+  session: string;
+  questions: readonly QuestionSession[];
+  semaine?: Semaine | null;
+  /** Notions déjà consolidées à l'ouverture ; `null` = inconnues, rien n'est fêté. */
+  dejaConsolidees?: readonly string[] | null;
+}) {
   const premiere = Math.max(0, questions.findIndex((q) => q.tentativeId === null));
   const [index, setIndex] = useState(questions.every((q) => q.tentativeId !== null) ? questions.length : premiere);
   const [reponses, setReponses] = useState<Record<string, string>>({});
@@ -31,7 +54,9 @@ export function Entrainement({ session, questions }: { session: string; question
       questions.filter((q) => q.tentativeId !== null).map((q) => [q.versionId, { correct: q.correct, explication: null, source_lesson_id: null, source_block_id: null, statut: null }]),
     ),
   );
-  const [aides, setAides] = useState<Record<string, string[]>>({});
+  const [aides, setAides] = useState<Record<string, Aide[]>>({});
+  const [consolidees, setConsolidees] = useState<Record<string, string>>({});
+  const [entraineAujourdhui, setEntraineAujourdhui] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const clients = useMemo(() => Object.fromEntries(questions.map((q) => [q.versionId, crypto.randomUUID()])), [questions]);
@@ -45,23 +70,20 @@ export function Entrainement({ session, questions }: { session: string; question
   if (index >= questions.length) {
     const reussies = Object.values(corrections).filter((c) => c.correct === true).length;
     const corrigees = Object.values(corrections).filter((c) => c.correct !== null).length;
+    // Une tentative faite pendant cette visite allume aujourd'hui, sans relire la base.
+    const semaineVue =
+      semaine && entraineAujourdhui && !semaine.jours[semaine.aujourdHui]
+        ? { ...semaine, jours: semaine.jours.map((j, i) => j || i === semaine.aujourdHui), actifs: semaine.actifs + 1 }
+        : semaine;
     return (
-      <div className="panneau text-center">
-        <CocheFin />
-        <p className="titre-section m-0 mt-3">Entraînement terminé</p>
-        <p className="m-0 mt-2 text-[color:var(--color-encre-faible)]">
-          {reussies} réussite{reussies > 1 ? "s" : ""} sur {corrigees} question{corrigees > 1 ? "s" : ""} corrigée{corrigees > 1 ? "s" : ""}. Ce n&apos;est pas une note : tes
-          erreurs sont rangées dans ton carnet, pour y revenir.
-        </p>
-        <div className="mt-5 flex flex-wrap justify-center gap-2">
-          <Link href="/app/erreurs" className="bouton bouton-primaire">
-            Mon carnet d&apos;erreurs
-          </Link>
-          <Link href="/app/reviser" className="bouton bouton-secondaire">
-            Réviser autre chose
-          </Link>
-        </div>
-      </div>
+      <BilanEntrainement reussies={reussies} corrigees={corrigees} semaine={semaineVue}>
+        <Link href="/app/erreurs" className="bouton bouton-primaire">
+          Mon carnet d&apos;erreurs
+        </Link>
+        <Link href="/app/reviser" className="bouton bouton-secondaire">
+          Réviser autre chose
+        </Link>
+      </BilanEntrainement>
     );
   }
 
@@ -79,7 +101,22 @@ export function Entrainement({ session, questions }: { session: string; question
         setErreur(r.message);
         return;
       }
-      setCorrections((c) => ({ ...c, [q.versionId]: (r.donnees ?? { correct: null, explication: null }) as Correction }));
+      const recue = (r.donnees ?? { correct: null, explication: null }) as Correction;
+      setCorrections((c) => ({ ...c, [q.versionId]: recue }));
+      setEntraineAujourdhui(true);
+      // Fêter le passage réel à « consolidée » : ni une tentative rejouée, ni
+      // une notion qui l'était déjà, ni deux fois la même.
+      if (
+        recue.statut === "consolide" &&
+        recue.rejouee !== true &&
+        q.notion &&
+        dejaConsolidees !== null &&
+        !dejaConsolidees.includes(q.notion) &&
+        !Object.values(consolidees).includes(q.notion)
+      ) {
+        const notion = q.notion;
+        setConsolidees((c) => ({ ...c, [q.versionId]: notion }));
+      }
     } catch {
       setErreur("Ta réponse n'a pas été envoyée (connexion). Elle est gardée : réessaie, elle ne sera comptée qu'une fois.");
     } finally {
@@ -90,8 +127,9 @@ export function Entrainement({ session, questions }: { session: string; question
   const aide = async (niveau: "indice" | "exemple") => {
     const r = await demanderAide(q.versionId, niveau);
     if (r.ok) {
-      const texte = typeof r.donnees === "string" && r.donnees ? r.donnees : niveau === "indice" ? "Ton professeur n'a pas prévu d'indice pour cet exercice." : "Pas d'exemple prévu pour cet exercice.";
-      setAides((a) => ({ ...a, [q.versionId]: [...(a[q.versionId] ?? []), texte] }));
+      const prevue = typeof r.donnees === "string" && r.donnees !== "";
+      const texte = prevue ? (r.donnees as string) : niveau === "indice" ? "Ton professeur n'a pas prévu d'indice pour cet exercice." : "Pas d'exemple prévu pour cet exercice.";
+      setAides((a) => ({ ...a, [q.versionId]: [...(a[q.versionId] ?? []), { texte, prevue }] }));
     } else setErreur(r.message);
   };
 
@@ -102,9 +140,7 @@ export function Entrainement({ session, questions }: { session: string; question
           Question {index + 1} sur {questions.length}
           {q.notion ? ` · ${q.notion}` : ""}
         </p>
-        <div className="h-1.5 w-40 overflow-hidden rounded-full bg-[color:var(--color-survol)]" aria-hidden="true">
-          <div className="h-full bg-[color:var(--color-accent)]" style={{ width: `${(index / questions.length) * 100}%` }} />
-        </div>
+        <BarreProgression fait={index} total={questions.length} />
       </div>
       <section className="panneau">
         <h2 ref={titre} tabIndex={-1} className="titre-section outline-none">
@@ -124,7 +160,7 @@ export function Entrainement({ session, questions }: { session: string; question
                 const choisi = valeur === String(i);
                 const ton = correction && choisi ? (correction.correct ? "border-[color:var(--color-succes)] bg-[color:var(--color-succes-fond)]" : "border-[color:var(--color-erreur)] bg-[color:var(--color-erreur-fond)]") : choisi ? "border-[color:var(--color-focus)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)]";
                 return (
-                  <label key={i} className={`choix-reponse flex min-h-[48px] cursor-pointer items-center gap-3 rounded-[10px] border px-4 py-3 ${ton}`}>
+                  <label key={i} className={`choix-reponse flex min-h-[48px] cursor-pointer items-center gap-3 rounded-[4px] border px-4 py-3 ${ton}`}>
                     <input type="radio" name="choix" value={i} checked={choisi} onChange={() => setReponses((r) => ({ ...r, [q.versionId]: String(i) }))} />
                     <span className="flex-1">{c}</span>
                     {/* Jamais la couleur seule : une icône et un mot accompagnent l’état. */}
@@ -183,26 +219,22 @@ export function Entrainement({ session, questions }: { session: string; question
             </div>
           ) : null}
         </form>
-        {(aides[q.versionId] ?? []).map((a, i) => (
-          <p key={i} className="m-0 mt-3 rounded-[10px] bg-[color:var(--color-attention-fond)] p-3 text-[0.875rem]">
-            <Lightbulb size={16} strokeWidth={1.75} aria-hidden="true" className="mr-1 inline" /> {a}
-          </p>
-        ))}
-        {correction ? (
-          <div role="status" className="correction-entree mt-5 rounded-[12px] border border-[color:var(--color-bordure)] p-4">
-            <p className="m-0 flex items-center gap-2 font-semibold">
-              {correction.correct === true ? (
-                <>
-                  <CheckCircle2 size={20} strokeWidth={1.75} aria-hidden="true" className="text-[color:var(--color-succes)]" /> Juste
-                </>
-              ) : correction.correct === false ? (
-                <>
-                  <XCircle size={20} strokeWidth={1.75} aria-hidden="true" className="text-[color:var(--color-erreur)]" /> Pas encore
-                </>
-              ) : (
-                "Réponse enregistrée : une réponse rédigée n'est pas corrigée automatiquement."
-              )}
+        {(aides[q.versionId] ?? []).map((a, i) =>
+          a.prevue ? (
+            <IndiceDevoile key={i} texte={a.texte} />
+          ) : (
+            <p key={i} className="m-0 mt-3 bg-[color:var(--color-attention-fond)] p-3 text-[0.875rem]">
+              <Lightbulb size={16} strokeWidth={1.75} aria-hidden="true" className="mr-1 inline" /> {a.texte}
             </p>
+          ),
+        )}
+        {correction ? (
+          <RetourReponse ton={correction.correct === true ? "succes" : correction.correct === false ? "erreur" : "neutre"}>
+            {correction.correct === null ? (
+              <p className="m-0 font-semibold">Réponse enregistrée : une réponse rédigée n&apos;est pas corrigée automatiquement.</p>
+            ) : (
+              <EnteteRetour juste={correction.correct} sansIndice={!(aides[q.versionId] ?? []).some((a) => a.prevue)} />
+            )}
             {correction.explication ? <p className="m-0 mt-2">{correction.explication}</p> : null}
             {correction.source_lesson_id ? (
               <Link className="meta" href={`/app/seances/${correction.source_lesson_id}${correction.source_block_id ? `#bloc-${correction.source_block_id}` : ""}`}>
@@ -219,8 +251,9 @@ export function Entrainement({ session, questions }: { session: string; question
                 </Link>
               ) : null}
             </div>
-          </div>
+          </RetourReponse>
         ) : null}
+        {consolidees[q.versionId] ? <NotionConsolidee notion={consolidees[q.versionId]!} /> : null}
       </section>
     </div>
   );

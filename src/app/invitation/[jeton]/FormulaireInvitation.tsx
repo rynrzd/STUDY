@@ -17,7 +17,7 @@ export function FormulaireInvitation({ jeton, prenom, compteActif }: { jeton: st
   return (
     <form action={action} noValidate className="grid gap-5">
       <RetourFormulaire etat={etat} />
-      <label className="flex min-h-[48px] cursor-pointer items-start gap-3 rounded-[12px] border border-[color:var(--color-bordure)] px-4 py-3">
+      <label className="flex min-h-[48px] cursor-pointer items-start gap-3 rounded-[4px] border border-[color:var(--color-bordure)] px-4 py-3">
         <input type="checkbox" name="confirme" value="oui" required className="mt-1 size-5 shrink-0 accent-[color:var(--color-accent)]" aria-describedby={erreur("confirme") ? "erreur-confirme" : undefined} />
         <span>
           Je suis {prenom}, et ce lien m&apos;a été remis personnellement.
