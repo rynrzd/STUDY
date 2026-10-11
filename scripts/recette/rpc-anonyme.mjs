@@ -91,6 +91,23 @@ const FONCTIONS = [
   { nom: "passages_incompris_seance", corps: { p_lecon: "00000000-0000-4000-8000-000000000000" } },
   { nom: "passages_incompris_resume", corps: {} },
   { nom: "passage_empreinte", corps: { p_extrait: "sonde anonyme" } },
+
+  // 0063 — Évaluations. Une copie, un corrigé, une note : rien ne doit
+  // répondre sans compte, ni en lecture ni en écriture.
+  { nom: "evaluation_commencer", corps: {p_eval: "00000000-0000-4000-8000-000000000000"} },
+  { nom: "evaluation_repondre", corps: {p_copie: "00000000-0000-4000-8000-000000000000", p_question: "00000000-0000-4000-8000-000000000000", p_reponse: {index: 0}} },
+  { nom: "evaluation_rendre", corps: {p_copie: "00000000-0000-4000-8000-000000000000"} },
+  { nom: "evaluation_signaler_sortie", corps: {p_copie: "00000000-0000-4000-8000-000000000000"} },
+  { nom: "evaluation_ma_copie", corps: {p_eval: "00000000-0000-4000-8000-000000000000"} },
+  { nom: "evaluation_distribuer", corps: {p_eval: "00000000-0000-4000-8000-000000000000", p_copies: []} },
+  { nom: "evaluation_saisir_reponse", corps: {p_copie: "00000000-0000-4000-8000-000000000000", p_question: "00000000-0000-4000-8000-000000000000", p_reponse: {index: 0}} },
+  { nom: "evaluation_noter", corps: {p_copie: "00000000-0000-4000-8000-000000000000", p_question: "00000000-0000-4000-8000-000000000000", p_points: 1, p_commentaire: null} },
+  { nom: "evaluation_publier_resultats", corps: {p_eval: "00000000-0000-4000-8000-000000000000"} },
+  { nom: "eleves_de_l_espace", corps: {p_space: "00000000-0000-4000-8000-000000000000"} },
+  { nom: "evaluation_enseignee", corps: {p_eval: "00000000-0000-4000-8000-000000000000"} },
+  { nom: "evaluation_copie_enseignee", corps: {p_copie: "00000000-0000-4000-8000-000000000000"} },
+  { nom: "evaluation_ratio", corps: {p_kind: "qcm", p_reponse: {index: 0}, p_attendu: {index: 0}} },
+  { nom: "evaluation_normaliser", corps: {p_texte: "sonde"} },
 ];
 
 let defauts = 0;
