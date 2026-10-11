@@ -31,7 +31,7 @@ function trouverFfmpeg() {
 
 const nav = await chromium.launch({ channel: "msedge" });
 const page = await (await nav.newContext({ viewport: { width: largeur, height: hauteur }, deviceScaleFactor: 1 })).newPage();
-await page.goto(`${base}/apercu/film?format=${format}`, { waitUntil: "networkidle", timeout: 180000 });
+await page.goto(`${base}/apercu/film?format=${format}`, { waitUntil: "load", timeout: 180000 });
 await page.addStyleTag({ content: "nextjs-portal{display:none!important} html,body{margin:0;overflow:hidden;background:#000}" });
 await page.evaluate(() => document.fonts.ready);
 const duree = await page.evaluate(() => Number(document.querySelector("[data-film-duree]")?.getAttribute("data-film-duree") ?? 0));

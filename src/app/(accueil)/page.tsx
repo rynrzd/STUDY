@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpen, ChartNoAxesCombined, FileText } from "lucide-react";
+import { ArrowRight, BookOpen, ChartNoAxesCombined, Check, FileText, Flame, Landmark, Languages, TriangleAlert } from "lucide-react";
 import { pagePublique } from "@/lib/metadonnees";
 import s from "./accueil.module.css";
 import { MenuMobile } from "./MenuMobile";
@@ -10,6 +10,12 @@ export const metadata: Metadata = pagePublique({
   titre: "Ta classe, tout simplement",
   description: "Tes cours, le travail à faire et les échanges de ta classe, au même endroit. Une plateforme pédagogique pour les lycées, financée par l'établissement.",
 });
+
+const COURS = [
+  { matiere: "Mathématiques", chapitre: "Fonctions affines", seances: "3 séances · exercices", avance: 66, icone: ChartNoAxesCombined },
+  { matiere: "Histoire-géographie", chapitre: "L’urbanisation", seances: "2 séances · documents", avance: 40, icone: Landmark },
+  { matiere: "Anglais", chapitre: "Present perfect", seances: "1 séance · audio", avance: 20, icone: Languages },
+] as const;
 
 /** Landing : présentation bureau R2 et composition mobile éditoriale. */
 export default function Accueil() {
@@ -70,6 +76,14 @@ export default function Accueil() {
                 </div>
               </div>
             </div>
+            <div className={`${s.flottant} ${s.flottantHaut}`} aria-hidden="true">
+              <span className={s.flottantIcone}><Check size={14} strokeWidth={3} /></span>
+              <span><strong>Bonne réponse !</strong><br />Trouvée sans indice</span>
+            </div>
+            <div className={`${s.flottant} ${s.flottantBas}`} aria-hidden="true">
+              <span className={`${s.flottantIcone} ${s.flottantFlamme}`}><Flame size={14} strokeWidth={2.4} fill="currentColor" /></span>
+              <span><strong>4 jours</strong><br />d’entraînement cette semaine</span>
+            </div>
             <figcaption>Exemple illustratif · aucune donnée réelle</figcaption>
           </figure>
           <div className={`${s.panel} ${s.rose} ${s.stack} ${s.desktopOnly}`}>
@@ -107,7 +121,25 @@ export default function Accueil() {
               <p className={`${s.mobileOnly} ${s.brandStory}`}>Study rapproche les moments où tu apprends : en classe, à la maison, et quand une question te bloque.</p>
               <Link href="/produit">Découvrir les cours →</Link>
             </div>
-            <div className={`${s.card} ${s.stack}`}>
+            <div className={`${s.mobileOnly} ${s.pileZone}`}>
+              <div className={s.pile}>
+                {COURS.map((c, i) => (
+                  <article key={c.matiere} className={s.carteCours} style={{ "--i": i } as React.CSSProperties}>
+                    <span className={s.carteIcone} data-teinte={i}>
+                      <c.icone size={22} aria-hidden="true" />
+                    </span>
+                    <div className={s.carteTexte}>
+                      <p>{c.matiere}</p>
+                      <h3>{c.chapitre}</h3>
+                      <span className={s.carteMeta}>{c.seances}</span>
+                    </div>
+                    <span className={s.carteBarre} aria-hidden="true"><i style={{ width: `${c.avance}%` }} /></span>
+                  </article>
+                ))}
+              </div>
+              <p className={s.sample}>Exemple illustratif</p>
+            </div>
+            <div className={`${s.card} ${s.stack} ${s.desktopOnly}`}>
               <p className={s.eyebrow}>Un cours bien organisé</p>
               <h3>Fonctions affines</h3>
               <p className={s.row}>01 · Comprendre la définition</p>
@@ -170,16 +202,19 @@ export default function Accueil() {
               <span className={s.number}>1</span>
               <h3>Préparer</h3>
               <p>Le cours, les ressources et les consignes.</p>
+              <span className={`${s.mobileOnly} ${s.illu} ${s.illuDoc}`} aria-hidden="true"><b /><i /><i /><i /></span>
             </article>
             <article className={s.card}>
               <span className={s.number}>2</span>
               <h3>Choisir la classe</h3>
               <p>Vérifier les destinataires avant publication.</p>
+              <span className={`${s.mobileOnly} ${s.illu} ${s.illuClasses}`} aria-hidden="true"><b data-choisie="oui">Seconde 2 ✓</b><b>Première 3</b></span>
             </article>
             <article className={s.card}>
               <span className={s.number}>3</span>
               <h3>Publier</h3>
               <p>Rendre la séance accessible à la classe.</p>
+              <span className={`${s.mobileOnly} ${s.illu} ${s.illuPublier}`} aria-hidden="true"><i /><b>Publiée</b></span>
             </article>
           </div>
         </section>
@@ -192,6 +227,15 @@ export default function Accueil() {
               <Link href="/etablissements">Voir la mise en place →</Link>
             </div>
             <div className={s.stack}>
+              <div className={`${s.mobileOnly} ${s.carteImport}`} aria-hidden="true">
+                <p className={s.importTitre}>Import · Seconde 2 <span>liste.csv</span></p>
+                <ul>
+                  <li><span>Camille D.</span><Check size={15} strokeWidth={2.6} /></li>
+                  <li><span>Hugo F.</span><Check size={15} strokeWidth={2.6} /></li>
+                  <li data-alerte="oui"><span>Lina B. · doublon</span><TriangleAlert size={15} strokeWidth={2.2} /></li>
+                </ul>
+                <p className={s.importPied}><strong>32 élèves</strong> · 1 doublon à corriger</p>
+              </div>
               <div className={s.row}>
                 <strong>01 · Importer</strong>
                 <p>Charger les listes dans le format accepté.</p>

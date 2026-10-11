@@ -19,9 +19,10 @@
   width: 1920px;
   height: 1080px;
   overflow: hidden;
-  background: #fcfafb;
+  background: radial-gradient(circle at 50% 50%, #4a2635 0%, #22141b 100%);
   color: var(--encre);
   font-family: var(--font-titre);
+  perspective: 2200px;
 }
 .stage[data-format="9x16"] { width: 1080px; height: 1920px; }
 
@@ -36,10 +37,10 @@
 .entre { animation: entre 700ms var(--d, 0ms) cubic-bezier(0.16, 0.84, 0.44, 1) both; }
 
 @keyframes scene {
-  0% { opacity: 0; transform: scale(1.02); visibility: visible; }
-  7% { opacity: 1; transform: none; }
-  93% { opacity: 1; transform: none; }
-  100% { opacity: 0; transform: scale(0.99); visibility: hidden; }
+  0% { opacity: 0; transform: translateZ(-420px) rotateY(-18deg); visibility: visible; }
+  9% { opacity: 1; transform: none; }
+  91% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateZ(-480px) rotateY(16deg); visibility: hidden; }
 }
 @keyframes bloc {
   0% { opacity: 0; transform: translateY(24px); visibility: visible; }
@@ -60,15 +61,15 @@
 
 /* --- Logo ---------------------------------------------------------------------- */
 .logoScene { display: grid; place-content: center; justify-items: center; gap: 36px; height: 100%; }
-.marque { position: relative; display: grid; place-items: center; width: 220px; height: 220px; animation: approche 900ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.marque { position: relative; display: grid; place-items: center; width: 220px; height: 220px; transform-style: preserve-3d; animation: approche 1300ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
 .anneau { position: absolute; inset: 0; width: 100%; height: 100%; animation: tourne 1400ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
 .anneau circle { fill: none; stroke: var(--blush); stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 100; animation: dessine 1200ms 100ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
 .lettre { font-size: 120px; font-weight: 800; letter-spacing: -0.06em; line-height: 1; transform: translateY(-8px); animation: apparait 600ms 450ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
-.mot { margin: 0; font-size: 96px; font-weight: 800; letter-spacing: -0.06em; line-height: 1; animation: entre 800ms 700ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.mot { margin: 0; text-shadow: 0 2px 0 #6e3a4f, 0 4px 0 #66354a, 0 6px 0 #5d2e41, 0 8px 0 #552a3b, 0 16px 30px rgba(0, 0, 0, 0.35); font-size: 96px; font-weight: 800; letter-spacing: -0.06em; line-height: 1; animation: entre 800ms 700ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
 .mot span { display: inline-block; color: var(--blush); animation: point 900ms 1000ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
 .accroche { margin: 0; font-size: 40px; font-weight: 700; letter-spacing: -0.02em; text-align: center; opacity: 0.92; }
 
-@keyframes approche { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: none; } }
+@keyframes approche { from { opacity: 0; transform: perspective(900px) rotateY(-540deg) scale(0.4); } to { opacity: 1; transform: perspective(900px); } }
 @keyframes tourne { from { transform: rotate(-260deg); } to { transform: rotate(-90deg); } }
 @keyframes dessine { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
 @keyframes apparait { from { opacity: 0; transform: translateY(-8px) scale(0.5); } to { opacity: 1; transform: translateY(-8px); } }
@@ -77,24 +78,26 @@
 /* --- Typographie cinétique ------------------------------------------------------ */
 .cinetique { display: grid; align-content: center; height: 100%; padding: 0 180px; gap: 4px; }
 .stage[data-format="9x16"] .cinetique { padding: 0 90px; }
-.ligne { overflow: hidden; }
+.ligne { perspective: 900px; }
 .ligne > span {
   display: block;
   font-size: 150px;
   font-weight: 800;
   letter-spacing: -0.055em;
   line-height: 1.02;
-  animation: revele 800ms var(--d) cubic-bezier(0.16, 0.84, 0.44, 1) both;
+  transform-origin: 50% 100%;
+  animation: revele 900ms var(--d) cubic-bezier(0.16, 0.84, 0.44, 1) both;
 }
 .stage[data-format="9x16"] .ligne > span { font-size: 128px; }
 .ligne:last-of-type > span { color: var(--berry); }
 .sousCinetique { margin: 28px 0 0; font-size: 44px; font-weight: 700; color: var(--faible); animation: entre 800ms 2100ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
 .filet { display: block; width: 180px; height: 6px; margin-top: 36px; background: var(--berry); transform-origin: left; animation: trait 900ms 2400ms cubic-bezier(0.65, 0, 0.35, 1) both; }
-@keyframes revele { from { transform: translateY(105%); } to { transform: none; } }
+@keyframes revele { from { opacity: 0; transform: rotateX(-96deg) translateY(20px); } to { opacity: 1; transform: none; } }
 @keyframes trait { from { transform: scaleX(0); } to { transform: none; } }
 
 /* --- Composition : légende + téléphone ------------------------------------------ */
 .compo {
+  perspective: 1800px;
   display: grid;
   grid-template-columns: 1fr 520px;
   align-items: center;
@@ -112,6 +115,12 @@
 .texte { margin: 0; max-width: 30ch; font-size: 32px; line-height: 1.45; color: var(--faible); font-family: var(--font-texte, var(--font-titre)); }
 
 /* --- Téléphone -------------------------------------------------------------------- */
+.orbite {
+  position: relative;
+  justify-self: center;
+  transform-style: preserve-3d;
+  animation: orbite var(--duree) linear both;
+}
 .telephone {
   position: relative;
   justify-self: center;
@@ -119,8 +128,8 @@
   padding: 14px;
   background: var(--encre);
   border-radius: 64px;
-  box-shadow: 36px 40px 0 rgba(129, 68, 91, 0.18);
-  animation: arrive 900ms 150ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
+  box-shadow: 50px 60px 80px -30px rgba(41, 20, 30, 0.45), 18px 22px 0 rgba(129, 68, 91, 0.14);
+  animation: arrive 1100ms 150ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
 }
 .stage[data-format="9x16"] .telephone { transform-origin: top center; scale: 1.42; }
 .ecran { position: relative; height: 780px; overflow: hidden; background: #f8f7f9; border-radius: 50px; }
@@ -155,13 +164,115 @@
 .enTeteEntrainement span { white-space: nowrap; }
 .enTeteEntrainement { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; color: var(--faible); }
 
-@keyframes arrive { from { opacity: 0; transform: translateY(80px) rotate(-3deg); } to { opacity: 1; transform: none; } }
+@keyframes arrive { from { opacity: 0; transform: translateZ(-600px) translateY(80px) rotateY(-70deg) rotateX(18deg); } to { opacity: 1; transform: none; } }
+@keyframes orbite { from { transform: rotateY(-24deg) rotateX(7deg); } to { transform: rotateY(-8deg) rotateX(3deg); } }
+
+/* Cartes satellites : elles flottent devant le téléphone, à leur profondeur. */
+.satellite {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: max-content;
+  max-width: 380px;
+  padding: 16px 20px;
+  background: #fff;
+  border: 1px solid #e5dfe5;
+  border-left: 5px solid var(--berry);
+  box-shadow: 0 30px 50px -20px rgba(41, 20, 30, 0.45);
+  font-family: var(--font-texte, var(--font-titre));
+  font-size: 19px;
+  line-height: 1.3;
+  color: var(--faible);
+  transform: translate3d(0, 0, var(--z)) rotateY(var(--ry));
+  animation: satellite 900ms var(--d) cubic-bezier(0.16, 0.84, 0.44, 1) both;
+}
+.satellite strong { display: block; color: var(--encre); font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+.satellite[data-ton="succes"] { border-left-color: var(--color-succes); }
+.satelliteIcone { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; background: var(--berry); color: #fff; }
+.satellite[data-ton="succes"] .satelliteIcone { background: var(--color-succes); }
+@keyframes satellite {
+  from { opacity: 0; transform: translate3d(0, 40px, calc(var(--z) - 400px)) rotateY(calc(var(--ry) + 60deg)); }
+  to { opacity: 1; transform: translate3d(0, 0, var(--z)) rotateY(var(--ry)); }
+}
+
+/* Trois cartes arrivent du fond et se posent en éventail. */
+.trio { display: grid; align-content: center; justify-items: center; gap: 70px; height: 100%; perspective: 1600px; }
+.trioTitre { margin: 0; font-size: 76px; font-weight: 800; letter-spacing: -0.05em; color: var(--encre); }
+.trioTitre em { font-style: normal; color: var(--berry); }
+.eventail { display: flex; gap: 46px; transform-style: preserve-3d; }
+.stage[data-format="9x16"] .eventail { flex-direction: column; gap: 34px; }
+.carte3d {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  width: 400px;
+  padding: 30px;
+  background: #fff;
+  border: 1px solid #e5dfe5;
+  border-top: 6px solid var(--berry);
+  box-shadow: 0 50px 70px -36px rgba(41, 20, 30, 0.5);
+  font-family: var(--font-texte, var(--font-titre));
+  transform: var(--pose);
+  animation: carte3d 1200ms var(--d) cubic-bezier(0.16, 0.84, 0.44, 1) both;
+}
+.stage[data-format="9x16"] .carte3d { width: 640px; padding: 26px 30px; }
+.carte3d:nth-child(2) { border-top-color: var(--color-rose-decor, #c37a94); }
+.carte3d:nth-child(3) { border-top-color: var(--encre); }
+.carte3dTete { display: flex; align-items: center; gap: 16px; }
+.carte3dIcone { display: grid; place-items: center; width: 60px; height: 60px; background: var(--blush); color: var(--berry); }
+.carte3dSourcil { margin: 0; color: var(--faible); font-size: 18px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.carte3dTitre { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.03em; color: var(--encre); }
+.lignes { display: grid; gap: 10px; }
+.lignes i { height: 10px; background: #efe6ea; }
+.lignes i:first-child { width: 60%; background: var(--berry); }
+.lignes i:nth-child(3) { width: 80%; }
+.carte3dPied { margin: 0; display: flex; align-items: center; gap: 10px; color: var(--berry); font-size: 20px; font-weight: 800; }
+.flammes { display: flex; gap: 10px; color: var(--berry); }
+.flammes span { color: #d9ccd3; }
+.bulle { margin: 0; padding: 14px 16px; background: var(--blush); color: var(--encre); font-size: 19px; line-height: 1.35; }
+@keyframes carte3d {
+  from { opacity: 0; transform: translateZ(-1400px) translateY(160px) rotateY(var(--depart)) rotateX(30deg); }
+  to { opacity: 1; transform: var(--pose); }
+}
+
+/* Cubes en fil de fer qui tournent lentement dans les scènes de marque. */
+.decor { position: absolute; inset: 0; perspective: 1400px; pointer-events: none; }
+.cube {
+  position: absolute;
+  width: var(--t);
+  height: var(--t);
+  transform-style: preserve-3d;
+  animation: cube var(--duree) linear both;
+}
+.cube i { position: absolute; inset: 0; border: 2px solid rgba(249, 231, 237, 0.5); background: rgba(249, 231, 237, 0.05); }
+.cube i:nth-child(1) { transform: translateZ(calc(var(--t) / 2)); }
+.cube i:nth-child(2) { transform: rotateY(180deg) translateZ(calc(var(--t) / 2)); }
+.cube i:nth-child(3) { transform: rotateY(90deg) translateZ(calc(var(--t) / 2)); }
+.cube i:nth-child(4) { transform: rotateY(-90deg) translateZ(calc(var(--t) / 2)); }
+.cube i:nth-child(5) { transform: rotateX(90deg) translateZ(calc(var(--t) / 2)); }
+.cube i:nth-child(6) { transform: rotateX(-90deg) translateZ(calc(var(--t) / 2)); }
+@keyframes cube {
+  from { transform: rotateX(-24deg) rotateY(var(--a0)) rotateZ(8deg); }
+  to { transform: rotateX(-24deg) rotateY(calc(var(--a0) + var(--tour))) rotateZ(-14deg); }
+}
 @keyframes selection { from { opacity: 0; } to { opacity: 1; } }
 @keyframes tap { 0% { opacity: 0; transform: scale(0.3); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(1.6); } }
 
 /* --- Fin ---------------------------------------------------------------------------- */
-.fin { display: grid; place-content: center; justify-items: center; gap: 30px; height: 100%; text-align: center; }
-.finMot { margin: 0; font-size: 150px; font-weight: 800; letter-spacing: -0.06em; line-height: 1; animation: entre 900ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.fin { position: relative; display: grid; place-content: center; justify-items: center; gap: 30px; height: 100%; text-align: center; perspective: 1200px; }
+.finMot {
+  margin: 0;
+  font-size: 150px;
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  text-shadow: 0 3px 0 #6e3a4f, 0 6px 0 #66354a, 0 9px 0 #5d2e41, 0 12px 0 #552a3b, 0 24px 40px rgba(0, 0, 0, 0.35);
+  transform-origin: 50% 100%;
+  animation: bascule 1100ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
+}
+@keyframes bascule { from { opacity: 0; transform: rotateX(-100deg) translateY(40px); } to { opacity: 1; transform: none; } }
 .finMot span { display: inline-block; color: var(--blush); animation: point 900ms 300ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
 .adresse { margin: 0; padding: 16px 34px; background: #fff; color: var(--berry); font-size: 44px; font-weight: 800; letter-spacing: -0.02em; animation: entre 800ms 700ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
 .mentions { margin: 0; font-size: 30px; font-weight: 600; opacity: 0.9; animation: entre 800ms 1100ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
