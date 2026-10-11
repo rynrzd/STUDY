@@ -36,6 +36,8 @@ import { VueAccueilProfesseur } from "@/app/professeur/vue";
 import { VueStudioDocuments } from "@/app/professeur/studio/vue";
 import { VueBanque } from "@/app/studio/exercices/vue";
 import { VueStudio } from "@/app/studio/vue";
+import { QuestionsDeLaSeance } from "@/components/study/QuestionsDeLaSeance";
+import { VuePointsBloquants } from "@/components/study/PointsBloquants";
 import { Editeur } from "@/components/studio/Editeur";
 import { OngletsSeance } from "@/components/studio/OngletsSeance";
 import { CircleHelp, ClipboardCheck, Library } from "lucide-react";
@@ -105,6 +107,23 @@ const ECRANS: Record<string, Ecran> = {
     ),
   },
   A04: { titre: "Un cours", ctx: ELEVE, chemin: "/app/cours", rendu: () => <VueUnCours id={F.cours.id} cours={F.cours} chapitres={[...F.chapitres]} nbSeances={3} requete={null} /> },
+  A04q: {
+    titre: "Séance · questions de la classe",
+    ctx: ELEVE,
+    chemin: "/app/cours",
+    rendu: () => (
+      <div className="mx-auto max-w-[760px]">
+        <QuestionsDeLaSeance
+          seance="s1"
+          salonLien="/app/classes/c1/salons/m1"
+          questions={[
+            { id: "q1", href: "#", salon: "Mathématiques", texte: "Comment lire f(3) sur le graphique ?", auteur: "Lina B.", le: "2026-10-09T15:00:00Z", memeQuestion: 4, moiAussi: false, reponses: 2, reponseAdulte: { texte: "On part de 3 sur l'axe horizontal, on monte jusqu'à la droite, puis on lit la hauteur : 7.", auteur: "Mme Exemple", le: "2026-10-09T17:20:00Z" }, deMoi: false },
+            { id: "q2", href: "#", salon: "Mathématiques", texte: "Est-ce qu'une fonction constante est affine ?", auteur: "Hugo F.", le: "2026-10-10T08:10:00Z", memeQuestion: 1, moiAussi: false, reponses: 0, reponseAdulte: null, deMoi: false },
+          ]}
+        />
+      </div>
+    ),
+  },
   A05: { titre: "Recherche", ctx: ELEVE, chemin: "/app/recherche", rendu: () => <Recherche initiale={{ q: "", types: [], classe: "" }} classes={[{ id: F.classe, libelle: "Seconde 2" }]} /> },
   A06: { titre: "Réviser", ctx: ELEVE, chemin: "/app/reviser", rendu: () => <VueReviser fiches={[...F.fiches]} priorites={{ suggestions: [...F.suggestions], parametres: "" }} /> },
   A09: {
@@ -262,7 +281,14 @@ const ECRANS: Record<string, Ecran> = {
           { libelle: "Réponses aux ateliers", detail: "Réponses d'élèves des sept derniers jours", n: 3, href: "/app/prof/ateliers", icone: Library },
         ]}
         semaine={[...F.evenements]}
-        questions={null}
+        questions={
+          <VuePointsBloquants
+            points={[
+              { seance: "s1", titre: "Lire une image sur un graphique", questions: 3, sansReponse: 2, elevesConcernes: 7, exemple: "Pourquoi on part de l'axe horizontal ?", href: "/app/seances/s1?onglet=questions" },
+              { seance: "s2", titre: "La fonction carré", questions: 1, sansReponse: 0, elevesConcernes: 2, exemple: "Le carré d'un négatif est positif ?", href: "/app/seances/s2?onglet=questions" },
+            ]}
+          />
+        }
         aujourdhui={[F.seancesProf[0]]}
         libelles={new Map(F.coursProf.map((c) => [c.id, c.libelle]))}
         brouillons={F.seancesProf.filter((s) => s.state === "brouillon")}

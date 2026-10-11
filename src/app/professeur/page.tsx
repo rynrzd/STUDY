@@ -4,6 +4,7 @@ import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { coursDuProfesseur } from "@/lib/studio";
 import { devoirsDuProfesseur, seancesDuProfesseur } from "@/lib/espace-professeur";
 import { seancesDuJour } from "@/lib/echeances";
+import { PointsBloquants } from "@/components/study/PointsBloquants";
 import { QuestionsDesClasses } from "@/components/study/QuestionsDesClasses";
 import { EnTetePage, EtatVide } from "@/components/study/ui";
 import { agenda } from "@/lib/v6/eleve";
@@ -59,7 +60,12 @@ export default async function PageProfesseur() {
   const brouillons = seances.filter((s) => s.state === "brouillon").slice(0, 8);
   const publiees = seances.filter((s) => s.state === "publiee").slice(0, 6);
   const devoirsOuverts = devoirs.filter((d) => d.state === "publiee").slice(0, 6);
-  const questions = <QuestionsDesClasses jeton={jeton} />;
+  const questions = (
+    <>
+      <PointsBloquants jeton={jeton} />
+      <QuestionsDesClasses jeton={jeton} />
+    </>
+  );
   const prenom = personne.prenom;
   const organisation = personne.organisation;
 

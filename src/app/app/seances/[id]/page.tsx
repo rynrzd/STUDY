@@ -1,5 +1,7 @@
+import { QuestionsDeLaSeance } from "@/components/study/QuestionsDeLaSeance";
+import { questionsDeLaSeance } from "@/lib/v6/questions-seance";
 import Link from "next/link";
-import { Bookmark, BookmarkCheck, Dumbbell, FileText, HandHelping, MessageCircleQuestion, Sparkles } from "lucide-react";
+import { Bookmark, BookmarkCheck, Dumbbell, FileText, HandHelping, Sparkles } from "lucide-react";
 import { Entraide } from "@/components/app/Entraide";
 import { VueSeance } from "@/components/seance/VueSeance";
 import { RenduDocument } from "@/components/studio/RenduDocument";
@@ -48,13 +50,14 @@ export default async function PageSeance({
     return <AccesIndisponible retour="/app/cours" />;
   }
 
-  const [exercices, note, reperes, salon, fils, signales] = await Promise.all([
+  const [exercices, note, reperes, salon, fils, signales, questionsClasse] = await Promise.all([
     exercicesDeLaSeance(ctx.jeton, id),
     notePersonnelle(ctx.jeton, id),
     reperesDeLaSeance(ctx.jeton, id),
     clientUtilisateur(ctx.jeton).from("salons").select("id, class_id").eq("teaching_space_id", seance.coursId).maybeSingle(),
     onglet === "questions" ? filsDeLaSeance(ctx.jeton, id) : Promise.resolve([]),
     onglet === "questions" ? dejaSignales(ctx.jeton) : Promise.resolve(new Set<string>()),
+    onglet === "questions" ? questionsDeLaSeance(ctx.jeton, ctx.personne.profileId, id) : Promise.resolve([]),
   ]);
 
   const salonLien =
@@ -153,15 +156,8 @@ export default async function PageSeance({
               </Panneau>
             )
           ) : (
-            <div className="grid gap-4">
-              {salonLien ? (
-                <div className="panneau flex flex-wrap items-center justify-between gap-3">
-                  <p className="m-0">Ta question peut aider toute la classe : pose-la dans le salon de la matière, la séance sera citée.</p>
-                  <Link href={`${salonLien}?seance=${id}`} className="bouton bouton-secondaire">
-                    <MessageCircleQuestion {...ICONE} /> Demander au salon
-                  </Link>
-                </div>
-              ) : null}
+            <div className="grid gap-8">
+              <QuestionsDeLaSeance questions={questionsClasse} salonLien={salonLien} seance={id} />
               <Entraide seance={id} fils={fils} moi={ctx.personne.profileId} signales={[...signales]} />
             </div>
           )}
