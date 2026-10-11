@@ -16,7 +16,7 @@ export function MesPassagesIncompris({ seance, passages }: { seance: string; pas
       ) : (
         <ul className="m-0 mt-3 grid list-none gap-2 p-0">
           {passages.map((p) => (
-            <li key={p.id} className="rounded-[4px] bg-[color:var(--color-rose-clair)] p-3">
+            <li key={p.id} className="rounded-[var(--rayon-m)] bg-[color:var(--color-rose-clair)] p-3">
               <p className="m-0 line-clamp-3 text-[0.875rem]">« {p.extrait} »</p>
               <form action={marquerCompris} className="mt-2">
                 <input type="hidden" name="passage" value={p.id} />
@@ -47,7 +47,7 @@ export function PassagesIncomprisClasse({ passages }: { passages: readonly Passa
       ) : (
         <ul className="m-0 mt-3 grid list-none gap-2 p-0">
           {passages.map((p, i) => (
-            <li key={i} className="flex gap-3 rounded-[4px] border border-[color:var(--color-bordure)] p-3">
+            <li key={i} className="flex gap-3 rounded-[var(--rayon-m)] border border-[color:var(--color-bordure)] p-3">
               <CircleHelp size={18} strokeWidth={1.75} aria-hidden="true" className="mt-0.5 shrink-0 text-[color:var(--color-accent)]" />
               <span className="min-w-0">
                 <span className="block line-clamp-3 text-[0.875rem]">« {p.extrait} »</span>

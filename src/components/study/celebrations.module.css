@@ -26,7 +26,8 @@
   background: var(--color-surface);
   border: 1px solid var(--color-bordure);
   border-top: 3px solid var(--color-accent);
-  box-shadow: 8px 8px 0 rgba(129, 68, 91, 0.12);
+  border-radius: var(--rayon-xl);
+  box-shadow: var(--ombre-douce);
   animation: entreePanneau 380ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
 }
 .panneau[data-ton="succes"] { border-top-color: var(--color-succes); }
@@ -118,6 +119,7 @@
   text-align: left;
   background: var(--color-surface-douce);
   border-left: 3px solid var(--color-accent);
+  border-radius: var(--rayon-m);
 }
 .bilan p { margin: 0; }
 
@@ -137,7 +139,7 @@
   font-size: 0.75rem;
 }
 .jour[data-actif="oui"] { border-top-color: var(--color-accent); color: var(--color-encre); }
-.jour[data-aujourdhui="oui"] { font-weight: 800; background: var(--color-surface-douce); }
+.jour[data-aujourdhui="oui"] { font-weight: 800; background: var(--color-surface-douce); border-radius: 0 0 var(--rayon-s) var(--rayon-s); }
 .flamme { color: var(--color-bordure-forte); }
 .jour[data-actif="oui"] .flamme { color: var(--color-accent); animation: allume 520ms var(--d) cubic-bezier(0.16, 0.84, 0.44, 1) both; }
 .semaineNote { margin: 10px 0 0; font-size: 0.8125rem; color: var(--color-encre-faible); }
@@ -186,6 +188,7 @@
   padding: 14px 16px;
   background: var(--color-attention-fond);
   border-left: 3px solid var(--color-attention);
+  border-radius: var(--rayon-m);
   animation: deplie 340ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
 }
 .indice p { margin: 0; }
@@ -214,7 +217,7 @@
 
 /* --- Barre de progression : se remplit, l'étape franchie s'annonce ---------- */
 .progression { display: flex; align-items: center; gap: 10px; }
-.barre { position: relative; width: 10rem; height: 6px; overflow: hidden; background: var(--color-survol); }
+.barre { position: relative; width: 10rem; height: 6px; overflow: hidden; border-radius: 999px; background: var(--color-survol); }
 .barre > span {
   position: absolute;
   inset: 0;
@@ -243,6 +246,7 @@
   font-size: 0.75rem;
   font-weight: 700;
   white-space: nowrap;
+  border-radius: 999px;
   animation: etape 2800ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
 }
 
@@ -258,6 +262,7 @@
   padding: 18px;
   border: 1px solid var(--color-bordure);
   border-left-width: 4px;
+  border-radius: var(--rayon-l);
   animation: entreePanneau 320ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
 }
 .retour[data-ton="succes"] { border-left-color: var(--color-succes); background: var(--color-succes-fond); }

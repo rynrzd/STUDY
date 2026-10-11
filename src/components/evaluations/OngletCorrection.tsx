@@ -40,7 +40,7 @@ export function OngletCorrection({ prof, suivi, questionId }: { prof: Evaluation
               key={q.id}
               href={`?onglet=correction&question=${q.id}`}
               aria-current={q.id === question.id ? "page" : undefined}
-              className={`flex min-w-0 items-center justify-between gap-2 border-l-[3px] px-3 py-2 no-underline ${q.id === question.id ? "border-l-[color:var(--color-accent)] bg-[color:var(--color-surface-douce)] font-bold" : "border-l-transparent hover:bg-[color:var(--color-survol)]"}`}
+              className={`flex min-w-0 items-center justify-between gap-2 rounded-[var(--rayon-s)] border-l-[3px] px-3 py-2 no-underline ${q.id === question.id ? "border-l-[color:var(--color-accent)] bg-[color:var(--color-surface-douce)] font-bold" : "border-l-transparent hover:bg-[color:var(--color-survol)]"}`}
             >
               <span className="min-w-0 truncate">
                 {q.ordre}. {texteModele(q.enonce)}
@@ -74,7 +74,7 @@ export function OngletCorrection({ prof, suivi, questionId }: { prof: Evaluation
             // Points partiels : ni juste ni faux, et l'icône le dit.
             const Icone = !correction ? CircleDashed : correction.juste ? CheckCircle2 : correction.points > 0 ? CircleDot : XCircle;
             return (
-              <li key={c.id} className="border border-[color:var(--color-bordure)] p-4">
+              <li key={c.id} className="rounded-[var(--rayon-l)] border border-[color:var(--color-bordure)] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <p className="m-0 font-semibold">{noms.get(c.profileId) ?? "Élève"}</p>
                   <span className="inline-flex items-center gap-1 text-[0.875rem] font-semibold">
@@ -87,7 +87,7 @@ export function OngletCorrection({ prof, suivi, questionId }: { prof: Evaluation
                   </span>
                 </div>
                 {item.enonce !== question.enonce ? <p className="meta m-0 mt-1">Son sujet : {item.enonce}</p> : null}
-                <p className="m-0 mt-2 whitespace-pre-wrap rounded-[4px] bg-[color:var(--color-survol)] p-3">{texteReponse(item, reponse)}</p>
+                <p className="m-0 mt-2 whitespace-pre-wrap rounded-[var(--rayon-m)] bg-[color:var(--color-survol)] p-3">{texteReponse(item, reponse)}</p>
                 {attendu && question.kind !== "redigee" ? <p className="meta m-0 mt-1">Attendu sur son sujet : {texteAttendu(item, attendu)}</p> : null}
 
                 {papier && !publiee && (question.kind === "qcm" || question.kind === "vrai_faux") ? (

@@ -127,7 +127,7 @@ export function GestesCompte({
             <button
               type="button"
               onClick={() => setDemande("aucune")}
-              className="rounded-[6px] px-2.5 py-1.5 text-[length:var(--text-aide)] underline underline-offset-2"
+              className="rounded-[var(--rayon-s)] px-2.5 py-1.5 text-[length:var(--text-aide)] underline underline-offset-2"
             >
               Annuler
             </button>
@@ -160,7 +160,7 @@ export function GestesCompte({
             <button
               type="button"
               onClick={() => setDemande("aucune")}
-              className="rounded-[6px] px-2.5 py-1.5 text-[length:var(--text-aide)] underline underline-offset-2"
+              className="rounded-[var(--rayon-s)] px-2.5 py-1.5 text-[length:var(--text-aide)] underline underline-offset-2"
             >
               Annuler
             </button>

@@ -119,7 +119,7 @@ export function ParcoursDebloque({ exercices, salon }: { exercices: readonly Exe
               ) : null}
             </li>
             {aides.map((a, i) => (
-              <li key={i} className="rounded-[4px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-4">
+              <li key={i} className="rounded-[var(--rayon-m)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-4">
                 <p className="m-0 mb-1 font-semibold">{a.niveau === "indice" ? "2. Indice" : "3. Un exemple proche"}</p>
                 <p className="m-0">{a.texte}</p>
               </li>
@@ -163,7 +163,7 @@ export function ParcoursDebloque({ exercices, salon }: { exercices: readonly Exe
               Demander à quelqu&apos;un
             </h2>
             <p className="m-0 mt-2">Voici exactement ce qui sera envoyé — rien d&apos;autre, et surtout pas tes notes privées :</p>
-            <pre className="mt-3 whitespace-pre-wrap rounded-[4px] bg-[color:var(--color-rose-clair)] p-3 font-[family-name:var(--font-texte)] text-[0.875rem]">{message}</pre>
+            <pre className="mt-3 whitespace-pre-wrap rounded-[var(--rayon-m)] bg-[color:var(--color-rose-clair)] p-3 font-[family-name:var(--font-texte)] text-[0.875rem]">{message}</pre>
             <div className="mt-4 flex flex-wrap gap-2">
               {salon ? (
                 <Link

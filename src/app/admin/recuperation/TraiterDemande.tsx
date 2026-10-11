@@ -9,17 +9,17 @@ export function TraiterDemande({ demande, reference, nom }: { demande: string; r
   const [etat, action] = useActionState<EtatFormulaire, FormData>(remettreLien.bind(null, demande), {});
   if (etat.ok && etat.message) {
     return (
-      <div role="status" className="mt-3 rounded-[4px] bg-[color:var(--color-succes-fond)] p-4 text-[0.875rem]">
+      <div role="status" className="mt-3 rounded-[var(--rayon-m)] bg-[color:var(--color-succes-fond)] p-4 text-[0.875rem]">
         <p className="m-0 font-semibold text-[color:var(--color-succes)]">Lien créé pour {nom}, valable trois jours, à usage unique.</p>
         <p className="m-0 mt-2">Remettez-le en main propre (impression ou affichage). Il ne sera plus affiché ensuite.</p>
-        <p className="m-0 mt-2 break-all rounded-[8px] bg-[color:var(--color-surface)] p-2 font-mono text-[0.8125rem]" data-testid="lien-recuperation">
+        <p className="m-0 mt-2 break-all rounded-[var(--rayon-s)] bg-[color:var(--color-surface)] p-2 font-mono text-[0.8125rem]" data-testid="lien-recuperation">
           {etat.message}
         </p>
       </div>
     );
   }
   return (
-    <form action={action} className="mt-3 grid gap-3 rounded-[4px] border border-[color:var(--color-bordure)] p-4" noValidate>
+    <form action={action} className="mt-3 grid gap-3 rounded-[var(--rayon-m)] border border-[color:var(--color-bordure)] p-4" noValidate>
       <RetourFormulaire etat={etat} />
       <label className="flex items-start gap-3 text-[0.875rem]">
         <input type="checkbox" name="identite" value="oui" className="mt-1 size-4 shrink-0" />

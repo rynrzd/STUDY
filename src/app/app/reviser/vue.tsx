@@ -48,13 +48,15 @@ export function VueReviser({
         }
       />
       {erreur ? (
-        <p role="alert" className="mb-4 rounded-[4px] bg-[color:var(--color-erreur-fond)] p-3 text-[color:var(--color-erreur)]">
+        <p role="alert" className="mb-4 rounded-[var(--rayon-m)] bg-[color:var(--color-erreur-fond)] p-3 text-[color:var(--color-erreur)]">
           {erreur === "aucun-exercice" ? "Aucun exercice disponible pour cet entraînement." : "L'entraînement n'a pas pu être ouvert."}
         </p>
       ) : null}
 
-      <section aria-labelledby="dues" className="mb-8">
-        <h2 id="dues" className="titre-section mb-3">
+      {/* Bento : ce qui presse, et la semaine à côté. */}
+      <div className="bento mb-8">
+      <section aria-labelledby="dues" className={`bento-carte md-6 ${semaine ? "lg-8" : "lg-12"}`}>
+        <h2 id="dues" className="bento-titre">
           À revoir en premier
         </h2>
         {priorites.suggestions.length === 0 ? (
@@ -92,16 +94,17 @@ export function VueReviser({
             ))}
           </ListeLignes>
         )}
-        <p className="meta m-0 mt-3">
+        <p className="meta m-0 mt-auto">
           Ces propositions combinent les contrôles annoncés, tes réponses récentes et les révisions prévues.
         </p>
       </section>
 
       {semaine ? (
-        <section aria-label="Ta semaine" className="panneau mb-8">
+        <section aria-label="Ta semaine" className="bento-carte md-6 lg-4">
           <MaSemaine semaine={semaine} />
         </section>
       ) : null}
+      </div>
 
       <Progression matieres={progression} />
 

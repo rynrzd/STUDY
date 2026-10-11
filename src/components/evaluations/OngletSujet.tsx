@@ -63,7 +63,7 @@ export function OngletSujet({ prof, banque, eleves }: { prof: EvaluationProf; ba
           ) : (
             <ol className="m-0 grid list-none gap-3 p-0">
               {questions.map((q) => (
-                <li key={q.id} className="border border-[color:var(--color-bordure)] border-l-[3px] border-l-[color:var(--color-accent)] p-4">
+                <li key={q.id} className="rounded-[var(--rayon-l)] border border-[color:var(--color-bordure)] border-l-[3px] border-l-[color:var(--color-accent)] p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <p className="m-0 font-semibold">
                       {q.ordre}. {q.enonce}

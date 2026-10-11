@@ -526,7 +526,7 @@ function BoutonBloc({
       type="button"
       onClick={onClick}
       disabled={desactive}
-      className="min-h-8 rounded-[6px] border border-[color:var(--color-bordure)] px-2 text-[length:var(--text-aide)] disabled:opacity-40"
+      className="min-h-8 rounded-[var(--rayon-s)] border border-[color:var(--color-bordure)] px-2 text-[length:var(--text-aide)] disabled:opacity-40"
     >
       {libelle}
     </button>

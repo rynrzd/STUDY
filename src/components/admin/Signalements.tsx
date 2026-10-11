@@ -147,7 +147,7 @@ function Fiche({ signalement }: { signalement: Signalement }) {
 
       <blockquote
         data-testid="signalement-contenu"
-        className="m-0 mt-3 rounded-[4px] border-l-[3px] border-[color:var(--color-accent)] bg-[color:var(--color-surface-douce)] py-3 pl-4 pr-3 whitespace-pre-line"
+        className="m-0 mt-3 rounded-[var(--rayon-m)] border-l-[3px] border-[color:var(--color-accent)] bg-[color:var(--color-surface-douce)] py-3 pl-4 pr-3 whitespace-pre-line"
       >
         {signalement.contenu === "" ? (
           <span className="text-[color:var(--color-encre-faible)] italic">

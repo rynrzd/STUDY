@@ -235,7 +235,7 @@ export function RetourFormulaire({ etat }: { etat: EtatFormulaire }) {
       ref={ref}
       tabIndex={-1}
       role={etat.ok ? "status" : "alert"}
-      className={`mb-4 rounded-[4px] px-4 py-3 text-[0.8125rem] font-medium outline-none ${
+      className={`mb-4 rounded-[var(--rayon-m)] px-4 py-3 text-[0.8125rem] font-medium outline-none ${
         etat.ok
           ? "bg-[color:var(--color-succes-fond)] text-[color:var(--color-succes)]"
           : "bg-[color:var(--color-erreur-fond)] text-[color:var(--color-erreur)]"

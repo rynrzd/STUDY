@@ -77,7 +77,7 @@ export function AccueilEleve({ d }: { d: DonneesAccueil }) {
             ) : (
               <ul className="m-0 mt-4 grid list-none gap-2 p-0">
                 {d.taches.slice(0, 3).map((t) => (
-                  <li key={t.id} className="flex min-w-0 items-center gap-3 rounded-[4px] border border-[color:var(--color-bordure)] px-3 py-3">
+                  <li key={t.id} className="flex min-w-0 items-center gap-3 rounded-[var(--rayon-m)] border border-[color:var(--color-bordure)] px-3 py-3">
                     <CaseFaite devoir={t.id} fait={false} libelle={t.titre} />
                     <Link href={`/app/devoirs/${t.id}`} className="min-w-0 flex-1 no-underline">
                       <span className="line-clamp-2 block font-bold text-[color:var(--color-encre)]">{t.titre}</span>
@@ -105,7 +105,7 @@ export function AccueilEleve({ d }: { d: DonneesAccueil }) {
                   <li key={c.id}>
                     <Link
                       href={`/app/cours/${c.id}`}
-                      className="carte-souleve flex min-h-[64px] items-center gap-3 rounded-[4px] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] px-3 py-2.5 no-underline"
+                      className="carte-souleve flex min-h-[64px] items-center gap-3 rounded-[var(--rayon-m)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] px-3 py-2.5 no-underline"
                     >
                       <span className="livre" aria-hidden="true">
                         {sigle(c.matiere)}
@@ -129,7 +129,7 @@ export function AccueilEleve({ d }: { d: DonneesAccueil }) {
             </TitreBloc>
             {d.enDirect ? (
               <div className="mt-3 flex gap-3">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[4px] bg-[color:var(--color-rose-clair)] text-[color:var(--color-accent)]" aria-hidden="true">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[var(--rayon-m)] bg-[color:var(--color-rose-clair)] text-[color:var(--color-accent)]" aria-hidden="true">
                   <MessageCircle size={18} strokeWidth={1.75} />
                 </span>
                 <div className="min-w-0">
@@ -151,7 +151,7 @@ export function AccueilEleve({ d }: { d: DonneesAccueil }) {
               </p>
             )}
             {d.consultation ? (
-              <div className="mt-4 rounded-[4px] bg-[color:var(--color-rose-clair)] p-4">
+              <div className="mt-4 rounded-[var(--rayon-m)] bg-[color:var(--color-rose-clair)] p-4">
                 <p className="m-0 font-bold">{d.consultation.titre}</p>
                 <p className="meta m-0 mt-1">
                   Consultation de la classe

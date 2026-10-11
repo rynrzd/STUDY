@@ -161,7 +161,7 @@ export function AccuseDeRemise({ etat }: { etat: Extract<EtatRemiseAction, { eta
   return (
     <div
       data-testid="remise-accuse"
-      className="relative overflow-hidden border border-t-[3px] border-[color:var(--color-succes)] bg-[color:var(--color-succes-fond)] p-5 shadow-[8px_8px_0_rgba(47,106,69,0.12)]"
+      className="relative overflow-hidden rounded-[var(--rayon-xl)] border border-t-[3px] border-[color:var(--color-succes)] bg-[color:var(--color-succes-fond)] p-5 shadow-[var(--ombre-douce)]"
     >
       <EnteteRemise />
       <h3 className="m-0 mt-3 text-center text-[length:var(--text-h3)] leading-[var(--text-h3--line-height)] text-[color:var(--color-succes)]">

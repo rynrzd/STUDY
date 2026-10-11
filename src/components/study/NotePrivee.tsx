@@ -96,7 +96,7 @@ export function NotePrivee({ seance, initiale, revision }: { seance: string; ini
         {statut}
       </p>
       {etat.etat === "conflit" ? (
-        <div role="alert" className="mt-2 rounded-[4px] bg-[color:var(--color-attention-fond)] p-3 text-[0.8125rem] text-[color:var(--color-attention)]">
+        <div role="alert" className="mt-2 rounded-[var(--rayon-m)] bg-[color:var(--color-attention-fond)] p-3 text-[0.8125rem] text-[color:var(--color-attention)]">
           {etat.message} Copie ton texte si besoin, puis{" "}
           <a href={`/app/seances/${seance}`} className="font-semibold text-[color:var(--color-attention)]">
             recharge la note

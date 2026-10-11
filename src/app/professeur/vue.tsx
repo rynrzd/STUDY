@@ -40,32 +40,10 @@ export function VueAccueilProfesseur({ prenom, organisation, tableau, priorites,
         </p>
       ) : null}
 
-      <section aria-labelledby="classes">
-        <h2 id="classes" className="titre-section mb-3">
-          Mes classes
-        </h2>
-        <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2 xl:grid-cols-4">
-          {tableau.cartes.map((c) => (
-            <li key={c.id}>
-              <Link href={c.salon ? `/app/messagerie/${c.salon}` : "/studio"} className="carte-chiffre">
-                <TuileIcone icone={MessageCircleQuestion} />
-                <span>
-                  <span className="block font-bold">{c.classe}</span>
-                  <span className="meta block">{c.matiere}</span>
-                </span>
-                <span className="mt-auto">
-                  <span className="block text-[1.75rem] font-extrabold leading-none">{c.questionsSansReponse}</span>
-                  <span className="meta">question{c.questionsSansReponse > 1 ? "s" : ""} sans réponse</span>
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <section aria-labelledby="priorites">
-          <h2 id="priorites" className="titre-section mb-3">
+      {/* Bento : la priorité en grande carte, le reste autour, chaque classe en tuile. */}
+      <div className="bento">
+        <section aria-labelledby="priorites" className="bento-carte lg-7 md-6">
+          <h2 id="priorites" className="bento-titre">
             À traiter en priorité
           </h2>
           <ListeLignes>
@@ -74,15 +52,14 @@ export function VueAccueilProfesseur({ prenom, organisation, tableau, priorites,
             ))}
           </ListeLignes>
         </section>
-        <section aria-labelledby="agenda">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 id="agenda" className="titre-section">
-              Mon agenda
-            </h2>
+
+        <section aria-labelledby="agenda" className="bento-carte lg-5 md-6">
+          <h2 id="agenda" className="bento-titre">
+            Mon agenda
             <Link href="/app/agenda" className="text-[0.875rem] font-semibold text-[color:var(--color-accent)]">
               Voir tout
             </Link>
-          </div>
+          </h2>
           {semaine === null ? (
             <p className="m-0 text-[color:var(--color-erreur)]">L&apos;agenda n&apos;a pas pu être chargé.</p>
           ) : semaine.length === 0 ? (
@@ -100,31 +77,48 @@ export function VueAccueilProfesseur({ prenom, organisation, tableau, priorites,
             </ListeLignes>
           )}
         </section>
-      </div>
 
-      <div id="questions" className="mt-8 scroll-mt-24">
-        {questions}
-      </div>
-
-      <section className="mt-8" aria-labelledby="aujourdhui">
-        <h2 id="aujourdhui" className="titre-section mb-3">
-          Aujourd&apos;hui
+        <h2 id="classes" className="titre-section m-0 mt-2 md-6 lg-12">
+          Mes classes
         </h2>
-        {aujourdhui.length === 0 ? (
-          <p className="m-0 text-[color:var(--color-encre-faible)]">Aucune séance n&apos;est datée d&apos;aujourd&apos;hui. Vous pouvez en préparer une pour un autre jour depuis le Studio.</p>
-        ) : (
-          <ListeLignes>
-            {aujourdhui.map((seance) => (
-              <Ligne key={seance.id} href={`/studio/${seance.id}`} icone={FileText} titre={seance.title} detail={libelles.get(seance.teaching_space_id) ?? "Cours"} fin={etat(seance.state === "publiee")} />
-            ))}
-          </ListeLignes>
-        )}
-      </section>
+        {tableau.cartes.map((c) => (
+          <Link key={c.id} href={c.salon ? `/app/messagerie/${c.salon}` : "/studio"} className="carte-chiffre md-3 lg-3" aria-describedby="classes">
+            <TuileIcone icone={MessageCircleQuestion} />
+            <span>
+              <span className="block font-bold">{c.classe}</span>
+              <span className="meta block">{c.matiere}</span>
+            </span>
+            <span className="mt-auto">
+              <span className="bento-chiffre block">{c.questionsSansReponse}</span>
+              <span className="meta">question{c.questionsSansReponse > 1 ? "s" : ""} sans réponse</span>
+            </span>
+          </Link>
+        ))}
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2 lg:items-start">
-        <section aria-labelledby="brouillons">
-          <h2 id="brouillons" className="titre-section mb-3 flex items-center gap-2">
-            Brouillons à terminer <span className="nombre">{brouillons.length}</span>
+        <div id="questions" className="scroll-mt-24 md-6 lg-12">
+          {questions}
+        </div>
+
+        <section aria-labelledby="aujourdhui" className="bento-carte lg-12 md-6" data-ton="rose">
+          <h2 id="aujourdhui" className="bento-titre">
+            Aujourd&apos;hui
+          </h2>
+          {aujourdhui.length === 0 ? (
+            <p className="m-0 text-[color:var(--color-encre-faible)]">Aucune séance n&apos;est datée d&apos;aujourd&apos;hui. Vous pouvez en préparer une pour un autre jour depuis le Studio.</p>
+          ) : (
+            <ListeLignes>
+              {aujourdhui.map((seance) => (
+                <Ligne key={seance.id} href={`/studio/${seance.id}`} icone={FileText} titre={seance.title} detail={libelles.get(seance.teaching_space_id) ?? "Cours"} fin={etat(seance.state === "publiee")} />
+              ))}
+            </ListeLignes>
+          )}
+        </section>
+
+        <section aria-labelledby="brouillons" className="bento-carte lg-6 md-6">
+          <h2 id="brouillons" className="bento-titre">
+            <span className="flex items-center gap-2">
+              Brouillons à terminer <span className="nombre">{brouillons.length}</span>
+            </span>
           </h2>
           {brouillons.length === 0 ? (
             <p className="m-0 text-[color:var(--color-encre-faible)]">Aucun brouillon en attente.</p>
@@ -136,9 +130,12 @@ export function VueAccueilProfesseur({ prenom, organisation, tableau, priorites,
             </ListeLignes>
           )}
         </section>
-        <section aria-labelledby="devoirs">
-          <h2 id="devoirs" className="titre-section mb-3 flex items-center gap-2">
-            Devoirs en cours <span className="nombre">{devoirsOuverts.length}</span>
+
+        <section aria-labelledby="devoirs" className="bento-carte lg-6 md-6">
+          <h2 id="devoirs" className="bento-titre">
+            <span className="flex items-center gap-2">
+              Devoirs en cours <span className="nombre">{devoirsOuverts.length}</span>
+            </span>
           </h2>
           {devoirsOuverts.length === 0 ? (
             <p className="m-0 text-[color:var(--color-encre-faible)]">Aucun devoir donné pour l&apos;instant.</p>
@@ -157,22 +154,22 @@ export function VueAccueilProfesseur({ prenom, organisation, tableau, priorites,
             </ListeLignes>
           )}
         </section>
-      </div>
 
-      <section className="mt-8" aria-labelledby="publiees">
-        <h2 id="publiees" className="titre-section mb-3">
-          Dernières séances publiées
-        </h2>
-        {publiees.length === 0 ? (
-          <p className="m-0 text-[color:var(--color-encre-faible)]">Rien n&apos;est encore publié. Tant qu&apos;une séance reste un brouillon, vos élèves ne la voient pas.</p>
-        ) : (
-          <ListeLignes>
-            {publiees.map((seance) => (
-              <Ligne key={seance.id} href={`/studio/${seance.id}`} icone={FileText} titre={seance.title} detail={libelles.get(seance.teaching_space_id) ?? "Cours"} fin={etat(true)} />
-            ))}
-          </ListeLignes>
-        )}
-      </section>
+        <section aria-labelledby="publiees" className="bento-carte lg-12 md-6">
+          <h2 id="publiees" className="bento-titre">
+            Dernières séances publiées
+          </h2>
+          {publiees.length === 0 ? (
+            <p className="m-0 text-[color:var(--color-encre-faible)]">Rien n&apos;est encore publié. Tant qu&apos;une séance reste un brouillon, vos élèves ne la voient pas.</p>
+          ) : (
+            <ListeLignes>
+              {publiees.map((seance) => (
+                <Ligne key={seance.id} href={`/studio/${seance.id}`} icone={FileText} titre={seance.title} detail={libelles.get(seance.teaching_space_id) ?? "Cours"} fin={etat(true)} />
+              ))}
+            </ListeLignes>
+          )}
+        </section>
+      </div>
     </>
   );
 }

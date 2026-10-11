@@ -64,7 +64,7 @@ export function VueOrientation({ filtre, miennes, intentions, autres, recues, ad
             <Panneau titre="Ce que j'aimerais" compte={intentions.length}>
               <ul className="m-0 grid list-none gap-2 p-0">
                 {intentions.map((i) => (
-                  <li key={i.id} className="flex items-center justify-between gap-2 rounded-[4px] bg-[color:var(--color-rose-clair)] py-1 pl-3 pr-1">
+                  <li key={i.id} className="flex items-center justify-between gap-2 rounded-[var(--rayon-m)] bg-[color:var(--color-rose-clair)] py-1 pl-3 pr-1">
                     <span className="flex items-center gap-2 font-semibold"><Heart size={16} strokeWidth={1.75} aria-hidden="true" className="text-[color:var(--color-accent)]" />{i.intitule}</span>
                     <form action={supprimerPiste}>
                       <input type="hidden" name="piste" value={i.id} />

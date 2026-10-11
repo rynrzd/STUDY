@@ -71,14 +71,14 @@ export function VueCarnet({ archivesVues, entrees, error, parNotion }: { archive
                     </p>
                     <p className="m-0 mt-1 font-semibold">{e.enonce}</p>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                      <div className="rounded-[4px] border border-[color:var(--color-bordure)] p-3 text-[0.875rem]">
+                      <div className="rounded-[var(--rayon-m)] border border-[color:var(--color-bordure)] p-3 text-[0.875rem]">
                         <span className="meta block">Ta réponse</span>
                         <strong>
                           {e.kind === "qcm" && e.reponse?.index !== undefined ? (e.choix?.[e.reponse.index] ?? "—") : (e.reponse?.valeur ?? e.reponse?.texte ?? "—")}
                         </strong>
                       </div>
                       {e.explication ? (
-                        <div className="rounded-[4px] bg-[color:var(--color-rose-clair)] p-3 text-[0.875rem]">
+                        <div className="rounded-[var(--rayon-m)] bg-[color:var(--color-rose-clair)] p-3 text-[0.875rem]">
                           <span className="meta block">Explication</span>
                           {e.explication}
                         </div>

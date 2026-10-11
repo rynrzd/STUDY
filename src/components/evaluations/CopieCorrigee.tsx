@@ -72,7 +72,7 @@ export function CopieCorrigee({
                 <span className="text-[1.25rem] font-bold text-[color:var(--color-encre-faible)]">/ 20</span>
               </p>
             ) : null}
-            {notation !== "sur20" && niveau ? <span className={`px-3 py-1.5 font-bold ${NIVEAU_FOND[niveau]}`}>{LIBELLES_NIVEAU[niveau]}</span> : null}
+            {notation !== "sur20" && niveau ? <span className={`rounded-full px-4 py-1.5 font-bold ${NIVEAU_FOND[niveau]}`}>{LIBELLES_NIVEAU[niveau]}</span> : null}
           </div>
         ) : null}
         {!absent ? (
@@ -93,13 +93,13 @@ export function CopieCorrigee({
               return (
                 <li key={n.notion} className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--color-bordure)] pb-2">
                   <span className="font-semibold">{n.notion}</span>
-                  <span className={`px-2 py-1 text-[0.8125rem] font-bold ${NIVEAU_FOND[niv]}`}>{LIBELLES_NIVEAU[niv]}</span>
+                  <span className={`rounded-full px-3 py-1 text-[0.8125rem] font-bold ${NIVEAU_FOND[niv]}`}>{LIBELLES_NIVEAU[niv]}</span>
                 </li>
               );
             })}
           </ul>
           {remiseANiveau.length > 0 ? (
-            <form action={lancerEntrainement} className="mt-4 border-l-[3px] border-l-[color:var(--color-accent)] bg-[color:var(--color-surface-douce)] p-4">
+            <form action={lancerEntrainement} className="mt-4 rounded-[var(--rayon-m)] border-l-[3px] border-l-[color:var(--color-accent)] bg-[color:var(--color-surface-douce)] p-4">
               {remiseANiveau.map((v) => (
                 <input key={v} type="hidden" name="version" value={v} />
               ))}

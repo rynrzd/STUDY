@@ -40,7 +40,7 @@ export default async function PageAtelierProf({ params, searchParams }: { params
     <>
       <EnTetePage filAriane={[{ href: "/app/prof/ateliers", libelle: "Ateliers" }]} titre={at.titre} sousTitre={at.question} />
       {erreur ? (
-        <p role="alert" className="mb-4 rounded-[4px] bg-[color:var(--color-erreur-fond)] p-3 text-[color:var(--color-erreur)]">
+        <p role="alert" className="mb-4 rounded-[var(--rayon-m)] bg-[color:var(--color-erreur-fond)] p-3 text-[color:var(--color-erreur)]">
           {erreur === "sources" ? "Pour publier : deux à cinq sources datées (actualité), ou un texte à vérifier." : "Ce changement d'état n'est pas possible."}
         </p>
       ) : null}
@@ -70,7 +70,7 @@ export default async function PageAtelierProf({ params, searchParams }: { params
                     </li>
                   ))}
                 </ul>
-                {l.contestation ? <p className="m-0 mt-2 rounded-[8px] bg-[color:var(--color-attention-fond)] p-2 text-[0.875rem]">Contestation : {l.contestation}</p> : null}
+                {l.contestation ? <p className="m-0 mt-2 rounded-[var(--rayon-s)] bg-[color:var(--color-attention-fond)] p-2 text-[0.875rem]">Contestation : {l.contestation}</p> : null}
               </section>
             ))}
             <p className="meta m-0 mt-3">Aucune note : les opinions ne sont pas évaluées, seule la justification par une source compte.</p>

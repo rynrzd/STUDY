@@ -298,7 +298,7 @@ export function AjouterQuestion({ evaluation, notions }: { evaluation: string; n
         </div>
       ) : null}
 
-      <details className="rounded-[4px] border border-[color:var(--color-bordure)] p-3">
+      <details className="rounded-[var(--rayon-m)] border border-[color:var(--color-bordure)] p-3">
         <summary className="cursor-pointer font-semibold">Sujets différents par élève (valeurs aléatoires)</summary>
         <p className="meta m-0 mt-2">
           Écrivez {"{a}"}, {"{b}"}… dans l&apos;énoncé et les choix, ou un calcul comme {"{2*a+b}"}. Chaque élève reçoit ses propres valeurs.
@@ -334,7 +334,7 @@ export function ImporterBanque({ evaluation, exercices }: { evaluation: string; 
       <ul className="m-0 grid max-h-[320px] list-none gap-1 overflow-auto p-0">
         {exercices.map((e) => (
           <li key={e.versionId}>
-            <label className="flex items-start gap-3 rounded-[4px] p-2 hover:bg-[color:var(--color-survol)]">
+            <label className="flex items-start gap-3 rounded-[var(--rayon-m)] p-2 hover:bg-[color:var(--color-survol)]">
               <input type="checkbox" name="version" value={e.versionId} className="mt-1" />
               <span className="min-w-0">
                 <span className="line-clamp-2 block">{e.enonce}</span>

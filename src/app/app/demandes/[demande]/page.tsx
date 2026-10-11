@@ -31,7 +31,7 @@ export default async function PageDemande({ params, searchParams }: { params: Pr
         sousTitre={`Entre ${noms.get(demande.author_id)?.affichage ?? "—"} et ${noms.get(demande.recipient_id)?.affichage ?? "—"} · personne d'autre ne lit cet échange.`}
       />
       {envoyee ? (
-        <p role="status" className="mb-4 rounded-[4px] bg-[color:var(--color-succes-fond)] p-3 text-[color:var(--color-succes)]">
+        <p role="status" className="mb-4 rounded-[var(--rayon-m)] bg-[color:var(--color-succes-fond)] p-3 text-[color:var(--color-succes)]">
           Demande envoyée. La réponse apparaîtra dans tes notifications.
         </p>
       ) : null}

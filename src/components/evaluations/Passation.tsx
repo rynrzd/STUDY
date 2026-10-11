@@ -214,7 +214,7 @@ export function Passation({
 
   return (
     <div className="grid gap-4">
-      <div className="sticky top-2 z-10 flex flex-wrap items-center justify-between gap-3 border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] px-4 py-3 shadow-[var(--shadow-flottant)]">
+      <div className="sticky top-2 z-10 flex flex-wrap items-center justify-between gap-3 rounded-[var(--rayon-l)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] px-4 py-3 shadow-[var(--shadow-flottant)]">
         <p className="m-0 font-semibold">
           Question {index + 1} / {sujet.length}
         </p>
@@ -252,7 +252,7 @@ export function Passation({
             onClick={() => setIndex(i)}
             aria-current={i === index ? "step" : undefined}
             aria-label={`Question ${i + 1}${repondue(s, reponses[s.question_id]) ? ", répondue" : ", sans réponse"}`}
-            className={`grid h-10 w-10 place-items-center border text-[0.875rem] font-bold ${i === index ? "border-[color:var(--color-accent)] bg-[color:var(--color-accent)] text-white" : repondue(s, reponses[s.question_id]) ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure-forte)] bg-[color:var(--color-surface)]"}`}
+            className={`grid h-10 w-10 place-items-center rounded-full border text-[0.875rem] font-bold ${i === index ? "border-[color:var(--color-accent)] bg-[color:var(--color-accent)] text-white" : repondue(s, reponses[s.question_id]) ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure-forte)] bg-[color:var(--color-surface)]"}`}
           >
             {i + 1}
           </button>
@@ -278,7 +278,7 @@ export function Passation({
                 return (
                   <label
                     key={i}
-                    className={`flex min-h-[52px] cursor-pointer items-center gap-3 border px-4 py-3 ${coche ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)]"}`}
+                    className={`flex min-h-[52px] cursor-pointer items-center gap-3 rounded-[var(--rayon-m)] border px-4 py-3 ${coche ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)]"}`}
                   >
                     <input
                       type={item.kind === "qcm" ? "radio" : "checkbox"}
@@ -302,7 +302,7 @@ export function Passation({
             <fieldset className="m-0 flex gap-3 border-0 p-0">
               <legend className="sr-only">Vrai ou faux</legend>
               {[true, false].map((v) => (
-                <label key={String(v)} className={`flex min-h-[52px] flex-1 cursor-pointer items-center justify-center gap-2 border font-bold ${rep?.vrai === v ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)]"}`}>
+                <label key={String(v)} className={`flex min-h-[52px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-[var(--rayon-m)] border font-bold ${rep?.vrai === v ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)]"}`}>
                   <input type="radio" name={`q-${item.question_id}`} checked={rep?.vrai === v} onChange={() => changer(item.question_id, { vrai: v }, true)} />
                   {v ? "Vrai" : "Faux"}
                 </label>

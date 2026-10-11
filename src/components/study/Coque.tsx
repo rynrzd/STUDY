@@ -28,11 +28,14 @@ import { changerClasse } from "@/app/app/contexte-actions";
 import { MotSymbole } from "@/components/site/MotSymbole";
 import { initiales, type ContexteApp } from "@/lib/v6/contexte";
 import { createHash } from "node:crypto";
+import { cookies } from "next/headers";
 import { BandeauReseau } from "./BandeauReseau";
 import { GardienBrouillons } from "./connexion/NettoyageLocal";
 import { ServiceHorsLigne } from "./HorsLigne";
 import { LienNavigation } from "./LienNavigation";
 import { MenuPlus } from "./MenuPlus";
+import { COOKIE_BARRE } from "@/lib/preferences-affichage";
+import { ReplierBarre } from "./ReplierBarre";
 
 /**
  * AppShell R2 — cahier « refonte complète, sans 3D », §03.
@@ -181,7 +184,9 @@ function Liens({ liens }: { liens: readonly Destination[] }) {
   );
 }
 
-export function Coque({ ctx, children }: { ctx: ContexteApp; children: React.ReactNode }) {
+export async function Coque({ ctx, children }: { ctx: ContexteApp; children: React.ReactNode }) {
+  // Barre latérale repliée ou non : préférence d'affichage, lue ici pour éviter tout saut au chargement.
+  const repliee = (await cookies()).get(COOKIE_BARRE)?.value === "repliee";
   const espace = espaceDe(ctx);
   const { principales, secondaires } = navigation(ctx, espace);
   const espaces = espacesDisponibles(ctx);
@@ -193,11 +198,14 @@ export function Coque({ ctx, children }: { ctx: ContexteApp; children: React.Rea
   const plus = [...principales.slice(4), ...secondaires];
 
   return (
-    <div className="app-coque">
+    <div className="app-coque" data-barre={repliee ? "repliee" : undefined}>
       <aside className="app-barre" aria-label="Navigation principale">
-        <Link href={espaces[0]?.href ?? "/app"} className="mb-1 inline-flex min-h-[44px] items-center px-3 text-[color:var(--color-encre)]">
-          <MotSymbole titre="Study, accueil" className="block h-auto w-[72px] min-[1100px]:w-[88px]" />
-        </Link>
+        <div className="entete-barre mb-1 flex items-center justify-between gap-1">
+          <Link href={espaces[0]?.href ?? "/app"} className="inline-flex min-h-[44px] items-center px-3 text-[color:var(--color-encre)]">
+            <MotSymbole titre="Study, accueil" className="block h-auto w-[72px] min-[1100px]:w-[88px]" />
+          </Link>
+          <ReplierBarre repliee={repliee} />
+        </div>
         <div className="barre-detail mt-4 px-3">
           <p className="m-0 truncate text-[0.8125rem] font-bold text-[color:var(--color-encre)]">{personne.organisation ?? "Study"}</p>
           {contexte ? <p className="meta m-0 mt-0.5 truncate">{contexte}</p> : null}
@@ -206,13 +214,13 @@ export function Coque({ ctx, children }: { ctx: ContexteApp; children: React.Rea
 
         {espaces.length > 1 ? (
           <nav aria-label="Changer d'espace" className="barre-detail mt-4 px-1">
-            <ul className="m-0 grid list-none gap-1 rounded-[4px] bg-[color:var(--color-fond)] p-1">
+            <ul className="m-0 grid list-none gap-1 rounded-[var(--rayon-m)] bg-[color:var(--color-fond)] p-1">
               {espaces.map((e) => (
                 <li key={e.espace}>
                   <Link
                     href={e.href}
                     aria-current={e.espace === espace ? "true" : undefined}
-                    className={`flex min-h-[36px] items-center rounded-[9px] px-3 text-[0.8125rem] font-semibold no-underline ${e.espace === espace ? "bg-[color:var(--color-surface)] text-[color:var(--color-encre)] shadow-[0_1px_2px_rgba(41,40,46,0.08)]" : "text-[color:var(--color-encre-faible)]"}`}
+                    className={`flex min-h-[36px] items-center rounded-[var(--rayon-s)] px-3 text-[0.8125rem] font-semibold no-underline ${e.espace === espace ? "bg-[color:var(--color-surface)] text-[color:var(--color-encre)] shadow-[0_1px_2px_rgba(41,40,46,0.08)]" : "text-[color:var(--color-encre-faible)]"}`}
                   >
                     {e.libelle}
                   </Link>
@@ -231,7 +239,7 @@ export function Coque({ ctx, children }: { ctx: ContexteApp; children: React.Rea
 
         <div className="mt-auto pt-6">
           <details className="menu-deroulant">
-            <summary className="flex min-h-[48px] items-center gap-2.5 rounded-[4px] px-2 hover:bg-[color:var(--color-survol)]">
+            <summary className="flex min-h-[48px] items-center gap-2.5 rounded-[var(--rayon-m)] px-2 hover:bg-[color:var(--color-survol)]">
               <span className="avatar" aria-hidden="true">
                 {sigle}
               </span>
@@ -263,7 +271,7 @@ export function Coque({ ctx, children }: { ctx: ContexteApp; children: React.Rea
             <MotSymbole titre="Study, accueil" className="block h-auto w-[76px]" />
           </Link>
           {espace !== "admin" ? (
-            <form action="/app/recherche" method="get" role="search" className="app-seulement-bureau mr-auto flex h-11 max-w-[520px] flex-1 items-center gap-3 rounded-[4px] border border-[color:var(--color-bordure)] bg-[color:var(--color-fond)] px-3 focus-within:border-[color:var(--color-accent)]">
+            <form action="/app/recherche" method="get" role="search" className="app-seulement-bureau mr-auto flex h-11 max-w-[520px] flex-1 items-center gap-3 rounded-[var(--rayon-pilule)] border border-[color:var(--color-bordure)] bg-[color:var(--color-fond)] px-3 focus-within:border-[color:var(--color-accent)]">
               <label htmlFor="recherche-globale" className="sr-only">
                 Rechercher dans tes cours, fiches et échanges
               </label>

@@ -1,0 +1,308 @@
+/* ===========================================================================
+   Espace privé — « Soft Rounded Education × Bento ».
+
+   Un seul endroit pour le style de l'espace connecté (élève, professeur,
+   administration). Tout est porté par `.app-coque` : les pages publiques,
+   qui n'ont pas cette coque, gardent leur style à angles vifs.
+
+   Les couleurs et la marque ne changent pas. Ce qui change : les arrondis
+   (cartes 24 px, cartes secondaires 20 px, champs et menus 16 px, boutons et
+   badges en pilule, modales 28 px), des ombres très légères, des bordures
+   plus discrètes, plus d'air, et des transitions de 150 à 250 ms coupées
+   quand le mouvement est réduit.
+   =========================================================================== */
+
+/* Hors espace privé, ces jetons restent sans arrondi : un composant partagé
+   rendu sur une page publique garde ses angles vifs. */
+:root {
+  --rayon-xl: 4px;
+  --rayon-l: 4px;
+  --rayon-m: 4px;
+  --rayon-s: 4px;
+  --rayon-pilule: 4px;
+  --ombre-douce: none;
+  --ombre-survol: none;
+}
+
+@layer components {
+  /* --- Jetons de l'espace privé ------------------------------------------- */
+  .app-coque {
+    --radius-carte: 24px;
+    --radius-grand: 28px;
+    --radius-champ: 16px;
+    --radius-bouton: 999px;
+    --rayon-xl: 24px;
+    --rayon-l: 20px;
+    --rayon-m: 16px;
+    --rayon-s: 12px;
+    --rayon-pilule: 999px;
+    --bordure-douce: #ece6eb;
+    --ombre-douce: 0 1px 2px rgba(41, 40, 46, 0.04), 0 6px 20px -8px rgba(41, 40, 46, 0.08);
+    --ombre-survol: 0 2px 4px rgba(41, 40, 46, 0.04), 0 14px 32px -12px rgba(41, 40, 46, 0.16);
+    --transition-douce: 200ms cubic-bezier(0.16, 0.84, 0.44, 1);
+    background: var(--color-fond);
+  }
+
+  /* --- Surfaces : cartes, panneaux, listes ---------------------------------- */
+  .app-coque .panneau,
+  .app-coque .carte,
+  .app-coque .bloc,
+  .app-coque .liste-r2,
+  .app-coque .carte-chiffre {
+    border-color: var(--bordure-douce);
+    box-shadow: var(--ombre-douce);
+  }
+  .app-coque .panneau { padding: 22px; }
+  @media (min-width: 768px) {
+    .app-coque .panneau { padding: 26px; }
+  }
+
+  /* Survol doux des cartes cliquables : l'ombre s'étend, la carte monte de 2 px. */
+  .app-coque a.carte-chiffre,
+  .app-coque .carte-survol,
+  .app-coque .carte-souleve {
+    transition: box-shadow var(--transition-douce), transform var(--transition-douce), border-color var(--transition-douce);
+  }
+  @media (hover: hover) {
+    .app-coque a.carte-chiffre:hover,
+    .app-coque .carte-survol:hover,
+    .app-coque .carte-souleve:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--ombre-survol);
+      border-color: var(--bordure-douce);
+    }
+  }
+  .app-coque .carte-chiffre { padding: 22px; gap: 12px; }
+
+  .app-coque .liste-r2 > li + li { border-top-color: var(--bordure-douce); }
+  .app-coque .ligne-r2 { min-height: 64px; padding: 14px 20px; }
+  .app-coque a.ligne-r2 { transition: background-color var(--transition-douce); }
+  .app-coque a.ligne-r2:hover { background: #fbf8fa; }
+  .app-coque .ligne-r2 .chevron { transition: transform var(--transition-douce); }
+  .app-coque a.ligne-r2:hover .chevron { transform: translateX(3px); }
+
+  .app-coque .tuile { border-radius: var(--rayon-s); }
+  .app-coque .tuile-grande { border-radius: 14px; }
+  .app-coque .livre { border-radius: var(--rayon-s); }
+  .app-coque .encadre { border-radius: var(--rayon-l); padding: 18px 20px; }
+  .app-coque .date-bloc { border-radius: var(--rayon-s); }
+
+  /* --- Boutons : pilules, retour au clic ------------------------------------ */
+  .app-coque .bouton {
+    min-height: 44px;
+    padding-inline: 20px;
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 120ms ease;
+  }
+  .app-coque .bouton-compact { padding-inline: 14px; }
+  .app-coque .bouton-primaire { box-shadow: 0 1px 2px rgba(129, 68, 91, 0.25), 0 4px 12px -4px rgba(129, 68, 91, 0.35); }
+  .app-coque .bouton-primaire:hover:not(:disabled) { box-shadow: 0 2px 4px rgba(129, 68, 91, 0.25), 0 8px 20px -6px rgba(129, 68, 91, 0.45); }
+  .app-coque .bouton:active:not(:disabled) { transform: scale(0.97); }
+  .app-coque .bouton-secondaire { border-color: #d8bdc8; }
+
+  /* --- Champs ----------------------------------------------------------------- */
+  .app-coque .champ {
+    min-height: 46px;
+    padding: 11px 14px;
+    border-color: #ddd5dc;
+    background: #fff;
+  }
+  .app-coque textarea.champ { line-height: 1.5; }
+  .app-coque .champ:focus { box-shadow: 0 0 0 4px var(--color-rose-clair); }
+
+  /* --- Badges et étiquettes : pilules ------------------------------------------ */
+  .app-coque .etiquette-etat { border-radius: 999px; padding: 4px 11px; }
+  .app-coque .nombre { border-radius: 999px; }
+
+  /* --- Onglets : segment arrondi façon Linear ---------------------------------- */
+  .app-coque .onglets-liens {
+    gap: 4px;
+    width: fit-content;
+    max-width: 100%;
+    padding: 4px;
+    border: 1px solid var(--bordure-douce);
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: var(--ombre-douce);
+  }
+  .app-coque .onglets-liens a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--color-encre-faible);
+    font-weight: 600;
+    transition: background-color 180ms ease, color 180ms ease;
+  }
+  .app-coque .onglets-liens a:hover { color: var(--color-encre); background: var(--color-survol); }
+  .app-coque .onglets-liens a[aria-current="page"] {
+    background: var(--color-rose-clair);
+    color: var(--color-accent-fonce);
+    font-weight: 700;
+  }
+  .app-coque .onglets-liens a[aria-current="page"] .nombre { background: #fff; }
+
+  /* --- Menus, panneaux flottants, modales ---------------------------------------- */
+  .app-coque .menu-deroulant-panneau {
+    border-radius: 18px;
+    border-color: var(--bordure-douce);
+    padding: 6px;
+    box-shadow: 0 18px 40px -16px rgba(41, 40, 46, 0.25), 0 2px 6px rgba(41, 40, 46, 0.06);
+    animation: menu-ouvre 180ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
+  }
+  .app-coque .app-plus-panneau {
+    border-radius: 24px;
+    padding: 10px;
+    box-shadow: 0 -10px 40px -14px rgba(41, 40, 46, 0.25);
+    animation: menu-ouvre 200ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
+  }
+  dialog.dialogue {
+    border-radius: 28px;
+  }
+  dialog.dialogue[open] { animation: modale-ouvre 220ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+
+  /* --- Coque : barre latérale façon ChatGPT --------------------------------------- */
+  @media (min-width: 768px) {
+    .app-coque .app-barre {
+      background: #fbf9fa;
+      border-right-color: var(--bordure-douce);
+    }
+  }
+  .app-coque .lien-barre {
+    border-radius: 12px;
+    transition: background-color 160ms ease, color 160ms ease;
+  }
+  .app-coque .lien-barre:hover { background: #f1ecf0; }
+  .app-coque .lien-barre[aria-current="page"] {
+    background: #fff;
+    color: var(--color-encre);
+    box-shadow: 0 1px 2px rgba(41, 40, 46, 0.06), 0 0 0 1px var(--bordure-douce);
+  }
+
+  /* En-tête : blanc légèrement transparent, filet discret. */
+  .app-coque .app-entete {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: saturate(1.4) blur(10px);
+    border-bottom-color: var(--bordure-douce);
+  }
+
+  @media (min-width: 768px) {
+    .app-coque .app-principal { padding-top: 36px; }
+  }
+  @media (min-width: 1100px) {
+    .app-coque .app-principal { padding-inline: 40px; }
+  }
+
+  /* Barre repliée en rail (choix gardé dans un cookie, lu par le serveur). */
+  @media (min-width: 1100px) {
+    .app-coque[data-barre="repliee"] { grid-template-columns: 88px minmax(0, 1fr); }
+    .app-coque[data-barre="repliee"] .app-barre { padding: 20px 8px 16px; }
+    .app-coque[data-barre="repliee"] .app-barre .lien-barre {
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px 4px;
+      font-size: 0.75rem;
+      text-align: center;
+    }
+    .app-coque[data-barre="repliee"] .app-barre .barre-detail { display: none; }
+    .app-coque[data-barre="repliee"] .app-barre .barre-rail { display: block; }
+    .app-coque[data-barre="repliee"] .entete-barre { flex-direction: column; }
+    /* Le logo porte des utilitaires Tailwind (couche utilities), d'où le !important. */
+    .app-coque[data-barre="repliee"] .entete-barre > a { padding-inline: 0 !important; justify-content: center; }
+    .app-coque[data-barre="repliee"] .entete-barre a > svg { width: 56px !important; }
+  }
+  .app-coque .replier-barre { display: none; }
+  @media (min-width: 1100px) {
+    .app-coque .replier-barre { display: inline-grid; }
+  }
+
+  /* Navigation du téléphone : l'élément actif a sa pilule derrière l'icône. */
+  .app-coque .app-nav-mobile {
+    border-top-color: var(--bordure-douce);
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: saturate(1.4) blur(10px);
+  }
+  .app-coque .app-nav-mobile > a > svg,
+  .app-coque .app-nav-mobile > details > summary > svg {
+    box-sizing: content-box;
+    padding: 4px 16px;
+    border-radius: 999px;
+    transition: background-color 180ms ease;
+  }
+  .app-coque .app-nav-mobile > a[aria-current="page"] > svg,
+  .app-coque .app-nav-mobile > details[data-actif="oui"] > summary > svg {
+    background: var(--color-rose-clair);
+  }
+
+  /* --- Bento : tableaux de bord ----------------------------------------------------- */
+  .bento {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 768px) {
+    .bento { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 18px; }
+  }
+  @media (min-width: 1100px) {
+    .bento { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 20px; }
+  }
+  .bento-carte {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 22px;
+    background: var(--color-surface);
+    border: 1px solid var(--bordure-douce, var(--color-bordure));
+    border-radius: var(--rayon-xl);
+    box-shadow: var(--ombre-douce);
+  }
+  @media (min-width: 768px) {
+    .bento-carte { padding: 24px 26px; }
+  }
+  .bento-carte[data-ton="rose"] { background: linear-gradient(160deg, #fdf3f6, var(--color-rose-clair)); border-color: #f1d9e2; }
+  .bento-titre { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0; font-size: 1.0625rem; font-weight: 800; letter-spacing: -0.015em; }
+  /* Une liste posée dans une carte bento n'a pas de seconde bordure. */
+  .bento-carte .liste-r2 { margin-inline: -10px; border: 0; border-radius: var(--rayon-m); background: transparent; box-shadow: none; }
+  .bento-carte .ligne-r2 { padding-inline: 10px; border-radius: var(--rayon-m); }
+  .bento-carte .liste-r2 > li + li { border-top: 0; }
+  /* Les marges d'un bloc posé dans la grille : c'est l'écart de la grille qui espace. */
+  .bento > * > section:last-child,
+  .bento > section { margin-bottom: 0; }
+  .bento-chiffre { font-size: 2.25rem; font-weight: 800; line-height: 1; letter-spacing: -0.04em; }
+
+  /* Côte à côte (mobile : une colonne) : les étendues ne s'appliquent qu'en grand. */
+  @media (min-width: 768px) {
+    .bento .md-6 { grid-column: span 6; }
+    .bento .md-3 { grid-column: span 3; }
+  }
+  @media (min-width: 1100px) {
+    .bento .lg-12 { grid-column: span 12; }
+    .bento .lg-8 { grid-column: span 8; }
+    .bento .lg-7 { grid-column: span 7; }
+    .bento .lg-6 { grid-column: span 6; }
+    .bento .lg-5 { grid-column: span 5; }
+    .bento .lg-4 { grid-column: span 4; }
+    .bento .lg-3 { grid-column: span 3; }
+    .bento .lg-haute { grid-row: span 2; }
+  }
+
+  /* --- Squelettes de chargement : même forme que les cartes ------------------------- */
+  .app-coque .squelette,
+  .app-coque .squelette-ligne { border-radius: var(--rayon-s); }
+
+  @keyframes menu-ouvre { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: none; } }
+  @keyframes modale-ouvre { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .app-coque .bouton:active:not(:disabled),
+    .app-coque a.carte-chiffre:hover,
+    .app-coque .carte-survol:hover,
+    .app-coque .carte-souleve:hover { transform: none; }
+    .app-coque .menu-deroulant-panneau,
+    .app-coque .app-plus-panneau,
+    dialog.dialogue[open] { animation: none; }
+  }
+}

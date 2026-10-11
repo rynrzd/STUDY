@@ -434,7 +434,7 @@ function ListeComplete({ lignes }: { lignes: readonly LigneDuLot[] }) {
       {visibles.length === 0 ? (
         <p className="meta m-0 mt-4">Aucune ligne dans cet onglet.</p>
       ) : (
-        <div className="mt-4 max-h-[26rem] overflow-auto rounded-[4px] border border-[color:var(--color-bordure)]">
+        <div className="mt-4 max-h-[26rem] overflow-auto rounded-[var(--rayon-m)] border border-[color:var(--color-bordure)]">
           <table className="tableau-r2 min-w-[34rem]">
             <caption className="sr-only">Lignes « {VUES_LIGNES.find((o) => o.cle === vue)?.libelle} » lues dans les fichiers déposés</caption>
             <thead className="sticky top-0">

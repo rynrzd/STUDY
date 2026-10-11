@@ -89,7 +89,7 @@ function Question({ q }: { q: QuestionDeSeance }) {
         {q.reponseAdulte ? <Etiquette ton="succes">Répondue</Etiquette> : <Etiquette ton="attention">En attente</Etiquette>}
       </div>
       {q.reponseAdulte ? (
-        <div className="ml-[52px] rounded-[4px] border-l-[3px] border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)] px-3 py-2 text-[0.9375rem]">
+        <div className="ml-[52px] rounded-[var(--rayon-m)] border-l-[3px] border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)] px-3 py-2 text-[0.9375rem]">
           <p className="m-0 line-clamp-4 whitespace-pre-line">{q.reponseAdulte.texte}</p>
           <p className="meta m-0 mt-1">
             {q.reponseAdulte.auteur} · {dateLisible(q.reponseAdulte.le, { day: "numeric", month: "short" })}

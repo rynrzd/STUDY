@@ -99,8 +99,8 @@ export function OngletResultats({ prof, suivi }: { prof: EvaluationProf; suivi: 
                 </p>
                 <span className="font-bold">{pourcent(q.reussite)}</span>
               </div>
-              <div className="mt-2 h-2 bg-[color:var(--color-survol)]" aria-hidden="true">
-                <div className="h-full bg-[color:var(--color-accent)]" style={{ width: `${Math.round((q.reussite ?? 0) * 100)}%` }} />
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-[color:var(--color-survol)]" aria-hidden="true">
+                <div className="h-full rounded-full bg-[color:var(--color-accent)]" style={{ width: `${Math.round((q.reussite ?? 0) * 100)}%` }} />
               </div>
               <p className="meta m-0 mt-1">
                 {q.corrigees} copie{q.corrigees > 1 ? "s" : ""} corrigée{q.corrigees > 1 ? "s" : ""}
@@ -150,7 +150,7 @@ export function OngletResultats({ prof, suivi }: { prof: EvaluationProf; suivi: 
                       const niveau = niveauMaitrise(r);
                       return (
                         <td key={n.notionId} className="px-1 py-1">
-                          <span className={`grid h-8 min-w-[48px] place-items-center font-bold ${FOND[niveau]}`} title={`${LIBELLES_NIVEAU[niveau]} (${pourcent(r)})`}>
+                          <span className={`grid h-8 min-w-[48px] place-items-center rounded-[var(--rayon-s)] font-bold ${FOND[niveau]}`} title={`${LIBELLES_NIVEAU[niveau]} (${pourcent(r)})`}>
                             {COURT[niveau]}
                           </span>
                         </td>
@@ -185,7 +185,7 @@ export function OngletResultats({ prof, suivi }: { prof: EvaluationProf; suivi: 
                     </span>
                   </span>
                   {avecNote && x.note !== null ? <span className="text-[1.25rem] font-extrabold">{formaterNote(x.note)}</span> : null}
-                  {avecMaitrise && x.niveau ? <span className={`px-2 py-1 text-[0.8125rem] font-bold ${FOND[x.niveau]}`}>{LIBELLES_NIVEAU[x.niveau]}</span> : null}
+                  {avecMaitrise && x.niveau ? <span className={`rounded-full px-3 py-1 text-[0.8125rem] font-bold ${FOND[x.niveau]}`}>{LIBELLES_NIVEAU[x.niveau]}</span> : null}
                 </div>
               </li>
             ))}

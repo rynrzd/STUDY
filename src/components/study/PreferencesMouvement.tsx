@@ -25,7 +25,7 @@ export function PreferencesMouvement() {
         {CHOIX.map((c) => (
           <label
             key={c.valeur}
-            className={`flex cursor-pointer items-start gap-3 rounded-[4px] border px-4 py-3 ${
+            className={`flex cursor-pointer items-start gap-3 rounded-[var(--rayon-m)] border px-4 py-3 ${
               actuelle === c.valeur ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)]"
             }`}
           >

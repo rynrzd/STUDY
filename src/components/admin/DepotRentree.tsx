@@ -132,7 +132,7 @@ export function DepotRentree({ cible }: { cible: "eleves" | "professeurs" }) {
               <button
                 type="button"
                 onClick={() => poser(choisis.filter((autre) => autre !== fichier))}
-                className="shrink-0 rounded-[6px] px-2 py-1 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)] underline underline-offset-2 hover:text-[color:var(--color-encre)]"
+                className="shrink-0 rounded-[var(--rayon-s)] px-2 py-1 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)] underline underline-offset-2 hover:text-[color:var(--color-encre)]"
               >
                 Retirer<span className="sr-only"> {fichier.name}</span>
               </button>

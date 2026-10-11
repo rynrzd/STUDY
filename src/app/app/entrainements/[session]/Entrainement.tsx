@@ -160,7 +160,7 @@ export function Entrainement({
                 const choisi = valeur === String(i);
                 const ton = correction && choisi ? (correction.correct ? "border-[color:var(--color-succes)] bg-[color:var(--color-succes-fond)]" : "border-[color:var(--color-erreur)] bg-[color:var(--color-erreur-fond)]") : choisi ? "border-[color:var(--color-focus)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)]";
                 return (
-                  <label key={i} className={`choix-reponse flex min-h-[48px] cursor-pointer items-center gap-3 rounded-[4px] border px-4 py-3 ${ton}`}>
+                  <label key={i} className={`choix-reponse flex min-h-[48px] cursor-pointer items-center gap-3 rounded-[var(--rayon-m)] border px-4 py-3 ${ton}`}>
                     <input type="radio" name="choix" value={i} checked={choisi} onChange={() => setReponses((r) => ({ ...r, [q.versionId]: String(i) }))} />
                     <span className="flex-1">{c}</span>
                     {/* Jamais la couleur seule : une icône et un mot accompagnent l’état. */}

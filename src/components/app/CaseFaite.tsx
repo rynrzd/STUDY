@@ -56,7 +56,7 @@ export function CaseFaite({
       >
         <span
           aria-hidden="true"
-          className={`grid h-4 w-4 place-items-center rounded-[4px] border ${
+          className={`grid h-4 w-4 place-items-center rounded-[var(--rayon-m)] border ${
             coche
               ? "border-[color:var(--color-succes)] bg-[color:var(--color-succes)] text-white"
               : "border-[color:var(--color-bordure)]"
