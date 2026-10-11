@@ -1,0 +1,66 @@
+/* AvecStudy — expérience mobile des espaces connectés uniquement. */
+@media (max-width: 767px) {
+  .app-coque { --mobile-gouttiere: 18px; }
+  .app-entete {
+    height: 60px;
+    padding-inline: var(--mobile-gouttiere);
+    gap: 6px;
+    background: color-mix(in srgb, var(--color-surface) 96%, transparent);
+    backdrop-filter: blur(12px);
+  }
+  .app-entete .bouton-icone {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 12px;
+  }
+  .app-principal {
+    min-width: 0;
+    padding: 24px var(--mobile-gouttiere) calc(104px + env(safe-area-inset-bottom));
+  }
+  .app-principal > * { min-width: 0; }
+  .app-principal :is(h1, h2, h3) { overflow-wrap: anywhere; }
+  .app-principal h1 { font-size: clamp(1.55rem, 6.4vw, 2rem); line-height: 1.18; letter-spacing: -0.035em; }
+  .app-principal h2 { line-height: 1.3; }
+  .app-principal :is(.carte, .bloc) { border-radius: 16px; }
+  .app-principal :is(input, select, textarea) { max-width: 100%; }
+  .app-principal :is(button, .bouton, input, select, textarea) { font-size: max(16px, 1em); }
+  .app-principal :is(table, pre) { max-width: 100%; }
+  .app-principal :is(table) { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .app-nav-mobile {
+    height: calc(70px + env(safe-area-inset-bottom));
+    padding: 4px 8px env(safe-area-inset-bottom);
+    border-top-color: var(--color-bordure);
+    box-shadow: 0 -4px 20px rgba(41,40,46,.035);
+  }
+  .app-nav-mobile > a,
+  .app-nav-mobile > details > summary {
+    min-width: 0;
+    min-height: 60px;
+    gap: 4px;
+    border-radius: 12px;
+    font-size: .6875rem;
+    font-weight: 650;
+    letter-spacing: -.01em;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .app-nav-mobile > a[aria-current="page"],
+  .app-nav-mobile > details[data-actif="oui"] > summary {
+    background: var(--color-surface-douce);
+    color: var(--color-accent);
+  }
+  .app-plus-panneau {
+    bottom: calc(80px + env(safe-area-inset-bottom));
+    left: 12px;
+    right: 12px;
+    max-height: min(65dvh, 540px);
+    overflow-y: auto;
+    padding: 12px;
+    border-radius: 18px;
+  }
+}
+@media (max-width: 359px) {
+  .app-coque { --mobile-gouttiere: 12px; }
+  .app-nav-mobile { padding-inline: 3px; }
+  .app-nav-mobile > a, .app-nav-mobile > details > summary { font-size: .625rem; }
+}
