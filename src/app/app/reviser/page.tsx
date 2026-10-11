@@ -1,5 +1,6 @@
 import { contexteApp } from "@/lib/v6/contexte";
 import { mesFiches } from "@/lib/v6/fiches";
+import { maProgression } from "@/lib/v6/progression";
 import { suggestionsDeRevision } from "@/lib/v6/revision";
 import { VueReviser } from "./vue";
 
@@ -14,7 +15,11 @@ export const dynamic = "force-dynamic";
 export default async function PageReviser({ searchParams }: { searchParams: Promise<{ erreur?: string }> }) {
   const ctx = await contexteApp();
   const { erreur } = await searchParams;
-  const [fiches, priorites] = await Promise.all([mesFiches(ctx.jeton), suggestionsDeRevision(ctx.jeton, { limite: 5 })]);
+  const [fiches, priorites, progression] = await Promise.all([
+    mesFiches(ctx.jeton),
+    suggestionsDeRevision(ctx.jeton, { limite: 5 }),
+    maProgression(ctx.jeton, ctx.personne.profileId),
+  ]);
 
-  return <VueReviser erreur={erreur} fiches={fiches} priorites={priorites} />;
+  return <VueReviser erreur={erreur} fiches={fiches} priorites={priorites} progression={progression} />;
 }

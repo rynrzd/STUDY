@@ -125,7 +125,35 @@ const ECRANS: Record<string, Ecran> = {
     ),
   },
   A05: { titre: "Recherche", ctx: ELEVE, chemin: "/app/recherche", rendu: () => <Recherche initiale={{ q: "", types: [], classe: "" }} classes={[{ id: F.classe, libelle: "Seconde 2" }]} /> },
-  A06: { titre: "Réviser", ctx: ELEVE, chemin: "/app/reviser", rendu: () => <VueReviser fiches={[...F.fiches]} priorites={{ suggestions: [...F.suggestions], parametres: "" }} /> },
+  A06: {
+    titre: "Réviser",
+    ctx: ELEVE,
+    chemin: "/app/reviser",
+    rendu: () => (
+      <VueReviser
+        fiches={[...F.fiches]}
+        priorites={{ suggestions: [...F.suggestions], parametres: "" }}
+        progression={[
+          {
+            matiere: "Mathématiques",
+            compte: { a_revoir: 1, en_cours: 1, a_decouvrir: 1, consolide: 2, inconnu: 0 },
+            notions: [
+              { id: "n1", notion: "Images et antécédents", statut: "a_revoir", libelleStatut: "À revoir", reussitesRecentes: 1, tentativesRecentes: 4, prochaineRevision: "2026-10-12", rappelsActifs: true },
+              { id: "n2", notion: "Fonction carré", statut: "en_cours", libelleStatut: "En cours", reussitesRecentes: 2, tentativesRecentes: 3, prochaineRevision: "2026-10-14", rappelsActifs: true },
+              { id: "n3", notion: "Fonction inverse", statut: "a_decouvrir", libelleStatut: "À découvrir", reussitesRecentes: 0, tentativesRecentes: 0, prochaineRevision: null, rappelsActifs: true },
+              { id: "n4", notion: "Fonctions affines", statut: "consolide", libelleStatut: "Consolidée", reussitesRecentes: 5, tentativesRecentes: 5, prochaineRevision: null, rappelsActifs: true },
+              { id: "n5", notion: "Vecteurs", statut: "consolide", libelleStatut: "Consolidée", reussitesRecentes: 3, tentativesRecentes: 3, prochaineRevision: null, rappelsActifs: true },
+            ],
+          },
+          {
+            matiere: "Anglais",
+            compte: { a_revoir: 0, en_cours: 1, a_decouvrir: 0, consolide: 0, inconnu: 0 },
+            notions: [{ id: "n6", notion: "Present perfect", statut: "en_cours", libelleStatut: "En cours", reussitesRecentes: 1, tentativesRecentes: 2, prochaineRevision: "2026-10-13", rappelsActifs: false }],
+          },
+        ]}
+      />
+    ),
+  },
   A09: {
     titre: "Carnet d'erreurs",
     ctx: ELEVE,

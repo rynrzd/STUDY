@@ -1,3 +1,5 @@
+import { Progression } from "@/components/study/Progression";
+import type { MatiereSuivie } from "@/lib/v6/progression";
 import Link from "next/link";
 import { BookOpen, ClipboardCheck, FileText, Layers, LifeBuoy, Lightbulb, NotebookText, Sparkles, Target } from "lucide-react";
 import { EnTetePage, Etiquette, EtatVide, ICONE, Ligne, ListeLignes, TuileIcone, dateLisible } from "@/components/study/ui";
@@ -13,7 +15,17 @@ const ACTIVITES = [
 ] as const;
 
 /** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
-export function VueReviser({ erreur, fiches, priorites }: { erreur?: string; fiches: Awaited<ReturnType<typeof mesFiches>>; priorites: Awaited<ReturnType<typeof suggestionsDeRevision>> }) {
+export function VueReviser({
+  erreur,
+  fiches,
+  priorites,
+  progression,
+}: {
+  erreur?: string;
+  fiches: Awaited<ReturnType<typeof mesFiches>>;
+  priorites: Awaited<ReturnType<typeof suggestionsDeRevision>>;
+  progression: readonly MatiereSuivie[] | null;
+}) {
   return (
     <div className="mx-auto max-w-[1100px]">
       <EnTetePage
@@ -77,10 +89,11 @@ export function VueReviser({ erreur, fiches, priorites }: { erreur?: string; fic
           </ListeLignes>
         )}
         <p className="meta m-0 mt-3">
-          Ces propositions combinent les contrôles annoncés, tes réponses récentes et les révisions prévues. Une notion n&apos;est « consolidée »
-          qu&apos;après trois réussites sans aide, sur deux jours et deux exercices différents.
+          Ces propositions combinent les contrôles annoncés, tes réponses récentes et les révisions prévues.
         </p>
       </section>
+
+      <Progression matieres={progression} />
 
       <section aria-labelledby="activites" className="mb-8">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
