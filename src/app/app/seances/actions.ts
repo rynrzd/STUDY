@@ -80,3 +80,37 @@ export async function sEntrainer(donnees: FormData): Promise<void> {
   if (error !== null) redirect("/app/reviser?erreur=entrainement");
   redirect(`/app/entrainements/${String(data)}`);
 }
+
+export interface EtatIncompris {
+  readonly ok: boolean;
+  readonly message: string;
+}
+
+/**
+ * « Je n'ai pas compris ce passage » (0062). Privé : le professeur ne verra
+ * qu'un nombre d'élèves par passage, jamais de nom. La fonction revérifie que
+ * la séance est publiée et lisible par la personne.
+ */
+export async function marquerIncompris(seance: string, extrait: string): Promise<EtatIncompris> {
+  const requestId = idRequete();
+  const texte = extrait.replace(/\s+/g, " ").trim().slice(0, 500);
+  if (!uuid.safeParse(seance).success || texte.length < 3) return { ok: false, message: "Sélectionne au moins quelques mots du cours." };
+  const { jeton } = await contexteApp();
+  const { error } = await clientUtilisateur(jeton).rpc("passage_incompris_marquer", { p_lecon: seance, p_extrait: texte });
+  if (error !== null) {
+    if (/TROP_DE_PASSAGES/.test(error.message)) return { ok: false, message: "Tu as déjà signalé 30 passages sur cette séance." };
+    return { ok: false, message: traduire(error, requestId).message };
+  }
+  revalidatePath(`/app/seances/${seance}`);
+  return { ok: true, message: "Passage signalé. Ton professeur verra qu'il pose problème, sans ton nom." };
+}
+
+/** « C'est compris » : retire le passage de ses signalements (et des nombres du professeur). */
+export async function marquerCompris(donnees: FormData): Promise<void> {
+  const passage = String(donnees.get("passage") ?? "");
+  const seance = String(donnees.get("seance") ?? "");
+  if (!uuid.safeParse(passage).success || !uuid.safeParse(seance).success) return;
+  const { jeton } = await contexteApp();
+  await clientUtilisateur(jeton).rpc("passage_incompris_compris", { p_passage: passage });
+  revalidatePath(`/app/seances/${seance}`);
+}

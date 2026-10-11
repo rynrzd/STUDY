@@ -1,8 +1,9 @@
 "use client";
 
-import { MessageCircleQuestion, NotebookPen } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { noterLecture } from "@/app/app/seances/actions";
+import { CircleHelp, MessageCircleQuestion, NotebookPen } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { marquerIncompris, noterLecture } from "@/app/app/seances/actions";
 
 /**
  * Lecture d'une séance — E03.
@@ -15,15 +16,21 @@ import { noterLecture } from "@/app/app/seances/actions";
 export function LectureSeance({
   seance,
   salonQuestion,
+  incompris = false,
   children,
 }: {
   seance: string;
   /** Lien vers le salon de la matière, s'il est lisible. */
   salonQuestion: string | null;
+  /** Proposer « Je n'ai pas compris » (élève sur une séance publiée). */
+  incompris?: boolean;
   children: React.ReactNode;
 }) {
   const zone = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<{ texte: string; x: number; y: number } | null>(null);
+  const [retour, setRetour] = useState<{ ok: boolean; message: string } | null>(null);
+  const [envoi, demarrer] = useTransition();
+  const router = useRouter();
 
   useEffect(() => {
     void noterLecture(seance).catch(() => undefined);
@@ -65,6 +72,25 @@ export function LectureSeance({
               <MessageCircleQuestion size={16} strokeWidth={1.75} aria-hidden="true" /> Poser une question
             </a>
           ) : null}
+          {incompris ? (
+            <button
+              type="button"
+              className="bouton bouton-discret bouton-compact"
+              disabled={envoi}
+              onClick={() => {
+                const texte = selection.texte;
+                demarrer(async () => {
+                  const r = await marquerIncompris(seance, texte);
+                  setRetour(r);
+                  setSelection(null);
+                  window.getSelection()?.removeAllRanges();
+                  if (r.ok) router.refresh();
+                });
+              }}
+            >
+              <CircleHelp size={16} strokeWidth={1.75} aria-hidden="true" /> Je n&apos;ai pas compris
+            </button>
+          ) : null}
           <button
             type="button"
             className="bouton bouton-discret bouton-compact"
@@ -82,6 +108,11 @@ export function LectureSeance({
             <NotebookPen size={16} strokeWidth={1.75} aria-hidden="true" /> Dans ma note
           </button>
         </div>
+      ) : null}
+      {retour ? (
+        <p role="status" className={`mt-4 rounded-[10px] p-3 text-[0.875rem] ${retour.ok ? "bg-[color:var(--color-rose-clair)]" : "bg-[color:var(--color-erreur-fond)] text-[color:var(--color-erreur)]"}`}>
+          {retour.message}
+        </p>
       ) : null}
     </div>
   );

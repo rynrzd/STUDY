@@ -19,13 +19,13 @@ export function VuePointsBloquants({ points }: { points: readonly PointBloquant[
       <h2 id="points-bloquants" className="titre-section m-0">
         Ce qui bloque vos élèves
       </h2>
-      <p className="meta m-0 mb-3 mt-1">Questions des 30 derniers jours, regroupées par séance. Ouvrez une séance pour répondre une fois à toute la classe.</p>
+      <p className="meta m-0 mb-3 mt-1">Questions et passages « pas compris » des 30 derniers jours, regroupés par séance. Ouvrez une séance pour répondre une fois à toute la classe.</p>
       {points === null ? (
         <p role="alert" className="m-0 text-[color:var(--color-erreur)]">
           Ce regroupement n&apos;a pas pu être calculé.
         </p>
       ) : points.length === 0 ? (
-        <p className="m-0 text-[color:var(--color-encre-faible)]">Aucune question liée à une séance ce mois-ci.</p>
+        <p className="m-0 text-[color:var(--color-encre-faible)]">Aucune question ni passage signalé ce mois-ci.</p>
       ) : (
         <ul className="liste-r2">
           {points.map((p) => (
@@ -37,12 +37,18 @@ export function VuePointsBloquants({ points }: { points: readonly PointBloquant[
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold">{p.titre}</span>
                   <span className="meta block">
-                    {p.questions} question{p.questions > 1 ? "s" : ""} · {p.elevesConcernes} élève{p.elevesConcernes > 1 ? "s" : ""} concerné{p.elevesConcernes > 1 ? "s" : ""}
-                    {p.sansReponse > 0 ? ` · ${p.sansReponse} sans réponse` : " · toutes répondues"}
+                    {[
+                      p.questions > 0 ? `${p.questions} question${p.questions > 1 ? "s" : ""}` : null,
+                      p.passagesIncompris > 0 ? `${p.passagesIncompris} passage${p.passagesIncompris > 1 ? "s" : ""} pas compris` : null,
+                      `${p.elevesConcernes} élève${p.elevesConcernes > 1 ? "s" : ""} concerné${p.elevesConcernes > 1 ? "s" : ""}`,
+                      p.questions > 0 ? (p.sansReponse > 0 ? `${p.sansReponse} sans réponse` : "questions répondues") : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </span>
-                  <span className="mt-1 block truncate text-[0.875rem] text-[color:var(--color-encre-faible)]">« {p.exemple} »</span>
+                  {p.exemple ? <span className="mt-1 block truncate text-[0.875rem] text-[color:var(--color-encre-faible)]">« {p.exemple} »</span> : null}
                 </span>
-                {p.sansReponse > 0 ? <span className="etiquette-etat" data-ton="attention">À reprendre</span> : null}
+                {p.sansReponse > 0 || p.passagesIncompris > 0 ? <span className="etiquette-etat" data-ton="attention">À reprendre</span> : null}
               </Link>
             </li>
           ))}

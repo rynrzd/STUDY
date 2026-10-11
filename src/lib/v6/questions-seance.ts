@@ -2,6 +2,7 @@ import "server-only";
 
 import { clientUtilisateur } from "../supabase-serveur.ts";
 import { nomsAffichables } from "./classe.ts";
+import { resumePassagesIncompris } from "./passages.ts";
 
 /**
  * Les questions de la classe qui citent une séance (salons, `kind =
@@ -99,6 +100,8 @@ export interface PointBloquant {
   readonly questions: number;
   readonly sansReponse: number;
   readonly elevesConcernes: number;
+  /** Passages signalés « pas compris » (0062), en nombre ; 0 si aucun. */
+  readonly passagesIncompris: number;
   readonly exemple: string;
   readonly href: string;
 }
@@ -125,7 +128,8 @@ export async function pointsBloquants(jeton: string, limite = 5): Promise<PointB
     .limit(200);
   if (error !== null) return null;
   const lignes = (data ?? []) as unknown as { id: string; lesson_id: string; body: string; created_at: string; lessons: { title: string } | null }[];
-  if (lignes.length === 0) return [];
+  const passages = await resumePassagesIncompris(jeton);
+  if (lignes.length === 0 && passages.size === 0) return [];
   const compteurs = (await client.rpc("salon_compteurs", { p_messages: lignes.map((l) => l.id) })).data ?? [];
   const parId = new Map((compteurs as { message_id: string; meme_question: number; reponses: number }[]).map((c) => [c.message_id, c]));
 
@@ -141,9 +145,24 @@ export async function pointsBloquants(jeton: string, limite = 5): Promise<PointB
       questions: (actuel?.questions ?? 0) + 1,
       sansReponse: (actuel?.sansReponse ?? 0) + sansReponse,
       elevesConcernes: (actuel?.elevesConcernes ?? 0) + concernes,
+      passagesIncompris: 0,
       exemple: actuel?.exemple ?? l.body,
       href: `/app/seances/${l.lesson_id}?onglet=questions`,
       poids: (actuel?.poids ?? 0) + concernes + sansReponse * 2,
+    });
+  }
+  for (const [seance, r] of passages) {
+    const actuel = parSeance.get(seance);
+    parSeance.set(seance, {
+      seance,
+      titre: actuel?.titre ?? r.titre,
+      questions: actuel?.questions ?? 0,
+      sansReponse: actuel?.sansReponse ?? 0,
+      elevesConcernes: Math.max(actuel?.elevesConcernes ?? 0, r.eleves),
+      passagesIncompris: r.passages,
+      exemple: actuel?.exemple ?? "",
+      href: `/app/seances/${seance}`,
+      poids: (actuel?.poids ?? 0) + r.eleves + r.passages,
     });
   }
   return [...parSeance.values()]

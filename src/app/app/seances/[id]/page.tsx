@@ -1,3 +1,5 @@
+import { MesPassagesIncompris, PassagesIncomprisClasse } from "@/components/study/PassagesIncompris";
+import { mesPassagesIncompris, passagesIncomprisDeLaSeance } from "@/lib/v6/passages";
 import { QuestionsDeLaSeance } from "@/components/study/QuestionsDeLaSeance";
 import { questionsDeLaSeance } from "@/lib/v6/questions-seance";
 import Link from "next/link";
@@ -50,7 +52,7 @@ export default async function PageSeance({
     return <AccesIndisponible retour="/app/cours" />;
   }
 
-  const [exercices, note, reperes, salon, fils, signales, questionsClasse] = await Promise.all([
+  const [exercices, note, reperes, salon, fils, signales, questionsClasse, mesPassages, passagesClasse] = await Promise.all([
     exercicesDeLaSeance(ctx.jeton, id),
     notePersonnelle(ctx.jeton, id),
     reperesDeLaSeance(ctx.jeton, id),
@@ -58,6 +60,8 @@ export default async function PageSeance({
     onglet === "questions" ? filsDeLaSeance(ctx.jeton, id) : Promise.resolve([]),
     onglet === "questions" ? dejaSignales(ctx.jeton) : Promise.resolve(new Set<string>()),
     onglet === "questions" ? questionsDeLaSeance(ctx.jeton, ctx.personne.profileId, id) : Promise.resolve([]),
+    ctx.roles.eleve ? mesPassagesIncompris(ctx.jeton, id) : Promise.resolve(null),
+    ctx.roles.professeur ? passagesIncomprisDeLaSeance(ctx.jeton, id) : Promise.resolve(null),
   ]);
 
   const salonLien =
@@ -89,7 +93,7 @@ export default async function PageSeance({
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0">
           {onglet === "cours" ? (
-            <LectureSeance seance={id} salonQuestion={salonLien}>
+            <LectureSeance seance={id} salonQuestion={salonLien} incompris={ctx.roles.eleve && seance.etat === "publiee" && mesPassages !== null}>
               <article className="panneau lecture max-w-none">
                 <p className="meta m-0 mb-4 flex flex-wrap items-center gap-2">
                   <FileText size={14} strokeWidth={1.75} aria-hidden="true" />
@@ -195,6 +199,8 @@ export default async function PageSeance({
               ) : null}
             </div>
           </section>
+          <PassagesIncomprisClasse passages={passagesClasse} />
+          {ctx.roles.eleve ? <MesPassagesIncompris seance={id} passages={mesPassages} /> : null}
           {ctx.roles.eleve ? (
             <section className="panneau">
               <NotePrivee seance={id} initiale={note.corps} revision={note.revision} />

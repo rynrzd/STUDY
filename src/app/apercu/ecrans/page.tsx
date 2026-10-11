@@ -38,6 +38,7 @@ import { VueBanque } from "@/app/studio/exercices/vue";
 import { VueStudio } from "@/app/studio/vue";
 import { QuestionsDeLaSeance } from "@/components/study/QuestionsDeLaSeance";
 import { VuePointsBloquants } from "@/components/study/PointsBloquants";
+import { MesPassagesIncompris, PassagesIncomprisClasse } from "@/components/study/PassagesIncompris";
 import { Editeur } from "@/components/studio/Editeur";
 import { OngletsSeance } from "@/components/studio/OngletsSeance";
 import { CircleHelp, ClipboardCheck, Library } from "lucide-react";
@@ -119,6 +120,28 @@ const ECRANS: Record<string, Ecran> = {
           questions={[
             { id: "q1", href: "#", salon: "Mathématiques", texte: "Comment lire f(3) sur le graphique ?", auteur: "Lina B.", le: "2026-10-09T15:00:00Z", memeQuestion: 4, moiAussi: false, reponses: 2, reponseAdulte: { texte: "On part de 3 sur l'axe horizontal, on monte jusqu'à la droite, puis on lit la hauteur : 7.", auteur: "Mme Exemple", le: "2026-10-09T17:20:00Z" }, deMoi: false },
             { id: "q2", href: "#", salon: "Mathématiques", texte: "Est-ce qu'une fonction constante est affine ?", auteur: "Hugo F.", le: "2026-10-10T08:10:00Z", memeQuestion: 1, moiAussi: false, reponses: 0, reponseAdulte: null, deMoi: false },
+          ]}
+        />
+      </div>
+    ),
+  },
+  A04p: {
+    titre: "Séance · passages pas compris",
+    ctx: ELEVE,
+    chemin: "/app/cours",
+    rendu: () => (
+      <div className="mx-auto grid max-w-[900px] gap-4 md:grid-cols-2">
+        <MesPassagesIncompris
+          seance="00000000-0000-4000-8000-000000000242"
+          passages={[
+            { id: "00000000-0000-4000-8000-000000000901", extrait: "Le coefficient directeur a indique de combien f(x) augmente quand x augmente de 1." },
+            { id: "00000000-0000-4000-8000-000000000902", extrait: "Pour x = 3, f(3) = 7." },
+          ]}
+        />
+        <PassagesIncomprisClasse
+          passages={[
+            { extrait: "Le coefficient directeur a indique de combien f(x) augmente quand x augmente de 1.", eleves: 6, dernier: "2026-10-10T18:00:00Z" },
+            { extrait: "Pour x = 3, f(3) = 7.", eleves: 2, dernier: "2026-10-09T17:00:00Z" },
           ]}
         />
       </div>
@@ -312,8 +335,8 @@ const ECRANS: Record<string, Ecran> = {
         questions={
           <VuePointsBloquants
             points={[
-              { seance: "s1", titre: "Lire une image sur un graphique", questions: 3, sansReponse: 2, elevesConcernes: 7, exemple: "Pourquoi on part de l'axe horizontal ?", href: "/app/seances/s1?onglet=questions" },
-              { seance: "s2", titre: "La fonction carré", questions: 1, sansReponse: 0, elevesConcernes: 2, exemple: "Le carré d'un négatif est positif ?", href: "/app/seances/s2?onglet=questions" },
+              { seance: "s1", titre: "Lire une image sur un graphique", questions: 3, sansReponse: 2, elevesConcernes: 7, passagesIncompris: 2, exemple: "Pourquoi on part de l'axe horizontal ?", href: "/app/seances/s1?onglet=questions" },
+              { seance: "s2", titre: "La fonction carré", questions: 1, sansReponse: 0, elevesConcernes: 2, passagesIncompris: 0, exemple: "Le carré d'un négatif est positif ?", href: "/app/seances/s2?onglet=questions" },
             ]}
           />
         }
