@@ -5,7 +5,8 @@ import { z } from "zod";
 import { relireDocument, relireReglages } from "@/lib/document-cours";
 import { importer } from "@/lib/studio-documents";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
-import { clientExploitation, clientUtilisateur } from "@/lib/supabase-serveur";
+import { ciblesPublication, destinatairesUniques, publierPlusieurs } from "@/lib/publication";
+import { clientUtilisateur } from "@/lib/supabase-serveur";
 
 /**
  * Actions du Studio — cahier « Refonte fidèle », S02, S12, S14.
@@ -204,18 +205,18 @@ export async function publierDocument(
   donnees: FormData,
 ): Promise<EtatPublication> {
   const session = await professeur();
-  if (session === null) return { etat: "erreur", message: "Session expirée." };
+  if (session === null) return { etat: "erreur", message: "Session expirée. Reconnectez-vous." };
 
   const analyse = z
     .object({
       document: z.string().uuid(),
-      cours: z.string().uuid(),
+      cours: z.array(z.string().uuid()).min(1).max(40),
       titre: z.string().trim().min(1).max(160),
       revue: z.literal("oui"),
     })
     .safeParse({
       document: donnees.get("document"),
-      cours: donnees.get("cours"),
+      cours: donnees.getAll("cours"),
       titre: donnees.get("titre"),
       revue: donnees.get("revue"),
     });
@@ -223,32 +224,54 @@ export async function publierDocument(
   if (!analyse.success) {
     return {
       etat: "erreur",
-      message:
-        "Choisissez une classe et confirmez avoir relu le cours avant de le publier.",
+      message: "Choisissez au moins un cours et confirmez avoir relu le contenu avant de publier.",
     };
   }
 
-  // La publication écrit dans `lessons` : elle passe par la fonction dédiée,
-  // qui revérifie l'affectation en base au moment du clic. Entre l'affichage de
-  // l'écran et maintenant, une affectation a pu être retirée.
-  const { error } = await clientExploitation("administration_des_comptes").rpc("studio_publier", {
-    p_acteur: session.profileId,
-    p_document: analyse.data.document,
-    p_cours: analyse.data.cours,
-    p_titre: analyse.data.titre,
-  });
-
-  if (error !== null) {
-    return {
-      etat: "erreur",
-      message:
-        "La publication a été refusée. Vérifiez que vous enseignez toujours dans cette classe.",
-    };
+  // La base revérifie l'auteur du document et, cible par cible, l'affectation
+  // au moment du clic : une affectation retirée entre l'affichage et
+  // maintenant refuse cette cible seulement.
+  const resultats = await publierPlusieurs(session.profileId, analyse.data.document, analyse.data.cours, analyse.data.titre);
+  if (resultats === null) {
+    return { etat: "erreur", message: "La publication a été refusée. Le document n'est peut-être plus prêt : rouvrez-le puis réessayez." };
   }
+
+  // Les libellés viennent de la base, pas du formulaire.
+  const cibles = (await ciblesPublication(session.profileId, analyse.data.document)) ?? [];
+  const libelles = new Map(cibles.map((c) => [c.id, `${c.matiere} — ${c.cible}`]));
+  const lignes = resultats.map((r) => ({
+    cible: r.cible,
+    libelle: libelles.get(r.cible) ?? "Cours non disponible",
+    resultat: r.resultat,
+    seance: r.seance,
+    raison: r.raison,
+  }));
 
   revalidatePath(`/professeur/studio/${analyse.data.document}`);
+  revalidatePath(`/professeur/studio/${analyse.data.document}/publication`);
   revalidatePath("/app");
   revalidatePath("/app/cours");
 
-  return { etat: "ok", message: "Le cours est publié : la classe y a accès." };
+  const refusees = lignes.filter((l) => l.resultat === "refusee").length;
+  const reussies = lignes.length - refusees;
+  if (refusees === 0) {
+    return { etat: "ok", message: reussies > 1 ? `Publié dans ${reussies} cours.` : "Publié.", resultats: lignes };
+  }
+  return {
+    etat: reussies === 0 ? "erreur" : "partiel",
+    message: `${reussies} publication${reussies > 1 ? "s" : ""} réussie${reussies > 1 ? "s" : ""}, ${refusees} refusée${refusees > 1 ? "s" : ""}. Voir les cours concernés.`,
+    resultats: lignes,
+  };
+}
+
+/**
+ * Élèves distincts derrière la sélection en cours, pour le récapitulatif. Un
+ * élève présent dans une classe et dans un groupe n'est compté qu'une fois.
+ */
+export async function compterDestinataires(cours: string[]): Promise<number | null> {
+  const session = await professeur();
+  if (session === null) return null;
+  const valides = z.array(z.string().uuid()).max(40).safeParse(cours);
+  if (!valides.success) return null;
+  return destinatairesUniques(session.profileId, valides.data);
 }

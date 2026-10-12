@@ -124,6 +124,12 @@ const FONCTIONS = [
   { nom: "etab_groupes", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
   { nom: "etab_groupe_membres", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_groupe: "00000000-0000-4000-8000-000000000000" } },
   { nom: "etab_groupe_cours", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_groupe: "00000000-0000-4000-8000-000000000000" } },
+
+  // 0066 — Publication dans plusieurs cours. Ni publier, ni lire les cibles,
+  // ni compter les eleves d un cours sans compte.
+  { nom: "studio_cibles_publication", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_document: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "studio_destinataires_uniques", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_cours: [] } },
+  { nom: "studio_publier_plusieurs", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_document: "00000000-0000-4000-8000-000000000000", p_cours: [], p_titre: "sonde" } },
 ];
 
 let defauts = 0;

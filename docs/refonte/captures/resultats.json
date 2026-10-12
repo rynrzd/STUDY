@@ -372,6 +372,18 @@
     "ok": true
   },
   {
+    "id": "T06",
+    "chemin": "/apercu/ecrans?ecran=T06",
+    "largeur": 1440,
+    "statut": 200,
+    "debordement": 0,
+    "h1": 0,
+    "canvas": 0,
+    "hauteur": 900,
+    "erreurs": [],
+    "ok": true
+  },
+  {
     "id": "D01",
     "chemin": "/apercu/ecrans?ecran=D01",
     "largeur": 1440,
@@ -1052,6 +1064,18 @@
     "h1": 1,
     "canvas": 0,
     "hauteur": 1088,
+    "erreurs": [],
+    "ok": true
+  },
+  {
+    "id": "T06",
+    "chemin": "/apercu/ecrans?ecran=T06",
+    "largeur": 390,
+    "statut": 200,
+    "debordement": 0,
+    "h1": 0,
+    "canvas": 0,
+    "hauteur": 844,
     "erreurs": [],
     "ok": true
   },

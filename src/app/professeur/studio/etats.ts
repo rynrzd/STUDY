@@ -30,9 +30,24 @@ export interface EtatSauvegarde {
 
 export const ETAT_SAUVEGARDE_INITIAL: EtatSauvegarde = { etat: "vierge" };
 
+/**
+ * Publication dans plusieurs cours — cahier des charges, ch. 14.
+ *
+ * `partiel` existe pour ne jamais annoncer un succès global quand une cible a
+ * été refusée : chaque cours a sa ligne, avec son issue et sa raison.
+ */
+export interface ResultatPublication {
+  readonly cible: string;
+  readonly libelle: string;
+  readonly resultat: "publiee" | "mise_a_jour" | "deja_publiee" | "refusee";
+  readonly seance: string | null;
+  readonly raison: string | null;
+}
+
 export interface EtatPublication {
-  readonly etat: "vierge" | "ok" | "erreur";
+  readonly etat: "vierge" | "ok" | "partiel" | "erreur";
   readonly message?: string;
+  readonly resultats?: readonly ResultatPublication[];
 }
 
 export const ETAT_PUBLICATION_INITIAL: EtatPublication = { etat: "vierge" };

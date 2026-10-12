@@ -6,6 +6,7 @@ import { EtapesImport } from "@/components/admin/EtapesImport";
 import { VerificationRentree } from "@/components/admin/VerificationRentree";
 import { EnTetePage } from "@/components/study/ui";
 import type { ContexteApp } from "@/lib/v6/contexte";
+import { Publication } from "@/components/studio/Publication";
 import { VueClasses } from "@/app/admin/classes/vue";
 import { VueGroupe } from "@/app/admin/groupes/[groupe]/vue";
 import { VueGroupes } from "@/app/admin/groupes/vue";
@@ -405,6 +406,25 @@ const ECRANS: Record<string, Ecran> = {
         difficultes={[]}
         choixSeances={[{ id: F.seancesProf[1].id, libelle: "La fonction inverse — Mathématiques — Seconde 2 (brouillon)" }]}
       />
+    ),
+  },
+  T06: {
+    titre: "Publier dans plusieurs cours",
+    ctx: PROF,
+    chemin: "/professeur/studio/x/publication",
+    rendu: () => (
+      <div className="mx-auto max-w-[420px]">
+        <Publication
+          document="00000000-0000-4000-8000-000000000999"
+          titre="Les suites numériques"
+          cours={[
+            { id: "00000000-0000-4000-8000-000000000901", matiere: "Mathématiques", cible: "Seconde 1", genre: "classe", effectif: 31, dejaPublie: false, versionAJour: false },
+            { id: "00000000-0000-4000-8000-000000000902", matiere: "Mathématiques", cible: "Seconde 2", genre: "classe", effectif: 29, dejaPublie: true, versionAJour: true },
+            { id: "00000000-0000-4000-8000-000000000903", matiere: "Mathématiques", cible: "Spé Maths A", genre: "groupe", effectif: 26, dejaPublie: true, versionAJour: false },
+            { id: "00000000-0000-4000-8000-000000000904", matiere: "Mathématiques", cible: "Première 3", genre: "classe", effectif: 28, dejaPublie: false, versionAJour: false },
+          ]}
+        />
+      </div>
     ),
   },
   T05: { titre: "Ateliers (professeur)", ctx: PROF, chemin: "/app/prof/ateliers", rendu: () => <VueAteliersProf liste={[...F.ateliersProf]} espaces={[{ id: F.coursProf[0].id, libelle: "Mathématiques — Seconde 2" }]} /> },

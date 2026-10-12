@@ -120,6 +120,9 @@ export async function effectifsParClasse(jeton: string): Promise<Map<string, num
   const { data, error } = await clientUtilisateur(jeton)
     .from("class_enrollments")
     .select("class_id")
+    // Effectif courant : une inscription close (départ, changement de classe)
+    // ne compte plus.
+    .is("ends_on", null)
     .limit(2000);
 
   const effectifs = new Map<string, number>();

@@ -3,16 +3,14 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Publication, type CoursPubliable } from "@/components/studio/Publication";
 import { RenduDocument } from "@/components/studio/RenduDocument";
-import { effectifsParClasse } from "@/lib/espace-professeur";
+import { ciblesPublication } from "@/lib/publication";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
-import { coursDuProfesseur } from "@/lib/studio";
 import { document as lireDocument, revision } from "@/lib/studio-documents";
-import { clientUtilisateur } from "@/lib/supabase-serveur";
 
 export const metadata: Metadata = { title: "Publication" };
 
 /**
- * Prêt pour votre classe — S13.
+ * Prêt à publier — S13, cahier des charges ch. 14 (plusieurs cours).
  *
  * L'aperçu à gauche, le choix à droite. Les effectifs viennent de la base, pas
  * d'un nombre écrit à la main : un chiffre faux sur cet écran ferait douter de
@@ -35,20 +33,20 @@ export default async function PagePublication({
   const doc = await lireDocument(jeton, id);
   if (doc === null || doc.revisionId === null) notFound();
 
-  const [courante, cours, effectifs, dejaPubliees] = await Promise.all([
-    revision(jeton, doc.revisionId),
-    coursDuProfesseur(jeton),
-    effectifsParClasse(jeton),
-    lireDejaPubliees(jeton, id),
-  ]);
+  // Les cours et leurs effectifs viennent de la base : seulement ceux où la
+  // personne enseigne aujourd'hui, classes et groupes, élèves réellement inscrits.
+  const [courante, cibles] = await Promise.all([revision(jeton, doc.revisionId), ciblesPublication(personne.profileId, id)]);
 
   if (courante === null) notFound();
 
-  const publiables: CoursPubliable[] = cours.map((entree) => ({
-    id: entree.id,
-    libelle: entree.libelle,
-    effectif: effectifs.get(entree.classe ?? "") ?? 0,
-    dejaPublie: dejaPubliees.has(entree.id),
+  const publiables: CoursPubliable[] = (cibles ?? []).map((c) => ({
+    id: c.id,
+    matiere: c.matiere,
+    cible: c.cible,
+    genre: c.genre,
+    effectif: c.effectif,
+    dejaPublie: c.dejaPublie,
+    versionAJour: c.versionAJour,
   }));
 
   return (
@@ -63,7 +61,7 @@ export default async function PagePublication({
       </p>
 
       <h1 className="mt-4 text-[length:var(--text-h2)] leading-[var(--text-h2--line-height)] tracking-[-0.02em]">
-        Prêt pour votre classe.
+        Prêt à publier.
       </h1>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
@@ -72,7 +70,7 @@ export default async function PagePublication({
         </div>
 
         <aside className="lg:sticky lg:top-24">
-          <Publication document={id} titre={doc.titre} cours={publiables} />
+          <Publication document={id} titre={doc.titre} cours={publiables} lectureEchouee={cibles === null} />
 
           <div className="mt-8 border-t border-[color:var(--color-bordure)] pt-5">
             <h2 className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.08em] text-[color:var(--color-encre-faible)]">
@@ -103,22 +101,5 @@ export default async function PagePublication({
         </aside>
       </div>
     </>
-  );
-}
-
-/** Les cours où ce document est déjà publié : on le signale, on ne l'empêche pas. */
-async function lireDejaPubliees(jeton: string, document: string): Promise<Set<string>> {
-  const { data, error } = await clientUtilisateur(jeton)
-    .from("lessons")
-    .select("teaching_space_id")
-    .eq("origin_studio_document", document)
-    .is("archived_at", null)
-    .limit(40);
-
-  if (error !== null) return new Set();
-  return new Set(
-    ((data ?? []) as unknown as { teaching_space_id: string }[]).map(
-      (ligne) => ligne.teaching_space_id,
-    ),
   );
 }

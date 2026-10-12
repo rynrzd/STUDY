@@ -366,6 +366,27 @@
   .ajout-fiche dt { font-size: 0.8125rem; color: var(--color-encre-faible); }
   .ajout-fiche dd { margin: 2px 0 0; font-weight: 700; font-size: 1.0625rem; overflow-wrap: anywhere; }
 
+  /* Publication dans plusieurs cours (Studio). */
+  .cible-publication {
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer;
+    border: 1.5px solid var(--bordure-douce, var(--color-bordure)); border-radius: var(--rayon-m, 16px);
+    background: var(--color-surface); transition: border-color 140ms ease, background-color 140ms ease;
+  }
+  .cible-publication:hover { border-color: var(--color-bordure-forte); }
+  .cible-publication[data-actif] { border-color: var(--color-accent); background: var(--color-rose-clair); }
+  .cible-publication[data-actif] .picker-coche { background: var(--color-accent); border-color: var(--color-accent); }
+  .cible-publication:has(:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  .recap-publication {
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 12px 14px;
+    border: 1px solid var(--bordure-douce, var(--color-bordure)); border-radius: var(--rayon-m, 16px); background: var(--color-surface); font-size: 0.875rem; color: var(--color-encre-faible);
+  }
+  .resultat-publication {
+    display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: var(--rayon-m, 16px);
+    font-weight: 600; font-size: 0.9375rem; background: var(--color-succes-fond); color: var(--color-succes);
+  }
+  .resultat-publication[data-ton="partiel"] { background: var(--color-attention-fond); color: var(--color-attention); }
+  .resultat-publication[data-ton="erreur"] { background: var(--color-erreur-fond); color: var(--color-erreur); }
+
   /* Sélecteur d'élèves (groupes) : liste scrollable de cases à cocher. */
   .picker-liste {
     max-height: 320px; overflow-y: auto; border: 1px solid var(--bordure-douce, var(--color-bordure));
@@ -419,6 +440,6 @@
     dialog.dialogue[open],
     dialog.dialogue.dialogue-large[open],
     .ajout-succes { animation: none; }
-    .choix-role-coche, .picker-coche, .picker-ligne { transition: none; }
+    .choix-role-coche, .picker-coche, .picker-ligne, .cible-publication { transition: none; }
   }
 }
