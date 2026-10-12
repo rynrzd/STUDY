@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 import { contexteApp } from "@/lib/v6/contexte";
 import type { Annee, Apercu, ClasseAnnee, EleveSansClasse } from "./vue";
-import { VueAnnees } from "./vue";
+import { VueAnnees, type GroupeAReconduire } from "./vue";
 
 export const metadata = { title: "Années scolaires" };
 export const dynamic = "force-dynamic";
@@ -28,13 +28,15 @@ export default async function PageAnnees() {
 
   const classesCourantes = courante ? toutes.filter((c) => c.academic_year_id === courante.id) : [];
   const classesCible = cible ? toutes.filter((c) => c.academic_year_id === cible.id) : [];
-  const [apercu, sansClasse, effectifs] = cible
+  const [apercu, sansClasse, effectifs, groupesAnnee] = cible
     ? await Promise.all([
         client.rpc("annee_apercu", { p_cible: cible.id }),
         client.rpc("annee_eleves_sans_classe", { p_cible: cible.id }),
         client.from("class_enrollments").select("class_id").is("ends_on", null).in("class_id", classesCourantes.map((c) => c.id)),
+        client.rpc("annee_groupes_a_reconduire", { p_cible: cible.id }),
       ])
-    : [null, null, null];
+    : [null, null, null, null];
+  const groupes = (groupesAnnee?.data ?? []) as GroupeAReconduire[];
   const resume = ((apercu?.data ?? []) as Apercu[])[0] ?? null;
   const eleves = (sansClasse?.data ?? []) as EleveSansClasse[];
   const parClasse = new Map<string, number>();
@@ -43,5 +45,5 @@ export default async function PageAnnees() {
   // Étape réelle, déduite de l'état en base (pas d'un paramètre d'adresse).
   const etape = !cible ? 1 : classesCible.length === 0 ? 2 : (resume?.inscriptions_cible ?? 0) === 0 ? 3 : 4;
 
-  return <VueAnnees etape={etape} erreurAnnees={erreurAnnees} courante={courante} cible={cible} classesCourantes={classesCourantes} classesCible={classesCible} debutSuivant={debutSuivant} parClasse={parClasse} resume={resume} eleves={eleves} liste={liste} />;
+  return <VueAnnees etape={etape} erreurAnnees={erreurAnnees} courante={courante} cible={cible} classesCourantes={classesCourantes} classesCible={classesCible} debutSuivant={debutSuivant} parClasse={parClasse} resume={resume} eleves={eleves} liste={liste} groupes={groupes} />;
 }

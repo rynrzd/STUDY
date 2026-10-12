@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Archive } from "lucide-react";
 import { EnTetePage, Encadre, EtatVide, Etapes, Etiquette, Panneau, dateLisible } from "@/components/study/ui";
 import { FormulaireAnnee } from "./FormulaireAnnee";
-import { FormulaireBascule, FormulaireClasse, FormulairePreinscription } from "./Formulaires";
+import { FormulaireBascule, FormulaireClasse, FormulairePreinscription, FormulaireReconduireGroupes } from "./Formulaires";
 
 export interface Annee {
   id: string;
@@ -37,7 +37,18 @@ export interface EleveSansClasse {
 }
 
 /** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
-export function VueAnnees({ etape, erreurAnnees, courante, cible, classesCourantes, classesCible, debutSuivant, parClasse, resume, eleves, liste }: {
+export interface GroupeAReconduire {
+  readonly groupe: string;
+  readonly label: string;
+  readonly kind: string;
+  readonly effectif: number;
+  readonly cours: number;
+  readonly deja_reconduit: boolean;
+}
+
+export function VueAnnees({ etape, erreurAnnees, courante, cible, classesCourantes, classesCible, debutSuivant, parClasse, resume, eleves, liste, groupes = [] }: {
+  /** Groupes de l'année courante, à reconduire ou déjà reconduits (0073). */
+  groupes?: readonly GroupeAReconduire[];
   etape: number;
   erreurAnnees: boolean;
   courante: Annee | null;
@@ -129,6 +140,18 @@ export function VueAnnees({ etape, erreurAnnees, courante, cible, classesCourant
             </Panneau>
           </div>
 
+          {groupes.length > 0 ? (
+            <div className="mt-6">
+              <Panneau titre="3 bis. Reconduire les groupes">
+                <p className="meta m-0 mb-3">
+                  Spécialités, langues, options : le groupe est recréé dans {cible.label} avec le même nom, mais vide — la composition change
+                  d&apos;une année à l&apos;autre et se refait depuis « Groupes ». Relancer ne duplique rien.
+                </p>
+                <FormulaireReconduireGroupes annee={cible.id} groupes={groupes} />
+              </Panneau>
+            </div>
+          ) : null}
+
           <div className="mt-6">
             <Panneau titre={`4. Contrôler et basculer vers ${cible.label}`}>
               {resume === null ? (
@@ -167,6 +190,11 @@ export function VueAnnees({ etape, erreurAnnees, courante, cible, classesCourant
                   <p className="meta m-0 mt-4">
                     Avant de basculer, exportez les listes utiles depuis <Link href="/admin/utilisateurs">Utilisateurs</Link>. L&apos;année quittée
                     est archivée ; ses classes, inscriptions et messages restent en base.
+                  </p>
+                  <p className="meta m-0 mt-2">
+                    Les groupes et les cours de {resume.annee_courante ?? "l'année en cours"} sont archivés eux aussi : leurs élèves n&apos;y ont plus
+                    accès, et on n&apos;y publie plus.
+                    {groupes.some((g) => !g.deja_reconduit) ? " Pensez à reconduire les groupes qui continuent (étape 3 bis)." : ""}
                   </p>
                   <div className="mt-4">
                     {resume.classes_cible === 0 ? (

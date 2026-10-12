@@ -668,6 +668,11 @@ const ECRANS: Record<string, Ecran> = {
         resume={{ annee_courante: "2026-2027", classes_courantes: 2, inscriptions_a_clore: 59, classes_cible: 1, inscriptions_cible: 0, eleves_sans_classe_cible: 2 }}
         eleves={[{ profile_id: "e1", prenom: "Hugo", nom: "Fictif", identifiant: "hugo.fictif", classe_actuelle: "Seconde 2" }]}
         liste={[...F.annees]}
+        groupes={[
+          { groupe: "g1", label: "Spé Maths A", kind: "interclasses", effectif: 26, cours: 1, deja_reconduit: false },
+          { groupe: "g2", label: "Allemand LVB", kind: "interclasses", effectif: 18, cours: 1, deja_reconduit: true },
+          { groupe: "g3", label: "Seconde 2 — TP A", kind: "sous_groupe", effectif: 15, cours: 0, deja_reconduit: false },
+        ]}
       />
     ),
   },

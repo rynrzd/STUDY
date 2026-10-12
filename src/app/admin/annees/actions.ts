@@ -72,3 +72,27 @@ export async function basculer(annee: string, _p: EtatFormulaire, donnees: FormD
   revalidatePath("/admin/annees");
   return { ok: true, message: data === true ? "Bascule effectuée. L'année quittée est archivée ; rien n'a été supprimé." : "Cette année était déjà la courante : rien n'a été modifié." };
 }
+
+/**
+ * Reconduire des groupes dans l'année préparée (0073) : même nom et même
+ * type, jamais les élèves ; cours et professeurs titulaires en option.
+ */
+export async function reconduireGroupes(annee: string, _p: EtatFormulaire, donnees: FormData): Promise<EtatFormulaire> {
+  if (!uuid.safeParse(annee).success) return { ok: false, message: "Année invalide." };
+  const groupes = donnees.getAll("groupe").map(String).filter((g) => uuid.safeParse(g).success);
+  if (groupes.length === 0) return { ok: false, message: "Cochez au moins un groupe." };
+  const avecCours = donnees.get("avec_cours") === "oui";
+  const { data, erreur } = await rpc("annee_reconduire_groupes", { p_cible: annee, p_groupes: groupes, p_avec_cours: avecCours });
+  if (erreur) return { ok: false, message: erreur.message, requestId: erreur.requestId };
+  revalidatePath("/admin/annees");
+  const lignes = (data ?? []) as { resultat: string; cours_reconduits: number }[];
+  const crees = lignes.filter((l) => l.resultat === "cree").length;
+  const cours = lignes.reduce((n, l) => n + (l.cours_reconduits ?? 0), 0);
+  return {
+    ok: true,
+    message:
+      crees === 0
+        ? "Ces groupes existaient déjà dans l'année suivante : rien n'a été dupliqué."
+        : `${crees} groupe${crees > 1 ? "s" : ""} reconduit${crees > 1 ? "s" : ""}${avecCours ? `, ${cours} cours` : ""}. Ajoutez leurs élèves depuis « Groupes » une fois la composition connue.`,
+  };
+}

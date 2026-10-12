@@ -158,6 +158,10 @@ const FONCTIONS = [
   { nom: "etab_membres_comptes", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
   { nom: "etab_logins_pris", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_racine: "a" } },
   { nom: "plier", corps: { p_texte: "sonde" } },
+
+  // 0073 — Rentree : ni lister, ni reconduire les groupes sans compte.
+  { nom: "annee_groupes_a_reconduire", corps: { p_cible: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "annee_reconduire_groupes", corps: { p_cible: "00000000-0000-4000-8000-000000000000", p_groupes: [], p_avec_cours: false } },
 ];
 
 let defauts = 0;
