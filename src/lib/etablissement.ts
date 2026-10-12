@@ -435,3 +435,45 @@ export async function inscrireEleve(
   }
   return true;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Conservation du journal d'audit (0064, risque R-07)                         */
+/* -------------------------------------------------------------------------- */
+
+export const DUREES_CONSERVATION = [12, 36, 60] as const;
+export type DureeConservation = (typeof DUREES_CONSERVATION)[number];
+
+/** La durée de conservation du journal de l'établissement, en mois, ou `null` si la base a refusé. */
+export async function conservationJournal(acteur: string): Promise<DureeConservation | null> {
+  const client = clientExploitation("administration_des_comptes");
+  const { data, error } = await client.rpc("etab_conservation_journal", { p_acteur: acteur });
+  if (error !== null) {
+    console.error(JSON.stringify({ niveau: "erreur", contexte: "etab.conservation_journal", code: error.code }));
+    return null;
+  }
+  return DUREES_CONSERVATION.find((d) => d === data) ?? null;
+}
+
+/** Fixe la durée ; l'établissement est recalculé en base depuis l'adhésion de l'acteur. */
+export async function fixerConservationJournal(acteur: string, mois: DureeConservation): Promise<boolean> {
+  const client = clientExploitation("administration_des_comptes");
+  const { error } = await client.rpc("etab_fixer_conservation_journal", { p_acteur: acteur, p_mois: mois });
+  if (error !== null) {
+    console.error(JSON.stringify({ niveau: "erreur", contexte: "etab.fixer_conservation_journal", code: error.code }));
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Purge du journal à échéance, appelée par la tâche planifiée. La base garde
+ * le dernier mot : une ligne encore due ne peut pas être effacée, même ici.
+ */
+export async function purgerJournalAudit(): Promise<number | null> {
+  const { data, error } = await clientExploitation("tache_planifiee").rpc("purger_journal_audit");
+  if (error !== null) {
+    console.error(JSON.stringify({ niveau: "erreur", contexte: "purge_journal", code: error.code }));
+    return null;
+  }
+  return typeof data === "number" ? data : null;
+}

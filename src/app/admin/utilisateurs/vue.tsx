@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Download, Search, Upload } from "lucide-react";
-import { FormulaireCompte } from "@/components/admin/Formulaires";
+import { AjouterPersonne } from "@/components/admin/AjouterPersonne";
 import { GestesCompte } from "@/components/admin/GestesCompte";
 import { RechercheComptes } from "@/components/admin/RechercheComptes";
 import { EnTetePage, EtatVide, Etiquette, ICONE, OngletsLiens } from "@/components/study/ui";
@@ -14,7 +14,7 @@ const FILTRES = [
 ] as const;
 
 /** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
-export function VueUtilisateurs({ situation, listeMembres, listeClasses, visibles, filtre, classeChoisie, cherche, adresseExport, optionsClasses, moi }: {
+export function VueUtilisateurs({ situation, listeMembres, listeClasses, visibles, filtre, classeChoisie, cherche, adresseExport, optionsClasses, moi, ajouter = null }: {
   situation: NonNullable<Awaited<ReturnType<typeof contexte>>>;
   listeMembres: Awaited<ReturnType<typeof membres>>;
   listeClasses: Awaited<ReturnType<typeof classes>>;
@@ -25,6 +25,8 @@ export function VueUtilisateurs({ situation, listeMembres, listeClasses, visible
   adresseExport: string;
   optionsClasses: readonly { id: string; label: string }[];
   moi: string;
+  /** `?ajouter=eleve|professeur` : la fenêtre d'ajout s'ouvre d'emblée (liens du tableau de bord). */
+  ajouter?: "eleve" | "professeur" | null;
 }) {
   const compte = (cle: string) =>
     listeMembres.filter((m) =>
@@ -43,11 +45,12 @@ export function VueUtilisateurs({ situation, listeMembres, listeClasses, visible
                 n'est pas administrateur de ce lycée. Le fichier ne contient
                 aucun mot de passe : ils ne sont conservés nulle part. */}
             <a href={adresseExport} className="bouton bouton-secondaire">
-              <Download {...ICONE} /> Exporter les accès (CSV)
+              <Download {...ICONE} /> Exporter (CSV)
             </a>
-            <Link href="/admin/import" className="bouton bouton-primaire">
+            <Link href="/admin/import" className="bouton bouton-secondaire">
               <Upload {...ICONE} /> Import de rentrée
             </Link>
+            <AjouterPersonne listeClasses={optionsClasses} roleInitial={ajouter ?? (filtre === "professeur" ? "professeur" : "eleve")} ouvertAuDepart={ajouter !== null} />
           </>
         }
       />
@@ -70,7 +73,8 @@ export function VueUtilisateurs({ situation, listeMembres, listeClasses, visible
         <EtatVide
           icone={Search}
           titre="Aucun compte ne correspond."
-          texte="Changez de filtre ou de recherche, ou créez un compte avec le formulaire ci-dessous. L'import de rentrée reste le chemin le plus rapide pour une classe entière."
+          texte="Changez de filtre ou de recherche, ou ajoutez la personne. Pour une classe entière, l'import de rentrée reste le plus rapide."
+          action={<AjouterPersonne listeClasses={optionsClasses} roleInitial={filtre === "professeur" ? "professeur" : "eleve"} />}
         />
       ) : (
         <div className="overflow-x-auto rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)]">
@@ -132,10 +136,6 @@ export function VueUtilisateurs({ situation, listeMembres, listeClasses, visible
       )}
 
       {visibles.length > 500 ? <p className="meta m-0 mt-3">Les 500 premiers comptes sont affichés. Affinez avec la recherche ou un filtre pour voir les suivants.</p> : null}
-
-      <div className="mt-8" id="creer">
-        <FormulaireCompte listeClasses={optionsClasses} />
-      </div>
     </>
   );
 }

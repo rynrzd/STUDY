@@ -1294,6 +1294,9 @@
 
   /* --- Dialogue ---------------------------------------------------------- */
   .dialogue {
+    /* La remise à zéro de Tailwind met margin: 0 partout ; une boîte modale
+       native ne se centre qu'avec margin: auto. */
+    margin: auto;
     width: min(520px, calc(100vw - 32px));
     max-height: calc(100dvh - 32px);
     padding: 28px;

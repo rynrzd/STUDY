@@ -2,22 +2,24 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { Archive, BookOpen, CircleAlert, CircleCheck, Link2, School } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   affecterUnProfesseur,
-  creerUnCompte,
   creerUneClasse,
   creerUneMatiere,
+  fixerUneConservation,
 } from "@/app/admin/actions";
 import { ETAT_ADMIN_INITIAL, type EtatAdmin } from "@/app/admin/etats";
-import { FicheImprimable } from "./FicheImprimable";
 
 /**
  * Formulaires d'administration — cahier V2, §14.2 à §14.4.
  *
- * Tous suivent la même forme : des champs courts, un seul bouton, et une
- * réponse écrite sous le formulaire. Aucun ne dépend de JavaScript pour
- * fonctionner — `useActionState` améliore l'expérience, il ne la conditionne
- * pas : sans JS, le navigateur poste et la page se recharge avec le résultat.
+ * Tous suivent la même forme : un numéro d'étape, des champs courts, un seul
+ * bouton, et une réponse écrite sous le formulaire. Aucun ne dépend de
+ * JavaScript pour fonctionner — `useActionState` améliore l'expérience, il ne
+ * la conditionne pas : sans JS, le navigateur poste et la page se recharge
+ * avec le résultat.
  */
 
 export interface Option {
@@ -31,29 +33,15 @@ export function FormulaireClasse() {
   const [etat, action] = useActionState<EtatAdmin, FormData>(creerUneClasse, ETAT_ADMIN_INITIAL);
 
   return (
-    <form action={action} className="bloc border border-[color:var(--color-bordure)] p-5">
-      <h2 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
-        Nouvelle classe
-      </h2>
-      <p className="m-0 mt-2 text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-faible)]">
-        Le nom est celui que verront les professeurs et les élèves. Créer deux
-        fois la même classe ne la duplique pas.
-      </p>
-
+    <form action={action} className="panneau flex flex-col">
+      <EnTete numero={1} icone={School} titre="Nouvelle classe" texte="Le nom que verront les professeurs et les élèves. Créer deux fois la même classe ne la duplique pas." />
       <label className="etiquette mt-4" htmlFor="classe-label">
         Nom de la classe
       </label>
-      <input
-        id="classe-label"
-        name="label"
-        type="text"
-        className="champ"
-        placeholder="Seconde 4"
-        required
-        maxLength={80}
-      />
-
-      <Bouton libelle="Créer la classe" />
+      <div className="flex flex-wrap gap-2">
+        <input id="classe-label" name="label" type="text" className="champ min-w-0 flex-1" placeholder="Seconde 4" required maxLength={80} />
+        <Bouton libelle="Créer" />
+      </div>
       <Retour etat={etat} />
     </form>
   );
@@ -65,29 +53,15 @@ export function FormulaireMatiere() {
   const [etat, action] = useActionState<EtatAdmin, FormData>(creerUneMatiere, ETAT_ADMIN_INITIAL);
 
   return (
-    <form action={action} className="bloc border border-[color:var(--color-bordure)] p-5">
-      <h2 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
-        Nouvelle matière
-      </h2>
-      <p className="m-0 mt-2 text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-faible)]">
-        Les matières sont propres à votre établissement : vous gardez vos
-        intitulés.
-      </p>
-
+    <form action={action} className="panneau flex flex-col">
+      <EnTete numero={2} icone={BookOpen} titre="Nouvelle matière" texte="Propres à votre établissement : vous gardez vos intitulés." />
       <label className="etiquette mt-4" htmlFor="matiere-label">
         Nom de la matière
       </label>
-      <input
-        id="matiere-label"
-        name="label"
-        type="text"
-        className="champ"
-        placeholder="Mathématiques"
-        required
-        maxLength={80}
-      />
-
-      <Bouton libelle="Créer la matière" />
+      <div className="flex flex-wrap gap-2">
+        <input id="matiere-label" name="label" type="text" className="champ min-w-0 flex-1" placeholder="Mathématiques" required maxLength={80} />
+        <Bouton libelle="Créer" />
+      </div>
       <Retour etat={etat} />
     </form>
   );
@@ -104,39 +78,34 @@ export function FormulaireAffectation({
   listeClasses: readonly Option[];
   matieres: readonly Option[];
 }) {
-  const [etat, action] = useActionState<EtatAdmin, FormData>(
-    affecterUnProfesseur,
-    ETAT_ADMIN_INITIAL,
-  );
+  const [etat, action] = useActionState<EtatAdmin, FormData>(affecterUnProfesseur, ETAT_ADMIN_INITIAL);
 
-  const incomplet =
-    professeurs.length === 0 || listeClasses.length === 0 || matieres.length === 0;
+  const manque = [
+    professeurs.length === 0 ? "un professeur" : null,
+    listeClasses.length === 0 ? "une classe" : null,
+    matieres.length === 0 ? "une matière" : null,
+  ].filter((x): x is string => x !== null);
 
   return (
-    <form action={action} className="bloc border border-[color:var(--color-bordure)] p-5">
-      <h2 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
-        Affecter un professeur
-      </h2>
-      <p className="m-0 mt-2 max-w-[var(--spacing-lecture)] text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-faible)]">
-        Un professeur, une classe, une matière : c&apos;est ce qui fait apparaître
-        le cours dans son Studio, et les séances publiées chez les élèves de la
-        classe.
-      </p>
+    <form action={action} className="panneau">
+      <EnTete
+        numero={3}
+        icone={Link2}
+        titre="Affecter un professeur"
+        texte="Un professeur, une classe, une matière : le cours apparaît dans son Studio, et les séances publiées chez les élèves de la classe."
+      />
 
-      {incomplet ? (
-        <p className="m-0 mt-4 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
-          Il faut au moins un professeur, une classe et une matière pour créer une
-          affectation.
+      {manque.length > 0 ? (
+        <p className="ajout-identifiant mt-4">
+          Il manque encore {manque.join(", ").replace(/, ([^,]*)$/, " et $1")} pour créer une affectation.
         </p>
       ) : (
-        <>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <Choix nom="professeur" libelle="Professeur" options={professeurs} />
-            <Choix nom="classe" libelle="Classe" options={listeClasses} />
-            <Choix nom="matiere" libelle="Matière" options={matieres} />
-          </div>
+        <div className="mt-4 grid items-end gap-3 md:grid-cols-[1fr_1fr_1fr_auto]">
+          <Choix nom="professeur" libelle="Professeur" options={professeurs} />
+          <Choix nom="classe" libelle="Classe" options={listeClasses} />
+          <Choix nom="matiere" libelle="Matière" options={matieres} />
           <Bouton libelle="Affecter" />
-        </>
+        </div>
       )}
 
       <Retour etat={etat} />
@@ -144,197 +113,64 @@ export function FormulaireAffectation({
   );
 }
 
-/* ------------------------------------------------------------ Compte ----- */
+/* ------------------------------------------------ Conservation journal ----- */
 
-export function FormulaireCompte({ listeClasses }: { listeClasses: readonly Option[] }) {
-  const [etat, action] = useActionState<EtatAdmin, FormData>(creerUnCompte, ETAT_ADMIN_INITIAL);
+const DUREES = [
+  { mois: 12, libelle: "12 mois" },
+  { mois: 36, libelle: "3 ans" },
+  { mois: 60, libelle: "5 ans" },
+] as const;
 
+/** Durée de conservation du journal d'audit (risque R-07), à fixer avec le DPO. */
+export function FormulaireConservation({ actuelle }: { actuelle: number | null }) {
+  const [etat, action] = useActionState<EtatAdmin, FormData>(fixerUneConservation, ETAT_ADMIN_INITIAL);
   return (
-    <div>
-      <form action={action} className="bloc border border-[color:var(--color-bordure)] p-5">
-        <h2 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
-          Nouveau compte
-        </h2>
-        <p className="m-0 mt-2 max-w-[var(--spacing-lecture)] text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-faible)]">
-          Pour un arrivant en cours d&apos;année. L&apos;identifiant de connexion
-          est calculé à partir du nom ; le mot de passe temporaire s&apos;affiche
-          une seule fois, à imprimer et à remettre en main propre.
-        </p>
-
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div>
-            <label className="etiquette" htmlFor="compte-prenom">
-              Prénom
-            </label>
-            <input
-              id="compte-prenom"
-              name="prenom"
-              type="text"
-              className="champ"
-              required
-              maxLength={60}
-              autoComplete="off"
-            />
-          </div>
-          <div>
-            <label className="etiquette" htmlFor="compte-nom">
-              Nom
-            </label>
-            <input
-              id="compte-nom"
-              name="nom"
-              type="text"
-              className="champ"
-              required
-              maxLength={60}
-              autoComplete="off"
-            />
-          </div>
-        </div>
-
-        <fieldset className="mt-4 border-0 p-0">
-          <legend className="etiquette p-0">Rôle</legend>
-          <div className="flex flex-wrap gap-5">
-            <label className="flex items-center gap-2 text-[length:var(--text-tableau)]">
-              <input type="radio" name="role" value="eleve" defaultChecked /> Élève
-            </label>
-            <label className="flex items-center gap-2 text-[length:var(--text-tableau)]">
-              <input type="radio" name="role" value="professeur" /> Professeur
-            </label>
-          </div>
-        </fieldset>
-
-        {listeClasses.length > 0 ? (
-          <div className="mt-4">
-            <label className="etiquette" htmlFor="compte-classe">
-              Classe <span className="font-normal">(obligatoire pour un élève)</span>
-            </label>
-            <select id="compte-classe" name="classe" className="champ" defaultValue="">
-              <option value="">Sans classe</option>
-              {listeClasses.map((classe) => (
-                <option key={classe.id} value={classe.id}>
-                  {classe.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : (
-          <p className="m-0 mt-4 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
-            Aucune classe n&apos;existe encore : créez-en une avant d&apos;ajouter
-            un élève.
-          </p>
-        )}
-
-        <div className="mt-4">
-          <label className="etiquette" htmlFor="compte-email">
-            Adresse professionnelle <span className="font-normal">(professeur, facultatif)</span>
-          </label>
-          <input
-            id="compte-email"
-            name="email"
-            type="email"
-            className="champ"
-            maxLength={120}
-            autoComplete="off"
-          />
-          <p className="aide-champ">
-            Les élèves n&apos;ont pas d&apos;adresse dans AvecStudy : rien ne leur
-            est envoyé par courriel.
+    <form action={action} className="panneau">
+      <div className="flex items-start gap-3">
+        <span className="tuile" aria-hidden="true">
+          <Archive size={20} strokeWidth={1.75} />
+        </span>
+        <div className="min-w-0">
+          <h2 className="titre-bloc m-0 font-bold">Conservation du journal</h2>
+          <p className="meta m-0 mt-1 max-w-[70ch]">
+            Le journal trace les actes d&apos;administration (comptes créés, accès réinitialisés, affectations). Au-delà de cette durée, les lignes sont effacées
+            chaque nuit. Choisissez-la avec le délégué à la protection des données de l&apos;établissement.
           </p>
         </div>
-
-        <Bouton libelle="Créer le compte" />
-        <Retour etat={etat} />
-      </form>
-
-      {etat.etat === "ok" && etat.acces !== undefined ? (
-        <FicheAcces acces={etat.acces} />
-      ) : null}
-    </div>
-  );
-}
-
-/**
- * Fiche d'accès imprimable.
- *
- * Le mot de passe n'existe qu'ici et qu'une fois : il n'est stocké nulle part
- * en clair, et rechargeant la page il aura disparu. C'est volontaire — une
- * liste de mots de passe consultable serait une liste de mots de passe à
- * dérober.
- */
-function FicheAcces({
-  acces,
-}: {
-  acces: {
-    prenom: string;
-    nom: string;
-    role: string;
-    classe: string | null;
-    login: string;
-    motDePasseTemporaire: string;
-  };
-}) {
-  const role = acces.role === "eleve" ? "Élève" : "Professeur";
-
-  return (
-    <>
-      {/* Le document A4, invisible à l'écran et seul visible à l'impression. */}
-      <FicheImprimable
-        prenom={acces.prenom}
-        nom={acces.nom}
-        role={role}
-        classe={acces.classe}
-        login={acces.login}
-        motDePasse={acces.motDePasseTemporaire}
-      />
-
-      <section className="carte mt-6 p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h3 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
-            Fiche d&apos;accès
-          </h3>
-          <p className="m-0 mt-1.5 max-w-[var(--spacing-lecture)] text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-faible)]">
-            À imprimer maintenant et à remettre en main propre. L&apos;impression
-            ne sort qu&apos;une feuille : cette fiche, et rien de la page
-            d&apos;administration. Ce mot de passe ne sera plus affiché.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="bouton bouton-secondaire bouton-compact"
-        >
-          Imprimer
-        </button>
       </div>
-
-      <dl className="m-0 mt-5 grid gap-x-8 gap-y-3 sm:grid-cols-2">
-        <Champ terme="Nom" valeur={`${acces.prenom} ${acces.nom}`} />
-        <Champ terme="Rôle" valeur={role} />
-        {acces.classe === null ? null : <Champ terme="Classe" valeur={acces.classe} />}
-        <Champ terme="Identifiant" valeur={acces.login} mono />
-        <Champ terme="Mot de passe temporaire" valeur={acces.motDePasseTemporaire} mono />
-      </dl>
-      </section>
-    </>
-  );
-}
-
-function Champ({ terme, valeur, mono = false }: { terme: string; valeur: string; mono?: boolean }) {
-  return (
-    <div>
-      <dt className="m-0 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
-        {terme}
-      </dt>
-      <dd className={`m-0 mt-0.5 font-semibold ${mono ? "font-mono text-[1rem]" : ""}`}>
-        {valeur}
-      </dd>
-    </div>
+      <fieldset className="mt-4 border-0 p-0">
+        <legend className="sr-only">Durée de conservation</legend>
+        <div className="flex flex-wrap items-center gap-2">
+          {DUREES.map((d) => (
+            <label key={d.mois} className="puce-cours cursor-pointer gap-2 py-2 text-[0.9375rem]">
+              <input type="radio" name="mois" value={d.mois} defaultChecked={actuelle === d.mois} required />
+              {d.libelle}
+            </label>
+          ))}
+          <Bouton libelle="Enregistrer" />
+        </div>
+      </fieldset>
+      <Retour etat={etat} />
+    </form>
   );
 }
 
 /* -------------------------------------------------------------------------- */
+
+function EnTete({ numero, icone: Icone, titre, texte }: { numero: number; icone: LucideIcon; titre: string; texte: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="tuile" aria-hidden="true">
+        <Icone size={20} strokeWidth={1.75} />
+      </span>
+      <div className="min-w-0">
+        <p className="meta m-0 font-semibold uppercase tracking-[0.06em]">Étape {numero}</p>
+        <h2 className="titre-bloc m-0 font-bold">{titre}</h2>
+        <p className="meta m-0 mt-1 max-w-[62ch]">{texte}</p>
+      </div>
+    </div>
+  );
+}
 
 function Choix({
   nom,
@@ -346,7 +182,7 @@ function Choix({
   options: readonly Option[];
 }) {
   return (
-    <div>
+    <div className="min-w-0">
       <label className="etiquette" htmlFor={`affectation-${nom}`}>
         {libelle}
       </label>
@@ -367,7 +203,7 @@ function Choix({
 function Bouton({ libelle }: { libelle: string }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} className="bouton bouton-rose mt-4">
+    <button type="submit" disabled={pending} className="bouton bouton-primaire">
       {pending ? "…" : libelle}
     </button>
   );
@@ -375,16 +211,16 @@ function Bouton({ libelle }: { libelle: string }) {
 
 function Retour({ etat }: { etat: EtatAdmin }) {
   if (etat.etat === "vierge" || etat.message === undefined) return null;
+  const ok = etat.etat === "ok";
+  const Icone = ok ? CircleCheck : CircleAlert;
   return (
     <p
       role="status"
-      className={`m-0 mt-3 text-[length:var(--text-tableau)] ${
-        etat.etat === "ok"
-          ? "text-[color:var(--color-succes)]"
-          : "text-[color:var(--color-erreur)]"
+      className={`m-0 mt-3 flex items-center gap-2 rounded-[var(--rayon-m)] px-3.5 py-2.5 text-[0.9375rem] font-semibold ${
+        ok ? "bg-[color:var(--color-succes-fond)] text-[color:var(--color-succes)]" : "bg-[color:var(--color-erreur-fond)] text-[color:var(--color-erreur)]"
       }`}
     >
-      {etat.message}
+      <Icone size={18} strokeWidth={1.75} aria-hidden="true" className="shrink-0" /> {etat.message}
     </p>
   );
 }

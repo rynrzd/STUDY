@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { drainer } from "@/lib/travaux";
 import { purgerTentatives } from "@/lib/depot-authentification";
+import { purgerJournalAudit } from "@/lib/etablissement";
 import { secretTacheValide as secretValide } from "@/lib/secret-tache";
 
 /**
@@ -50,10 +51,14 @@ export async function POST(requete: Request) {
   // pièce qui peut elle-même tomber en panne sans bruit.
   const purgees = await purgerTentatives();
 
+  // Le journal d'audit à échéance (0064, risque R-07) : même raison d'être ici
+  // plutôt que dans la file — une durée écrite doit être appliquée quelque part.
+  const journal = await purgerJournalAudit();
+
   const bilan = await drainer({ budgetMs: 8_000, nom: "bff" });
 
   return NextResponse.json(
-    { ...bilan, tentatives_purgees: purgees },
+    { ...bilan, tentatives_purgees: purgees, journal_purge: journal },
     { headers: { "cache-control": "private, no-store" } },
   );
 }

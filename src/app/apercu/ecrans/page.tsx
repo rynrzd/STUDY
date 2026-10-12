@@ -6,6 +6,8 @@ import { EtapesImport } from "@/components/admin/EtapesImport";
 import { VerificationRentree } from "@/components/admin/VerificationRentree";
 import { EnTetePage } from "@/components/study/ui";
 import type { ContexteApp } from "@/lib/v6/contexte";
+import { VueClasses } from "@/app/admin/classes/vue";
+import { VueProfesseurs } from "@/app/admin/professeurs/vue";
 import { VueAdmin } from "@/app/admin/vue";
 import { VueAnnees } from "@/app/admin/annees/vue";
 import { VueRecuperation } from "@/app/admin/recuperation/vue";
@@ -430,6 +432,7 @@ const ECRANS: Record<string, Ecran> = {
         sansProfesseur={[]}
         listeClasses={[...F.classesEtab]}
         imports={F.imports.map((i) => ({ ...i, rapport: { ...i.rapport } }))}
+        conservation={36}
       />
     ),
   },
@@ -482,6 +485,43 @@ const ECRANS: Record<string, Ecran> = {
           />
         </div>
       </>
+    ),
+  },
+  D06: {
+    titre: "Professeurs",
+    ctx: ADMIN,
+    chemin: "/admin/professeurs",
+    rendu: () => {
+      const parProfesseur = new Map<string, { matiere: string; classe: string }[]>();
+      for (const lien of F.affectationsEtab) {
+        if (lien.professeur_id === null) continue;
+        parProfesseur.set(lien.professeur_id, [...(parProfesseur.get(lien.professeur_id) ?? []), { matiere: lien.matiere, classe: lien.classe }]);
+      }
+      const enseignants = F.membresEtab.filter((m) => (m.roles as readonly string[]).includes("professeur")).map((m) => ({ ...m, roles: [...m.roles] }));
+      return (
+        <VueProfesseurs
+          situation={F.situation}
+          enseignants={enseignants}
+          total={enseignants.length}
+          parProfesseur={parProfesseur}
+          coursSansProfesseur={F.affectationsEtab.filter((lien) => lien.professeur_id === null)}
+          cherche=""
+          optionsClasses={F.classesEtab.map((c) => ({ id: c.id, label: c.label }))}
+        />
+      );
+    },
+  },
+  D07: {
+    titre: "Classes et cours",
+    ctx: ADMIN,
+    chemin: "/admin/classes",
+    rendu: () => (
+      <VueClasses
+        listeClasses={[...F.classesEtab]}
+        listeAffectations={[...F.affectationsEtab]}
+        professeurs={F.membresEtab.filter((m) => (m.roles as readonly string[]).includes("professeur")).map((m) => ({ id: m.profile_id, label: `${m.nom} ${m.prenom}` }))}
+        matieres={[...F.matieresEtab]}
+      />
     ),
   },
   D03: { titre: "Récupérations", ctx: ADMIN, chemin: "/admin/recuperation", rendu: () => <VueRecuperation error={null} demandes={[...F.recuperations]} choisie={F.recuperations[0]} /> },

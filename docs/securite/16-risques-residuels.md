@@ -169,6 +169,14 @@ Mais « conservé » n'est pas une durée, et le RGPD demande une durée
 de scolarité plus un an, trois ans, cinq ans — et l'appliquer mécaniquement,
 comme la purge des tentatives de connexion l'est désormais.
 
+> **12 octobre 2026 — réduit** (migration 0064) : chaque établissement choisit
+> 12 mois, 3 ans ou 5 ans depuis son tableau de bord (3 ans par défaut, à
+> confirmer avec son DPO) ; la tâche planifiée efface chaque nuit les lignes
+> échues et laisse une trace de chaque purge. Le déclencheur d'immuabilité garde
+> le dernier mot : aucune mise à jour, et aucune suppression d'une ligne encore
+> due, même par la clé privilégiée. Les lignes sans établissement sont gardées
+> 5 ans. Reste : faire valider la durée par le DPO de chaque établissement.
+
 ---
 
 ## R-08 — Pas d'export complet des données d'un élève en un geste
@@ -204,6 +212,12 @@ C'est le manque le plus structurant qui reste après cet audit. Voir
 
 > **8 octobre 2026** : la sonde `/api/v1/etat` existe (branche `refonte-r2`, non
 > déployée). R-09 reste entier tant qu'aucune sonde externe ne l'interroge.
+
+> **12 octobre 2026** : la sonde répond en production (`200 {"etat":"ok"}`). Une
+> sonde externe est écrite (`.github/workflows/sonde-disponibilite.yml`, toutes les
+> 30 minutes, courriel GitHub en cas d'échec) ; elle ne tourne qu'une fois sur
+> `main`. R-09 est **réduit** à la disponibilité : le taux d'erreur et les
+> balayages de connexion ne préviennent toujours personne.
 
 ---
 

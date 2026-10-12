@@ -108,6 +108,12 @@ const FONCTIONS = [
   { nom: "evaluation_copie_enseignee", corps: {p_copie: "00000000-0000-4000-8000-000000000000"} },
   { nom: "evaluation_ratio", corps: {p_kind: "qcm", p_reponse: {index: 0}, p_attendu: {index: 0}} },
   { nom: "evaluation_normaliser", corps: {p_texte: "sonde"} },
+
+  // 0064 — Conservation du journal d'audit. Ni lire la durée, ni la changer,
+  // ni déclencher la purge : réservé au serveur applicatif.
+  { nom: "purger_journal_audit", corps: {} },
+  { nom: "etab_conservation_journal", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_fixer_conservation_journal", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_mois: 12 } },
 ];
 
 let defauts = 0;

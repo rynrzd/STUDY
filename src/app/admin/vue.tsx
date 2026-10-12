@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { ArrowRight, Building2, ChevronRight, GraduationCap, KeyRound, School, ShieldCheck, Upload, UserPlus, Users } from "lucide-react";
+import { ArrowRight, Building2, ChevronRight, GraduationCap, KeyRound, Link2, Presentation, School, ShieldCheck, Upload, UserPlus, Users } from "lucide-react";
+import { AjouterPersonne } from "@/components/admin/AjouterPersonne";
+import { FormulaireConservation } from "@/components/admin/Formulaires";
 import { CarteChiffre, EnTetePage, Etiquette, ICONE, Ligne, ListeLignes, TuileIcone } from "@/components/study/ui";
 import type { classes, contexte } from "@/lib/etablissement";
 import type { historiqueImports } from "@/lib/lot-rentree";
 
 /** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
-export function VueAdmin({ situation, nbSignalements, nbRecuperations, eleves, enseignants, aActiver, sansProfesseur, listeClasses, imports }: {
+export function VueAdmin({ situation, nbSignalements, nbRecuperations, eleves, enseignants, aActiver, sansProfesseur, listeClasses, imports, conservation = null }: {
   situation: NonNullable<Awaited<ReturnType<typeof contexte>>>;
   nbSignalements: number | null;
   nbRecuperations: number | null;
@@ -15,6 +17,8 @@ export function VueAdmin({ situation, nbSignalements, nbRecuperations, eleves, e
   sansProfesseur: readonly unknown[];
   listeClasses: Awaited<ReturnType<typeof classes>>;
   imports: Awaited<ReturnType<typeof historiqueImports>>;
+  /** Durée de conservation du journal, en mois (0064). */
+  conservation?: number | null;
 }) {
   return (
     <>
@@ -24,12 +28,10 @@ export function VueAdmin({ situation, nbSignalements, nbRecuperations, eleves, e
         sousTitre="Vue d'ensemble de l'établissement."
         actions={
           <>
-            <Link href="/admin/professeurs" className="bouton bouton-secondaire">
-              Professeurs
-            </Link>
-            <Link href="/admin/import" className="bouton bouton-primaire">
+            <Link href="/admin/import" className="bouton bouton-secondaire">
               <Upload {...ICONE} /> Import de rentrée
             </Link>
+            <AjouterPersonne listeClasses={listeClasses.map((classe) => ({ id: classe.id, label: classe.label }))} />
           </>
         }
       />
@@ -59,7 +61,7 @@ export function VueAdmin({ situation, nbSignalements, nbRecuperations, eleves, e
               Votre établissement est vide.
             </h2>
             <p className="m-0 mt-1 max-w-[62ch] text-[color:var(--color-encre-faible)]">
-              Deux chemins : l&apos;import de rentrée crée les classes et les élèves à partir d&apos;un fichier, ou vous créez une classe à la main puis y ajoutez les comptes un par un.
+              Deux chemins : l&apos;import de rentrée crée les classes et les élèves à partir d&apos;un fichier, ou vous créez une classe puis ajoutez les élèves et les professeurs un par un.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -79,10 +81,10 @@ export function VueAdmin({ situation, nbSignalements, nbRecuperations, eleves, e
         </h2>
         <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2 xl:grid-cols-4">
           {[
-            { href: "/admin/import", titre: "Importer des élèves", detail: "Fichier CSV ou XLSX, aperçu avant écriture", Icone: Upload },
-            { href: "/admin/professeurs", titre: "Ajouter des enseignants", detail: "Comptes et affectations", Icone: UserPlus },
-            { href: "/admin/moderation", titre: "Modération", detail: "Signalements de l'établissement", Icone: ShieldCheck },
-            { href: "/admin/recuperation", titre: "Récupération de compte", detail: "Vérifier l'identité, remettre un lien", Icone: KeyRound },
+            { href: "/admin/utilisateurs?ajouter=eleve", titre: "Ajouter un élève", detail: "Un compte, une fiche d'accès à imprimer", Icone: UserPlus },
+            { href: "/admin/utilisateurs?ajouter=professeur", titre: "Ajouter un professeur", detail: "Puis l'affecter à une classe", Icone: Presentation },
+            { href: "/admin/classes", titre: "Classes et cours", detail: "Classes, matières, affectations", Icone: Link2 },
+            { href: "/admin/import", titre: "Import de rentrée", detail: "Toute une classe depuis un fichier CSV ou XLSX", Icone: Upload },
           ].map(({ href, titre, detail, Icone }) => (
             <li key={href}>
               <Link href={href} className="carte-chiffre min-h-0">
@@ -181,6 +183,10 @@ export function VueAdmin({ situation, nbSignalements, nbRecuperations, eleves, e
           </section>
         </>
       ) : null}
+
+      <section className="mt-8" aria-label="Conservation du journal">
+        <FormulaireConservation actuelle={conservation} />
+      </section>
     </>
   );
 }

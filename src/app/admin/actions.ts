@@ -10,6 +10,8 @@ import {
   creerClasse,
   creerCompte,
   creerMatiere,
+  DUREES_CONSERVATION,
+  fixerConservationJournal,
   inscrireEleve,
   membres as listerMembres,
 } from "@/lib/etablissement";
@@ -345,4 +347,25 @@ export async function changerLEtatDUnCompte(
     etat: "ok",
     message: actif ? "Compte réactivé." : "Compte désactivé, sessions fermées.",
   };
+}
+
+/**
+ * Durée de conservation du journal d'audit (risque R-07). Choisie par
+ * l'établissement, avec son DPO, parmi les trois durées que la base accepte.
+ */
+export async function fixerUneConservation(
+  _precedent: EtatAdmin,
+  donnees: FormData,
+): Promise<EtatAdmin> {
+  const acteur = await exigerAdministrateur();
+  const mois = Number(texte(donnees, "mois", 3));
+  const duree = DUREES_CONSERVATION.find((d) => d === mois);
+  if (duree === undefined) {
+    return { etat: "erreur", message: "Choisissez 12, 36 ou 60 mois." };
+  }
+  if (!(await fixerConservationJournal(acteur, duree))) {
+    return { etat: "erreur", message: "La durée n'a pas pu être enregistrée." };
+  }
+  revalidatePath("/admin");
+  return { etat: "ok", message: `Journal conservé ${duree} mois.` };
 }

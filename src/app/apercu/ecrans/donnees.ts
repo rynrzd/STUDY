@@ -138,6 +138,16 @@ export const F = {
     { profile_id: u(341), prenom: "Inès", nom: "Exemple", local_login: "ines.exemple", roles: ["eleve"], account_state: "actif", classe: "Seconde 2" },
     { profile_id: u(342), prenom: "Hugo", nom: "Fictif", local_login: "hugo.fictif", roles: ["eleve"], account_state: "a_activer", classe: "Seconde 2" },
     { profile_id: u(343), prenom: "Claire", nom: "Exemple", local_login: "claire.exemple", roles: ["professeur"], account_state: "actif", classe: null },
+    { profile_id: u(344), prenom: "Marc", nom: "Fictif", local_login: "marc.fictif", roles: ["professeur"], account_state: "a_activer", classe: null },
+  ],
+  matieresEtab: [
+    { id: u(381), label: "Mathématiques" },
+    { id: u(382), label: "Histoire-géographie" },
+  ],
+  affectationsEtab: [
+    { teaching_space_id: u(391), class_id: CLASSE, classe: "Seconde 2", matiere: "Mathématiques", professeur_id: u(343), prenom: "Claire", nom: "Exemple" },
+    { teaching_space_id: u(392), class_id: u(331), classe: "Première 3", matiere: "Mathématiques", professeur_id: u(343), prenom: "Claire", nom: "Exemple" },
+    { teaching_space_id: u(393), class_id: CLASSE, classe: "Seconde 2", matiere: "Histoire-géographie", professeur_id: null, prenom: null, nom: null },
   ],
   imports: [{ id: u(351), kind: "eleves", state: "applique", created_at: "2026-09-01T08:00:00Z", applied_at: "2026-09-01T09:00:00Z", rapport: { cree: 89, existant: 0, erreur: 0 } }],
   recuperations: [

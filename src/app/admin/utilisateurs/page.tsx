@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 export default async function PageUtilisateurs({
   searchParams,
 }: {
-  searchParams: Promise<{ etat?: string; classe?: string; q?: string }>;
+  searchParams: Promise<{ etat?: string; classe?: string; q?: string; ajouter?: string }>;
 }) {
   const personne = await sessionCourante();
   if (personne === null) redirect("/connexion");
@@ -62,6 +62,7 @@ export default async function PageUtilisateurs({
   const adresseExport =
     classeExportee === null ? "/admin/acces" : `/admin/acces?classe=${classeExportee}`;
 
+  const ajouter = parametres.ajouter === "eleve" || parametres.ajouter === "professeur" ? parametres.ajouter : null;
   const moi = personne.profileId;
-  return <VueUtilisateurs situation={situation} listeMembres={listeMembres} listeClasses={listeClasses} visibles={visibles} filtre={filtre} classeChoisie={classeChoisie} cherche={cherche} adresseExport={adresseExport} optionsClasses={optionsClasses} moi={moi} />;
+  return <VueUtilisateurs ajouter={ajouter} situation={situation} listeMembres={listeMembres} listeClasses={listeClasses} visibles={visibles} filtre={filtre} classeChoisie={classeChoisie} cherche={cherche} adresseExport={adresseExport} optionsClasses={optionsClasses} moi={moi} />;
 }
