@@ -32,7 +32,10 @@ export function VueFicheEleve({
   return (
     <>
       <EnTetePage
-        filAriane={[{ href: "/admin/utilisateurs?etat=eleve", libelle: "Élèves" }]}
+        filAriane={[
+          { href: "/admin/utilisateurs", libelle: "Personnes" },
+          { href: "/admin/utilisateurs?etat=eleve", libelle: "Élèves" },
+        ]}
         sourcil="Fiche élève"
         titre={nom}
         sousTitre={

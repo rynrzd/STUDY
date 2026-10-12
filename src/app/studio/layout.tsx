@@ -4,7 +4,7 @@ import { Cadre } from "@/components/app/Cadre";
 import { estEnseignant, sessionCourante } from "@/lib/session-serveur";
 
 export const metadata: Metadata = {
-  title: "Studio",
+  title: "Mes cours",
   robots: { index: false, follow: false },
 };
 
@@ -19,15 +19,6 @@ export const metadata: Metadata = {
  */
 export const dynamic = "force-dynamic";
 
-export const LIENS_PROFESSEUR = [
-  { href: "/professeur", libelle: "Accueil" },
-  { href: "/professeur/classes", libelle: "Mes classes" },
-  { href: "/studio", libelle: "Studio" },
-  { href: "/studio/exercices", libelle: "Banque d’exercices" },
-  { href: "/professeur/devoirs", libelle: "Devoirs" },
-  { href: "/parametres", libelle: "Paramètres" },
-] as const;
-
 export default async function GabaritStudio({ children }: { children: React.ReactNode }) {
   const personne = await sessionCourante();
   if (personne === null) redirect("/connexion");
@@ -35,7 +26,7 @@ export default async function GabaritStudio({ children }: { children: React.Reac
   if (!estEnseignant(personne)) redirect("/app");
 
   return (
-    <Cadre liens={LIENS_PROFESSEUR} personne={personne} contexte={personne.organisation}>
+    <Cadre>
       {children}
     </Cadre>
   );

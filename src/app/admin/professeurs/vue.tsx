@@ -5,6 +5,7 @@ import { AjouterPersonne } from "@/components/admin/AjouterPersonne";
 import { TerminerAffectation } from "@/components/admin/TerminerAffectation";
 import { EnTetePage, EtatVide, Etiquette, ICONE } from "@/components/study/ui";
 import type { affectations, contexte, membres } from "@/lib/etablissement";
+import { RubriquePersonnes } from "@/components/study/Rubriques";
 
 type Membre = Awaited<ReturnType<typeof membres>>[number];
 type Affectation = Awaited<ReturnType<typeof affectations>>[number];
@@ -57,15 +58,13 @@ export function VueProfesseurs({
 
   return (
     <>
+      <RubriquePersonnes actif="/admin/professeurs" />
       <EnTetePage
-        sourcil="Administration"
-        titre="Professeurs"
+        sourcil="Personnes"
+        titre="Professeurs et cours"
         sousTitre={`${total} professeur${total > 1 ? "s" : ""} · ${nbCours} cours affecté${nbCours > 1 ? "s" : ""} dans ${situation.organisation}.`}
         actions={
           <>
-            <Link href="/admin/import" className="bouton bouton-secondaire">
-              <Upload {...ICONE} /> Importer un fichier
-            </Link>
             <AjouterPersonne listeClasses={optionsClasses} roleInitial="professeur" libelle="Ajouter un professeur" />
           </>
         }

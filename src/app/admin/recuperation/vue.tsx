@@ -19,7 +19,7 @@ export interface DemandeRecuperation {
 export function VueRecuperation({ error, demandes, choisie }: { error: unknown | null; demandes: readonly DemandeRecuperation[]; choisie: DemandeRecuperation | null }) {
   return (
     <div className="mx-auto max-w-[1100px]">
-      <EnTetePage sourcil="Administration" titre="Demandes de récupération de compte" sousTitre="Vérifiez l'identité avant de rétablir l'accès." />
+      <EnTetePage sourcil="Administration" titre="Demandes d'accès" sousTitre="Des élèves ou des professeurs qui ne peuvent plus se connecter. Vérifiez l'identité avant de rétablir l'accès." />
       <OngletsLiens etiquette="File" onglets={[{ href: "/admin/recuperation", libelle: "En attente", compte: error === null ? demandes.length : null, actif: true }]} />
       {error !== null ? (
         <p role="alert" className="text-[color:var(--color-erreur)]">

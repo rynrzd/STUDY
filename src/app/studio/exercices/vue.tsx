@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RubriqueCours } from "@/components/study/Rubriques";
 import { ListChecks, Search, Target } from "lucide-react";
 import { EnTetePage, EtatVide, Etiquette, OngletsLiens, Panneau, TuileIcone } from "@/components/study/ui";
 import type { banqueExercices, corrigeDe } from "@/lib/v6/banque";
@@ -37,9 +38,9 @@ export function VueBanque({ p, miens, total, exercices, erreur, ouvert, corrige,
 
   return (
     <div className="mx-auto max-w-[1240px]">
+      <RubriqueCours actif="/studio/exercices" />
       <EnTetePage
-        filAriane={[{ href: "/studio", libelle: "Studio" }]}
-        sourcil="Banque d'exercices"
+        sourcil="Mes cours"
         titre="Réutiliser un exercice"
         sousTitre="Parcourez, filtrez et ajoutez à vos séances les exercices de vos enseignements."
       />
@@ -118,7 +119,7 @@ export function VueBanque({ p, miens, total, exercices, erreur, ouvert, corrige,
           La banque n&apos;a pas pu être chargée. Réessayez dans un instant.
         </p>
       ) : total === 0 ? (
-        <EtatVide icone={Target} titre="Aucun exercice pour l'instant" texte="Créez vos premiers exercices depuis une séance du Studio : ils apparaîtront ici." />
+        <EtatVide icone={Target} titre="Aucun exercice pour l'instant" texte="Créez vos premiers exercices depuis une de vos séances (onglet « Mes séances ») : ils apparaîtront ici." />
       ) : (
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
           <section aria-labelledby="resultats">
@@ -184,7 +185,7 @@ export function VueBanque({ p, miens, total, exercices, erreur, ouvert, corrige,
                 </div>
                 <div className="mt-4">
                   {choixSeances.length === 0 ? (
-                    <p className="meta m-0">Aucune séance disponible : créez-en une dans le Studio.</p>
+                    <p className="meta m-0">Aucune séance disponible : créez-en une dans « Mes séances ».</p>
                   ) : (
                     <AjouterASeance version={ouvert.version} seances={choixSeances} />
                   )}

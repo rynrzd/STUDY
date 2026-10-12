@@ -143,6 +143,10 @@
     font-weight: 700;
   }
   .app-coque .onglets-liens a[aria-current="page"] .nombre { background: #fff; }
+  @media (max-width: 640px) {
+    .app-coque .rubrique .onglets-liens { flex-wrap: wrap; overflow: visible; border-radius: 22px; }
+    .app-coque .rubrique .onglets-liens a { padding: 0 12px; }
+  }
 
   /* --- Menus, panneaux flottants, modales ---------------------------------------- */
   .app-coque .menu-deroulant-panneau {

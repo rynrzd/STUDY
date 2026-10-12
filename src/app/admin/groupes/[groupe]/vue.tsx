@@ -31,6 +31,7 @@ export function VueGroupe({
     <>
       <EnTetePage
         filAriane={[
+          { href: "/admin/classes", libelle: "Classes et groupes" },
           { href: "/admin/groupes", libelle: "Groupes" },
           { href: `/admin/groupes/${groupe.id}`, libelle: groupe.label },
         ]}
@@ -50,7 +51,7 @@ export function VueGroupe({
             </span>
             <div className="min-w-0">
               <p className="m-0 font-bold">Affecter un professeur</p>
-              <p className="meta m-0 mt-1 max-w-[62ch]">Un professeur et une matière ouvrent un cours visible par les seuls membres de ce groupe, dans son Studio.</p>
+              <p className="meta m-0 mt-1 max-w-[62ch]">Un professeur et une matière ouvrent un cours visible par les seuls membres de ce groupe.</p>
             </div>
           </div>
           <div className="mt-4">

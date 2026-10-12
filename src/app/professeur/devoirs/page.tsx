@@ -76,7 +76,7 @@ export default async function PageDevoirsProfesseur() {
   return (
     <>
       <TitreEspace
-        titre="Devoirs"
+        titre="Devoirs et copies"
         sousTitre={
           devoirs.length === 0
             ? undefined

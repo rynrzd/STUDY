@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BookOpen } from "lucide-react";
+import { RubriqueCours } from "@/components/study/Rubriques";
 import { EnTetePage, EtatVide } from "@/components/study/ui";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { chapitresDuCours, coursDuProfesseur, seancesDuCours } from "@/lib/studio";
@@ -28,11 +29,12 @@ export default async function PageStudio({
   if (cours.length === 0) {
     return (
       <>
-        <EnTetePage sourcil="Studio" titre="Préparer mes cours" />
+        <RubriqueCours actif="/studio" />
+        <EnTetePage sourcil="Mes cours" titre="Préparer mes séances" />
         <EtatVide
           icone={BookOpen}
           titre="Aucun cours ne vous est affecté."
-          texte="Le Studio s'ouvre sur les classes et matières que l'administration de votre établissement vous a attribuées. Si cette liste est vide, c'est que l'affectation n'a pas encore été faite."
+          texte="« Mes cours » s'ouvre sur les classes et matières que l'administration de votre établissement vous a attribuées. Si cette liste est vide, c'est que l'affectation n'a pas encore été faite."
           action={
             <Link href="/professeur" className="bouton bouton-secondaire">
               Retour à l&apos;accueil

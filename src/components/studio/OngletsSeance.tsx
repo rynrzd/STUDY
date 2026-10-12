@@ -8,7 +8,7 @@ import { FilAriane, OngletsLiens } from "@/components/study/ui";
 export function OngletsSeance({ seance, titre, actif }: { seance: string; titre: string; actif: "contenu" | "exercices" }) {
   return (
     <div className="mb-6">
-      <FilAriane etapes={[{ href: "/studio", libelle: "Studio" }]} />
+      <FilAriane etapes={[{ href: "/studio", libelle: "Mes cours" }]} />
       <p className="sourcil">Séance</p>
       <h1 className="titre-page m-0 mb-4">{titre}</h1>
       <OngletsLiens

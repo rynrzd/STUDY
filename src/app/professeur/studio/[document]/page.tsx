@@ -100,5 +100,5 @@ export default async function PageMiseEnPage({
 }
 
 function Retour() {
-  return <FilAriane etapes={[{ href: "/professeur/studio", libelle: "Studio" }]} />;
+  return <FilAriane etapes={[{ href: "/studio", libelle: "Mes cours" }, { href: "/professeur/studio", libelle: "Documents importés" }]} />;
 }

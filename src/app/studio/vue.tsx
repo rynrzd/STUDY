@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FilePen, FileText } from "lucide-react";
 import { NouveauChapitre, NouvelleSeance } from "@/components/studio/Creation";
+import { RubriqueCours } from "@/components/study/Rubriques";
 import { EnTetePage, EtatVide, Etiquette, Ligne, ListeLignes } from "@/components/study/ui";
 import type { chapitresDuCours, coursDuProfesseur, seancesDuCours } from "@/lib/studio";
 
@@ -15,15 +16,16 @@ export function VueStudio({ cours, choisi, chapitres, seances, sansChapitre, bro
 }) {
   return (
     <>
+      <RubriqueCours actif="/studio" />
       <EnTetePage
-        sourcil="Studio"
+        sourcil="Mes cours"
         titre={choisi.libelle}
         sousTitre={`${seances.length} séance${seances.length > 1 ? "s" : ""}, dont ${brouillons} brouillon${brouillons > 1 ? "s" : ""}. Un brouillon reste invisible des élèves.`}
         actions={<NouvelleSeance cours={choisi.id} chapitres={chapitres} />}
       />
 
       {cours.length > 1 ? (
-        <nav aria-label="Mes cours" className="mb-6 flex flex-wrap gap-2">
+        <nav aria-label="Choisir un cours" className="mb-6 flex flex-wrap gap-2">
           {cours.map((autre) => (
             <Link key={autre.id} href={`/studio?cours=${autre.id}`} aria-current={autre.id === choisi.id ? "page" : undefined} className="pilule">
               {autre.libelle}

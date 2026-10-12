@@ -4,7 +4,7 @@ import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { mesDocuments } from "@/lib/studio-documents";
 import { VueStudioDocuments } from "./vue";
 
-export const metadata: Metadata = { title: "Studio" };
+export const metadata: Metadata = { title: "Importer un document" };
 
 /**
  * T02 (documents) — Studio d'import (R2). Le dépôt d'abord, la liste

@@ -7,10 +7,8 @@ import {
   ClipboardList,
   Compass,
   FolderKanban,
-  GraduationCap,
   House,
   KeyRound,
-  LayoutDashboard,
   Library,
   LifeBuoy,
   LogOut,
@@ -20,7 +18,6 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
-  Upload,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -42,9 +39,13 @@ import { ReplierBarre } from "./ReplierBarre";
  *
  * Trois espaces, trois navigations, une seule coque :
  * - élève : Accueil, Cours, Réviser, Classe, Agenda (mobile : … Classe, Plus) ;
- * - professeur : Accueil, Classes, Cours, Studio, Agenda ;
- * - administration : Vue d'ensemble, Personnes, Classes, Demandes,
- *   Modération, Années scolaires.
+ * - professeur : Accueil, Mes classes, Mes cours, Devoirs et copies, Agenda ;
+ * - administration : Accueil, Personnes, Classes et groupes, Années
+ *   scolaires, Demandes d'accès.
+ *
+ * Réglages et déconnexion sont dans le menu du compte (en bas de la barre),
+ * la messagerie et les notifications en haut à droite : ils ne doublent pas
+ * le menu.
  *
  * L'espace affiché se déduit du chemin, et n'est proposé que si le rôle est
  * vérifié en base (`ctx.roles`). Un compte à plusieurs capacités change
@@ -74,9 +75,7 @@ function espaceDe(ctx: ContexteApp): Espace {
   return "admin";
 }
 
-function navigation(ctx: ContexteApp, espace: Espace): { principales: Destination[]; secondaires: Destination[] } {
-  const messagerie: Destination = { href: "/app/messagerie", libelle: "Messagerie", icone: MessageCircle, compteur: ctx.nonLus.messages, aussi: ["/app/demandes"] };
-  const reglages: Destination = { href: "/app/reglages", libelle: "Réglages", icone: Settings, aussi: ["/parametres"] };
+function navigation(espace: Espace): { principales: Destination[]; secondaires: Destination[] } {
   const aide: Destination = { href: "/aide", libelle: "Aide", icone: LifeBuoy };
 
   if (espace === "eleve") {
@@ -93,42 +92,40 @@ function navigation(ctx: ContexteApp, espace: Espace): { principales: Destinatio
         { href: "/app/projets", libelle: "Projets", icone: FolderKanban },
         { href: "/app/orientation", libelle: "Orientation", icone: Compass },
         { href: "/app/ateliers", libelle: "Ateliers", icone: NotebookPen },
-        messagerie,
         aide,
-        reglages,
       ],
     };
   }
   if (espace === "professeur") {
+    // Une entrée par geste du métier. « Mes cours » réunit ce qui était
+    // éparpillé (séances, import d'un document, banque d'exercices) : ses
+    // pages portent les mêmes onglets (Rubriques.tsx).
     return {
       principales: [
         { href: "/professeur", libelle: "Accueil", icone: House, exact: true },
-        { href: "/professeur/classes", libelle: "Classes", icone: Users, aussi: ["/app/classe", "/app/classes"] },
-        { href: "/studio", libelle: "Cours", icone: BookOpen, aussi: ["/professeur/devoirs"] },
-        { href: "/professeur/studio", libelle: "Studio", icone: GraduationCap, aussi: ["/studio/exercices", "/app/prof"] },
+        { href: "/professeur/classes", libelle: "Mes classes", court: "Classes", icone: Users, aussi: ["/app/classe", "/app/classes"] },
+        { href: "/studio", libelle: "Mes cours", court: "Cours", icone: BookOpen, aussi: ["/professeur/studio", "/studio/exercices"] },
+        { href: "/professeur/devoirs", libelle: "Devoirs et copies", court: "Devoirs", icone: ClipboardList },
         { href: "/app/agenda", libelle: "Agenda", icone: CalendarDays },
       ],
       secondaires: [
         { href: "/professeur/evaluations", libelle: "Évaluations", court: "Évals", icone: ClipboardCheck },
-        { href: "/studio/exercices", libelle: "Banque d’exercices", court: "Exercices", icone: ClipboardList },
-        { href: "/app/prof/ateliers", libelle: "Ateliers", icone: Library },
-        { href: "/professeur/devoirs", libelle: "Devoirs et copies", court: "Copies", icone: ClipboardList },
-        messagerie,
+        { href: "/app/prof/ateliers", libelle: "Ateliers", icone: Library, aussi: ["/app/prof"] },
         aide,
-        reglages,
       ],
     };
   }
+  // Cinq entrées : les mêmes mots que sur l'accueil. Professeurs et import
+  // sont des onglets de « Personnes », groupes un onglet de « Classes ».
   return {
     principales: [
-      { href: "/admin", libelle: "Vue d’ensemble", court: "Vue", icone: LayoutDashboard, exact: true },
-      { href: "/admin/utilisateurs", libelle: "Personnes", icone: Users, aussi: ["/admin/professeurs", "/admin/import"] },
-      { href: "/admin/classes", libelle: "Classes", icone: BookOpen },
-      { href: "/admin/recuperation", libelle: "Demandes", icone: KeyRound },
-      { href: "/admin/moderation", libelle: "Modération", icone: ShieldCheck },
+      { href: "/admin", libelle: "Accueil", icone: House, exact: true },
+      { href: "/admin/utilisateurs", libelle: "Personnes", icone: Users, aussi: ["/admin/professeurs", "/admin/import", "/admin/eleves", "/admin/acces"] },
+      { href: "/admin/classes", libelle: "Classes et groupes", court: "Classes", icone: BookOpen, aussi: ["/admin/groupes"] },
       { href: "/admin/annees", libelle: "Années scolaires", court: "Années", icone: CalendarDays },
+      { href: "/admin/recuperation", libelle: "Demandes d’accès", court: "Demandes", icone: KeyRound },
     ],
-    secondaires: [{ href: "/admin/import", libelle: "Importer des élèves", court: "Import", icone: Upload }, aide, reglages],
+    secondaires: [{ href: "/admin/moderation", libelle: "Modération", icone: ShieldCheck }, aide],
   };
 }
 
@@ -188,7 +185,7 @@ export async function Coque({ ctx, children }: { ctx: ContexteApp; children: Rea
   // Barre latérale repliée ou non : préférence d'affichage, lue ici pour éviter tout saut au chargement.
   const repliee = (await cookies()).get(COOKIE_BARRE)?.value === "repliee";
   const espace = espaceDe(ctx);
-  const { principales, secondaires } = navigation(ctx, espace);
+  const { principales, secondaires } = navigation(espace);
   const espaces = espacesDisponibles(ctx);
   const { personne } = ctx;
   const sigle = initiales(personne.prenom, personne.nom);

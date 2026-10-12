@@ -3,13 +3,15 @@ import { ArrowRight, Layers, Users } from "lucide-react";
 import { CreerGroupe } from "@/components/admin/GroupeFormulaires";
 import { EnTetePage, EtatVide } from "@/components/study/ui";
 import type { GroupeEtab } from "@/lib/etablissement";
+import { RubriqueClasses } from "@/components/study/Rubriques";
 
 /** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
 export function VueGroupes({ liste }: { liste: readonly GroupeEtab[] }) {
   return (
     <>
+      <RubriqueClasses actif="/admin/groupes" />
       <EnTetePage
-        sourcil="Administration"
+        sourcil="Classes et groupes"
         titre="Groupes pédagogiques"
         sousTitre="Spécialités, langues, options, demi-groupes : un groupe réunit des élèves choisis, de plusieurs classes si besoin. Sa composition ne touche pas la classe principale des élèves."
       />

@@ -3,6 +3,7 @@ import { AjouterPersonne } from "@/components/admin/AjouterPersonne";
 import { FormulaireAffectation, FormulaireClasse, FormulaireMatiere } from "@/components/admin/Formulaires";
 import { EnTetePage, EtatVide } from "@/components/study/ui";
 import type { affectations, classes } from "@/lib/etablissement";
+import { RubriqueClasses } from "@/components/study/Rubriques";
 
 type Classe = Awaited<ReturnType<typeof classes>>[number];
 type Affectation = Awaited<ReturnType<typeof affectations>>[number];
@@ -36,10 +37,11 @@ export function VueClasses({
 
   return (
     <>
+      <RubriqueClasses actif="/admin/classes" />
       <EnTetePage
-        sourcil="Administration"
+        sourcil="Classes et groupes"
         titre="Classes et cours"
-        sousTitre="Un cours s'ouvre en trois étapes : une classe, une matière, puis le professeur qui l'enseigne. Il apparaît alors dans son Studio et chez les élèves."
+        sousTitre="Un cours s'ouvre en trois étapes : une classe, une matière, puis le professeur qui l'enseigne. Il apparaît alors dans « Mes cours » du professeur et chez les élèves."
         actions={<AjouterPersonne listeClasses={optionsClasses} libelle="Ajouter un élève ou un prof" variante="secondaire" />}
       />
 

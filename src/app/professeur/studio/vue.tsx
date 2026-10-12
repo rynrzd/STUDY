@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, FileCheck, FilePen, FileText, FileUp } from "lucide-react";
 import { Depot } from "@/components/studio/Depot";
+import { RubriqueCours } from "@/components/study/Rubriques";
 import { EnTetePage, EtatVide, Etiquette, Ligne, ListeLignes, TuileIcone, type Ton } from "@/components/study/ui";
 import type { DocumentStudio, mesDocuments } from "@/lib/studio-documents";
 
@@ -16,7 +17,8 @@ const ETATS: Record<DocumentStudio["etat"], { libelle: string; ton: Ton; action:
 export function VueStudioDocuments({ documents }: { documents: Awaited<ReturnType<typeof mesDocuments>> }) {
   return (
     <>
-      <EnTetePage sourcil="Studio" titre="Vos cours, bien présentés." sousTitre="Importez votre document. Gardez le contenu, choisissez la présentation." />
+      <RubriqueCours actif="/professeur/studio" />
+      <EnTetePage sourcil="Mes cours" titre="Importer un document" sousTitre="Un PDF ou un Word que vous avez déjà : vous le gardez tel quel, ou vous le transformez en séance modifiable." />
 
       {/* Deux façons de distribuer un PDF, nommées comme telles (cahier des
           charges ch. 12, PDF-01 et CONV-01) : rien n'est converti sans que le
@@ -33,7 +35,7 @@ export function VueStudioDocuments({ documents }: { documents: Awaited<ReturnTyp
             </span>
             <span className="mt-2 font-bold">Garder mon PDF tel quel</span>
             <span className="meta">
-              Formules, schémas, mise en page : rien ne bouge. Dans « Cours », ouvrez une séance et ajoutez un bloc « Document » : vos élèves le lisent directement dans la séance, ou le téléchargent.
+              Formules, schémas, mise en page : rien ne bouge. Dans « Mes séances », ouvrez une séance et ajoutez un bloc « Document » : vos élèves le lisent directement dans la séance, ou le téléchargent.
             </span>
             <span className="mt-1 inline-flex items-center gap-1 text-[0.875rem] font-semibold text-[color:var(--color-accent)]">
               Aller à mes séances <ArrowRight size={16} strokeWidth={1.75} aria-hidden="true" />

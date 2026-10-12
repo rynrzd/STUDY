@@ -9,7 +9,7 @@ import { Barre, ListeEnAttente } from "@/components/app/Chargement";
 export default function Chargement() {
   return (
     <div role="status" aria-busy="true">
-      <span className="sr-only">Chargement du Studio.</span>
+      <span className="sr-only">Chargement de vos documents.</span>
 
       <Barre largeur="min(22rem, 70%)" hauteur="1.75rem" />
       <Barre largeur="min(28rem, 85%)" hauteur="1rem" className="mt-3" />

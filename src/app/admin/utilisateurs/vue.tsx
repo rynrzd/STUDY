@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Download, Search, Upload } from "lucide-react";
+import { Download, Search } from "lucide-react";
 import { AjouterPersonne } from "@/components/admin/AjouterPersonne";
 import { GestesCompte } from "@/components/admin/GestesCompte";
 import { RechercheComptes } from "@/components/admin/RechercheComptes";
 import { EnTetePage, EtatVide, Etiquette, ICONE, OngletsLiens } from "@/components/study/ui";
 import type { ComptesMembres, classes, contexte, membres } from "@/lib/etablissement";
+import { RubriquePersonnes } from "@/components/study/Rubriques";
 
 const FILTRES = [
   { cle: "", libelle: "Tous" },
@@ -42,9 +43,10 @@ export function VueUtilisateurs({ situation, comptes, listeClasses, visibles, to
 
   return (
     <>
+      <RubriquePersonnes actif="/admin/utilisateurs" />
       <EnTetePage
-        sourcil="Administration"
-        titre="Personnes"
+        sourcil="Personnes"
+        titre="Tous les comptes"
         sousTitre={`${comptes === null ? "" : `${comptes.tous} compte${comptes.tous > 1 ? "s" : ""} dans `}${situation.organisation}. Aucun mot de passe n'est affiché ici.`}
         actions={
           <>
@@ -54,9 +56,6 @@ export function VueUtilisateurs({ situation, comptes, listeClasses, visibles, to
             <a href={adresseExport} className="bouton bouton-secondaire">
               <Download {...ICONE} /> Exporter (CSV)
             </a>
-            <Link href="/admin/import" className="bouton bouton-secondaire">
-              <Upload {...ICONE} /> Import de rentrée
-            </Link>
             <AjouterPersonne listeClasses={optionsClasses} roleInitial={ajouter ?? (filtre === "professeur" ? "professeur" : "eleve")} ouvertAuDepart={ajouter !== null} />
           </>
         }

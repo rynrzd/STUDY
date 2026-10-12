@@ -92,7 +92,7 @@ export function FormulaireAffectation({
         numero={3}
         icone={Link2}
         titre="Affecter un professeur"
-        texte="Un professeur, une classe, une matière : le cours apparaît dans son Studio, et les séances publiées chez les élèves de la classe."
+        texte="Un professeur, une classe, une matière : le cours apparaît dans « Mes cours » du professeur, et les séances publiées chez les élèves de la classe."
       />
 
       {manque.length > 0 ? (

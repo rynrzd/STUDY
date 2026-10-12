@@ -14,7 +14,8 @@ export function VueVersions({ document, titre, versions }: { document: string; t
     <>
       <EnTetePage
         filAriane={[
-          { href: "/professeur/studio", libelle: "Studio" },
+          { href: "/studio", libelle: "Mes cours" },
+          { href: "/professeur/studio", libelle: "Documents importés" },
           { href: `/professeur/studio/${document}`, libelle: titre },
         ]}
         sourcil="Historique"

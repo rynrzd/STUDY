@@ -17,7 +17,7 @@ interface Option {
 
 const ROLES: readonly { valeur: Role; titre: string; detail: string; Icone: typeof GraduationCap }[] = [
   { valeur: "eleve", titre: "Un élève", detail: "Inscrit dans une classe, il retrouve les séances publiées.", Icone: GraduationCap },
-  { valeur: "professeur", titre: "Un professeur", detail: "Il prépare et publie ses cours dans le Studio.", Icone: Presentation },
+  { valeur: "professeur", titre: "Un professeur", detail: "Il prépare et publie ses cours pour ses classes.", Icone: Presentation },
 ];
 
 /**
@@ -253,7 +253,7 @@ function Contenu({
             Adresse professionnelle <span className="font-normal text-[color:var(--color-encre-faible)]">(facultatif)</span>
           </label>
           <input id="ajout-email" name="email" type="email" className="champ" maxLength={120} autoComplete="off" placeholder="prenom.nom@ac-academie.fr" />
-          <p className="aide-champ">Ensuite, affectez-le à une classe et une matière : c&apos;est ce qui ouvre son Studio.</p>
+          <p className="aide-champ">Ensuite, affectez-le à une classe et une matière : c&apos;est ce qui lui ouvre ce cours.</p>
         </div>
       )}
 

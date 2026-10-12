@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, ClipboardCheck, FilePen, FileText, MessageCircleQuestion, Plus, type LucideIcon } from "lucide-react";
+import { CalendarDays, ClipboardCheck, ClipboardList, FilePen, FileText, FileUp, MessageCircleQuestion, Plus, type LucideIcon } from "lucide-react";
 import { EnTetePage, Etiquette, ICONE, Ligne, ListeLignes, TuileIcone, dateLisible } from "@/components/study/ui";
 import type { devoirsDuProfesseur, seancesDuProfesseur } from "@/lib/espace-professeur";
 import { echeanceLisible } from "@/lib/echeances";
@@ -29,7 +29,7 @@ export function VueAccueilProfesseur({ prenom, organisation, tableau, priorites,
         sousTitre="Ce qui attend une réponse, ce qui reste à préparer."
         actions={
           <Link href="/studio" className="bouton bouton-primaire">
-            <Plus {...ICONE} /> Créer un cours
+            <Plus {...ICONE} /> Préparer une séance
           </Link>
         }
       />
@@ -39,6 +39,33 @@ export function VueAccueilProfesseur({ prenom, organisation, tableau, priorites,
           Certaines données n&apos;ont pas pu être chargées. Les compteurs peuvent être incomplets.
         </p>
       ) : null}
+
+      {/* Les quatre gestes du métier, nommés comme dans le menu : on part
+          d'ici sans avoir à savoir où chaque chose se range. */}
+      <section aria-labelledby="que-faire" className="mb-6">
+        <h2 id="que-faire" className="titre-section mb-3">
+          Que voulez-vous faire ?
+        </h2>
+        <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            { href: "/studio", titre: "Préparer une séance", detail: "Écrire, ajouter un document, publier", Icone: FilePen, n: null },
+            { href: "/professeur/studio", titre: "Importer un document", detail: "Un PDF ou un Word que vous avez déjà", Icone: FileUp, n: null },
+            { href: "/professeur/devoirs", titre: "Corriger les copies", detail: "Devoirs rendus en attente de retour", Icone: ClipboardCheck, n: tableau.copiesAEvaluer },
+            { href: "/professeur/evaluations", titre: "Créer une évaluation", detail: "Questionnaire ou contrôle en ligne", Icone: ClipboardList, n: null },
+          ].map(({ href, titre, detail, Icone, n }) => (
+            <li key={href}>
+              <Link href={href} className="carte-chiffre carte-souleve min-h-0">
+                <span className="flex items-center justify-between gap-2">
+                  <TuileIcone icone={Icone} />
+                  {n ? <span className="nombre">{n}</span> : null}
+                </span>
+                <span className="font-bold">{titre}</span>
+                <span className="meta">{detail}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {/* Bento : la priorité en grande carte, le reste autour, chaque classe en tuile. */}
       <div className="bento">
@@ -104,7 +131,7 @@ export function VueAccueilProfesseur({ prenom, organisation, tableau, priorites,
             Aujourd&apos;hui
           </h2>
           {aujourdhui.length === 0 ? (
-            <p className="m-0 text-[color:var(--color-encre-faible)]">Aucune séance n&apos;est datée d&apos;aujourd&apos;hui. Vous pouvez en préparer une pour un autre jour depuis le Studio.</p>
+            <p className="m-0 text-[color:var(--color-encre-faible)]">Aucune séance n&apos;est datée d&apos;aujourd&apos;hui. Vous pouvez en préparer une pour un autre jour depuis « Mes cours ».</p>
           ) : (
             <ListeLignes>
               {aujourdhui.map((seance) => (

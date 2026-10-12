@@ -5,6 +5,7 @@ import { DepotRentree } from "@/components/admin/DepotRentree";
 import { contexte } from "@/lib/etablissement";
 import { historiqueImports } from "@/lib/lot-rentree";
 import { sessionCourante } from "@/lib/session-serveur";
+import { RubriquePersonnes } from "@/components/study/Rubriques";
 
 /**
  * Assistant de rentrée — le dépôt (cahier V5, §5.1).
@@ -28,7 +29,8 @@ export default async function PageImport() {
 
   return (
     <div className="max-w-[72rem]">
-      <p className="sourcil">Administration</p>
+      <RubriquePersonnes actif="/admin/import" />
+      <p className="sourcil">Personnes</p>
       <h1 className="titre-page m-0">
         Import de rentrée
       </h1>

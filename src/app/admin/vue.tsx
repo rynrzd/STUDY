@@ -39,7 +39,7 @@ export function VueAdmin({ situation, nbSignalements, nbRecuperations, nbEleves,
 
       <section aria-label="Chiffres de l'établissement" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <CarteChiffre icone={Users} libelle="Élèves" valeur={nbEleves ?? "—"} detail={nbAActiver === null ? "—" : `${nbAActiver} compte${nbAActiver > 1 ? "s" : ""} à activer`} href="/admin/utilisateurs" />
-        <CarteChiffre icone={School} libelle="Classes" valeur={listeClasses.length} detail="Groupes créés" href="/admin/classes" />
+        <CarteChiffre icone={School} libelle="Classes" valeur={listeClasses.length} detail="Classes de l'année" href="/admin/classes" />
         <CarteChiffre icone={GraduationCap} libelle="Enseignants" valeur={nbEnseignants ?? "—"} detail="Comptes enseignants" href="/admin/professeurs" />
         {/* Demandes en attente : compteurs réels ; « — » si la lecture est refusée (second facteur non validé). */}
         <div className="carte-chiffre">
@@ -78,7 +78,7 @@ export function VueAdmin({ situation, nbSignalements, nbRecuperations, nbEleves,
 
       <section className="mt-8" aria-labelledby="acces-rapides">
         <h2 id="acces-rapides" className="titre-section mb-3">
-          Accès rapides
+          Que voulez-vous faire ?
         </h2>
         <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2 xl:grid-cols-4">
           {[
@@ -119,7 +119,7 @@ export function VueAdmin({ situation, nbSignalements, nbRecuperations, nbEleves,
                     href="/admin/classes"
                     icone={GraduationCap}
                     titre={`${sansProfesseur.length} cours sans professeur`}
-                    detail="Un cours sans professeur affecté n'apparaît dans aucun Studio : personne ne peut y publier de séance."
+                    detail="Un cours sans professeur affecté n'apparaît chez aucun professeur : personne ne peut y publier de séance."
                   />
                 ) : null}
               </ListeLignes>
