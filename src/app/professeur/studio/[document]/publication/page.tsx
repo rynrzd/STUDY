@@ -47,6 +47,8 @@ export default async function PagePublication({
     effectif: c.effectif,
     dejaPublie: c.dejaPublie,
     versionAJour: c.versionAJour,
+    programmeePour: c.programmeePour,
+    seance: c.seance,
   }));
 
   return (

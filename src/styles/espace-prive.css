@@ -376,6 +376,12 @@
   .cible-publication[data-actif] { border-color: var(--color-accent); background: var(--color-rose-clair); }
   .cible-publication[data-actif] .picker-coche { background: var(--color-accent); border-color: var(--color-accent); }
   .cible-publication:has(:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  .choix-quand {
+    display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 12px; cursor: pointer;
+    border: 1.5px solid var(--bordure-douce, var(--color-bordure)); border-radius: 999px; font-weight: 600; font-size: 0.9375rem;
+  }
+  .choix-quand[data-actif] { border-color: var(--color-accent); background: var(--color-rose-clair); color: var(--color-accent); }
+  .choix-quand:has(:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: 2px; }
   .recap-publication {
     display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 12px 14px;
     border: 1px solid var(--bordure-douce, var(--color-bordure)); border-radius: var(--rayon-m, 16px); background: var(--color-surface); font-size: 0.875rem; color: var(--color-encre-faible);

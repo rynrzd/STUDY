@@ -5,7 +5,8 @@ import { z } from "zod";
 import { relireDocument, relireReglages } from "@/lib/document-cours";
 import { importer } from "@/lib/studio-documents";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
-import { ciblesPublication, destinatairesUniques, publierPlusieurs } from "@/lib/publication";
+import { heureLisible, parisVersIso } from "@/lib/evaluations/dates";
+import { annulerProgrammation, ciblesPublication, destinatairesUniques, programmerPlusieurs, publierPlusieurs } from "@/lib/publication";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 
 /**
@@ -228,10 +229,29 @@ export async function publierDocument(
     };
   }
 
+  // Publier maintenant, ou programmer : l'heure est saisie à l'heure de Paris
+  // et convertie ici, changements d'heure compris (cahier des charges ch. 14).
+  const programmer = donnees.get("mode") === "programmer";
+  let quand: string | null = null;
+  if (programmer) {
+    const saisie = donnees.get("quand");
+    quand = typeof saisie === "string" ? parisVersIso(saisie) : null;
+    if (quand === null || Date.parse(quand) <= Date.now() + 60_000) {
+      return { etat: "erreur", message: "Choisissez une date et une heure à venir pour programmer la publication." };
+    }
+  }
+
   // La base revérifie l'auteur du document et, cible par cible, l'affectation
   // au moment du clic : une affectation retirée entre l'affichage et
   // maintenant refuse cette cible seulement.
-  const resultats = await publierPlusieurs(session.profileId, analyse.data.document, analyse.data.cours, analyse.data.titre);
+  const issue =
+    quand === null
+      ? await publierPlusieurs(session.profileId, analyse.data.document, analyse.data.cours, analyse.data.titre)
+      : await programmerPlusieurs(session.profileId, analyse.data.document, analyse.data.cours, analyse.data.titre, quand);
+  if (issue !== null && !Array.isArray(issue)) {
+    return { etat: "erreur", message: "La date doit être à venir, et à moins d'un an." };
+  }
+  const resultats = issue;
   if (resultats === null) {
     return { etat: "erreur", message: "La publication a été refusée. Le document n'est peut-être plus prêt : rouvrez-le puis réessayez." };
   }
@@ -255,7 +275,12 @@ export async function publierDocument(
   const refusees = lignes.filter((l) => l.resultat === "refusee").length;
   const reussies = lignes.length - refusees;
   if (refusees === 0) {
-    return { etat: "ok", message: reussies > 1 ? `Publié dans ${reussies} cours.` : "Publié.", resultats: lignes };
+    const quandLisible = quand === null ? "" : heureLisible(quand);
+    return {
+      etat: "ok",
+      message: quand !== null ? `Programmé ${reussies > 1 ? `dans ${reussies} cours ` : ""}pour le ${quandLisible}. Rien n'est visible avant.` : reussies > 1 ? `Publié dans ${reussies} cours.` : "Publié.",
+      resultats: lignes,
+    };
   }
   return {
     etat: reussies === 0 ? "erreur" : "partiel",
@@ -274,4 +299,16 @@ export async function compterDestinataires(cours: string[]): Promise<number | nu
   const valides = z.array(z.string().uuid()).max(40).safeParse(cours);
   if (!valides.success) return null;
   return destinatairesUniques(session.profileId, valides.data);
+}
+
+/** Annuler une programmation avant l'heure — la séance redevient un brouillon. */
+export async function annulerUneProgrammation(seance: string, document: string): Promise<boolean> {
+  const session = await professeur();
+  if (session === null) return false;
+  if (!z.string().uuid().safeParse(seance).success || !z.string().uuid().safeParse(document).success) return false;
+  const fait = await annulerProgrammation(session.profileId, seance);
+  if (fait) {
+    revalidatePath(`/professeur/studio/${document}/publication`);
+  }
+  return fait;
 }

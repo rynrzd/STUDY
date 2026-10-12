@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { drainer } from "@/lib/travaux";
 import { purgerTentatives } from "@/lib/depot-authentification";
 import { purgerJournalAudit } from "@/lib/etablissement";
+import { publierSeancesEchues } from "@/lib/publication";
 import { secretTacheValide as secretValide } from "@/lib/secret-tache";
 
 /**
@@ -54,11 +55,14 @@ export async function POST(requete: Request) {
   // Le journal d'audit à échéance (0064, risque R-07) : même raison d'être ici
   // plutôt que dans la file — une durée écrite doit être appliquée quelque part.
   const journal = await purgerJournalAudit();
+  // Filet de sécurité : les séances programmées échues, si personne n'a
+  // ouvert l'application depuis leur heure.
+  const seancesPubliees = await publierSeancesEchues();
 
   const bilan = await drainer({ budgetMs: 8_000, nom: "bff" });
 
   return NextResponse.json(
-    { ...bilan, tentatives_purgees: purgees, journal_purge: journal },
+    { ...bilan, tentatives_purgees: purgees, journal_purge: journal, seances_publiees: seancesPubliees },
     { headers: { "cache-control": "private, no-store" } },
   );
 }

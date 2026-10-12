@@ -435,7 +435,7 @@ const ECRANS: Record<string, Ecran> = {
             { id: "00000000-0000-4000-8000-000000000901", matiere: "Mathématiques", cible: "Seconde 1", genre: "classe", effectif: 31, dejaPublie: false, versionAJour: false },
             { id: "00000000-0000-4000-8000-000000000902", matiere: "Mathématiques", cible: "Seconde 2", genre: "classe", effectif: 29, dejaPublie: true, versionAJour: true },
             { id: "00000000-0000-4000-8000-000000000903", matiere: "Mathématiques", cible: "Spé Maths A", genre: "groupe", effectif: 26, dejaPublie: true, versionAJour: false },
-            { id: "00000000-0000-4000-8000-000000000904", matiere: "Mathématiques", cible: "Première 3", genre: "classe", effectif: 28, dejaPublie: false, versionAJour: false },
+            { id: "00000000-0000-4000-8000-000000000904", matiere: "Mathématiques", cible: "Première 3", genre: "classe", effectif: 28, dejaPublie: false, versionAJour: true, programmeePour: "2026-10-20T06:30:00Z", seance: "00000000-0000-4000-8000-000000000905" },
           ]}
         />
       </div>

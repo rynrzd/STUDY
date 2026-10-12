@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { Check, CircleAlert, CircleCheck, Layers, School, Search } from "lucide-react";
-import { compterDestinataires, publierDocument } from "@/app/professeur/studio/actions";
+import { CalendarClock, Check, CircleAlert, CircleCheck, Layers, School, Search, Send } from "lucide-react";
+import { annulerUneProgrammation, compterDestinataires, publierDocument } from "@/app/professeur/studio/actions";
 import { ETAT_PUBLICATION_INITIAL, type EtatPublication, type ResultatPublication } from "@/app/professeur/studio/etats";
 
 /**
@@ -30,11 +31,19 @@ export interface CoursPubliable {
   readonly effectif: number;
   readonly dejaPublie: boolean;
   readonly versionAJour: boolean;
+  readonly programmeePour?: string | null;
+  readonly seance?: string | null;
+}
+
+/** Une date UTC lue à l'heure de Paris, quel que soit le fuseau du poste. */
+function aParis(iso: string): string {
+  return new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
 }
 
 const RAISONS: Record<string, string> = {
   non_affecte: "Vous n'enseignez plus dans ce cours.",
   cours_introuvable: "Ce cours n'existe plus ou a été archivé.",
+  deja_visible: "Déjà visible par les élèves : publiez maintenant pour remplacer la version en ligne.",
   erreur: "Erreur inattendue : réessayez.",
 };
 
@@ -66,6 +75,18 @@ export function Publication({
   const [revue, setRevue] = useState(false);
   const [recherche, setRecherche] = useState("");
   const [compte, setCompte] = useState<{ cle: string; valeur: number | null }>({ cle: "", valeur: 0 });
+  const [mode, setMode] = useState<"maintenant" | "programmer">("maintenant");
+  const [quand, setQuand] = useState("");
+  const [annulees, setAnnulees] = useState<ReadonlySet<string>>(new Set());
+  const router = useRouter();
+
+  async function annuler(seance: string) {
+    const fait = await annulerUneProgrammation(seance, document).catch(() => false);
+    if (fait) {
+      setAnnulees((prec) => new Set(prec).add(seance));
+      router.refresh();
+    }
+  }
 
   const selection = useMemo(() => [...choisis].sort(), [choisis]);
   const cle = selection.join(",");
@@ -126,6 +147,7 @@ export function Publication({
       <input type="hidden" name="document" value={document} />
       <input type="hidden" name="titre" value={titre} />
       {revue ? <input type="hidden" name="revue" value="oui" /> : null}
+      <input type="hidden" name="mode" value={mode} />
 
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="titre-bloc m-0 font-bold">Publier dans</h2>
@@ -163,7 +185,13 @@ export function Publication({
                   <span className="block truncate font-semibold">{c.cible}</span>
                   <span className="meta block">
                     {c.matiere} · {c.effectif} élève{c.effectif > 1 ? "s" : ""}
-                    {c.dejaPublie ? (c.versionAJour ? " · déjà publié, à jour" : " · publié, ancienne version") : ""}
+                    {c.programmeePour && !(c.seance && annulees.has(c.seance))
+                      ? ` · programmé pour ${aParis(c.programmeePour)}`
+                      : c.dejaPublie
+                        ? c.versionAJour
+                          ? " · déjà publié, à jour"
+                          : " · publié, ancienne version"
+                        : ""}
                   </span>
                 </span>
                 <span className="etiquette-etat shrink-0" data-ton={c.genre === "groupe" ? "rose" : undefined}>
@@ -171,6 +199,11 @@ export function Publication({
                   {c.genre === "groupe" ? "Groupe" : "Classe"}
                 </span>
               </label>
+              {c.programmeePour && c.seance && !annulees.has(c.seance) ? (
+                <button type="button" className="mt-1 ml-1 text-[0.8125rem] font-semibold text-[color:var(--color-accent)]" onClick={() => void annuler(c.seance as string)}>
+                  Annuler la programmation
+                </button>
+              ) : null}
             </li>
           );
         })}
@@ -196,6 +229,29 @@ export function Publication({
         )}
       </div>
 
+      <fieldset className="mt-5 border-0 p-0">
+        <legend className="etiquette p-0">Quand</legend>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="choix-quand" data-actif={mode === "maintenant" ? "" : undefined}>
+            <input type="radio" name="choix-quand" checked={mode === "maintenant"} onChange={() => setMode("maintenant")} className="sr-only" />
+            <Send size={16} strokeWidth={1.75} aria-hidden="true" /> Maintenant
+          </label>
+          <label className="choix-quand" data-actif={mode === "programmer" ? "" : undefined}>
+            <input type="radio" name="choix-quand" checked={mode === "programmer"} onChange={() => setMode("programmer")} className="sr-only" />
+            <CalendarClock size={16} strokeWidth={1.75} aria-hidden="true" /> Programmer
+          </label>
+        </div>
+        {mode === "programmer" ? (
+          <div className="mt-3">
+            <label className="etiquette" htmlFor="publication-quand">
+              Date et heure <span className="font-normal text-[color:var(--color-encre-faible)]">(heure de Paris)</span>
+            </label>
+            <input id="publication-quand" name="quand" type="datetime-local" className="champ" value={quand} onChange={(e) => setQuand(e.target.value)} required />
+            <p className="aide-champ">Rien n&apos;est visible avant cette heure, ni dans les cours, ni dans la recherche.</p>
+          </div>
+        ) : null}
+      </fieldset>
+
       <label className="mt-5 flex min-h-[var(--spacing-cible)] items-start gap-3">
         <input type="checkbox" checked={revue} onChange={(e) => setRevue(e.target.checked)} className="mt-1 size-4 shrink-0 accent-[color:var(--color-accent)]" />
         <span className="text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)]">
@@ -204,14 +260,14 @@ export function Publication({
         </span>
       </label>
 
-      <Bouton nombre={selection.length} pret={selection.length > 0 && revue} />
+      <Bouton nombre={selection.length} pret={selection.length > 0 && revue && (mode === "maintenant" || quand !== "")} programmer={mode === "programmer"} />
 
       {etat.etat !== "vierge" ? <Resultats etat={etat} /> : null}
     </form>
   );
 }
 
-function Bouton({ nombre, pret }: { nombre: number; pret: boolean }) {
+function Bouton({ nombre, pret, programmer }: { nombre: number; pret: boolean; programmer: boolean }) {
   const { pending } = useFormStatus();
   return (
     <button
@@ -221,7 +277,13 @@ function Bouton({ nombre, pret }: { nombre: number; pret: boolean }) {
       disabled={!pret || pending}
       className="bouton bouton-primaire mt-5 w-full"
     >
-      {pending ? "Publication…" : nombre === 0 ? "Choisissez un cours" : nombre === 1 ? "Publier dans ce cours" : `Publier dans ${nombre} cours`}
+      {pending
+        ? programmer
+          ? "Programmation…"
+          : "Publication…"
+        : nombre === 0
+          ? "Choisissez un cours"
+          : `${programmer ? "Programmer" : "Publier"} dans ${nombre === 1 ? "ce cours" : `${nombre} cours`}`}
     </button>
   );
 }
@@ -230,6 +292,7 @@ const ISSUES: Record<ResultatPublication["resultat"], { texte: string; ton: "suc
   publiee: { texte: "Publié", ton: "succes" },
   mise_a_jour: { texte: "Mis à jour vers cette version", ton: "succes" },
   deja_publiee: { texte: "Déjà publié, rien à refaire", ton: "neutre" },
+  programmee: { texte: "Programmé", ton: "succes" },
   refusee: { texte: "Refusé", ton: "erreur" },
 };
 

@@ -143,6 +143,11 @@ const FONCTIONS = [
   // 0069 — Roles et dates : ni terminer une affectation, ni lire les affectations sans compte.
   { nom: "etab_terminer_affectation", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_affectation: "00000000-0000-4000-8000-000000000000", p_date: null } },
   { nom: "etab_affectations_professeurs", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
+
+  // 0070 — Programmation : ni programmer, ni annuler, ni declencher la bascule sans compte.
+  { nom: "studio_programmer_plusieurs", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_document: "00000000-0000-4000-8000-000000000000", p_cours: [], p_titre: "sonde", p_quand: "2030-01-01T00:00:00Z" } },
+  { nom: "studio_annuler_programmation", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_seance: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "publier_seances_echues", corps: {} },
 ];
 
 let defauts = 0;

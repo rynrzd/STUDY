@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ConteneurEffets } from "@/components/study/ConteneurEffets";
 import { Coque } from "@/components/study/Coque";
 import { IntroConnexion } from "@/components/study/IntroConnexion";
+import { publierSeancesEchues } from "@/lib/publication";
 import { contexteApp } from "@/lib/v6/contexte";
 
 export const metadata: Metadata = {
@@ -21,7 +22,10 @@ export const dynamic = "force-dynamic";
  * espace et n'entre pas ici.
  */
 export default async function GabaritApp({ children }: { children: React.ReactNode }) {
-  const ctx = await contexteApp();
+  // Les séances programmées dont l'heure est venue passent en « publiée »
+  // avant toute lecture : un élève voit son cours à l'heure dite, sans
+  // attendre la tâche de nuit (cahier des charges ch. 14).
+  const [ctx] = await Promise.all([contexteApp(), publierSeancesEchues().catch(() => null)]);
   if (ctx.roles.exploitant) redirect("/administration");
 
   const seulementEleve = ctx.roles.eleve && !ctx.roles.professeur && !ctx.roles.admin;

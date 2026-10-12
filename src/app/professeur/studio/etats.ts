@@ -39,7 +39,7 @@ export const ETAT_SAUVEGARDE_INITIAL: EtatSauvegarde = { etat: "vierge" };
 export interface ResultatPublication {
   readonly cible: string;
   readonly libelle: string;
-  readonly resultat: "publiee" | "mise_a_jour" | "deja_publiee" | "refusee";
+  readonly resultat: "publiee" | "mise_a_jour" | "deja_publiee" | "programmee" | "refusee";
   readonly seance: string | null;
   readonly raison: string | null;
 }
