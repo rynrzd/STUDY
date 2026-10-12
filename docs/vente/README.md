@@ -33,8 +33,9 @@ Ces actions ne peuvent être faites que par le titulaire des comptes :
    sous-traitance — risque R-02.
 3. Jouer une restauration de bout en bout dans un projet séparé
    (`npm run restauration:test`) — chapitre 11.
-4. Brancher une sonde de disponibilité externe sur
-   `https://avecstudy.fr/api/v1/etat` une fois la branche `refonte-r2`
-   déployée — risque R-09.
+4. Sonde de disponibilité externe : écrite
+   (`.github/workflows/sonde-disponibilite.yml`), active dès qu'elle est sur `main`.
+   Vérifier que les notifications Actions de GitHub arrivent bien par courriel
+   — risque R-09.
 5. Vérifier l'assurance responsabilité civile professionnelle.
 6. Faire relire le contrat et la clause de réversibilité.

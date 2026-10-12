@@ -2,7 +2,9 @@
 //
 //   node scripts/film/enregistrer.mjs <base> <sortie.mp4|sortie.webm> [16x9|9x16] [ips] [debit]
 //
-// Sortie .mp4 : H.264 encodé par Edge (WebCodecs), assemblé en MP4 classique.
+// Sortie .mp4 : H.264 encodé par Edge (WebCodecs), assemblé en MP4 classique,
+// avec la bande-son calculée par `musique.mjs` en AAC (SANS_MUSIQUE=1 pour
+// un film muet).
 // Sortie .webm : VP8 encodé par le ffmpeg installé par Playwright.
 //
 // L'horloge est fixée à chaque image : pas de saccade, quel que soit le temps
@@ -14,7 +16,9 @@ import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { chromium } from "playwright-core";
+import { encoderAac } from "./encodeur-aac.mjs";
 import { ouvrirEncodeur } from "./encodeur-h264.mjs";
+import { composer } from "./musique.mjs";
 
 const [base = "http://localhost:3108", sortie = "avecstudy.mp4", format = "16x9", ipsTexte = "30", debitTexte = "2400000"] = process.argv.slice(2);
 const ips = Number(ipsTexte);
@@ -39,7 +43,7 @@ async function ouvrirSortie(nav) {
     const encodeur = await ouvrirEncodeur(nav, { largeur, hauteur, ips, debit: Number(debitTexte) });
     return {
       ajouter: (image, i) => encodeur.ajouter(image, i),
-      fermer: async (n) => writeFileSync(sortie, await encodeur.terminer(n)),
+      fermer: async (n, son) => writeFileSync(sortie, await encodeur.terminer(n, son)),
     };
   }
   const ffmpeg = spawn(
@@ -68,6 +72,10 @@ await page.addStyleTag({ content: "nextjs-portal{display:none!important} html,bo
 await page.evaluate(() => document.fonts.ready);
 const duree = await page.evaluate(() => Number(document.querySelector("[data-film-duree]")?.getAttribute("data-film-duree") ?? 0));
 if (!duree) throw new Error("durée du film introuvable");
+// Les scènes [début, durée] en millisecondes : la musique suit leurs coupes.
+const scenes = await page.evaluate(() =>
+  [...document.querySelectorAll("section[data-debut]")].map((s) => [Number(s.getAttribute("data-debut")), parseFloat(getComputedStyle(s).getPropertyValue("--duree"))]),
+);
 
 const images = Math.round((duree / 1000) * ips);
 const destination = await ouvrirSortie(nav);
@@ -90,6 +98,11 @@ for (let i = 0; i < images; i++) {
   await destination.ajouter(await scene.screenshot({ type: "jpeg", quality: 92 }), i);
   if (i % ips === 0) process.stdout.write(`\r${Math.round((i / images) * 100)} %  (${Math.round((Date.now() - debut) / 1000)} s)`);
 }
-await destination.fermer(images);
+let son;
+if (enMp4 && process.env.SANS_MUSIQUE !== "1") {
+  process.stdout.write("\nbande-son…");
+  son = await encoderAac(nav, composer({ duree: (images * 1000) / ips, scenes }));
+}
+await destination.fermer(images, son);
 await nav.close();
-console.log(`\n${sortie} : ${images} images, ${duree / 1000} s, ${largeur}×${hauteur}`);
+console.log(`\n${sortie} : ${images} images, ${duree / 1000} s, ${largeur}×${hauteur}${son ? ", son AAC stéréo" : ", muet"}`);

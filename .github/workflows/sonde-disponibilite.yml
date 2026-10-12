@@ -1,0 +1,39 @@
+# Sonde de disponibilité externe — risque R-09 (docs/securite/16-risques-residuels.md).
+#
+# Interroge la sonde publique /api/v1/etat depuis l'extérieur de Vercel. Si elle
+# ne répond pas « ok » après trois essais, le travail échoue et GitHub prévient
+# par courriel le titulaire du dépôt (notifications Actions activées par défaut).
+#
+# Aucun secret, aucune donnée : la réponse publique ne contient que {"etat":"ok"}.
+# Les travaux planifiés ne tournent que depuis la branche par défaut (main).
+# Toutes les 30 minutes : environ 1 440 minutes Actions par mois, sous le quota
+# gratuit d'un dépôt privé. GitHub peut décaler un déclenchement planifié.
+name: Sonde de disponibilité
+
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  etat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Interroger /api/v1/etat
+        run: |
+          url="https://avecstudy.fr/api/v1/etat"
+          for essai in 1 2 3; do
+            corps=$(curl -sS --max-time 20 -w '\n%{http_code}' "$url" || true)
+            code=$(printf '%s' "$corps" | tail -n1)
+            if [ "$code" = "200" ] && printf '%s' "$corps" | grep -q '"etat":"ok"'; then
+              echo "AvecStudy répond (essai $essai)."
+              exit 0
+            fi
+            echo "Essai $essai : statut ${code:-aucun}."
+            sleep 30
+          done
+          echo "::error::AvecStudy ne répond pas « ok » sur $url après trois essais."
+          exit 1

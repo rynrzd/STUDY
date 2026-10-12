@@ -61,13 +61,14 @@ export async function ouvrirEncodeur(navigateur, { largeur, hauteur, ips, debit 
 
   return {
     ajouter: (jpeg, i) => page.evaluate(([b, i]) => window.ajouter(b, i), [jpeg.toString("base64"), i]),
-    async terminer(attendues) {
+    /** `son` (facultatif) : la sortie de `encoderAac`, ajoutée en seconde piste. */
+    async terminer(attendues, son) {
       await page.evaluate(() => window.finir());
       await page.close();
       serveur.close();
       if (!avcC) throw new Error("configuration H.264 absente");
       if (echantillons.length !== attendues) throw new Error(`${echantillons.length} images encodées sur ${attendues}`);
-      return ecrireMp4({ largeur, hauteur, ips, avcC, echantillons });
+      return ecrireMp4({ largeur, hauteur, ips, avcC, echantillons, son });
     },
   };
 }
