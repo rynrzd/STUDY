@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, CalendarClock, Search } from "lucide-react";
 import { EnTetePage, EtatVide, ICONE, dateLisible } from "@/components/study/ui";
 import type { mesCours } from "@/lib/v6/cours";
+import { RubriqueCoursEleve } from "@/components/study/Rubriques";
 
 /** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
 export function VueCours({ classes, filtre, visibles, listeAteliers }: {
@@ -12,6 +13,7 @@ export function VueCours({ classes, filtre, visibles, listeAteliers }: {
 }) {
   return (
     <>
+      <RubriqueCoursEleve actif="/app/cours" />
       <EnTetePage
         titre="Mes cours"
         sousTitre="Tes matières, leurs chapitres et toutes les séances publiées par tes professeurs."

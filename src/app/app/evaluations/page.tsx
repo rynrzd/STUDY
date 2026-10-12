@@ -3,6 +3,7 @@ import { EnTetePage, Etiquette, EtatVide, Ligne, ListeLignes, type Ton } from "@
 import { heureLisible } from "@/lib/evaluations/dates";
 import { contexteApp } from "@/lib/v6/contexte";
 import { evaluationsDeLEleve, LIBELLES_MODE, type EvaluationEleve } from "@/lib/v6/evaluations";
+import { RubriqueCoursEleve } from "@/components/study/Rubriques";
 
 export const metadata = { title: "Évaluations" };
 export const dynamic = "force-dynamic";
@@ -24,6 +25,7 @@ export default async function PageEvaluationsEleve() {
 
   return (
     <div className="mx-auto max-w-[900px]">
+      <RubriqueCoursEleve actif="/app/evaluations" />
       <EnTetePage sourcil="Évaluations" titre="Tes évaluations" sousTitre="Les contrôles de tes professeurs, et ta copie corrigée quand les résultats sont publiés." />
       {evaluations === null ? (
         <p role="alert" className="text-[color:var(--color-erreur)]">

@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Compass, FolderKanban, Lock, Plus, Users } from "lucide-react";
+import { FolderKanban, Lock, Plus, Users } from "lucide-react";
 import { EnTetePage, EtatVide, Etiquette, ICONE, Ligne, ListeLignes, Panneau, TuileIcone, dateLisible } from "@/components/study/ui";
 import { repondreInvitation } from "./actions";
 import { FormulaireProjet } from "./formulaires";
+import { RubriqueProjets } from "@/components/study/Rubriques";
 
 export interface ProjetLigne {
   readonly id: string;
@@ -30,15 +31,13 @@ export function VueProjets({ invitations, actifs, classes, participants, etapeDe
 
   return (
     <>
+      <RubriqueProjets actif="/app/projets" />
       <EnTetePage
         sourcil="Projets"
         titre="Mes projets"
         sousTitre="Projets personnels et projets de groupe, avec leurs tâches et documents."
         actions={
           <>
-            <Link href="/app/orientation" className="bouton bouton-secondaire">
-              <Compass {...ICONE} /> Orientation et stages
-            </Link>
             <a href="#nouveau-projet" className="bouton bouton-primaire">
               <Plus {...ICONE} /> Nouveau projet
             </a>

@@ -5,6 +5,7 @@ import { AvisVisibilite, EnTetePage, EtatVide, Etiquette, Panneau, TuileIcone, d
 import type { nomsAffichables } from "@/lib/v6/classe";
 import { partagerPiste, supprimerPiste } from "./actions";
 import { FormulaireModifierPiste, FormulairePiste } from "./formulaires";
+import { RubriqueProjets } from "@/components/study/Rubriques";
 
 const STATUTS: Record<string, string> = { a_explorer: "À explorer", a_contacter: "À contacter", contacte: "Contacté", reponse: "Réponse reçue", clos: "Clos" };
 
@@ -41,7 +42,8 @@ export function VueOrientation({ filtre, miennes, intentions, autres, recues, ad
 }) {
   return (
     <>
-      <EnTetePage filAriane={[{ href: "/app/projets", libelle: "Mes projets" }]} sourcil="Orientation" titre="Tes pistes et tes démarches" sousTitre="Tes envies, les formations qui t'intriguent, tes recherches de stage. Pour toi." />
+      <RubriqueProjets actif="/app/orientation" />
+      <EnTetePage sourcil="Orientation" titre="Tes pistes et tes démarches" sousTitre="Tes envies, les formations qui t'intriguent, tes recherches de stage. Pour toi." />
       <nav aria-label="Filtrer" className="mb-4 flex flex-wrap gap-2">
         {FILTRES.map((f) => (
           <Link key={f.cle} href={f.cle === "toutes" ? "/app/orientation" : `/app/orientation?type=${f.cle}`} aria-current={filtre === f.cle ? "page" : undefined} className="pilule">

@@ -5,7 +5,6 @@ import {
   CalendarDays,
   ClipboardCheck,
   ClipboardList,
-  Compass,
   FolderKanban,
   House,
   KeyRound,
@@ -13,7 +12,6 @@ import {
   LifeBuoy,
   LogOut,
   MessageCircle,
-  NotebookPen,
   Search,
   Settings,
   ShieldCheck,
@@ -39,6 +37,7 @@ import { ReplierBarre } from "./ReplierBarre";
  *
  * Trois espaces, trois navigations, une seule coque :
  * - élève : Accueil, Cours, Réviser, Classe, Agenda (mobile : … Classe, Plus) ;
+ *   « Cours » porte les onglets Mes cours, À faire, Évaluations, Ateliers ;
  * - professeur : Accueil, Mes classes, Mes cours, Devoirs et copies, Agenda ;
  * - administration : Accueil, Personnes, Classes et groupes, Années
  *   scolaires, Demandes d'accès.
@@ -82,16 +81,15 @@ function navigation(espace: Espace): { principales: Destination[]; secondaires: 
     return {
       principales: [
         { href: "/app", libelle: "Accueil", icone: House, exact: true, aussi: ["/app/bienvenue", "/app/notifications"] },
-        { href: "/app/cours", libelle: "Cours", icone: BookOpen, aussi: ["/app/seances", "/app/devoirs", "/app/rattrapage", "/app/recherche"] },
+        { href: "/app/cours", libelle: "Cours", icone: BookOpen, aussi: ["/app/seances", "/app/devoirs", "/app/evaluations", "/app/ateliers", "/app/rattrapage", "/app/recherche"] },
         { href: "/app/reviser", libelle: "Réviser", icone: Sparkles, aussi: ["/app/fiches", "/app/cartes", "/app/entrainements", "/app/erreurs", "/app/aide"] },
         { href: "/app/classe", libelle: "Classe", icone: Users, aussi: ["/app/classes", "/app/messagerie", "/app/demandes", "/app/entraide"] },
         { href: "/app/agenda", libelle: "Agenda", icone: CalendarDays },
       ],
       secondaires: [
-        { href: "/app/evaluations", libelle: "Évaluations", icone: ClipboardCheck },
-        { href: "/app/projets", libelle: "Projets", icone: FolderKanban },
-        { href: "/app/orientation", libelle: "Orientation", icone: Compass },
-        { href: "/app/ateliers", libelle: "Ateliers", icone: NotebookPen },
+        // Évaluations, ateliers et « À faire » sont des onglets de « Cours » ;
+        // l'orientation, un onglet de « Projets ».
+        { href: "/app/projets", libelle: "Projets et orientation", court: "Projets", icone: FolderKanban, aussi: ["/app/orientation"] },
         aide,
       ],
     };

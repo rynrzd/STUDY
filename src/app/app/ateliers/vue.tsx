@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Bot, Newspaper } from "lucide-react";
 import { EnTetePage, EtatVide, Etiquette, Ligne, ListeLignes, dateLisible } from "@/components/study/ui";
+import { RubriqueCoursEleve } from "@/components/study/Rubriques";
 
 /** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
 export function VueAteliers({ type, error, ateliers, filtres }: {
@@ -11,6 +12,7 @@ export function VueAteliers({ type, error, ateliers, filtres }: {
 }) {
   return (
     <div className="mx-auto max-w-[960px]">
+      <RubriqueCoursEleve actif="/app/ateliers" />
       <EnTetePage sourcil="Ateliers" titre="Lire, vérifier, répondre" sousTitre="Lire des sources datées, puis répondre. Proposés par tes professeurs." />
       <nav aria-label="Filtrer les ateliers" className="mb-5 flex flex-wrap gap-2">
         {filtres.map((f) => (

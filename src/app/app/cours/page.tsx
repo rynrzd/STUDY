@@ -4,6 +4,7 @@ import { mesCours } from "@/lib/v6/cours";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 import { EnTetePage, EtatErreur } from "@/components/study/ui";
 import { VueCours } from "./vue";
+import { RubriqueCoursEleve } from "@/components/study/Rubriques";
 
 export const metadata = { title: "Mes cours" };
 export const dynamic = "force-dynamic";
@@ -27,6 +28,7 @@ export default async function PageCours({ searchParams }: { searchParams: Promis
   if (cours === null) {
     return (
       <>
+        <RubriqueCoursEleve actif="/app/cours" />
         <EnTetePage titre="Mes cours" />
         <EtatErreur requestId={idRequete()} action={<Link href="/app/cours" className="bouton bouton-secondaire">Réessayer</Link>} />
       </>

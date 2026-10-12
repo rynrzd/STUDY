@@ -7,6 +7,7 @@ import { coursDeLEleve } from "@/lib/espace-eleve";
 import { instantLisible } from "@/lib/horodatage";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
+import { RubriqueCoursEleve } from "@/components/study/Rubriques";
 
 export const metadata: Metadata = { title: "À faire" };
 
@@ -116,6 +117,7 @@ export default async function PageDevoirsEleve() {
   if (devoirs.length === 0) {
     return (
       <>
+        <RubriqueCoursEleve actif="/app/devoirs" />
         <TitreEspace titre="À faire" />
         <div className="mt-8">
           <Vide
@@ -136,6 +138,7 @@ export default async function PageDevoirsEleve() {
 
   return (
     <>
+      <RubriqueCoursEleve actif="/app/devoirs" />
       <TitreEspace
         titre="À faire"
         sousTitre={`${aFaire} devoir${aFaire > 1 ? "s" : ""} à rendre`}
