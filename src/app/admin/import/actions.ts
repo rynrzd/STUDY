@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { decouperCellule } from "@/lib/assistant-rentree";
+import { decouperCellule, reconnaitreColonnes, type Champ, type Correspondance } from "@/lib/assistant-rentree";
 import { assurerAnnee, contexte } from "@/lib/etablissement";
 import {
   analyserLotProfesseurs,
@@ -18,9 +18,10 @@ import {
 } from "@/lib/lot-rentree";
 import { assuranceSuffisante, REFUS_ASSURANCE } from "@/lib/garde-assurance";
 import { sessionCourante } from "@/lib/session-serveur";
-import { TAILLE_MAXIMALE } from "@/lib/tableur";
+import { FichierIllisible, lireTableur, TAILLE_MAXIMALE } from "@/lib/tableur";
 
 import type {
+  EtatColonnes,
   EtatCorrection,
   EtatCreation,
   EtatCreationProfesseurs,
@@ -59,6 +60,84 @@ async function exigerAdministrateur(): Promise<string> {
   }
 
   return personne.profileId;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 0. Vérifier les colonnes (cahier des charges ch. 17, étape 2)               */
+/* -------------------------------------------------------------------------- */
+
+const CHAMPS_ELEVES: readonly Champ[] = ["nom", "prenom", "classe", "email", "identifiantExterne"];
+const CHAMPS_PROFESSEURS: readonly Champ[] = ["nom", "prenom", "email", "matieres", "classes"];
+
+/**
+ * Correspondances choisies à l'écran, par nom de fichier. Le champ arrive en
+ * JSON ; tout ce qui n'est pas un champ connu associé à un index entier est
+ * écarté. Les index sont ensuite bornés au tableau lu (lot-rentree).
+ */
+function correspondancesChoisies(donnees: FormData, champs: readonly Champ[]): Map<string, Correspondance> {
+  const sortie = new Map<string, Correspondance>();
+  const brut = donnees.get("correspondances");
+  if (typeof brut !== "string" || brut.length === 0 || brut.length > 20_000) return sortie;
+  let lu: unknown;
+  try {
+    lu = JSON.parse(brut);
+  } catch {
+    return sortie;
+  }
+  if (lu === null || typeof lu !== "object" || Array.isArray(lu)) return sortie;
+  for (const [nom, valeur] of Object.entries(lu as Record<string, unknown>)) {
+    if (valeur === null || typeof valeur !== "object" || Array.isArray(valeur)) continue;
+    const c: Correspondance = {};
+    for (const champ of champs) {
+      const index = (valeur as Record<string, unknown>)[champ];
+      if (typeof index === "number" && Number.isInteger(index) && index >= 0 && index < 200) c[champ] = index;
+    }
+    sortie.set(nom, c);
+  }
+  return sortie;
+}
+
+/**
+ * Lit les colonnes des fichiers choisis, sans rien enregistrer (IMP-01) : ni
+ * lot, ni ligne, ni fichier conservé. L'écran montre ce qui a été compris et
+ * l'administrateur corrige avant l'analyse.
+ */
+export async function lireColonnes(cible: "eleves" | "professeurs", _precedent: EtatColonnes, donnees: FormData): Promise<EtatColonnes> {
+  await exigerAdministrateur();
+  const retenus = donnees.getAll("fichiers").filter((f): f is File => f instanceof File && f.size > 0);
+  if (retenus.length === 0) return { etat: "erreur", message: "Choisissez au moins un fichier." };
+  if (retenus.length > FICHIERS_MAXIMUM) return { etat: "erreur", message: `Déposez au plus ${FICHIERS_MAXIMUM} fichiers à la fois.` };
+  if (retenus.reduce((n, f) => n + f.size, 0) > TAILLE_MAXIMALE * 8) {
+    return { etat: "erreur", message: "L'ensemble déposé est trop volumineux. Procédez en deux fois." };
+  }
+
+  const champs = cible === "eleves" ? CHAMPS_ELEVES : CHAMPS_PROFESSEURS;
+  const fichiers = [];
+  for (const fichier of retenus) {
+    if (fichier.size > TAILLE_MAXIMALE) {
+      fichiers.push({ nom: fichier.name, colonnes: [], echantillon: [], lignes: 0, erreur: "Ce fichier est trop volumineux." });
+      continue;
+    }
+    try {
+      const tableau = lireTableur(fichier.name, Buffer.from(await fichier.arrayBuffer()));
+      fichiers.push({
+        nom: fichier.name,
+        colonnes: reconnaitreColonnes(tableau, champs).map((c) => ({ ...c, entete: c.entete.slice(0, 60) })),
+        echantillon: tableau.lignes.slice(0, 3).map((l) => tableau.entetes.map((_, i) => (l[i] ?? "").slice(0, 40))),
+        lignes: tableau.lignes.length,
+        erreur: null,
+      });
+    } catch (erreur) {
+      fichiers.push({
+        nom: fichier.name,
+        colonnes: [],
+        echantillon: [],
+        lignes: 0,
+        erreur: erreur instanceof FichierIllisible ? erreur.message : "Ce fichier n'a pas pu être lu. Déposez un .xlsx ou un .csv.",
+      });
+    }
+  }
+  return { etat: "ok", fichiers };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -104,9 +183,10 @@ export async function deposerFichiers(
     return { etat: "erreur", message: "L'ensemble déposé est trop volumineux. Procédez en deux fois." };
   }
 
+  const choisies = correspondancesChoisies(donnees, CHAMPS_ELEVES);
   const fichiers: FichierDepose[] = [];
   for (const fichier of retenus) {
-    fichiers.push({ nom: fichier.name, contenu: Buffer.from(await fichier.arrayBuffer()) });
+    fichiers.push({ nom: fichier.name, contenu: Buffer.from(await fichier.arrayBuffer()), correspondance: choisies.get(fichier.name) });
   }
 
   const annee = situation.academicYearId ?? (await assurerAnnee(acteur));
@@ -284,9 +364,10 @@ export async function deposerProfesseurs(
     };
   }
 
+  const choisies = correspondancesChoisies(donnees, CHAMPS_PROFESSEURS);
   const fichiers: FichierDepose[] = [];
   for (const fichier of retenus) {
-    fichiers.push({ nom: fichier.name, contenu: Buffer.from(await fichier.arrayBuffer()) });
+    fichiers.push({ nom: fichier.name, contenu: Buffer.from(await fichier.arrayBuffer()), correspondance: choisies.get(fichier.name) });
   }
 
   const annee = situation.academicYearId ?? (await assurerAnnee(acteur));

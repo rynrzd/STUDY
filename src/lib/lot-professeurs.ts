@@ -12,7 +12,7 @@ import {
 } from "./assistant-rentree.ts";
 import { proposerLogin } from "./import-rentree.ts";
 import { genererAliasTechnique, genererMotDePasseTemporaire } from "./identite.ts";
-import type { AccesCree, FichierDepose } from "./lot-rentree.ts";
+import { correspondanceBornee, type AccesCree, type FichierDepose } from "./lot-rentree.ts";
 import { FichierIllisible, lireTableur, TAILLE_MAXIMALE } from "./tableur.ts";
 import { clientExploitation } from "./supabase-serveur.ts";
 
@@ -68,7 +68,12 @@ export async function analyserLotProfesseurs(options: {
     try {
       const tableau = lireTableur(fichier.nom, fichier.contenu);
       analyses.push(
-        analyserFichierProfesseurs({ nom: fichier.nom, octets: fichier.contenu.length, tableau }),
+        analyserFichierProfesseurs({
+          nom: fichier.nom,
+          octets: fichier.contenu.length,
+          tableau,
+          correspondance: correspondanceBornee(fichier.correspondance, tableau.entetes.length),
+        }),
       );
     } catch (erreur) {
       analyses.push(

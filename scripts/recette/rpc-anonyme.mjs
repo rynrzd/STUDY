@@ -162,6 +162,11 @@ const FONCTIONS = [
   // 0073 — Rentree : ni lister, ni reconduire les groupes sans compte.
   { nom: "annee_groupes_a_reconduire", corps: { p_cible: "00000000-0000-4000-8000-000000000000" } },
   { nom: "annee_reconduire_groupes", corps: { p_cible: "00000000-0000-4000-8000-000000000000", p_groupes: [], p_avec_cours: false } },
+
+  // 0075 — Professeur principal, annees archivees : service_role seulement.
+  { nom: "etab_professeurs_principaux", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_designer_professeur_principal", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_classe: "00000000-0000-4000-8000-000000000000", p_professeur: null } },
+  { nom: "etab_annee_archivee", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_annee: "00000000-0000-4000-8000-000000000000" } },
 ];
 
 let defauts = 0;

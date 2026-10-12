@@ -188,7 +188,7 @@ export function VueAnnees({ etape, erreurAnnees, courante, cible, classesCourant
                     <p className="m-0 mt-4 font-semibold text-[color:var(--color-succes)]">Chaque élève actif a une classe en {cible.label}.</p>
                   )}
                   <p className="meta m-0 mt-4">
-                    Avant de basculer, exportez les listes utiles depuis <Link href="/admin/utilisateurs">Utilisateurs</Link>. L&apos;année quittée
+                    Avant de basculer, exportez les listes utiles depuis <Link href="/admin/utilisateurs">Personnes</Link>. L&apos;année quittée
                     est archivée ; ses classes, inscriptions et messages restent en base.
                   </p>
                   <p className="meta m-0 mt-2">
@@ -213,11 +213,16 @@ export function VueAnnees({ etape, erreurAnnees, courante, cible, classesCourant
       {liste.some((a) => a.archived_at) ? (
         <div className="mt-6">
           <Panneau titre="Années archivées">
-            <ul className="m-0 grid gap-1 pl-5">
+            <p className="meta m-0 mb-3">En lecture seule : classes, groupes, cours et professeurs de chaque année passée.</p>
+            <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
               {liste
                 .filter((a) => a.archived_at)
                 .map((a) => (
-                  <li key={a.id}>{a.label}</li>
+                  <li key={a.id}>
+                    <Link href={`/admin/annees/${a.id}`} className="bouton bouton-secondaire bouton-compact">
+                      <Archive size={16} strokeWidth={1.75} aria-hidden="true" /> {a.label}
+                    </Link>
+                  </li>
                 ))}
             </ul>
           </Panneau>

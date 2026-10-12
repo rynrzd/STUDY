@@ -16,6 +16,8 @@ import { VueGroupes } from "@/app/admin/groupes/vue";
 import { type LigneCours, VueProfesseurs } from "@/app/admin/professeurs/vue";
 import { VueAdmin } from "@/app/admin/vue";
 import { VueAnnees } from "@/app/admin/annees/vue";
+import { VueAnneeArchivee } from "@/app/admin/annees/[annee]/vue";
+import { ApercuColonnes } from "./ApercuColonnes";
 import { VueRecuperation } from "@/app/admin/recuperation/vue";
 import { VueUtilisateurs } from "@/app/admin/utilisateurs/vue";
 import { VueAgenda } from "@/app/app/agenda/vue";
@@ -52,7 +54,7 @@ import { Editeur } from "@/components/studio/Editeur";
 import { OngletsSeance } from "@/components/studio/OngletsSeance";
 import { CircleHelp, ClipboardCheck, Library } from "lucide-react";
 import { CONTEXTE_FICTIF } from "../fictif";
-import { F, NOMS_FICTIFS } from "./donnees";
+import { F, NOMS_FICTIFS, ANNEE_ARCHIVEE } from "./donnees";
 
 /**
  * Aperçu de développement des écrans recomposés (R2) : chaque écran est rendu
@@ -633,9 +635,12 @@ const ECRANS: Record<string, Ecran> = {
         listeAffectations={[...F.affectationsEtab]}
         professeurs={F.membresEtab.filter((m) => (m.roles as readonly string[]).includes("professeur")).map((m) => ({ id: m.profile_id, label: `${m.nom} ${m.prenom}` }))}
         matieres={[...F.matieresEtab]}
+        principaux={F.classesEtab[0] ? { [F.classesEtab[0].id]: { id: "pp", nom: "Claire Exemple" } } : {}}
       />
     ),
   },
+  D02c: { titre: "Import · vérifier les colonnes", ctx: ADMIN, chemin: "/admin/import", rendu: () => <div className="mx-auto max-w-[900px]"><ApercuColonnes /></div> },
+  D11: { titre: "Année archivée", ctx: ADMIN, chemin: "/admin/annees/x", rendu: () => <VueAnneeArchivee releve={ANNEE_ARCHIVEE} /> },
   D03: { titre: "Récupérations", ctx: ADMIN, chemin: "/admin/recuperation", rendu: () => <VueRecuperation error={null} demandes={[...F.recuperations]} choisie={F.recuperations[0]} /> },
   D04: {
     titre: "Modération",

@@ -842,3 +842,49 @@ export async function loginsPris(acteur: string, racine: string): Promise<string
   }
   return (data ?? []) as string[];
 }
+
+/* -------------------------------------------------------------------------- */
+/* Professeur principal, années archivées (0075)                              */
+/* -------------------------------------------------------------------------- */
+
+export interface ProfesseurPrincipal {
+  readonly classe: string;
+  readonly profil: string;
+  readonly prenom: string;
+  readonly nom: string;
+}
+
+/** Le professeur principal de chaque classe en cours ; `null` : lecture refusée. */
+export async function professeursPrincipaux(acteur: string): Promise<ProfesseurPrincipal[] | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_professeurs_principaux", { p_acteur: acteur });
+  if (error !== null) return null;
+  return (data ?? []) as ProfesseurPrincipal[];
+}
+
+/** Désigne (ou retire, avec `null`) le professeur principal d'une classe en cours. */
+export async function designerProfesseurPrincipal(acteur: string, classe: string, professeur: string | null): Promise<"designe" | "retire" | "inchange" | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_designer_professeur_principal", {
+    p_acteur: acteur,
+    p_classe: classe,
+    p_professeur: professeur,
+  });
+  if (error !== null) {
+    console.error(JSON.stringify({ niveau: "erreur", contexte: "etab.professeur_principal", code: error.code }));
+    return null;
+  }
+  return data as "designe" | "retire" | "inchange";
+}
+
+export interface AnneeArchivee {
+  readonly annee: { id: string; label: string; debut: string; fin: string; archivee_le: string };
+  readonly classes: readonly { id: string; label: string; effectif: number; professeur_principal: string | null }[];
+  readonly groupes: readonly { id: string; label: string; kind: string; effectif: number }[];
+  readonly cours: readonly { matiere: string; cible: string; genre: "classe" | "groupe"; professeurs: string | null; seances_publiees: number; devoirs: number }[];
+}
+
+/** Relevé en lecture seule d'une année archivée ; `null` si refusée ou non archivée. */
+export async function anneeArchivee(acteur: string, annee: string): Promise<AnneeArchivee | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_annee_archivee", { p_acteur: acteur, p_annee: annee });
+  if (error !== null) return null;
+  return data as AnneeArchivee;
+}

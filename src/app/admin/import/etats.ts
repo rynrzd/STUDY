@@ -61,3 +61,33 @@ export interface EtatCreationProfesseurs {
 }
 
 export const ETAT_CREATION_PROFS_INITIAL: EtatCreationProfesseurs = { etat: "vierge" };
+
+/**
+ * Étape « Vérifier les colonnes » (cahier des charges ch. 17, étape 2) : ce
+ * que l'analyse a compris de chaque fichier, colonne par colonne, avec un
+ * échantillon. Rien n'est enregistré à cette étape (IMP-01).
+ */
+export interface ColonneApercu {
+  readonly index: number;
+  readonly entete: string;
+  readonly champ: string | null;
+  readonly confiance: "sur" | "a_confirmer" | "non_reconnu";
+  readonly exemple: string;
+}
+
+export interface FichierColonnes {
+  readonly nom: string;
+  readonly colonnes: readonly ColonneApercu[];
+  /** Les trois premières lignes, pour juger sur pièce. */
+  readonly echantillon: readonly (readonly string[])[];
+  readonly lignes: number;
+  readonly erreur: string | null;
+}
+
+export interface EtatColonnes {
+  readonly etat: "vierge" | "ok" | "erreur";
+  readonly message?: string;
+  readonly fichiers?: readonly FichierColonnes[];
+}
+
+export const ETAT_COLONNES_INITIAL: EtatColonnes = { etat: "vierge" };

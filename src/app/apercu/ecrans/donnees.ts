@@ -182,3 +182,19 @@ export const F = {
 } as const;
 
 export const NOMS_FICTIFS = new Map([[u(153), { affichage: "Mme Exemple", initiales: "ME", adulte: true }]]);
+
+/** D11 — relevé d'une année archivée (0075). */
+export const ANNEE_ARCHIVEE = {
+  annee: { id: "y-2025", label: "2025-2026", debut: "2025-09-01", fin: "2026-07-04", archivee_le: "2026-08-28T09:00:00Z" },
+  classes: [
+    { id: "c-2a", label: "Seconde 1", effectif: 31, professeur_principal: "Claire Exemple" },
+    { id: "c-2b", label: "Seconde 2", effectif: 29, professeur_principal: null },
+    { id: "c-1a", label: "Première 3", effectif: 33, professeur_principal: "Marc Fictif" },
+  ],
+  groupes: [{ id: "g-spe", label: "Spé Maths A", kind: "interclasses", effectif: 24 }],
+  cours: [
+    { matiere: "Mathématiques", cible: "Seconde 1", genre: "classe", professeurs: "Claire Exemple", seances_publiees: 42, devoirs: 11 },
+    { matiere: "Histoire-géographie", cible: "Seconde 1", genre: "classe", professeurs: "Marc Fictif, Léa Remplace (remplacant)", seances_publiees: 30, devoirs: 6 },
+    { matiere: "Mathématiques", cible: "Spé Maths A", genre: "groupe", professeurs: "Claire Exemple", seances_publiees: 38, devoirs: 9 },
+  ],
+} as const satisfies import("@/lib/etablissement").AnneeArchivee;

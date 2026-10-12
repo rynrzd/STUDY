@@ -13,6 +13,7 @@ import {
   creerClasse,
   creerCompte,
   creerMatiere,
+  designerProfesseurPrincipal,
   DUREES_CONSERVATION,
   fixerConservationJournal,
   inscrireEleve,
@@ -469,5 +470,27 @@ export async function terminerUneAffectation(_precedent: EtatAdmin, donnees: For
   return {
     etat: "ok",
     message: issue === "retiree" ? "Affectation à venir retirée." : issue === "deja" ? "Cette affectation était déjà terminée." : "Affectation terminée : l'accès s'arrête après le dernier jour indiqué.",
+  };
+}
+
+/**
+ * Professeur principal d'une classe (0075). Choisir « Aucun » le retire. La
+ * base vérifie que la classe est de cet établissement et en cours, et que la
+ * personne y est professeur.
+ */
+export async function changerProfesseurPrincipal(_precedent: EtatAdmin, donnees: FormData): Promise<EtatAdmin> {
+  const acteur = await exigerAdministrateur();
+  const classe = identifiant(donnees, "classe");
+  if (classe === null) return { etat: "erreur", message: "Classe introuvable." };
+  const brut = texte(donnees, "professeur", 64);
+  const professeur = brut === "" ? null : identifiant(donnees, "professeur");
+  if (brut !== "" && professeur === null) return { etat: "erreur", message: "Professeur introuvable." };
+
+  const issue = await designerProfesseurPrincipal(acteur, classe, professeur);
+  if (issue === null) return { etat: "erreur", message: "Refusé : la classe doit être en cours, et la personne professeur de l'établissement." };
+  revalidatePath("/admin/classes");
+  return {
+    etat: "ok",
+    message: issue === "retire" ? "Professeur principal retiré." : issue === "inchange" ? "Rien n'a changé." : "Professeur principal désigné.",
   };
 }

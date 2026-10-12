@@ -1,5 +1,6 @@
 import { Check, School } from "lucide-react";
 import { AjouterPersonne } from "@/components/admin/AjouterPersonne";
+import { ProfesseurPrincipal } from "@/components/admin/ProfesseurPrincipal";
 import { FormulaireAffectation, FormulaireClasse, FormulaireMatiere } from "@/components/admin/Formulaires";
 import { EnTetePage, EtatVide } from "@/components/study/ui";
 import type { affectations, classes } from "@/lib/etablissement";
@@ -15,7 +16,10 @@ export function VueClasses({
   listeAffectations,
   professeurs,
   matieres,
+  principaux = {},
 }: {
+  /** Professeur principal par classe (0075) ; absent : non désigné. */
+  principaux?: Readonly<Record<string, { id: string; nom: string }>>;
   listeClasses: readonly Classe[];
   listeAffectations: readonly Affectation[];
   professeurs: readonly Option[];
@@ -93,6 +97,7 @@ export function VueClasses({
                       </span>
                     </span>
                   </div>
+                  <ProfesseurPrincipal classe={classe.id} libelleClasse={classe.label} actuel={principaux[classe.id] ?? null} professeurs={professeurs} />
                   {cours.length === 0 ? (
                     <p className="meta m-0">Aucun cours : affectez un professeur pour en ouvrir un.</p>
                   ) : (

@@ -58,6 +58,22 @@ const PURGE_JOURS = 30;
 export interface FichierDepose {
   readonly nom: string;
   readonly contenu: Buffer;
+  /**
+   * Correspondance choisie par l'administrateur à l'étape « Vérifier les
+   * colonnes » (ch. 17). Absente : la reconnaissance automatique s'applique.
+   * Les index hors du tableau sont écartés, jamais devinés.
+   */
+  readonly correspondance?: Correspondance;
+}
+
+/** Ne garde de la correspondance choisie que les colonnes qui existent. */
+export function correspondanceBornee(correspondance: Correspondance | undefined, colonnes: number): Correspondance | undefined {
+  if (correspondance === undefined) return undefined;
+  const sortie: Correspondance = {};
+  for (const [champ, index] of Object.entries(correspondance) as [keyof Correspondance, number | undefined][]) {
+    if (typeof index === "number" && Number.isInteger(index) && index >= 0 && index < colonnes) sortie[champ] = index;
+  }
+  return sortie;
 }
 
 /**
@@ -94,7 +110,12 @@ export async function analyserLot(options: {
     try {
       const tableau = lireTableur(fichier.nom, fichier.contenu);
       analyses.push(
-        analyserFichier({ nom: fichier.nom, octets: fichier.contenu.length, tableau }),
+        analyserFichier({
+          nom: fichier.nom,
+          octets: fichier.contenu.length,
+          tableau,
+          correspondance: correspondanceBornee(fichier.correspondance, tableau.entetes.length),
+        }),
       );
     } catch (erreur) {
       analyses.push(

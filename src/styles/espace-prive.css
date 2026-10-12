@@ -526,3 +526,38 @@
     .choix-role-coche, .picker-coche, .picker-ligne, .cible-publication { transition: none; }
   }
 }
+
+/* Relevé d'une année archivée (0075) : une ligne par cours. */
+@layer components {
+  .app-coque .ligne-annee-archivee {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--bordure-douce);
+  }
+  .app-coque .ligne-annee-archivee:first-child { border-top: 0; }
+  .app-coque .professeur-principal {
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: var(--color-fond);
+  }
+}
+
+/* Import : « Vérifier les colonnes » (ch. 17). Seul tableau de l'espace
+   autorisé à défiler horizontalement sur téléphone (cahier, §3.3). */
+@layer components {
+  .colonnes-import {
+    padding: 18px;
+    border: 1px solid var(--bordure-douce);
+    border-radius: 18px;
+    background: var(--color-surface);
+  }
+  .colonnes-import-defilement { margin-top: 8px; overflow-x: auto; }
+  .colonnes-import table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 0.9375rem; }
+  .colonnes-import th { padding: 8px 10px; text-align: left; font-size: 0.8125rem; color: var(--color-encre-faible); border-bottom: 1px solid var(--bordure-douce); }
+  .colonnes-import td { padding: 8px 10px; border-bottom: 1px solid var(--bordure-douce); vertical-align: middle; }
+  .colonnes-import tr:last-child td { border-bottom: 0; }
+  .colonnes-import select { min-width: 200px; }
+}
