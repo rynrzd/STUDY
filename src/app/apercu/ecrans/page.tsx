@@ -6,6 +6,7 @@ import { EtapesImport } from "@/components/admin/EtapesImport";
 import { VerificationRentree } from "@/components/admin/VerificationRentree";
 import { EnTetePage } from "@/components/study/ui";
 import type { ContexteApp } from "@/lib/v6/contexte";
+import { LecteurPdf } from "@/components/seance/LecteurPdf";
 import { Publication } from "@/components/studio/Publication";
 import { VueClasses } from "@/app/admin/classes/vue";
 import { VueGroupe } from "@/app/admin/groupes/[groupe]/vue";
@@ -406,6 +407,18 @@ const ECRANS: Record<string, Ecran> = {
         difficultes={[]}
         choixSeances={[{ id: F.seancesProf[1].id, libelle: "La fonction inverse — Mathématiques — Seconde 2 (brouillon)" }]}
       />
+    ),
+  },
+  T07: {
+    titre: "Lecteur PDF intégré",
+    ctx: ELEVE,
+    chemin: "/app/seances/x",
+    rendu: () => (
+      <div className="mx-auto max-w-[860px] space-y-6">
+        <h1 className="titre-page">Les fonctions affines</h1>
+        <LecteurPdf fichier="00000000-0000-4000-8000-000000000998" nom="Cours — fonctions affines.pdf" source="/apercu/pdf-exemple" />
+        <LecteurPdf fichier="00000000-0000-4000-8000-000000000997" nom="Document retiré.pdf" source="/apercu/pdf-absent" />
+      </div>
     ),
   },
   T06: {

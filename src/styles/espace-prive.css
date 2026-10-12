@@ -399,6 +399,37 @@
     .ligne-affectation > .flex-1 { flex-basis: calc(100% - 80px); }
   }
 
+  /* Lecteur de PDF intégré (mode « PDF tel quel »). */
+  .lecteur-pdf {
+    display: flex; flex-direction: column; overflow: hidden; outline: none;
+    border: 1px solid var(--bordure-douce, var(--color-bordure)); border-radius: var(--rayon-l, 20px);
+    background: var(--color-surface);
+  }
+  .lecteur-pdf-barre, .lecteur-pdf-commandes {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px 8px 14px;
+  }
+  .lecteur-pdf-barre { border-bottom: 1px solid var(--bordure-douce, var(--color-bordure)); }
+  .lecteur-pdf-commandes { flex-wrap: wrap; border-top: 1px solid var(--bordure-douce, var(--color-bordure)); padding-left: 10px; }
+  .lecteur-pdf-page {
+    display: flex; justify-content: center; overflow: auto; max-height: min(78vh, 900px);
+    background: var(--color-fond, #f7f4f6); padding: 12px;
+  }
+  .lecteur-pdf-page canvas { display: block; max-width: none; background: #fff; box-shadow: 0 1px 3px rgba(33, 23, 35, 0.12); }
+  .lecteur-pdf-bouton {
+    display: inline-grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 999px;
+    background: transparent; color: var(--color-encre); cursor: pointer; transition: background-color 140ms ease;
+  }
+  .lecteur-pdf-bouton:hover:not(:disabled) { background: var(--color-survol); }
+  .lecteur-pdf-bouton:disabled { opacity: 0.35; cursor: not-allowed; }
+  .lecteur-pdf-bouton:focus-visible, .lecteur-pdf-zoom:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  .lecteur-pdf-zoom {
+    min-width: 4rem; height: 36px; padding: 0 10px; border: 1px solid var(--bordure-douce, var(--color-bordure));
+    border-radius: 999px; background: var(--color-surface); font-size: 0.8125rem; font-weight: 700; cursor: pointer;
+  }
+  .lecteur-pdf-note { padding: 0 14px 12px; font-size: 0.75rem; color: var(--color-encre-faible); }
+  .lecteur-pdf[data-plein-ecran] { border-radius: 0; height: 100vh; }
+  .lecteur-pdf[data-plein-ecran] .lecteur-pdf-page { max-height: none; flex: 1; }
+
   /* Sélecteur d'élèves (groupes) : liste scrollable de cases à cocher. */
   .picker-liste {
     max-height: 320px; overflow-y: auto; border: 1px solid var(--bordure-douce, var(--color-bordure));

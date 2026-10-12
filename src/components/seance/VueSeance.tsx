@@ -1,3 +1,4 @@
+import { LecteurPdf } from "@/components/seance/LecteurPdf";
 import { tailleLisible } from "@/lib/formats-documents";
 import type { Bloc, Seance } from "@/lib/studio";
 
@@ -135,7 +136,14 @@ function BlocLu({ bloc }: { bloc: Bloc }) {
     );
   }
 
-  // Document. Le lien passe par notre route, pas par une URL signée du
+  // PDF déposé tel quel : il se lit sur place, octet pour octet, sans
+  // conversion (cahier des charges ch. 12, mode A). Le téléchargement reste
+  // dans la barre du lecteur.
+  if (bloc.file_id !== null && bloc.contenu.format === "PDF") {
+    return <LecteurPdf fichier={bloc.file_id} nom={String(bloc.contenu.nom ?? "Document PDF")} />;
+  }
+
+  // Autres documents. Le lien passe par notre route, pas par une URL signée du
   // stockage : l'autorisation est ainsi vérifiée à chaque téléchargement, et
   // non une fois pour toutes au moment où la page a été rendue.
   return (

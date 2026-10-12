@@ -319,7 +319,7 @@
     "debordement": 0,
     "h1": 1,
     "canvas": 0,
-    "hauteur": 900,
+    "hauteur": 1021,
     "erreurs": [],
     "ok": true
   },
@@ -1015,7 +1015,7 @@
     "debordement": 0,
     "h1": 1,
     "canvas": 0,
-    "hauteur": 892,
+    "hauteur": 1446,
     "erreurs": [],
     "ok": true
   },
@@ -1388,6 +1388,30 @@
     "h1": 1,
     "canvas": 0,
     "hauteur": 1144,
+    "erreurs": [],
+    "ok": true
+  },
+  {
+    "id": "T07",
+    "chemin": "/apercu/ecrans?ecran=T07",
+    "largeur": 1440,
+    "statut": 200,
+    "debordement": 0,
+    "h1": 1,
+    "canvas": 0,
+    "hauteur": 1295,
+    "erreurs": [],
+    "ok": true
+  },
+  {
+    "id": "T07",
+    "chemin": "/apercu/ecrans?ecran=T07",
+    "largeur": 390,
+    "statut": 200,
+    "debordement": 0,
+    "h1": 1,
+    "canvas": 0,
+    "hauteur": 1248,
     "erreurs": [],
     "ok": true
   }
