@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { affectations, classes, contexte, matieres, membres } from "@/lib/etablissement";
+import { affectations, classes, contexte, matieres, tousLesMembres } from "@/lib/etablissement";
 import { sessionCourante } from "@/lib/session-serveur";
 import { VueClasses } from "./vue";
 
@@ -25,7 +25,7 @@ export default async function PageAdminClasses() {
   const [listeClasses, listeMatieres, listeMembres, listeAffectations] = await Promise.all([
     classes(personne.profileId),
     matieres(personne.profileId),
-    membres(personne.profileId),
+    tousLesMembres(personne.profileId, { role: "professeur" }),
     affectations(personne.profileId),
   ]);
 

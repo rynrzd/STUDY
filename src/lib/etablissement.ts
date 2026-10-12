@@ -763,3 +763,82 @@ export async function terminerAffectation(acteur: string, affectation: string, d
   }
   return data as "terminee" | "retiree" | "deja";
 }
+
+/* -------------------------------------------------------------------------- */
+/* Recherche paginée des comptes (0072)                                        */
+/* -------------------------------------------------------------------------- */
+
+export interface FiltreMembres {
+  readonly texte?: string;
+  readonly role?: "eleve" | "professeur";
+  readonly classe?: string;
+  readonly etat?: "a_activer";
+  readonly limite?: number;
+  readonly decalage?: number;
+}
+
+/** Une page de comptes et le total exact ; `null` si la lecture échoue. */
+export async function rechercherMembres(acteur: string, filtre: FiltreMembres): Promise<{ lignes: MembreEtab[]; total: number } | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_membres_recherche", {
+    p_acteur: acteur,
+    p_texte: filtre.texte && filtre.texte.trim() !== "" ? filtre.texte.trim() : null,
+    p_role: filtre.role ?? null,
+    p_classe: filtre.classe && filtre.classe !== "" ? filtre.classe : null,
+    p_etat: filtre.etat ?? null,
+    p_limite: filtre.limite ?? 50,
+    p_decalage: filtre.decalage ?? 0,
+  });
+  if (error !== null) {
+    console.error(JSON.stringify({ niveau: "erreur", contexte: "etab.membres_recherche", code: error.code }));
+    return null;
+  }
+  const lignes = (data ?? []) as (MembreEtab & { total: number })[];
+  return { lignes, total: lignes[0]?.total ?? 0 };
+}
+
+/**
+ * Tous les comptes d'un filtre, page par page (au plus 5 000). Pour les listes
+ * courtes par nature — les professeurs — qu'un plafond global de 2 000 comptes
+ * tous rôles confondus pouvait tronquer en silence.
+ */
+export async function tousLesMembres(acteur: string, filtre: Omit<FiltreMembres, "limite" | "decalage">): Promise<MembreEtab[]> {
+  const tous: MembreEtab[] = [];
+  for (let decalage = 0; decalage < 5000; decalage += 200) {
+    const page = await rechercherMembres(acteur, { ...filtre, limite: 200, decalage });
+    if (page === null) break;
+    tous.push(...page.lignes);
+    if (tous.length >= page.total || page.lignes.length === 0) break;
+  }
+  return tous;
+}
+
+export interface ComptesMembres {
+  readonly tous: number;
+  readonly eleves: number;
+  readonly professeurs: number;
+  readonly a_activer: number;
+}
+
+/** Compteurs exacts, en base, sur toute la population ; `null` si la lecture échoue. */
+export async function comptesMembres(acteur: string, texte?: string, classe?: string): Promise<ComptesMembres | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_membres_comptes", {
+    p_acteur: acteur,
+    p_texte: texte && texte.trim() !== "" ? texte.trim() : null,
+    p_classe: classe && classe !== "" ? classe : null,
+  });
+  if (error !== null) {
+    console.error(JSON.stringify({ niveau: "erreur", contexte: "etab.membres_comptes", code: error.code }));
+    return null;
+  }
+  return ((data ?? []) as ComptesMembres[])[0] ?? null;
+}
+
+/** Les identifiants déjà pris qui commencent par `racine`, dans tout l'établissement. */
+export async function loginsPris(acteur: string, racine: string): Promise<string[] | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_logins_pris", { p_acteur: acteur, p_racine: racine });
+  if (error !== null) {
+    console.error(JSON.stringify({ niveau: "erreur", contexte: "etab.logins_pris", code: error.code }));
+    return null;
+  }
+  return (data ?? []) as string[];
+}

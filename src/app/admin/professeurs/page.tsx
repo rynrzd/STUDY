@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { affectations, affectationsProfesseurs, classes, contexte, groupes, matieres, membres } from "@/lib/etablissement";
+import { affectations, affectationsProfesseurs, classes, contexte, groupes, matieres, tousLesMembres } from "@/lib/etablissement";
 import { sessionCourante } from "@/lib/session-serveur";
 import { type LigneCours, VueProfesseurs } from "./vue";
 
@@ -38,7 +38,8 @@ export default async function PageProfesseurs({
   if (situation === null) redirect("/admin");
 
   const [listeMembres, listeAffectations, listeClasses, listeGroupes, listeMatieres, lignesAffectation] = await Promise.all([
-    membres(personne.profileId),
+    // Les professeurs seuls, sans plafond global (0072).
+    tousLesMembres(personne.profileId, { role: "professeur" }),
     affectations(personne.profileId),
     classes(personne.profileId),
     groupes(personne.profileId),

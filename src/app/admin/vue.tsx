@@ -7,13 +7,14 @@ import type { classes, contexte } from "@/lib/etablissement";
 import type { historiqueImports } from "@/lib/lot-rentree";
 
 /** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
-export function VueAdmin({ situation, nbSignalements, nbRecuperations, eleves, enseignants, aActiver, sansProfesseur, listeClasses, imports, conservation = null }: {
+export function VueAdmin({ situation, nbSignalements, nbRecuperations, nbEleves, nbEnseignants, nbAActiver, sansProfesseur, listeClasses, imports, conservation = null }: {
   situation: NonNullable<Awaited<ReturnType<typeof contexte>>>;
   nbSignalements: number | null;
   nbRecuperations: number | null;
-  eleves: readonly unknown[];
-  enseignants: readonly unknown[];
-  aActiver: readonly unknown[];
+  /** Compteurs exacts, en base (0072) ; `null` : indisponibles, affichés « — ». */
+  nbEleves: number | null;
+  nbEnseignants: number | null;
+  nbAActiver: number | null;
   sansProfesseur: readonly unknown[];
   listeClasses: Awaited<ReturnType<typeof classes>>;
   imports: Awaited<ReturnType<typeof historiqueImports>>;
@@ -37,9 +38,9 @@ export function VueAdmin({ situation, nbSignalements, nbRecuperations, eleves, e
       />
 
       <section aria-label="Chiffres de l'établissement" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <CarteChiffre icone={Users} libelle="Élèves" valeur={eleves.length} detail={`${aActiver.length} compte${aActiver.length > 1 ? "s" : ""} à activer`} href="/admin/utilisateurs" />
+        <CarteChiffre icone={Users} libelle="Élèves" valeur={nbEleves ?? "—"} detail={nbAActiver === null ? "—" : `${nbAActiver} compte${nbAActiver > 1 ? "s" : ""} à activer`} href="/admin/utilisateurs" />
         <CarteChiffre icone={School} libelle="Classes" valeur={listeClasses.length} detail="Groupes créés" href="/admin/classes" />
-        <CarteChiffre icone={GraduationCap} libelle="Enseignants" valeur={enseignants.length} detail="Comptes enseignants" href="/admin/professeurs" />
+        <CarteChiffre icone={GraduationCap} libelle="Enseignants" valeur={nbEnseignants ?? "—"} detail="Comptes enseignants" href="/admin/professeurs" />
         {/* Demandes en attente : compteurs réels ; « — » si la lecture est refusée (second facteur non validé). */}
         <div className="carte-chiffre">
           <TuileIcone icone={ShieldCheck} />
@@ -99,17 +100,17 @@ export function VueAdmin({ situation, nbSignalements, nbRecuperations, eleves, e
 
       {listeClasses.length > 0 ? (
         <>
-          {aActiver.length > 0 || sansProfesseur.length > 0 ? (
+          {(nbAActiver ?? 0) > 0 || sansProfesseur.length > 0 ? (
             <section className="mt-8" aria-labelledby="a-traiter">
               <h2 id="a-traiter" className="titre-section mb-3">
                 À traiter
               </h2>
               <ListeLignes>
-                {aActiver.length > 0 ? (
+                {nbAActiver !== null && nbAActiver > 0 ? (
                   <Ligne
                     href="/admin/utilisateurs?etat=a_activer"
                     icone={KeyRound}
-                    titre={`${aActiver.length} compte${aActiver.length > 1 ? "s" : ""} n'a jamais été activé`}
+                    titre={`${nbAActiver} compte${nbAActiver > 1 ? "s" : ""} n'a jamais été activé`}
                     detail="Remettez la fiche d'accès à la personne concernée : elle choisira son mot de passe à la première connexion."
                   />
                 ) : null}

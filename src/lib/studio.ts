@@ -35,6 +35,8 @@ interface LigneEspace {
   teaching_groups: { label: string } | null;
 }
 
+const LIMITE_COURS = 500;
+
 /** Les cours où la personne enseigne. La liste vient de RLS, pas d'un filtre. */
 export async function coursDuProfesseur(jeton: string): Promise<Cours[]> {
   const client = clientUtilisateur(jeton);
@@ -43,11 +45,16 @@ export async function coursDuProfesseur(jeton: string): Promise<Cours[]> {
     .from("teaching_spaces")
     .select("id, subjects(label), classes(label), teaching_groups(label)")
     .is("archived_at", null)
-    .limit(100);
+    // 500 : bien au-delà d'un service réel. Si la borne est atteinte, on le
+    // journalise au lieu de tronquer en silence (DATA-09).
+    .limit(LIMITE_COURS);
 
   if (error !== null) {
     journaliser("studio.cours", error.code);
     return [];
+  }
+  if ((data ?? []).length >= LIMITE_COURS) {
+    console.warn(JSON.stringify({ niveau: "alerte", contexte: "studio.cours", message: "borne de 500 cours atteinte" }));
   }
 
   return ((data ?? []) as unknown as LigneEspace[]).map((ligne) => {

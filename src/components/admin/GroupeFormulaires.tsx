@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useRef, useState } from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Check, CircleAlert, CircleCheck, Layers, Search, UserMinus, Users } from "lucide-react";
 import {
   affecterUnProfesseurAuGroupe,
   ajouterDesEleves,
+  chercherElevesPourGroupe,
   creerUnGroupe,
   retirerUnEleve,
 } from "@/app/admin/groupes/actions";
@@ -76,56 +77,93 @@ export function CreerGroupe() {
 
 /* ----------------------------------------------- Ajouter des élèves -------- */
 
-export function AjouterEleves({ groupe, eligibles }: { groupe: string; eligibles: readonly EleveChoisissable[] }) {
-  const [etat, action] = useActionState<EtatAdmin, FormData>(ajouterDesEleves, ETAT_ADMIN_INITIAL);
+export function AjouterEleves({
+  groupe,
+  eligibles,
+  plus = false,
+  classes = [],
+}: {
+  groupe: string;
+  /** Première page de résultats, rendue par le serveur. */
+  eligibles: readonly EleveChoisissable[];
+  /** La recherche a d'autres résultats que ceux montrés. */
+  plus?: boolean;
+  /** Les classes de l'établissement, pour filtrer. */
+  classes?: readonly string[];
+}) {
+  const [etat, action] = useActionState<EtatAdmin, FormData>(async (precedent, donnees) => {
+    try {
+      return await ajouterDesEleves(precedent, donnees);
+    } catch {
+      return { etat: "erreur", message: "La réponse du serveur n'est pas arrivée. Rechargez la page." };
+    }
+  }, ETAT_ADMIN_INITIAL);
   const [recherche, setRecherche] = useState("");
   const [classe, setClasse] = useState("");
-  const [choisis, setChoisis] = useState<ReadonlySet<string>>(new Set());
+  const [resultats, setResultats] = useState<{ eleves: readonly EleveChoisissable[]; plus: boolean; enCours: boolean; erreur: boolean }>({ eleves: eligibles, plus, enCours: false, erreur: false });
+  // Les élèves cochés restent cochés d'une recherche à l'autre.
+  const [choisis, setChoisis] = useState<ReadonlyMap<string, EleveChoisissable>>(new Map());
+  const minuterie = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const derniere = useRef(0);
 
-  const classes = useMemo(() => [...new Set(eligibles.map((e) => e.classe ?? "Sans classe"))].sort(), [eligibles]);
-  const visibles = useMemo(() => {
-    const r = recherche.trim().toLowerCase();
-    return eligibles.filter((e) => {
-      if (classe !== "" && (e.classe ?? "Sans classe") !== classe) return false;
-      if (r === "") return true;
-      return `${e.prenom} ${e.nom}`.toLowerCase().includes(r);
-    });
-  }, [eligibles, recherche, classe]);
+  function relancer(texte: string, filtreClasse: string) {
+    if (minuterie.current) clearTimeout(minuterie.current);
+    setResultats((r) => ({ ...r, enCours: true }));
+    minuterie.current = setTimeout(async () => {
+      const numero = ++derniere.current;
+      const r = await chercherElevesPourGroupe(groupe, texte, filtreClasse).catch(() => null);
+      if (numero !== derniere.current) return; // une recherche plus récente a pris le relais
+      setResultats(r === null ? { eleves: [], plus: false, enCours: false, erreur: true } : { eleves: r.eleves, plus: r.plus, enCours: false, erreur: false });
+    }, 250);
+  }
 
-  function basculer(id: string) {
+  function basculer(e: EleveChoisissable) {
     setChoisis((prec) => {
-      const suite = new Set(prec);
-      if (suite.has(id)) suite.delete(id);
-      else suite.add(id);
+      const suite = new Map(prec);
+      if (suite.has(e.profile_id)) suite.delete(e.profile_id);
+      else suite.set(e.profile_id, e);
       return suite;
     });
   }
 
-  if (eligibles.length === 0) {
-    return (
-      <p className="meta m-0">
-        Tous les élèves de l&apos;établissement sont déjà dans ce groupe, ou aucun élève n&apos;existe encore.
-      </p>
-    );
-  }
-
   return (
-    <form action={action} onSubmit={() => setChoisis(new Set())}>
+    <form action={action} onSubmit={() => setTimeout(() => setChoisis(new Map()), 0)}>
       <input type="hidden" name="groupe" value={groupe} />
+      {[...choisis.keys()].map((id) => (
+        <input key={id} type="hidden" name="eleve" value={id} />
+      ))}
       <div className="flex flex-wrap items-end gap-2">
         <span className="relative min-w-0 flex-1">
           <Search size={18} strokeWidth={1.75} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[color:var(--color-encre-faible)]" />
           <label htmlFor="picker-recherche" className="sr-only">
             Rechercher un élève
           </label>
-          <input id="picker-recherche" type="search" value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Rechercher un élève" className="champ pl-10" />
+          <input
+            id="picker-recherche"
+            type="search"
+            value={recherche}
+            onChange={(e) => {
+              setRecherche(e.target.value);
+              relancer(e.target.value, classe);
+            }}
+            placeholder="Nom, prénom ou identifiant"
+            className="champ pl-10"
+          />
         </span>
-        {classes.length > 1 ? (
+        {classes.length > 0 ? (
           <span className="min-w-0">
             <label htmlFor="picker-classe" className="sr-only">
               Filtrer par classe
             </label>
-            <select id="picker-classe" value={classe} onChange={(e) => setClasse(e.target.value)} className="champ">
+            <select
+              id="picker-classe"
+              value={classe}
+              onChange={(e) => {
+                setClasse(e.target.value);
+                relancer(recherche, e.target.value);
+              }}
+              className="champ"
+            >
               <option value="">Toutes les classes</option>
               {classes.map((c) => (
                 <option key={c} value={c}>
@@ -137,17 +175,31 @@ export function AjouterEleves({ groupe, eligibles }: { groupe: string; eligibles
         ) : null}
       </div>
 
-      <div className="picker-liste mt-3" role="group" aria-label="Élèves à ajouter">
-        {visibles.length === 0 ? (
-          <p className="meta m-0 px-1 py-6 text-center">Aucun élève ne correspond.</p>
+      {choisis.size > 0 ? (
+        <ul className="m-0 mt-3 flex list-none flex-wrap gap-2 p-0" aria-label="Élèves choisis">
+          {[...choisis.values()].map((e) => (
+            <li key={e.profile_id}>
+              <button type="button" className="puce-cours" onClick={() => basculer(e)} aria-label={`Retirer ${e.prenom} ${e.nom} de la sélection`}>
+                {e.prenom} {e.nom} <span aria-hidden="true">×</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <div className="picker-liste mt-3" role="group" aria-label="Élèves à ajouter" aria-busy={resultats.enCours}>
+        {resultats.erreur ? (
+          <p className="meta m-0 px-1 py-6 text-center">La recherche n&apos;a pas abouti. Réessayez.</p>
+        ) : resultats.eleves.length === 0 ? (
+          <p className="meta m-0 px-1 py-6 text-center">{resultats.enCours ? "Recherche…" : "Aucun élève ne correspond."}</p>
         ) : (
           <ul className="m-0 list-none p-0">
-            {visibles.map((e) => {
+            {resultats.eleves.map((e) => {
               const coche = choisis.has(e.profile_id);
               return (
                 <li key={e.profile_id}>
                   <label className="picker-ligne" data-actif={coche ? "" : undefined}>
-                    <input type="checkbox" name="eleve" value={e.profile_id} checked={coche} onChange={() => basculer(e.profile_id)} className="sr-only" />
+                    <input type="checkbox" checked={coche} onChange={() => basculer(e)} className="sr-only" />
                     <span className="picker-coche" aria-hidden="true">
                       {coche ? <Check size={14} strokeWidth={3} /> : null}
                     </span>
@@ -162,6 +214,7 @@ export function AjouterEleves({ groupe, eligibles }: { groupe: string; eligibles
           </ul>
         )}
       </div>
+      {resultats.plus ? <p className="meta m-0 mt-2">Seuls les premiers résultats s&apos;affichent : affinez avec un nom ou une classe.</p> : null}
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <span className="meta" aria-live="polite">

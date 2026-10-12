@@ -152,6 +152,12 @@ const FONCTIONS = [
   // 0071 — Historique des versions : ni lire, ni restaurer sans compte.
   { nom: "studio_historique", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_document: "00000000-0000-4000-8000-000000000000" } },
   { nom: "studio_restaurer_version", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_document: "00000000-0000-4000-8000-000000000000", p_version: "00000000-0000-4000-8000-000000000000" } },
+
+  // 0072 — Recherche des comptes : ni lister, ni compter, ni sonder les identifiants sans compte.
+  { nom: "etab_membres_recherche", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_membres_comptes", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_logins_pris", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_racine: "a" } },
+  { nom: "plier", corps: { p_texte: "sonde" } },
 ];
 
 let defauts = 0;

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { affectations, classes, conservationJournal, contexte, membres } from "@/lib/etablissement";
+import { affectations, classes, comptesMembres, conservationJournal, contexte } from "@/lib/etablissement";
 import { historiqueImports } from "@/lib/lot-rentree";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
@@ -37,9 +37,9 @@ export default async function PageAdmin() {
 
   const jeton = await jetonAccesDe(personne);
   const client = jeton ? clientUtilisateur(jeton) : null;
-  const [listeClasses, listeMembres, listeAffectations, imports, signalementsOuverts, recuperations, conservation] = await Promise.all([
+  const [listeClasses, comptes, listeAffectations, imports, signalementsOuverts, recuperations, conservation] = await Promise.all([
     classes(personne.profileId),
-    membres(personne.profileId),
+    comptesMembres(personne.profileId),
     affectations(personne.profileId),
     historiqueImports(personne.profileId),
     // Compteurs réels, sous le jeton de l'administrateur (second facteur exigé par la base).
@@ -50,10 +50,7 @@ export default async function PageAdmin() {
   const nbSignalements = signalementsOuverts?.error ? null : (signalementsOuverts?.count ?? null);
   const nbRecuperations = recuperations?.error ? null : ((recuperations?.data ?? []) as unknown[]).length;
 
-  const eleves = listeMembres.filter((membre) => membre.roles.includes("eleve"));
-  const enseignants = listeMembres.filter((membre) => membre.roles.includes("professeur"));
-  const aActiver = listeMembres.filter((membre) => membre.account_state === "a_activer");
   const sansProfesseur = listeAffectations.filter((lien) => lien.professeur_id === null);
 
-  return <VueAdmin situation={situation} nbSignalements={nbSignalements} nbRecuperations={nbRecuperations} eleves={eleves} enseignants={enseignants} aActiver={aActiver} sansProfesseur={sansProfesseur} listeClasses={listeClasses} imports={imports} conservation={conservation} />;
+  return <VueAdmin situation={situation} nbSignalements={nbSignalements} nbRecuperations={nbRecuperations} nbEleves={comptes?.eleves ?? null} nbEnseignants={comptes?.professeurs ?? null} nbAActiver={comptes?.a_activer ?? null} sansProfesseur={sansProfesseur} listeClasses={listeClasses} imports={imports} conservation={conservation} />;
 }

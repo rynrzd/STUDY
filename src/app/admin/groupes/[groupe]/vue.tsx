@@ -13,6 +13,8 @@ export function VueGroupe({
   eligibles,
   professeurs,
   matieres,
+  plus = false,
+  classes = [],
 }: {
   groupe: GroupeEtab;
   membres: readonly MembreGroupe[];
@@ -20,6 +22,8 @@ export function VueGroupe({
   eligibles: readonly { profile_id: string; prenom: string; nom: string; classe: string | null }[];
   professeurs: readonly Option[];
   matieres: readonly Option[];
+  plus?: boolean;
+  classes?: readonly string[];
 }) {
   const classesSources = [...new Set(membres.map((m) => m.classe).filter((c): c is string => c !== null))];
 
@@ -105,9 +109,9 @@ export function VueGroupe({
             <p className="m-0 flex items-center gap-2 font-bold">
               <Layers size={18} strokeWidth={1.75} aria-hidden="true" /> Ajouter des élèves
             </p>
-            <p className="meta m-0 mt-1">Cherchez, filtrez par classe, cochez, puis ajoutez d&apos;un coup.</p>
+            <p className="meta m-0 mt-1">Cherchez un nom ou choisissez une classe, cochez, puis ajoutez d&apos;un coup. La sélection reste d&apos;une recherche à l&apos;autre.</p>
             <div className="mt-3">
-              <AjouterEleves groupe={groupe.id} eligibles={eligibles} />
+              <AjouterEleves groupe={groupe.id} eligibles={eligibles} plus={plus} classes={classes} />
             </div>
           </div>
         </div>

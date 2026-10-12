@@ -480,9 +480,9 @@ const ECRANS: Record<string, Ecran> = {
         situation={F.situation}
         nbSignalements={2}
         nbRecuperations={2}
-        eleves={[1, 2]}
-        enseignants={[1]}
-        aActiver={[1]}
+        nbEleves={2431}
+        nbEnseignants={79}
+        nbAActiver={37}
         sansProfesseur={[]}
         listeClasses={[...F.classesEtab]}
         imports={F.imports.map((i) => ({ ...i, rapport: { ...i.rapport } }))}
@@ -497,7 +497,8 @@ const ECRANS: Record<string, Ecran> = {
     rendu: () => (
       <VueUtilisateurs
         situation={F.situation}
-        listeMembres={F.membresEtab.map((m) => ({ ...m, roles: [...m.roles] }))}
+        comptes={{ tous: 2512, eleves: 2431, professeurs: 79, a_activer: 37 }}
+        total={F.membresEtab.length}
         listeClasses={[...F.classesEtab]}
         visibles={F.membresEtab.map((m) => ({ ...m, roles: [...m.roles] }))}
         filtre=""

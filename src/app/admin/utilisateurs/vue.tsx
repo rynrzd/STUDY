@@ -4,7 +4,7 @@ import { AjouterPersonne } from "@/components/admin/AjouterPersonne";
 import { GestesCompte } from "@/components/admin/GestesCompte";
 import { RechercheComptes } from "@/components/admin/RechercheComptes";
 import { EnTetePage, EtatVide, Etiquette, ICONE, OngletsLiens } from "@/components/study/ui";
-import type { classes, contexte, membres } from "@/lib/etablissement";
+import type { ComptesMembres, classes, contexte, membres } from "@/lib/etablissement";
 
 const FILTRES = [
   { cle: "", libelle: "Tous" },
@@ -14,9 +14,14 @@ const FILTRES = [
 ] as const;
 
 /** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
-export function VueUtilisateurs({ situation, listeMembres, listeClasses, visibles, filtre, classeChoisie, cherche, adresseExport, optionsClasses, moi, ajouter = null }: {
+export function VueUtilisateurs({ situation, comptes, listeClasses, visibles, total, lectureEchouee = false, page = 1, parPage = 50, filtre, classeChoisie, cherche, adresseExport, optionsClasses, moi, ajouter = null }: {
   situation: NonNullable<Awaited<ReturnType<typeof contexte>>>;
-  listeMembres: Awaited<ReturnType<typeof membres>>;
+  /** Compteurs exacts des onglets, en base ; `null` si indisponibles. */
+  comptes: ComptesMembres | null;
+  total: number;
+  lectureEchouee?: boolean;
+  page?: number;
+  parPage?: number;
   listeClasses: Awaited<ReturnType<typeof classes>>;
   visibles: Awaited<ReturnType<typeof membres>>;
   filtre: string;
@@ -28,17 +33,19 @@ export function VueUtilisateurs({ situation, listeMembres, listeClasses, visible
   /** `?ajouter=eleve|professeur` : la fenêtre d'ajout s'ouvre d'emblée (liens du tableau de bord). */
   ajouter?: "eleve" | "professeur" | null;
 }) {
+  // « — » plutôt qu'un faux zéro si les compteurs n'ont pas pu être lus.
   const compte = (cle: string) =>
-    listeMembres.filter((m) =>
-      cle === "eleve" ? m.roles.includes("eleve") : cle === "professeur" ? m.roles.includes("professeur") : cle === "a_activer" ? m.account_state === "a_activer" : true,
-    ).length;
+    comptes === null ? undefined : cle === "eleve" ? comptes.eleves : cle === "professeur" ? comptes.professeurs : cle === "a_activer" ? comptes.a_activer : comptes.tous;
+  const pages = Math.max(1, Math.ceil(total / parPage));
+  const premier = total === 0 ? 0 : (page - 1) * parPage + 1;
+  const dernier = Math.min(total, page * parPage);
 
   return (
     <>
       <EnTetePage
         sourcil="Administration"
         titre="Personnes"
-        sousTitre={`${listeMembres.length} compte${listeMembres.length > 1 ? "s" : ""} dans ${situation.organisation}. Aucun mot de passe n'est affiché ici.`}
+        sousTitre={`${comptes === null ? "" : `${comptes.tous} compte${comptes.tous > 1 ? "s" : ""} dans `}${situation.organisation}. Aucun mot de passe n'est affiché ici.`}
         actions={
           <>
             {/* Un lien de téléchargement, dont l'adresse reste refusée à qui
@@ -69,7 +76,9 @@ export function VueUtilisateurs({ situation, listeMembres, listeClasses, visible
         <RechercheComptes valeur={cherche} etat={filtre} classe={classeChoisie} classes={listeClasses.map((classe) => classe.label)} />
       </div>
 
-      {visibles.length === 0 ? (
+      {lectureEchouee ? (
+        <EtatVide icone={Search} titre="Les comptes ne sont pas disponibles." texte="La liste n'a pas pu être lue. Rechargez la page dans un instant." />
+      ) : visibles.length === 0 ? (
         <EtatVide
           icone={Search}
           titre="Aucun compte ne correspond."
@@ -91,7 +100,7 @@ export function VueUtilisateurs({ situation, listeMembres, listeClasses, visible
               </tr>
             </thead>
             <tbody>
-              {visibles.slice(0, 500).map((membre) => (
+              {visibles.map((membre) => (
                 <tr key={membre.profile_id} className="align-top">
                   <td>
                     <span className="flex items-center gap-3">
@@ -141,18 +150,40 @@ export function VueUtilisateurs({ situation, listeMembres, listeClasses, visible
         </div>
       )}
 
-      {visibles.length > 500 ? <p className="meta m-0 mt-3">Les 500 premiers comptes sont affichés. Affinez avec la recherche ou un filtre pour voir les suivants.</p> : null}
+      {total > 0 ? (
+        <nav aria-label="Pages de la liste" className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <span className="meta">
+            {premier}–{dernier} sur {total}
+          </span>
+          <span className="flex gap-2">
+            {page > 1 ? (
+              <Link href={adresse(filtre, classeChoisie, cherche, page - 1)} className="bouton bouton-compact bouton-secondaire" rel="prev">
+                Précédent
+              </Link>
+            ) : null}
+            <span className="meta self-center">
+              Page {page} / {pages}
+            </span>
+            {page < pages ? (
+              <Link href={adresse(filtre, classeChoisie, cherche, page + 1)} className="bouton bouton-compact bouton-secondaire" rel="next">
+                Suivant
+              </Link>
+            ) : null}
+          </span>
+        </nav>
+      ) : null}
     </>
   );
 }
 
 
 /** L'adresse d'un filtre, en gardant la recherche et la classe en cours. */
-function adresse(etat: string, classe: string, recherche: string): string {
+function adresse(etat: string, classe: string, recherche: string, page = 1): string {
   const parametres = new URLSearchParams();
   if (etat !== "") parametres.set("etat", etat);
   if (classe !== "") parametres.set("classe", classe);
   if (recherche !== "") parametres.set("q", recherche);
+  if (page > 1) parametres.set("page", String(page));
 
   const suite = parametres.toString();
   return suite === "" ? "/admin/utilisateurs" : `/admin/utilisateurs?${suite}`;

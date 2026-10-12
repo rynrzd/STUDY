@@ -16,7 +16,7 @@ import {
   DUREES_CONSERVATION,
   fixerConservationJournal,
   inscrireEleve,
-  membres as listerMembres,
+  loginsPris,
 } from "@/lib/etablissement";
 import { proposerLogin } from "@/lib/import-rentree";
 import { assuranceSuffisante, REFUS_ASSURANCE } from "@/lib/garde-assurance";
@@ -172,10 +172,15 @@ export async function creerUnCompte(
 
   // Les identifiants déjà pris viennent de la base, pas d'un cache : deux
   // administrateurs qui créent « Martin Dupont » en même temps n'obtiennent pas
-  // le même identifiant.
-  const existants = await listerMembres(acteur);
-  const pris = new Set(existants.map((membre) => membre.local_login));
-  const login = proposerLogin(prenom, nom, pris);
+  // le même identifiant. Ils sont lus par préfixe sur tout l'établissement
+  // (0072) — une liste chargée et plafonnée laissait passer des doublons
+  // au-delà de 2 000 comptes.
+  const racine = proposerLogin(prenom, nom, new Set());
+  const dejaPris = await loginsPris(acteur, racine);
+  if (dejaPris === null) {
+    return { etat: "erreur", message: "Les identifiants existants n'ont pas pu être vérifiés. Réessayez." };
+  }
+  const login = proposerLogin(prenom, nom, new Set(dejaPris));
 
   // Le libellé de la classe ne sert qu'à la fiche imprimable. Il est relu en
   // base à partir de l'identifiant choisi, jamais repris du formulaire : ce

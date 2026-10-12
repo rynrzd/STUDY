@@ -8,7 +8,9 @@ import {
   creerGroupe,
   type GenreGroupe,
   groupeAjouterEleves,
+  groupeMembres,
   groupeRetirerEleve,
+  rechercherMembres,
 } from "@/lib/etablissement";
 import { assuranceSuffisante, REFUS_ASSURANCE } from "@/lib/garde-assurance";
 import { sessionCourante } from "@/lib/session-serveur";
@@ -142,4 +144,31 @@ export async function affecterUnProfesseurAuGroupe(_precedent: EtatAdmin, donnee
 
   revalidatePath(`/admin/groupes/${groupe}`);
   return { etat: "ok", message: "Professeur affecté au groupe." };
+}
+
+/**
+ * Élèves à proposer pour un groupe : recherche en base (accents et majuscules
+ * ignorés), au plus 50 résultats, sans les membres actuels. Le sélecteur ne
+ * charge donc jamais tout l'établissement (cahier des charges GR-03).
+ */
+export async function chercherElevesPourGroupe(
+  groupe: string,
+  texte: string,
+  classe: string,
+): Promise<{ eleves: { profile_id: string; prenom: string; nom: string; classe: string | null }[]; plus: boolean } | null> {
+  const acteur = await exigerAdministrateur();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(groupe)) return null;
+  const [page, dansLeGroupe] = await Promise.all([
+    rechercherMembres(acteur, { role: "eleve", texte: texte.slice(0, 80), classe: classe.slice(0, 80), limite: 80 }),
+    groupeMembres(acteur, groupe),
+  ]);
+  if (page === null) return null;
+  const membres = new Set(dansLeGroupe.map((m) => m.profile_id));
+  const eleves = page.lignes
+    .filter((m) => !membres.has(m.profile_id))
+    .slice(0, 50)
+    .map((m) => ({ profile_id: m.profile_id, prenom: m.prenom, nom: m.nom, classe: m.classe }));
+  // « plus » : la recherche a d'autres résultats que ceux montrés — on invite
+  // à l'affiner plutôt que d'annoncer un chiffre approximatif.
+  return { eleves, plus: page.total > page.lignes.length || page.lignes.length - eleves.length > 0 && eleves.length === 50 };
 }
