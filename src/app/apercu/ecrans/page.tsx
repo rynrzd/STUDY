@@ -6,6 +6,7 @@ import { EtapesImport } from "@/components/admin/EtapesImport";
 import { VerificationRentree } from "@/components/admin/VerificationRentree";
 import { EnTetePage } from "@/components/study/ui";
 import type { ContexteApp } from "@/lib/v6/contexte";
+import { VueVersions } from "@/app/professeur/studio/[document]/versions/vue";
 import { LecteurPdf } from "@/components/seance/LecteurPdf";
 import { Publication } from "@/components/studio/Publication";
 import { VueClasses } from "@/app/admin/classes/vue";
@@ -420,6 +421,23 @@ const ECRANS: Record<string, Ecran> = {
         <LecteurPdf fichier="00000000-0000-4000-8000-000000000998" nom="Cours — fonctions affines.pdf" source="/apercu/pdf-exemple" />
         <LecteurPdf fichier="00000000-0000-4000-8000-000000000997" nom="Document retiré.pdf" source="/apercu/pdf-absent" />
       </div>
+    ),
+  },
+  T08: {
+    titre: "Historique des versions",
+    ctx: PROF,
+    chemin: "/professeur/studio/x/versions",
+    rendu: () => (
+      <VueVersions
+        document="00000000-0000-4000-8000-000000000999"
+        titre="Les suites numériques"
+        versions={[
+          { version: "v4", numero: 4, creeeLe: "2026-10-12T14:05:00Z", courante: true, titre: "Les suites numériques", enLigneDans: [] },
+          { version: "v3", numero: 3, creeeLe: "2026-10-10T09:40:00Z", courante: false, titre: "Les suites numériques", enLigneDans: ["Mathématiques — Seconde 2", "Mathématiques — Spé Maths A"] },
+          { version: "v2", numero: 2, creeeLe: "2026-10-08T17:12:00Z", courante: false, titre: "Suites — relu", enLigneDans: [] },
+          { version: "v1", numero: 1, creeeLe: "2026-10-06T08:00:00Z", courante: false, titre: "Suites — premier jet", enLigneDans: [] },
+        ]}
+      />
     ),
   },
   T06: {

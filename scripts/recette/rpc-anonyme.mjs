@@ -148,6 +148,10 @@ const FONCTIONS = [
   { nom: "studio_programmer_plusieurs", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_document: "00000000-0000-4000-8000-000000000000", p_cours: [], p_titre: "sonde", p_quand: "2030-01-01T00:00:00Z" } },
   { nom: "studio_annuler_programmation", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_seance: "00000000-0000-4000-8000-000000000000" } },
   { nom: "publier_seances_echues", corps: {} },
+
+  // 0071 — Historique des versions : ni lire, ni restaurer sans compte.
+  { nom: "studio_historique", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_document: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "studio_restaurer_version", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_document: "00000000-0000-4000-8000-000000000000", p_version: "00000000-0000-4000-8000-000000000000" } },
 ];
 
 let defauts = 0;

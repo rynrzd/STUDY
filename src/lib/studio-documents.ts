@@ -320,6 +320,7 @@ export async function convertir(options: {
       body: { document: contenu, reglages: REGLAGES_PAR_DEFAUT },
       version_number: numero + 1,
       created_by: options.proprietaire,
+      studio_document_id: options.document,
     })
     .select("id")
     .single();
@@ -366,4 +367,42 @@ export async function etatTraitement(
   if (ligne == null) return null;
 
   return { state: ligne.state, attempts: ligne.attempts, erreur: ligne.last_error ?? null };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Historique des versions (0071)                                              */
+/* -------------------------------------------------------------------------- */
+
+export interface VersionDocument {
+  readonly version: string;
+  readonly numero: number;
+  readonly creeeLe: string;
+  readonly courante: boolean;
+  readonly titre: string;
+  readonly enLigneDans: readonly string[];
+}
+
+/** Les versions d'un document de l'auteur, de la plus récente à la plus ancienne ; `null` si refusé. */
+export async function historique(acteur: string, document: string): Promise<VersionDocument[] | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("studio_historique", { p_acteur: acteur, p_document: document });
+  if (error !== null) return null;
+  return ((data ?? []) as { version: string; numero: number; creee_le: string; courante: boolean; titre: string; en_ligne_dans: string[] }[]).map((l) => ({
+    version: l.version,
+    numero: l.numero,
+    creeeLe: l.creee_le,
+    courante: l.courante,
+    titre: l.titre,
+    enLigneDans: l.en_ligne_dans ?? [],
+  }));
+}
+
+/** Restaure une version en créant une nouvelle version ; renvoie son numéro ou `null`. */
+export async function restaurerVersion(acteur: string, document: string, version: string): Promise<number | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("studio_restaurer_version", {
+    p_acteur: acteur,
+    p_document: document,
+    p_version: version,
+  });
+  if (error !== null) return null;
+  return typeof data === "number" ? data : null;
 }

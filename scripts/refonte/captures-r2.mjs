@@ -7,7 +7,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const [base = "http://localhost:3101", dossier] = process.argv.slice(2);
 mkdirSync(dossier, { recursive: true });
-const ECRANS = ["A01", "A03", "A08", "A04", "A04q", "A04p", "A05", "A06", "A09", "A10", "A11", "A13", "A14", "A12", "A15", "A16", "A17", "A18", "A19", "A19b", "A20", "A20b", "A20c", "A21", "T01", "T02", "T02b", "T03", "T04", "T05", "T05b", "T06", "T07", "D01", "D02", "D02b", "D03", "D04", "D05", "D06", "D07", "D08", "D09", "D10"];
+const ECRANS = ["A01", "A03", "A08", "A04", "A04q", "A04p", "A05", "A06", "A09", "A10", "A11", "A13", "A14", "A12", "A15", "A16", "A17", "A18", "A19", "A19b", "A20", "A20b", "A20c", "A21", "T01", "T02", "T02b", "T03", "T04", "T05", "T05b", "T06", "T07", "T08", "D01", "D02", "D02b", "D03", "D04", "D05", "D06", "D07", "D08", "D09", "D10"];
 const AUTRES = [
   ["P01", "/"], ["P02", "/connexion"], ["P06", "/acces-oublie"], ["P09", "/rejoindre"], ["P10", "/session-expiree"], ["P11", "/lien-expire"],
   ["P12", "/aide"], ["P13", "/confidentialite"], ["P15", "/produit"], ["P16", "/etablissements"], ["P17", "/offre"], ["P18", "/contact"], ["P21", "/page-inexistante"],

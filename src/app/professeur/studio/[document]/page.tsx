@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { FileWarning } from "lucide-react";
+import { FileWarning, History } from "lucide-react";
 import { FilAriane } from "@/components/study/ui";
 import { EditeurDocument } from "@/components/studio/EditeurDocument";
 import { SuiviTraitement } from "@/components/studio/SuiviTraitement";
@@ -77,7 +77,12 @@ export default async function PageMiseEnPage({
 
   return (
     <>
-      <Retour />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Retour />
+        <Link href={`/professeur/studio/${doc.id}/versions`} className="inline-flex min-h-[44px] items-center gap-1.5 text-[0.875rem] font-semibold text-[color:var(--color-accent)]">
+          <History size={16} strokeWidth={1.75} aria-hidden="true" /> Historique des versions
+        </Link>
+      </div>
       <div className="mt-4">
         <EditeurDocument
           initial={{

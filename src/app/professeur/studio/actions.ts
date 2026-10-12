@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { relireDocument, relireReglages } from "@/lib/document-cours";
-import { importer } from "@/lib/studio-documents";
+import { importer, restaurerVersion } from "@/lib/studio-documents";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { heureLisible, parisVersIso } from "@/lib/evaluations/dates";
 import { annulerProgrammation, ciblesPublication, destinatairesUniques, programmerPlusieurs, publierPlusieurs } from "@/lib/publication";
@@ -150,6 +150,9 @@ export async function enregistrerRevision(
       body: { document: contenu, reglages },
       version_number: numeroCourant + 1,
       created_by: session.profileId,
+      // Chaque version reste rattachée à son document : c'est ce qui permet
+      // de la retrouver dans l'historique (0071).
+      studio_document_id: doc.id,
     })
     .select("id, version_number")
     .single();
@@ -311,4 +314,16 @@ export async function annulerUneProgrammation(seance: string, document: string):
     revalidatePath(`/professeur/studio/${document}/publication`);
   }
   return fait;
+}
+
+/** Restaurer une version : une NOUVELLE version la recopie (rien n'est réécrit). */
+export async function restaurerUneVersion(document: string, version: string): Promise<{ ok: true; numero: number } | { ok: false; message: string }> {
+  const session = await professeur();
+  if (session === null) return { ok: false, message: "Session expirée. Reconnectez-vous." };
+  if (!z.string().uuid().safeParse(document).success || !z.string().uuid().safeParse(version).success) return { ok: false, message: "Version introuvable." };
+  const r = await restaurerVersion(session.profileId, document, version);
+  if (r === null) return { ok: false, message: "La restauration a été refusée." };
+  revalidatePath(`/professeur/studio/${document}`);
+  revalidatePath(`/professeur/studio/${document}/versions`);
+  return { ok: true, numero: r };
 }
