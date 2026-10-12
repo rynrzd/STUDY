@@ -592,3 +592,38 @@ export async function affecterProfesseurGroupe(acteur: string, professeur: strin
   }
   return typeof data === "string" ? data : null;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Affectations multiples (0067, cahier des charges ch. 08)                    */
+/* -------------------------------------------------------------------------- */
+
+export interface LigneAffectation {
+  readonly genre: "classe" | "groupe";
+  readonly cible: string;
+  readonly matiere: string;
+}
+
+export interface IssueAffectation {
+  readonly rang: number;
+  readonly resultat: "creee" | "existante" | "refusee";
+  readonly raison: string | null;
+}
+
+/** Affecte un professeur à plusieurs couples cible × matière ; `null` si la demande entière est refusée. */
+export async function affecterPlusieurs(acteur: string, professeur: string, lignes: readonly LigneAffectation[]): Promise<IssueAffectation[] | null> {
+  const client = clientExploitation("administration_des_comptes");
+  const { data, error } = await client.rpc("etab_affecter_professeur_plusieurs", {
+    p_acteur: acteur,
+    p_professeur: professeur,
+    p_lignes: lignes,
+  });
+  if (error !== null) {
+    console.error(JSON.stringify({ niveau: "erreur", contexte: "etab.affecter_plusieurs", code: error.code }));
+    return null;
+  }
+  return ((data ?? []) as { rang: number; resultat: IssueAffectation["resultat"]; raison: string | null }[]).map((l) => ({
+    rang: l.rang,
+    resultat: l.resultat,
+    raison: l.raison,
+  }));
+}

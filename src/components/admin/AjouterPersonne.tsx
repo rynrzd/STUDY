@@ -148,7 +148,7 @@ function Contenu({
           </button>
           <div className="flex flex-wrap gap-2">
             {acces.role === "professeur" ? (
-              <Link href="/admin/classes#affecter" className="bouton bouton-secondaire" onClick={fermer}>
+              <Link href="/admin/professeurs" className="bouton bouton-secondaire" onClick={fermer}>
                 Affecter à une classe <ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" />
               </Link>
             ) : null}

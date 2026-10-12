@@ -21,3 +21,12 @@ export interface EtatAdmin {
 }
 
 export const ETAT_ADMIN_INITIAL: EtatAdmin = { etat: "vierge" };
+
+/** Affectation multiple : l'issue de chaque ligne, dans l'ordre de la demande (rang 1, 2…). */
+export interface EtatAffectations {
+  readonly etat: "vierge" | "ok" | "partiel" | "erreur";
+  readonly message?: string;
+  readonly issues?: readonly { readonly rang: number; readonly resultat: "creee" | "existante" | "refusee"; readonly raison: string | null }[];
+}
+
+export const ETAT_AFFECTATIONS_INITIAL: EtatAffectations = { etat: "vierge" };

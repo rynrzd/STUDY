@@ -387,6 +387,18 @@
   .resultat-publication[data-ton="partiel"] { background: var(--color-attention-fond); color: var(--color-attention); }
   .resultat-publication[data-ton="erreur"] { background: var(--color-erreur-fond); color: var(--color-erreur); }
 
+  /* Affectation multiple : une ligne par cours. */
+  .ligne-affectation { display: flex; align-items: center; gap: 8px; }
+  .ligne-affectation-rang {
+    display: inline-grid; place-items: center; width: 28px; height: 28px; flex-shrink: 0; border-radius: 999px;
+    background: var(--color-rose-clair); color: var(--color-accent); font-weight: 800; font-size: 0.8125rem;
+  }
+  .ajout-fermer:disabled { opacity: 0.35; cursor: not-allowed; }
+  @media (max-width: 560px) {
+    .ligne-affectation { flex-wrap: wrap; padding-bottom: 10px; border-bottom: 1px solid var(--bordure-douce, var(--color-bordure)); }
+    .ligne-affectation > .flex-1 { flex-basis: calc(100% - 80px); }
+  }
+
   /* Sélecteur d'élèves (groupes) : liste scrollable de cases à cocher. */
   .picker-liste {
     max-height: 320px; overflow-y: auto; border: 1px solid var(--bordure-douce, var(--color-bordure));

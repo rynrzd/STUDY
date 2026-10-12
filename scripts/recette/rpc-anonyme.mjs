@@ -130,6 +130,9 @@ const FONCTIONS = [
   { nom: "studio_cibles_publication", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_document: "00000000-0000-4000-8000-000000000000" } },
   { nom: "studio_destinataires_uniques", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_cours: [] } },
   { nom: "studio_publier_plusieurs", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_document: "00000000-0000-4000-8000-000000000000", p_cours: [], p_titre: "sonde" } },
+
+  // 0067 — Affectation multiple : aucun cours ne s ouvre sans compte.
+  { nom: "etab_affecter_professeur_plusieurs", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_professeur: "00000000-0000-4000-8000-000000000000", p_lignes: [] } },
 ];
 
 let defauts = 0;

@@ -550,6 +550,8 @@ const ECRANS: Record<string, Ecran> = {
           coursSansProfesseur={F.affectationsEtab.filter((lien) => lien.professeur_id === null)}
           cherche=""
           optionsClasses={F.classesEtab.map((c) => ({ id: c.id, label: c.label }))}
+          optionsGroupes={F.groupesEtab.map((g) => ({ id: g.id, label: g.label }))}
+          optionsMatieres={[...F.matieresEtab]}
         />
       );
     },

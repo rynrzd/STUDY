@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { changerEtatCompte, reinitialiserAcces } from "@/lib/acces";
 import {
+  affecterPlusieurs,
   affecterProfesseur,
   assurerAnnee,
   classes as listerClasses,
@@ -28,7 +29,7 @@ import { sessionCourante } from "@/lib/session-serveur";
  * à la fois, pour l’élève qui arrive en janvier.
  */
 
-import type { EtatAdmin } from "./etats";
+import type { EtatAdmin, EtatAffectations } from "./etats";
 
 async function exigerAdministrateur(): Promise<string> {
   const personne = await sessionCourante();
@@ -368,4 +369,67 @@ export async function fixerUneConservation(
   }
   revalidatePath("/admin");
   return { etat: "ok", message: `Journal conservé ${duree} mois.` };
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Affecter un professeur à plusieurs cours en une fois — cahier des charges,
+ * ch. 08. Les lignes arrivent en JSON depuis la fenêtre ; elles sont relues ici
+ * (forme, identifiants), puis la base revérifie chaque cible, chaque matière et
+ * l'année de la cible. L'issue est rendue ligne par ligne.
+ */
+export async function affecterPlusieursCours(_precedent: EtatAffectations, donnees: FormData): Promise<EtatAffectations> {
+  const acteur = await exigerAdministrateur();
+  const professeur = identifiant(donnees, "professeur");
+  if (professeur === null) return { etat: "erreur", message: "Professeur introuvable." };
+
+  let brutes: unknown;
+  try {
+    brutes = JSON.parse(texte(donnees, "lignes", 20000) || "[]");
+  } catch {
+    return { etat: "erreur", message: "La liste des cours est illisible. Rechargez la page." };
+  }
+  if (!Array.isArray(brutes) || brutes.length === 0) {
+    return { etat: "erreur", message: "Ajoutez au moins un cours." };
+  }
+  if (brutes.length > 60) {
+    return { etat: "erreur", message: "60 cours au plus en une fois." };
+  }
+  const lignes = brutes.map((l) => {
+    const o = (l ?? {}) as Record<string, unknown>;
+    const genre: "classe" | "groupe" = o.genre === "groupe" ? "groupe" : "classe";
+    return {
+      genre,
+      cible: typeof o.cible === "string" && UUID.test(o.cible) ? o.cible : "",
+      matiere: typeof o.matiere === "string" && UUID.test(o.matiere) ? o.matiere : "",
+    };
+  });
+  if (lignes.some((l) => l.cible === "" || l.matiere === "")) {
+    return { etat: "erreur", message: "Chaque ligne doit avoir une classe ou un groupe, et une matière." };
+  }
+
+  const issues = await affecterPlusieurs(acteur, professeur, lignes);
+  if (issues === null) {
+    return { etat: "erreur", message: "L'affectation a été refusée. Vérifiez que ce compte est bien un professeur de votre établissement." };
+  }
+
+  revalidatePath("/admin/professeurs");
+  revalidatePath("/admin/classes");
+  revalidatePath("/admin/groupes");
+  revalidatePath("/admin");
+
+  const creees = issues.filter((i) => i.resultat === "creee").length;
+  const existantes = issues.filter((i) => i.resultat === "existante").length;
+  const refusees = issues.filter((i) => i.resultat === "refusee").length;
+  const morceaux = [
+    creees > 0 ? `${creees} affectation${creees > 1 ? "s" : ""} créée${creees > 1 ? "s" : ""}` : null,
+    existantes > 0 ? `${existantes} déjà en place` : null,
+    refusees > 0 ? `${refusees} refusée${refusees > 1 ? "s" : ""}` : null,
+  ].filter(Boolean);
+  return {
+    etat: refusees === 0 ? "ok" : creees + existantes === 0 ? "erreur" : "partiel",
+    message: `${morceaux.join(", ")}.`,
+    issues,
+  };
 }

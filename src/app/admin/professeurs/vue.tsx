@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, Presentation, Search, Upload, UserX } from "lucide-react";
+import { AffecterPlusieurs } from "@/components/admin/AffecterPlusieurs";
 import { AjouterPersonne } from "@/components/admin/AjouterPersonne";
 import { EnTetePage, EtatVide, Etiquette, ICONE } from "@/components/study/ui";
 import type { affectations, contexte, membres } from "@/lib/etablissement";
@@ -16,6 +17,8 @@ export function VueProfesseurs({
   coursSansProfesseur,
   cherche,
   optionsClasses,
+  optionsGroupes = [],
+  optionsMatieres = [],
 }: {
   situation: NonNullable<Awaited<ReturnType<typeof contexte>>>;
   /** Les professeurs affichés (après recherche). */
@@ -26,6 +29,8 @@ export function VueProfesseurs({
   coursSansProfesseur: readonly Affectation[];
   cherche: string;
   optionsClasses: readonly { id: string; label: string }[];
+  optionsGroupes?: readonly { id: string; label: string }[];
+  optionsMatieres?: readonly { id: string; label: string }[];
 }) {
   const sansAffectation = enseignants.filter((membre) => (parProfesseur.get(membre.profile_id) ?? []).length === 0);
   const nbCours = [...parProfesseur.values()].reduce((n, liens) => n + liens.length, 0);
@@ -193,9 +198,15 @@ export function VueProfesseurs({
                     )}
 
                     <div className="mt-auto flex flex-wrap gap-2 border-t border-[color:var(--bordure-douce,var(--color-bordure))] pt-3">
-                      <Link href="/admin/classes#affecter" className={`bouton bouton-compact ${siennes.length === 0 ? "bouton-primaire" : "bouton-secondaire"}`}>
-                        {siennes.length === 0 ? "Affecter à une classe" : "Ajouter une classe"}
-                      </Link>
+                      <AffecterPlusieurs
+                        professeur={membre.profile_id}
+                        nom={`${membre.prenom} ${membre.nom}`}
+                        classes={optionsClasses}
+                        groupes={optionsGroupes}
+                        matieres={optionsMatieres}
+                        libelle={siennes.length === 0 ? "Affecter à des cours" : "Ajouter des cours"}
+                        variante={siennes.length === 0 ? "primaire" : "secondaire"}
+                      />
                       <Link href={`/admin/utilisateurs?etat=professeur&q=${encodeURIComponent(membre.local_login)}`} className="bouton bouton-compact bouton-discret">
                         Gérer l&apos;accès
                       </Link>

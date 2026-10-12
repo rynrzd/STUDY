@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { affectations, classes, contexte, membres } from "@/lib/etablissement";
+import { affectations, classes, contexte, groupes, matieres, membres } from "@/lib/etablissement";
 import { sessionCourante } from "@/lib/session-serveur";
 import { VueProfesseurs } from "./vue";
 
@@ -32,10 +32,12 @@ export default async function PageProfesseurs({
   const situation = await contexte(personne.profileId);
   if (situation === null) redirect("/admin");
 
-  const [listeMembres, listeAffectations, listeClasses] = await Promise.all([
+  const [listeMembres, listeAffectations, listeClasses, listeGroupes, listeMatieres] = await Promise.all([
     membres(personne.profileId),
     affectations(personne.profileId),
     classes(personne.profileId),
+    groupes(personne.profileId),
+    matieres(personne.profileId),
   ]);
 
   const parametres = await searchParams;
@@ -73,6 +75,8 @@ export default async function PageProfesseurs({
       coursSansProfesseur={coursSansProfesseur}
       cherche={cherche}
       optionsClasses={optionsClasses}
+      optionsGroupes={listeGroupes.map((g) => ({ id: g.id, label: g.label }))}
+      optionsMatieres={listeMatieres.map((m) => ({ id: m.id, label: m.label }))}
     />
   );
 }
