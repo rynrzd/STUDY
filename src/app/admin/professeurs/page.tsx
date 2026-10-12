@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { affectations, classes, contexte, groupes, matieres, membres } from "@/lib/etablissement";
+import { affectations, affectationsProfesseurs, classes, contexte, groupes, matieres, membres } from "@/lib/etablissement";
 import { sessionCourante } from "@/lib/session-serveur";
-import { VueProfesseurs } from "./vue";
+import { type LigneCours, VueProfesseurs } from "./vue";
+
+/** Aujourd'hui (AAAA-MM-JJ), lu une fois par requête, hors du rendu. */
+function aujourdhui(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 export const metadata: Metadata = { title: "Professeurs" };
 
@@ -32,26 +37,42 @@ export default async function PageProfesseurs({
   const situation = await contexte(personne.profileId);
   if (situation === null) redirect("/admin");
 
-  const [listeMembres, listeAffectations, listeClasses, listeGroupes, listeMatieres] = await Promise.all([
+  const [listeMembres, listeAffectations, listeClasses, listeGroupes, listeMatieres, lignesAffectation] = await Promise.all([
     membres(personne.profileId),
     affectations(personne.profileId),
     classes(personne.profileId),
     groupes(personne.profileId),
     matieres(personne.profileId),
+    affectationsProfesseurs(personne.profileId),
   ]);
 
   const parametres = await searchParams;
   const cherche = (parametres.q ?? "").trim();
   const recherche = cherche.toLowerCase();
 
-  const parProfesseur = new Map<string, { matiere: string; classe: string }[]>();
-  for (const lien of listeAffectations) {
-    if (lien.professeur_id === null) continue;
-    parProfesseur.set(lien.professeur_id, [
-      ...(parProfesseur.get(lien.professeur_id) ?? []),
-      { matiere: lien.matiere, classe: lien.classe },
+  // Affectations en cours et à venir, classes ET groupes, avec rôle et dates.
+  const jour = aujourdhui();
+  const parProfesseur = new Map<string, LigneCours[]>();
+  for (const a of lignesAffectation ?? []) {
+    parProfesseur.set(a.profile_id, [
+      ...(parProfesseur.get(a.profile_id) ?? []),
+      { affectation: a.affectation, matiere: a.matiere, cible: a.cible, genre: a.genre, role: a.role, debut: a.debut, fin: a.fin, aVenir: a.debut > jour },
     ]);
   }
+
+  // Plusieurs titulaires actifs sur un même cours : signalé, jamais corrigé
+  // d'office (PROF-16).
+  const noms = new Map(listeMembres.map((m) => [m.profile_id, `${m.prenom} ${m.nom}`]));
+  const titulairesParCours = new Map<string, { cours: string; ids: string[] }>();
+  for (const a of lignesAffectation ?? []) {
+    if (a.role !== "titulaire" || a.debut > jour) continue;
+    const e = titulairesParCours.get(a.teaching_space_id) ?? { cours: `${a.matiere} — ${a.cible}`, ids: [] };
+    e.ids.push(a.profile_id);
+    titulairesParCours.set(a.teaching_space_id, e);
+  }
+  const titulairesMultiples = [...titulairesParCours.values()]
+    .filter((e) => e.ids.length > 1)
+    .map((e) => ({ cours: e.cours, noms: e.ids.map((id) => noms.get(id) ?? "?").join(", ") }));
 
   const enseignants = listeMembres
     .filter((membre) => membre.roles.includes("professeur"))
@@ -72,6 +93,7 @@ export default async function PageProfesseurs({
       enseignants={enseignants}
       total={total}
       parProfesseur={parProfesseur}
+      titulairesMultiples={titulairesMultiples}
       coursSansProfesseur={coursSansProfesseur}
       cherche={cherche}
       optionsClasses={optionsClasses}

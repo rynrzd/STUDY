@@ -12,7 +12,7 @@ import { VueClasses } from "@/app/admin/classes/vue";
 import { VueFicheEleve } from "@/app/admin/eleves/[eleve]/vue";
 import { VueGroupe } from "@/app/admin/groupes/[groupe]/vue";
 import { VueGroupes } from "@/app/admin/groupes/vue";
-import { VueProfesseurs } from "@/app/admin/professeurs/vue";
+import { type LigneCours, VueProfesseurs } from "@/app/admin/professeurs/vue";
 import { VueAdmin } from "@/app/admin/vue";
 import { VueAnnees } from "@/app/admin/annees/vue";
 import { VueRecuperation } from "@/app/admin/recuperation/vue";
@@ -576,11 +576,18 @@ const ECRANS: Record<string, Ecran> = {
     ctx: ADMIN,
     chemin: "/admin/professeurs",
     rendu: () => {
-      const parProfesseur = new Map<string, { matiere: string; classe: string }[]>();
-      for (const lien of F.affectationsEtab) {
-        if (lien.professeur_id === null) continue;
-        parProfesseur.set(lien.professeur_id, [...(parProfesseur.get(lien.professeur_id) ?? []), { matiere: lien.matiere, classe: lien.classe }]);
-      }
+      const parProfesseur = new Map<string, LigneCours[]>();
+      F.affectationsEtab.forEach((lien, i) => {
+        if (lien.professeur_id === null) return;
+        parProfesseur.set(lien.professeur_id, [
+          ...(parProfesseur.get(lien.professeur_id) ?? []),
+          { affectation: `a${i}`, matiere: lien.matiere, cible: lien.classe, genre: "classe", role: "titulaire", debut: "2026-09-01", fin: null, aVenir: false },
+        ]);
+      });
+      // Un remplacement daté, pour montrer les étiquettes de rôle et de fin.
+      parProfesseur.set(F.membresEtab[3].profile_id, [
+        { affectation: "r1", matiere: "Mathématiques", cible: "Spé Maths A", genre: "groupe", role: "remplacant", debut: "2026-11-03", fin: "2026-11-17", aVenir: true },
+      ]);
       const enseignants = F.membresEtab.filter((m) => (m.roles as readonly string[]).includes("professeur")).map((m) => ({ ...m, roles: [...m.roles] }));
       return (
         <VueProfesseurs

@@ -1,12 +1,29 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, Presentation, Search, Upload, UserX } from "lucide-react";
+import { ArrowRight, BookOpen, Presentation, Search, Upload, Users, UserX } from "lucide-react";
 import { AffecterPlusieurs } from "@/components/admin/AffecterPlusieurs";
 import { AjouterPersonne } from "@/components/admin/AjouterPersonne";
+import { TerminerAffectation } from "@/components/admin/TerminerAffectation";
 import { EnTetePage, EtatVide, Etiquette, ICONE } from "@/components/study/ui";
 import type { affectations, contexte, membres } from "@/lib/etablissement";
 
 type Membre = Awaited<ReturnType<typeof membres>>[number];
 type Affectation = Awaited<ReturnType<typeof affectations>>[number];
+
+/** Un cours d'un professeur, avec son rôle et ses dates. */
+export interface LigneCours {
+  readonly affectation: string;
+  readonly matiere: string;
+  readonly cible: string;
+  readonly genre: "classe" | "groupe";
+  readonly role: "titulaire" | "remplacant" | "co_intervenant";
+  readonly debut: string;
+  readonly fin: string | null;
+  /** Commence après aujourd'hui. */
+  readonly aVenir: boolean;
+}
+
+const ROLES: Record<LigneCours["role"], string> = { titulaire: "", remplacant: "Remplaçant", co_intervenant: "Co-intervenant" };
+const jourLisible = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 
 /** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
 export function VueProfesseurs({
@@ -14,6 +31,7 @@ export function VueProfesseurs({
   enseignants,
   total,
   parProfesseur,
+  titulairesMultiples = [],
   coursSansProfesseur,
   cherche,
   optionsClasses,
@@ -25,7 +43,9 @@ export function VueProfesseurs({
   enseignants: readonly Membre[];
   /** Tous les professeurs de l'établissement. */
   total: number;
-  parProfesseur: ReadonlyMap<string, readonly { matiere: string; classe: string }[]>;
+  parProfesseur: ReadonlyMap<string, readonly LigneCours[]>;
+  /** Cours où plusieurs professeurs sont titulaires en même temps (PROF-16). */
+  titulairesMultiples?: readonly { cours: string; noms: string }[];
   coursSansProfesseur: readonly Affectation[];
   cherche: string;
   optionsClasses: readonly { id: string; label: string }[];
@@ -51,7 +71,7 @@ export function VueProfesseurs({
         }
       />
 
-      {sansAffectation.length > 0 || coursSansProfesseur.length > 0 ? (
+      {sansAffectation.length > 0 || coursSansProfesseur.length > 0 || titulairesMultiples.length > 0 ? (
         <section aria-labelledby="a-traiter" className="mb-8">
           <h2 id="a-traiter" className="titre-section mb-3">
             À traiter
@@ -107,6 +127,28 @@ export function VueProfesseurs({
                 <Link href="/admin/classes#affecter" className="bouton bouton-secondaire self-start">
                   Choisir un professeur <ArrowRight {...ICONE} />
                 </Link>
+              </div>
+            ) : null}
+            {titulairesMultiples.length > 0 ? (
+              <div className="panneau flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                  <span className="tuile" data-ton="neutre" aria-hidden="true">
+                    <Users size={20} strokeWidth={1.75} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="m-0 font-bold">
+                      {titulairesMultiples.length} cours avec plusieurs titulaires
+                    </p>
+                    <p className="meta m-0 mt-1">Si c&apos;est voulu, passez l&apos;un d&apos;eux en co-intervenant ; sinon, terminez l&apos;affectation en trop. Rien n&apos;est retiré automatiquement.</p>
+                  </div>
+                </div>
+                <ul className="m-0 list-none space-y-1 p-0 text-[0.875rem]">
+                  {titulairesMultiples.slice(0, 6).map((t) => (
+                    <li key={t.cours}>
+                      <span className="font-semibold">{t.cours}</span> <span className="meta">— {t.noms}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             ) : null}
           </div>
@@ -187,11 +229,21 @@ export function VueProfesseurs({
                         Ce compte ne voit encore aucun cours.
                       </p>
                     ) : (
-                      <ul className="m-0 flex list-none flex-wrap gap-2 p-0" aria-label={`Cours de ${membre.prenom} ${membre.nom}`}>
+                      <ul className="m-0 list-none space-y-1.5 p-0" aria-label={`Cours de ${membre.prenom} ${membre.nom}`}>
                         {siennes.map((lien) => (
-                          <li key={`${lien.matiere}-${lien.classe}`} className="puce-cours">
-                            <span className="font-semibold">{lien.classe}</span>
-                            <span className="text-[color:var(--color-encre-faible)]">{lien.matiere}</span>
+                          <li key={lien.affectation} className="ligne-cours-prof">
+                            <span className="min-w-0">
+                              <span className="font-semibold">{lien.cible}</span> <span className="text-[color:var(--color-encre-faible)]">{lien.matiere}</span>
+                              {lien.genre === "groupe" ? <span className="meta"> · groupe</span> : null}
+                              {ROLES[lien.role] !== "" || lien.fin !== null || lien.aVenir ? (
+                                <span className="mt-0.5 flex flex-wrap gap-1.5">
+                                  {ROLES[lien.role] !== "" ? <span className="puce-cours py-0.5 text-[0.75rem]">{ROLES[lien.role]}</span> : null}
+                                  {lien.aVenir ? <span className="puce-cours py-0.5 text-[0.75rem]">dès le {jourLisible(lien.debut)}</span> : null}
+                                  {lien.fin !== null ? <span className="puce-cours py-0.5 text-[0.75rem]" data-ton={lien.role === "remplacant" ? "attention" : undefined}>jusqu&apos;au {jourLisible(lien.fin)}</span> : null}
+                                </span>
+                              ) : null}
+                            </span>
+                            <TerminerAffectation affectation={lien.affectation} libelle={`${lien.matiere} — ${lien.cible}`} />
                           </li>
                         ))}
                       </ul>

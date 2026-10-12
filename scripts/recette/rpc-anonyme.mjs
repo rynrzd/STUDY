@@ -139,6 +139,10 @@ const FONCTIONS = [
   { nom: "etab_apercu_changement_classe", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_eleve: "00000000-0000-4000-8000-000000000000", p_classe: "00000000-0000-4000-8000-000000000000" } },
   { nom: "etab_changer_classe", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_eleve: "00000000-0000-4000-8000-000000000000", p_classe: "00000000-0000-4000-8000-000000000000", p_date: null } },
   { nom: "etab_depart_eleve", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_eleve: "00000000-0000-4000-8000-000000000000", p_date: null } },
+
+  // 0069 — Roles et dates : ni terminer une affectation, ni lire les affectations sans compte.
+  { nom: "etab_terminer_affectation", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_affectation: "00000000-0000-4000-8000-000000000000", p_date: null } },
+  { nom: "etab_affectations_professeurs", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
 ];
 
 let defauts = 0;

@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { changerEtatCompte, reinitialiserAcces } from "@/lib/acces";
 import {
   affecterPlusieurs,
+  type RoleAffectation,
+  terminerAffectation,
   affecterProfesseur,
   assurerAnnee,
   classes as listerClasses,
@@ -399,12 +401,20 @@ export async function affecterPlusieursCours(_precedent: EtatAffectations, donne
   const lignes = brutes.map((l) => {
     const o = (l ?? {}) as Record<string, unknown>;
     const genre: "classe" | "groupe" = o.genre === "groupe" ? "groupe" : "classe";
+    const role: RoleAffectation = o.role === "remplacant" || o.role === "co_intervenant" ? o.role : "titulaire";
+    const date = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined);
     return {
       genre,
       cible: typeof o.cible === "string" && UUID.test(o.cible) ? o.cible : "",
       matiere: typeof o.matiere === "string" && UUID.test(o.matiere) ? o.matiere : "",
+      role,
+      debut: date(o.debut),
+      fin: date(o.fin),
     };
   });
+  if (lignes.some((l) => l.role === "remplacant" && l.fin === undefined)) {
+    return { etat: "erreur", message: "Un remplacement a besoin d'une date de fin : c'est elle qui coupe l'accès." };
+  }
   if (lignes.some((l) => l.cible === "" || l.matiere === "")) {
     return { etat: "erreur", message: "Chaque ligne doit avoir une classe ou un groupe, et une matière." };
   }
@@ -431,5 +441,28 @@ export async function affecterPlusieursCours(_precedent: EtatAffectations, donne
     etat: refusees === 0 ? "ok" : creees + existantes === 0 ? "erreur" : "partiel",
     message: `${morceaux.join(", ")}.`,
     issues,
+  };
+}
+
+/**
+ * Terminer UNE affectation — cahier des charges ch. 08 (PROF-08, T01-015).
+ * Les autres affectations du professeur ne bougent pas ; la base vérifie que
+ * l'affectation est bien de cet établissement.
+ */
+export async function terminerUneAffectation(_precedent: EtatAdmin, donnees: FormData): Promise<EtatAdmin> {
+  const acteur = await exigerAdministrateur();
+  const affectation = identifiant(donnees, "affectation");
+  const date = texte(donnees, "date", 10);
+  if (affectation === null) return { etat: "erreur", message: "Affectation introuvable." };
+  if (date !== "" && !/^\d{4}-\d{2}-\d{2}$/.test(date)) return { etat: "erreur", message: "La date est illisible." };
+
+  const issue = await terminerAffectation(acteur, affectation, date === "" ? null : date);
+  if (issue === null) return { etat: "erreur", message: "Refusé. La date ne peut pas remonter à plus d'un mois." };
+
+  revalidatePath("/admin/professeurs");
+  revalidatePath("/admin/classes");
+  return {
+    etat: "ok",
+    message: issue === "retiree" ? "Affectation à venir retirée." : issue === "deja" ? "Cette affectation était déjà terminée." : "Affectation terminée : l'accès s'arrête après le dernier jour indiqué.",
   };
 }

@@ -77,6 +77,9 @@ interface Ligne {
   readonly id: number;
   readonly cible: string; // « classe:<uuid> » ou « groupe:<uuid> »
   readonly matiere: string;
+  readonly role: "titulaire" | "remplacant" | "co_intervenant";
+  readonly debut: string;
+  readonly fin: string;
 }
 
 function Contenu({
@@ -103,7 +106,7 @@ function Contenu({
       return { etat: "erreur", message: "La réponse du serveur n'est pas arrivée. Rouvrez la fiche : rejouer ne crée pas de doublon." };
     }
   }, ETAT_AFFECTATIONS_INITIAL);
-  const [lignes, setLignes] = useState<readonly Ligne[]>([{ id: 1, cible: "", matiere: "" }]);
+  const [lignes, setLignes] = useState<readonly Ligne[]>([{ id: 1, cible: "", matiere: "", role: "titulaire", debut: "", fin: "" }]);
   const [suivant, setSuivant] = useState(2);
   // Les libellés des lignes envoyées, figés au moment de l'envoi : le résultat
   // doit nommer ce qui a été demandé, même si on retouche la liste ensuite.
@@ -114,15 +117,17 @@ function Contenu({
     ...groupes.map((g) => [`groupe:${g.id}`, g.label] as const),
   ]);
   const matiereDe = new Map(matieres.map((m) => [m.id, m.label]));
-  const completes = lignes.filter((l) => l.cible !== "" && l.matiere !== "");
+  // Une ligne est complète quand elle a un cours, une matière et, pour un
+  // remplacement, une date de fin.
+  const completes = lignes.filter((l) => l.cible !== "" && l.matiere !== "" && (l.role !== "remplacant" || l.fin !== ""));
   const charge = JSON.stringify(
     completes.map((l) => {
       const [genre, cible] = l.cible.split(":");
-      return { genre, cible, matiere: l.matiere };
+      return { genre, cible, matiere: l.matiere, role: l.role, debut: l.debut || undefined, fin: l.fin || undefined };
     }),
   );
 
-  function modifier(id: number, champ: "cible" | "matiere", valeur: string) {
+  function modifier(id: number, champ: "cible" | "matiere" | "role" | "debut" | "fin", valeur: string) {
     setLignes((prec) => prec.map((l) => (l.id === id ? { ...l, [champ]: valeur } : l)));
   }
 
@@ -160,7 +165,8 @@ function Contenu({
 
       <ul className="m-0 mt-5 list-none space-y-3 p-0">
         {lignes.map((l, i) => (
-          <li key={l.id} className="ligne-affectation">
+          <li key={l.id} className="ligne-affectation-bloc">
+            <div className="ligne-affectation">
             <span className="ligne-affectation-rang" aria-hidden="true">
               {i + 1}
             </span>
@@ -212,6 +218,31 @@ function Contenu({
             >
               <Trash2 size={18} strokeWidth={1.75} aria-hidden="true" />
             </button>
+            </div>
+            <div className="ligne-affectation-details">
+              <span>
+                <label className="etiquette" htmlFor={`role-${l.id}`}>
+                  Rôle
+                </label>
+                <select id={`role-${l.id}`} className="champ" value={l.role} onChange={(e) => modifier(l.id, "role", e.target.value)}>
+                  <option value="titulaire">Titulaire</option>
+                  <option value="remplacant">Remplaçant</option>
+                  <option value="co_intervenant">Co-intervenant</option>
+                </select>
+              </span>
+              <span>
+                <label className="etiquette" htmlFor={`debut-${l.id}`}>
+                  Début <span className="font-normal text-[color:var(--color-encre-faible)]">(vide : aujourd&apos;hui)</span>
+                </label>
+                <input id={`debut-${l.id}`} type="date" className="champ" value={l.debut} onChange={(e) => modifier(l.id, "debut", e.target.value)} />
+              </span>
+              <span>
+                <label className="etiquette" htmlFor={`fin-${l.id}`}>
+                  Fin {l.role === "remplacant" ? <span className="font-normal text-[color:var(--color-accent)]">(obligatoire)</span> : <span className="font-normal text-[color:var(--color-encre-faible)]">(facultatif)</span>}
+                </label>
+                <input id={`fin-${l.id}`} type="date" className="champ" value={l.fin} min={l.debut || undefined} onChange={(e) => modifier(l.id, "fin", e.target.value)} />
+              </span>
+            </div>
           </li>
         ))}
       </ul>
@@ -221,7 +252,7 @@ function Contenu({
         className="mt-3 inline-flex min-h-[44px] items-center gap-1.5 text-[0.9375rem] font-semibold text-[color:var(--color-accent)]"
         disabled={lignes.length >= 60}
         onClick={() => {
-          setLignes((prec) => [...prec, { id: suivant, cible: "", matiere: "" }]);
+          setLignes((prec) => [...prec, { id: suivant, cible: "", matiere: "", role: "titulaire", debut: "", fin: "" }]);
           setSuivant((n) => n + 1);
         }}
       >
@@ -269,6 +300,8 @@ const RAISONS: Record<string, string> = {
   matiere_introuvable: "Refusée : matière indisponible",
   doublon_dans_la_demande: "Refusée : ligne en double",
   ligne_invalide: "Refusée : ligne incomplète",
+  dates_invalides: "Refusée : dates incohérentes",
+  fin_requise: "Refusée : un remplacement a besoin d'une fin",
   erreur: "Refusée : erreur, réessayez",
 };
 

@@ -597,10 +597,17 @@ export async function affecterProfesseurGroupe(acteur: string, professeur: strin
 /* Affectations multiples (0067, cahier des charges ch. 08)                    */
 /* -------------------------------------------------------------------------- */
 
+export type RoleAffectation = "titulaire" | "remplacant" | "co_intervenant";
+
 export interface LigneAffectation {
   readonly genre: "classe" | "groupe";
   readonly cible: string;
   readonly matiere: string;
+  readonly role?: RoleAffectation;
+  /** AAAA-MM-JJ ; vide : aujourd'hui. */
+  readonly debut?: string;
+  /** AAAA-MM-JJ, dernier jour inclus ; obligatoire pour un remplacement. */
+  readonly fin?: string;
 }
 
 export interface IssueAffectation {
@@ -715,4 +722,44 @@ export async function departEleve(acteur: string, eleve: string, date: string | 
     return null;
   }
   return data as { classes: number; groupes: number };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Rôles et dates des affectations (0069, cahier des charges ch. 08)           */
+/* -------------------------------------------------------------------------- */
+
+export interface AffectationProf {
+  readonly affectation: string;
+  readonly teaching_space_id: string;
+  readonly profile_id: string;
+  readonly matiere: string;
+  readonly cible: string;
+  readonly genre: "classe" | "groupe";
+  readonly role: RoleAffectation;
+  readonly debut: string;
+  readonly fin: string | null;
+}
+
+/** Affectations en cours et à venir, classes et groupes ; `null` si la lecture échoue. */
+export async function affectationsProfesseurs(acteur: string): Promise<AffectationProf[] | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_affectations_professeurs", { p_acteur: acteur });
+  if (error !== null) {
+    console.error(JSON.stringify({ niveau: "erreur", contexte: "etab.affectations_professeurs", code: error.code }));
+    return null;
+  }
+  return (data ?? []) as AffectationProf[];
+}
+
+/** Termine une affectation à une date (vide : aujourd'hui). */
+export async function terminerAffectation(acteur: string, affectation: string, date: string | null): Promise<"terminee" | "retiree" | "deja" | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_terminer_affectation", {
+    p_acteur: acteur,
+    p_affectation: affectation,
+    p_date: date,
+  });
+  if (error !== null) {
+    console.error(JSON.stringify({ niveau: "erreur", contexte: "etab.terminer_affectation", code: error.code }));
+    return null;
+  }
+  return data as "terminee" | "retiree" | "deja";
 }
