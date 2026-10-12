@@ -133,6 +133,12 @@ const FONCTIONS = [
 
   // 0067 — Affectation multiple : aucun cours ne s ouvre sans compte.
   { nom: "etab_affecter_professeur_plusieurs", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_professeur: "00000000-0000-4000-8000-000000000000", p_lignes: [] } },
+
+  // 0068 — Fiche eleve : ni lire, ni deplacer, ni faire partir sans compte.
+  { nom: "etab_fiche_eleve", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_eleve: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_apercu_changement_classe", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_eleve: "00000000-0000-4000-8000-000000000000", p_classe: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_changer_classe", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_eleve: "00000000-0000-4000-8000-000000000000", p_classe: "00000000-0000-4000-8000-000000000000", p_date: null } },
+  { nom: "etab_depart_eleve", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_eleve: "00000000-0000-4000-8000-000000000000", p_date: null } },
 ];
 
 let defauts = 0;

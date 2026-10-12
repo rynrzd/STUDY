@@ -430,6 +430,21 @@
   .lecteur-pdf[data-plein-ecran] { border-radius: 0; height: 100vh; }
   .lecteur-pdf[data-plein-ecran] .lecteur-pdf-page { max-height: none; flex: 1; }
 
+  /* Fiche élève : sens d'un mouvement de cours, frise d'historique. */
+  .mouvement-cours {
+    display: inline-grid; place-items: center; width: 20px; height: 20px; flex-shrink: 0; border-radius: 999px;
+    background: var(--color-fond, #f7f4f6); color: var(--color-encre-faible);
+  }
+  .mouvement-cours[data-mouvement="perdu"] { background: var(--color-erreur-fond); color: var(--color-erreur); }
+  .mouvement-cours[data-mouvement="gagne"] { background: var(--color-succes-fond); color: var(--color-succes); }
+  .frise { margin: 0; padding: 0 0 0 18px; list-style: none; border-left: 2px solid var(--bordure-douce, var(--color-bordure)); }
+  .frise > li { position: relative; padding: 0 0 14px 4px; }
+  .frise > li::before {
+    content: ""; position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; border-radius: 999px;
+    background: var(--color-surface); border: 2px solid var(--color-bordure-forte);
+  }
+  .frise > li[data-actif]::before { background: var(--color-accent); border-color: var(--color-accent); }
+
   /* Sélecteur d'élèves (groupes) : liste scrollable de cases à cocher. */
   .picker-liste {
     max-height: 320px; overflow-y: auto; border: 1px solid var(--bordure-douce, var(--color-bordure));

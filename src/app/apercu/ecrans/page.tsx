@@ -9,6 +9,7 @@ import type { ContexteApp } from "@/lib/v6/contexte";
 import { LecteurPdf } from "@/components/seance/LecteurPdf";
 import { Publication } from "@/components/studio/Publication";
 import { VueClasses } from "@/app/admin/classes/vue";
+import { VueFicheEleve } from "@/app/admin/eleves/[eleve]/vue";
 import { VueGroupe } from "@/app/admin/groupes/[groupe]/vue";
 import { VueGroupes } from "@/app/admin/groupes/vue";
 import { VueProfesseurs } from "@/app/admin/professeurs/vue";
@@ -520,6 +521,33 @@ const ECRANS: Record<string, Ecran> = {
           />
         </div>
       </>
+    ),
+  },
+  D10: {
+    titre: "Fiche élève",
+    ctx: ADMIN,
+    chemin: "/admin/eleves/x",
+    rendu: () => (
+      <VueFicheEleve
+        eleve="00000000-0000-4000-8000-000000000341"
+        codeEtablissement="FICTIF1"
+        classes={F.classesEtab.map((c) => ({ id: c.id, label: c.label }))}
+        fiche={{
+          identite: { prenom: "Inès", nom: "Exemple", identifiant: "ines.exemple", etat_compte: "actif", actif: true },
+          classe: { id: F.classesEtab[0].id, label: "Seconde 2", annee: "2026-2027", depuis: "2026-09-01" },
+          classe_a_venir: null,
+          groupes: [
+            { id: "00000000-0000-4000-8000-000000000395", label: "Spé Maths A", kind: "interclasses", debut: "2026-09-08", fin: null, actif: true },
+            { id: "00000000-0000-4000-8000-000000000396", label: "2nde 2 — TP A", kind: "sous_groupe", debut: "2026-09-01", fin: "2026-10-01", actif: false },
+          ],
+          inscriptions: [{ classe: "Seconde 2", annee: "2026-2027", debut: "2026-09-01", fin: null, principale: true }],
+          cours: [
+            { matiere: "Mathématiques", cible: "Seconde 2", genre: "classe", professeurs: "Claire Exemple" },
+            { matiere: "Histoire-géographie", cible: "Seconde 2", genre: "classe", professeurs: null },
+            { matiere: "Mathématiques", cible: "Spé Maths A", genre: "groupe", professeurs: "Claire Exemple" },
+          ],
+        }}
+      />
     ),
   },
   D08: {

@@ -627,3 +627,92 @@ export async function affecterPlusieurs(acteur: string, professeur: string, lign
     raison: l.raison,
   }));
 }
+
+/* -------------------------------------------------------------------------- */
+/* Fiche élève (0068, cahier des charges ch. 09)                               */
+/* -------------------------------------------------------------------------- */
+
+export interface FicheEleve {
+  readonly identite: { readonly prenom: string; readonly nom: string; readonly identifiant: string; readonly etat_compte: string; readonly actif: boolean };
+  readonly classe: { readonly id: string; readonly label: string; readonly annee: string; readonly depuis: string } | null;
+  readonly classe_a_venir: { readonly label: string; readonly depuis: string } | null;
+  readonly groupes: readonly { readonly id: string; readonly label: string; readonly kind: string; readonly debut: string; readonly fin: string | null; readonly actif: boolean }[];
+  readonly inscriptions: readonly { readonly classe: string; readonly annee: string; readonly debut: string; readonly fin: string | null; readonly principale: boolean }[];
+  readonly cours: readonly { readonly matiere: string; readonly cible: string; readonly genre: "classe" | "groupe"; readonly professeurs: string | null }[];
+}
+
+export interface MouvementCours {
+  readonly matiere: string;
+  readonly cible: string;
+  readonly genre: "classe" | "groupe";
+  readonly mouvement: "perdu" | "gagne" | "garde";
+}
+
+function journaliserEleve(contexte: string, code: string | undefined) {
+  console.error(JSON.stringify({ niveau: "erreur", contexte: `etab.${contexte}`, code: code ?? "inconnu" }));
+}
+
+/** La fiche d'un élève de l'établissement ; `null` s'il n'en fait pas partie ou si la lecture échoue. */
+export async function ficheEleve(acteur: string, eleve: string): Promise<FicheEleve | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_fiche_eleve", { p_acteur: acteur, p_eleve: eleve });
+  if (error !== null) {
+    journaliserEleve("fiche_eleve", error.code);
+    return null;
+  }
+  return (data ?? null) as FicheEleve | null;
+}
+
+export async function apercuChangementClasse(acteur: string, eleve: string, classe: string): Promise<MouvementCours[] | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_apercu_changement_classe", {
+    p_acteur: acteur,
+    p_eleve: eleve,
+    p_classe: classe,
+  });
+  if (error !== null) {
+    journaliserEleve("apercu_changement", error.code);
+    return null;
+  }
+  return (data ?? []) as MouvementCours[];
+}
+
+/** Change la classe d'un élève à une date. Renvoie l'issue, ou un message de refus. */
+export async function changerClasse(
+  acteur: string,
+  eleve: string,
+  classe: string,
+  date: string | null,
+): Promise<{ readonly ok: true; readonly issue: "deplacee" | "corrigee" | "deja" } | { readonly ok: false; readonly message: string }> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_changer_classe", {
+    p_acteur: acteur,
+    p_eleve: eleve,
+    p_classe: classe,
+    p_date: date,
+  });
+  if (error !== null) {
+    journaliserEleve("changer_classe", error.code);
+    const m = error.message ?? "";
+    return {
+      ok: false,
+      message: m.includes("autre annee")
+        ? "Cette classe appartient à une autre année : le passage d'une année à l'autre se fait dans « Années scolaires »."
+        : m.includes("trop ancienne")
+          ? "La date ne peut pas remonter à plus d'un mois."
+          : "Le changement a été refusé. Vérifiez que la classe et l'élève sont de votre établissement.",
+    };
+  }
+  return { ok: true, issue: data as "deplacee" | "corrigee" | "deja" };
+}
+
+/** Départ de l'établissement : clôt classe et groupes à la date. `null` si refusé. */
+export async function departEleve(acteur: string, eleve: string, date: string | null): Promise<{ classes: number; groupes: number } | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_depart_eleve", {
+    p_acteur: acteur,
+    p_eleve: eleve,
+    p_date: date,
+  });
+  if (error !== null) {
+    journaliserEleve("depart_eleve", error.code);
+    return null;
+  }
+  return data as { classes: number; groupes: number };
+}

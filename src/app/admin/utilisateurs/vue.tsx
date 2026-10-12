@@ -98,9 +98,15 @@ export function VueUtilisateurs({ situation, listeMembres, listeClasses, visible
                       <span className="avatar" aria-hidden="true">
                         {`${membre.prenom[0] ?? ""}${membre.nom[0] ?? ""}`.toUpperCase()}
                       </span>
-                      <span>
-                        <span className="font-semibold">{membre.nom.toUpperCase()}</span> {membre.prenom}
-                      </span>
+                      {membre.roles.includes("eleve") ? (
+                        <Link href={`/admin/eleves/${membre.profile_id}`} className="text-[color:var(--color-encre)] no-underline hover:text-[color:var(--color-accent)] hover:underline">
+                          <span className="font-semibold">{membre.nom.toUpperCase()}</span> {membre.prenom}
+                        </Link>
+                      ) : (
+                        <span>
+                          <span className="font-semibold">{membre.nom.toUpperCase()}</span> {membre.prenom}
+                        </span>
+                      )}
                     </span>
                   </td>
                   <td className="font-mono text-[color:var(--color-encre-faible)]">{membre.local_login}</td>
