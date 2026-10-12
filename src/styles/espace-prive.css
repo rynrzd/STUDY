@@ -366,7 +366,28 @@
   .ajout-fiche dt { font-size: 0.8125rem; color: var(--color-encre-faible); }
   .ajout-fiche dd { margin: 2px 0 0; font-weight: 700; font-size: 1.0625rem; overflow-wrap: anywhere; }
 
-  /* Parcours guidé (classes → matières → affectations) et cartes de personne. */
+  /* Sélecteur d'élèves (groupes) : liste scrollable de cases à cocher. */
+  .picker-liste {
+    max-height: 320px; overflow-y: auto; border: 1px solid var(--bordure-douce, var(--color-bordure));
+    border-radius: var(--rayon-l, 20px); background: var(--color-surface);
+  }
+  .picker-ligne {
+    display: flex; align-items: center; gap: 12px; padding: 10px 14px; cursor: pointer;
+    border-bottom: 1px solid var(--bordure-douce, var(--color-bordure));
+    transition: background-color 140ms ease;
+  }
+  .picker-liste li:last-child .picker-ligne { border-bottom: 0; }
+  .picker-ligne:hover { background: var(--color-survol); }
+  .picker-ligne[data-actif] { background: var(--color-rose-clair); }
+  .picker-ligne:has(:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+  .picker-coche {
+    display: inline-grid; place-items: center; width: 22px; height: 22px; flex-shrink: 0; border-radius: 7px;
+    border: 1.5px solid var(--color-bordure-forte); background: var(--color-surface); color: #fff;
+    transition: background-color 140ms ease, border-color 140ms ease;
+  }
+  .picker-ligne[data-actif] .picker-coche { background: var(--color-accent); border-color: var(--color-accent); }
+
+
   .parcours { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
   @media (min-width: 760px) { .parcours { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   .parcours > li {
@@ -398,6 +419,6 @@
     dialog.dialogue[open],
     dialog.dialogue.dialogue-large[open],
     .ajout-succes { animation: none; }
-    .choix-role-coche { transition: none; }
+    .choix-role-coche, .picker-coche, .picker-ligne { transition: none; }
   }
 }

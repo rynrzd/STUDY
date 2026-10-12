@@ -477,3 +477,118 @@ export async function purgerJournalAudit(): Promise<number | null> {
   }
   return typeof data === "number" ? data : null;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Groupes pédagogiques (0065, cahier des charges ch. 07)                      */
+/* -------------------------------------------------------------------------- */
+
+export type GenreGroupe = "sous_groupe" | "interclasses";
+
+export interface GroupeEtab {
+  readonly id: string;
+  readonly label: string;
+  readonly kind: GenreGroupe;
+  readonly academic_year_id: string;
+  readonly annee: string;
+  readonly effectif: number;
+  readonly cours: number;
+}
+
+export interface MembreGroupe {
+  readonly profile_id: string;
+  readonly prenom: string;
+  readonly nom: string;
+  readonly classe: string | null;
+}
+
+export interface CoursGroupe {
+  readonly teaching_space_id: string;
+  readonly matiere: string;
+  readonly professeur_id: string | null;
+  readonly prenom: string | null;
+  readonly nom: string | null;
+}
+
+function journaliserGroupe(contexte: string, code: string | undefined) {
+  console.error(JSON.stringify({ niveau: "erreur", contexte: `etab.${contexte}`, code: code ?? "inconnu" }));
+}
+
+export async function groupes(acteur: string): Promise<GroupeEtab[]> {
+  const client = clientExploitation("administration_des_comptes");
+  const { data, error } = await client.rpc("etab_groupes", { p_acteur: acteur });
+  if (error !== null) {
+    journaliserGroupe("groupes", error.code);
+    return [];
+  }
+  return (data ?? []) as unknown as GroupeEtab[];
+}
+
+export async function groupeMembres(acteur: string, groupe: string): Promise<MembreGroupe[]> {
+  const client = clientExploitation("administration_des_comptes");
+  const { data, error } = await client.rpc("etab_groupe_membres", { p_acteur: acteur, p_groupe: groupe });
+  if (error !== null) {
+    journaliserGroupe("groupe_membres", error.code);
+    return [];
+  }
+  return (data ?? []) as unknown as MembreGroupe[];
+}
+
+export async function groupeCours(acteur: string, groupe: string): Promise<CoursGroupe[]> {
+  const client = clientExploitation("administration_des_comptes");
+  const { data, error } = await client.rpc("etab_groupe_cours", { p_acteur: acteur, p_groupe: groupe });
+  if (error !== null) {
+    journaliserGroupe("groupe_cours", error.code);
+    return [];
+  }
+  return (data ?? []) as unknown as CoursGroupe[];
+}
+
+/** Crée un groupe. Idempotent par code normalisé ; renvoie son identifiant ou `null`. */
+export async function creerGroupe(acteur: string, annee: string, label: string, kind: GenreGroupe): Promise<string | null> {
+  const client = clientExploitation("administration_des_comptes");
+  const { data, error } = await client.rpc("etab_creer_groupe", { p_acteur: acteur, p_annee: annee, p_label: label, p_kind: kind });
+  if (error !== null) {
+    journaliserGroupe("creer_groupe", error.code);
+    return null;
+  }
+  return typeof data === "string" ? data : null;
+}
+
+/** Ajoute des élèves à un groupe. Renvoie le nombre réellement ajoutés, ou `null` en cas d'échec. */
+export async function groupeAjouterEleves(acteur: string, groupe: string, eleves: readonly string[]): Promise<number | null> {
+  const client = clientExploitation("administration_des_comptes");
+  const { data, error } = await client.rpc("etab_groupe_ajouter_eleves", { p_acteur: acteur, p_groupe: groupe, p_eleves: eleves });
+  if (error !== null) {
+    journaliserGroupe("groupe_ajouter_eleves", error.code);
+    return null;
+  }
+  return typeof data === "number" ? data : null;
+}
+
+/** Retire un élève d'un groupe (clôture datée, historique conservé). */
+export async function groupeRetirerEleve(acteur: string, groupe: string, eleve: string): Promise<boolean> {
+  const client = clientExploitation("administration_des_comptes");
+  const { error } = await client.rpc("etab_groupe_retirer_eleve", { p_acteur: acteur, p_groupe: groupe, p_eleve: eleve });
+  if (error !== null) {
+    journaliserGroupe("groupe_retirer_eleve", error.code);
+    return false;
+  }
+  return true;
+}
+
+/** Affecte un professeur à un groupe pour une matière ; crée l'espace au besoin. */
+export async function affecterProfesseurGroupe(acteur: string, professeur: string, groupe: string, matiere: string, annee: string): Promise<string | null> {
+  const client = clientExploitation("administration_des_comptes");
+  const { data, error } = await client.rpc("etab_affecter_professeur_groupe", {
+    p_acteur: acteur,
+    p_professeur: professeur,
+    p_groupe: groupe,
+    p_matiere: matiere,
+    p_annee: annee,
+  });
+  if (error !== null) {
+    journaliserGroupe("affecter_professeur_groupe", error.code);
+    return null;
+  }
+  return typeof data === "string" ? data : null;
+}

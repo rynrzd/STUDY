@@ -114,6 +114,16 @@ const FONCTIONS = [
   { nom: "purger_journal_audit", corps: {} },
   { nom: "etab_conservation_journal", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
   { nom: "etab_fixer_conservation_journal", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_mois: 12 } },
+
+  // 0065 — Groupes pedagogiques. Creer, peupler, affecter, lire : rien ne doit
+  // repondre sans compte.
+  { nom: "etab_creer_groupe", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_annee: "00000000-0000-4000-8000-000000000000", p_label: "X", p_kind: "interclasses" } },
+  { nom: "etab_groupe_ajouter_eleves", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_groupe: "00000000-0000-4000-8000-000000000000", p_eleves: [] } },
+  { nom: "etab_groupe_retirer_eleve", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_groupe: "00000000-0000-4000-8000-000000000000", p_eleve: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_affecter_professeur_groupe", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_professeur: "00000000-0000-4000-8000-000000000000", p_groupe: "00000000-0000-4000-8000-000000000000", p_matiere: "00000000-0000-4000-8000-000000000000", p_annee: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_groupes", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_groupe_membres", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_groupe: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_groupe_cours", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_groupe: "00000000-0000-4000-8000-000000000000" } },
 ];
 
 let defauts = 0;

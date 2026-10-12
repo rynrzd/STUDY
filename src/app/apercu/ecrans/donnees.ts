@@ -144,6 +144,17 @@ export const F = {
     { id: u(381), label: "Mathématiques" },
     { id: u(382), label: "Histoire-géographie" },
   ],
+  groupesEtab: [
+    { id: u(395), label: "Spé Maths A", kind: "interclasses", academic_year_id: u(321), annee: "2026-2027", effectif: 2, cours: 1 },
+    { id: u(396), label: "2nde 2 — TP A", kind: "sous_groupe", academic_year_id: u(321), annee: "2026-2027", effectif: 1, cours: 0 },
+  ],
+  membresGroupe: [
+    { profile_id: u(341), prenom: "Inès", nom: "Exemple", classe: "Seconde 2" },
+    { profile_id: u(342), prenom: "Hugo", nom: "Fictif", classe: "Première 3" },
+  ],
+  coursGroupe: [
+    { teaching_space_id: u(397), matiere: "Mathématiques", professeur_id: u(343), prenom: "Claire", nom: "Exemple" },
+  ],
   affectationsEtab: [
     { teaching_space_id: u(391), class_id: CLASSE, classe: "Seconde 2", matiere: "Mathématiques", professeur_id: u(343), prenom: "Claire", nom: "Exemple" },
     { teaching_space_id: u(392), class_id: u(331), classe: "Première 3", matiere: "Mathématiques", professeur_id: u(343), prenom: "Claire", nom: "Exemple" },

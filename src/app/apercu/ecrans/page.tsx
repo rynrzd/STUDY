@@ -7,6 +7,8 @@ import { VerificationRentree } from "@/components/admin/VerificationRentree";
 import { EnTetePage } from "@/components/study/ui";
 import type { ContexteApp } from "@/lib/v6/contexte";
 import { VueClasses } from "@/app/admin/classes/vue";
+import { VueGroupe } from "@/app/admin/groupes/[groupe]/vue";
+import { VueGroupes } from "@/app/admin/groupes/vue";
 import { VueProfesseurs } from "@/app/admin/professeurs/vue";
 import { VueAdmin } from "@/app/admin/vue";
 import { VueAnnees } from "@/app/admin/annees/vue";
@@ -485,6 +487,27 @@ const ECRANS: Record<string, Ecran> = {
           />
         </div>
       </>
+    ),
+  },
+  D08: {
+    titre: "Groupes",
+    ctx: ADMIN,
+    chemin: "/admin/groupes",
+    rendu: () => <VueGroupes liste={[...F.groupesEtab]} />,
+  },
+  D09: {
+    titre: "Fiche groupe",
+    ctx: ADMIN,
+    chemin: "/admin/groupes/x",
+    rendu: () => (
+      <VueGroupe
+        groupe={F.groupesEtab[0]}
+        membres={[...F.membresGroupe]}
+        cours={[...F.coursGroupe]}
+        eligibles={F.membresEtab.filter((m) => (m.roles as readonly string[]).includes("eleve")).map((m) => ({ profile_id: m.profile_id, prenom: m.prenom, nom: m.nom, classe: m.classe }))}
+        professeurs={F.membresEtab.filter((m) => (m.roles as readonly string[]).includes("professeur")).map((m) => ({ id: m.profile_id, label: `${m.nom} ${m.prenom}` }))}
+        matieres={[...F.matieresEtab]}
+      />
     ),
   },
   D06: {
