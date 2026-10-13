@@ -193,6 +193,10 @@ const EXECUTABLES_PAR_AUTHENTICATED = new Set([
   "notification_lue",
   "orientation_modifier",
   "orientation_partager",
+  // 0076 — Archives du professeur : relisent l'appelant par current_user_id().
+  "prof_archive_cours",
+  "prof_archive_seance",
+  "prof_cours_archives",
   "projet_archiver",
   "projet_creer",
   "projet_editeur",

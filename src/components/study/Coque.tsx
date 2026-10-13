@@ -102,7 +102,7 @@ function navigation(espace: Espace): { principales: Destination[]; secondaires: 
       principales: [
         { href: "/professeur", libelle: "Accueil", icone: House, exact: true },
         { href: "/professeur/classes", libelle: "Mes classes", court: "Classes", icone: Users, aussi: ["/app/classe", "/app/classes"] },
-        { href: "/studio", libelle: "Mes cours", court: "Cours", icone: BookOpen, aussi: ["/professeur/studio", "/studio/exercices"] },
+        { href: "/studio", libelle: "Mes cours", court: "Cours", icone: BookOpen, aussi: ["/professeur/studio", "/studio/exercices", "/professeur/archives"] },
         { href: "/professeur/devoirs", libelle: "Devoirs et copies", court: "Devoirs", icone: ClipboardList },
         { href: "/app/agenda", libelle: "Agenda", icone: CalendarDays },
       ],

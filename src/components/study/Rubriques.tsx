@@ -24,6 +24,7 @@ export const ONGLETS_COURS = [
   { href: "/studio", libelle: "Mes séances" },
   { href: "/professeur/studio", libelle: "Importer un document" },
   { href: "/studio/exercices", libelle: "Banque d’exercices" },
+  { href: "/professeur/archives", libelle: "Années passées" },
 ] as const satisfies readonly Onglet[];
 
 export function RubriqueCours({ actif }: { actif: (typeof ONGLETS_COURS)[number]["href"] }) {

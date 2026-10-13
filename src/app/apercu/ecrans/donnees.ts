@@ -198,3 +198,24 @@ export const ANNEE_ARCHIVEE = {
     { matiere: "Mathématiques", cible: "Spé Maths A", genre: "groupe", professeurs: "Claire Exemple", seances_publiees: 38, devoirs: 9 },
   ],
 } as const satisfies import("@/lib/etablissement").AnneeArchivee;
+
+/** T09, T10 — archives du professeur (0076). */
+export const ARCHIVES_PROF = [
+  { espace: "a-1", annee: "2025-2026", matiere: "Mathématiques", cible: "Seconde 1", genre: "classe", seances: 34, devoirs: 9, archive_le: "2026-08-28T09:00:00Z" },
+  { espace: "a-2", annee: "2025-2026", matiere: "Mathématiques", cible: "Spé Maths A", genre: "groupe", seances: 28, devoirs: 7, archive_le: "2026-08-28T09:00:00Z" },
+  { espace: "a-3", annee: "2024-2025", matiere: "Mathématiques", cible: "Première 3", genre: "classe", seances: 31, devoirs: 8, archive_le: "2025-08-29T09:00:00Z" },
+] as const satisfies readonly import("@/lib/archives-professeur").CoursArchive[];
+
+const seanceArchivee = (id: string, title: string, chapter_id: string | null, quand: string) => ({
+  id, title, objective: null, state: "publiee" as const, chapter_id, teaching_space_id: "a-1", scheduled_for: quand, published_at: quand, updated_at: quand,
+});
+export const ARCHIVE_COURS = {
+  cours: { id: "a-1", matiere: "Mathématiques", cible: "Seconde 1", annee: "2025-2026", archive_le: "2026-08-28T09:00:00Z" },
+  chapitres: [{ id: "ch-1", label: "Chapitre 1 — Fonctions de référence" }, { id: "ch-2", label: "Chapitre 2 — Statistiques" }],
+  seances: [
+    seanceArchivee("s-1", "Lire une image sur un graphique", "ch-1", "2025-09-12T08:00:00Z"),
+    seanceArchivee("s-2", "La fonction carré", "ch-1", "2025-09-19T08:00:00Z"),
+    seanceArchivee("s-3", "Moyenne et médiane", "ch-2", "2025-11-07T08:00:00Z"),
+  ],
+  devoirs: [{ id: "d-1", title: "Exercices 12 à 15", due_at: "2025-09-26T16:00:00Z", remises: 29 }],
+} satisfies import("@/lib/archives-professeur").ArchiveCours;

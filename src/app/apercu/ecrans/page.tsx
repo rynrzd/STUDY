@@ -54,7 +54,9 @@ import { Editeur } from "@/components/studio/Editeur";
 import { OngletsSeance } from "@/components/studio/OngletsSeance";
 import { CircleHelp, ClipboardCheck, Library } from "lucide-react";
 import { CONTEXTE_FICTIF } from "../fictif";
-import { F, NOMS_FICTIFS, ANNEE_ARCHIVEE } from "./donnees";
+import { F, NOMS_FICTIFS, ANNEE_ARCHIVEE, ARCHIVES_PROF, ARCHIVE_COURS } from "./donnees";
+import { VueArchivesProfesseur } from "@/app/professeur/archives/vue";
+import { VueArchiveCours } from "@/app/professeur/archives/[cours]/vue";
 
 /**
  * Aperçu de développement des écrans recomposés (R2) : chaque écran est rendu
@@ -425,6 +427,8 @@ const ECRANS: Record<string, Ecran> = {
       </div>
     ),
   },
+  T09: { titre: "Années passées", ctx: PROF, chemin: "/professeur/archives", rendu: () => <VueArchivesProfesseur cours={[...ARCHIVES_PROF]} /> },
+  T10: { titre: "Cours archivé", ctx: PROF, chemin: "/professeur/archives/x", rendu: () => <VueArchiveCours archive={ARCHIVE_COURS} /> },
   T08: {
     titre: "Historique des versions",
     ctx: PROF,

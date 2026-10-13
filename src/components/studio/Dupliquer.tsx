@@ -23,7 +23,10 @@ export function Dupliquer({
   titre,
   cours,
   coursActuel,
+  libelle = "Dupliquer vers une autre classe",
 }: {
+  /** Intitulé du bouton : « Réutiliser cette année » depuis les archives. */
+  libelle?: string;
   seance: string;
   titre: string;
   cours: readonly { id: string; libelle: string }[];
@@ -63,7 +66,7 @@ export function Dupliquer({
         onClick={() => setOuvert(true)}
         className="bouton bouton-secondaire"
       >
-        Dupliquer vers une autre classe
+        {libelle}
       </button>
     );
   }

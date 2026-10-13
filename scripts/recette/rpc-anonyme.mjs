@@ -167,6 +167,12 @@ const FONCTIONS = [
   { nom: "etab_professeurs_principaux", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
   { nom: "etab_designer_professeur_principal", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_classe: "00000000-0000-4000-8000-000000000000", p_professeur: null } },
   { nom: "etab_annee_archivee", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_annee: "00000000-0000-4000-8000-000000000000" } },
+
+  // 0076 — Archives du professeur : rien sans compte.
+  { nom: "prof_cours_archives", corps: {} },
+  { nom: "prof_archive_cours", corps: { p_espace: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "prof_archive_seance", corps: { p_seance: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "enseignait_archive", corps: { space: "00000000-0000-4000-8000-000000000000" } },
 ];
 
 let defauts = 0;
