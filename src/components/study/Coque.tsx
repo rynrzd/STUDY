@@ -1,3 +1,4 @@
+import { ActiviteSession } from "@/components/app/ActiviteSession";
 import Link from "next/link";
 import {
   Bell,
@@ -194,6 +195,7 @@ export async function Coque({ ctx, children }: { ctx: ContexteApp; children: Rea
 
   return (
     <div className="app-coque" data-barre={repliee ? "repliee" : undefined}>
+      <ActiviteSession key={personne.profileId} />
       <aside className="app-barre" aria-label="Navigation principale">
         <div className="entete-barre mb-1 flex items-center justify-between gap-1">
           <Link href={espaces[0]?.href ?? "/app"} className="inline-flex min-h-[44px] items-center px-3 text-[color:var(--color-encre)]">

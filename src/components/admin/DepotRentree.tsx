@@ -133,7 +133,7 @@ export function DepotRentree({ cible }: { cible: "eleves" | "professeurs" }) {
           {eleves
             ? "Un fichier par classe, ou un seul fichier pour tout le lycée. Format .xlsx ou .csv."
             : "Nom, prénom, matière(s) et classe(s) par ligne. Format .xlsx ou .csv."}{" "}
-          Rien n&apos;est créé maintenant : vous verrez d&apos;abord ce qui a été
+          4 Mo au total par envoi. Rien n&apos;est créé maintenant : vous verrez d&apos;abord ce qui a été
           compris.
         </p>
         <p className="m-0 mt-2 text-[length:var(--text-aide)]">

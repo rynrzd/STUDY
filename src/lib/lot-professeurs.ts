@@ -10,6 +10,8 @@ import {
   type FichierProfesseurs,
   type PlanProfesseurs,
 } from "./assistant-rentree.ts";
+import { contexte } from "./etablissement.ts";
+import { identifierProfesseur, type ProfesseurConnu } from "./identifier-professeur.ts";
 import { proposerLogin } from "./import-rentree.ts";
 import { genererAliasTechnique, genererMotDePasseTemporaire } from "./identite.ts";
 import { correspondanceBornee, type AccesCree, type FichierDepose } from "./lot-rentree.ts";
@@ -463,13 +465,27 @@ export async function appliquerLotProfesseurs(options: {
 
   const client = clientExploitation("administration_des_comptes");
 
-  const { data: membres } = await client.rpc("etab_membres", {
-    p_acteur: options.acteur,
-    p_limite: 5000,
-  });
-  const pris = new Set(
-    ((membres ?? []) as { local_login: string }[]).map((membre) => membre.local_login),
-  );
+  // Portée calculée par la base depuis l'administrateur, jamais depuis le formulaire.
+  const etab = await contexte(options.acteur);
+  if (etab === null) return { erreur: "Établissement inaccessible." };
+  const connus: ProfesseurConnu[] = [];
+  const pris = new Set<string>();
+  for (let debut = 0; ; debut += 500) {
+    const { data, error } = await client.from("organization_memberships")
+      .select("profile_id, local_login, roles, profiles(first_name, last_name, professional_email)")
+      .eq("organization_id", etab.organizationId)
+      .order("profile_id").range(debut, debut + 499);
+    if (error !== null || data === null) return { erreur: "Impossible de vérifier les comptes existants. Aucun compte n’a été créé." };
+    for (const membre of data) {
+      pris.add(membre.local_login);
+      const profil = membre.profiles as unknown as { first_name: string; last_name: string; professional_email: string | null } | null;
+      if (membre.roles.includes("professeur") && profil !== null) connus.push({
+        profile_id: membre.profile_id, local_login: membre.local_login,
+        prenom: profil.first_name, nom: profil.last_name, email: profil.professional_email,
+      });
+    }
+    if (data.length < 500) break;
+  }
 
   let cree = 0;
   let existant = 0;
@@ -478,72 +494,40 @@ export async function appliquerLotProfesseurs(options: {
   const echecs: { ligne: number; raison: string }[] = [];
 
   for (const personne of complet.personnes) {
-    const login = proposerLogin(personne.prenom, personne.nom, pris);
-    pris.add(login);
-
-    const motDePasse = genererMotDePasseTemporaire(16);
-    const alias = genererAliasTechnique(options.domaineAlias);
-
-    const creation = await client.auth.admin.createUser({
-      email: alias,
-      password: motDePasse,
-      email_confirm: true,
-    });
-
-    if (creation.error !== null || creation.data.user === null) {
-      echecs.push({ ligne: 0, raison: `${personne.prenom} ${personne.nom} : compte non créé` });
+    const reconnu = identifierProfesseur(personne, connus);
+    if (reconnu.erreur !== null) {
+      echecs.push({ ligne: 0, raison: `${personne.prenom} ${personne.nom} : ${reconnu.erreur}` });
       continue;
     }
-
-    const profileId = creation.data.user.id;
-
-    const { data: resultat, error } = await client.rpc("etab_creer_membre", {
-      p_acteur: options.acteur,
-      p_profile: profileId,
-      p_prenom: personne.prenom,
-      p_nom: personne.nom,
-      p_login: login,
-      p_alias: alias,
-      p_role: "professeur",
-      p_classe: null,
-      p_email: personne.email,
-    });
-
-    if (error !== null) {
-      await client.auth.admin.deleteUser(profileId).catch(() => undefined);
-      echecs.push({ ligne: 0, raison: `${personne.prenom} ${personne.nom} : écriture refusée` });
-      continue;
-    }
-
-    let identifiant = profileId;
-
-    if (resultat === "existant") {
-      // Le compte fournisseur ouvert à l'instant ne sert à rien : sans cette
-      // suppression, l'alias resterait pris pour toujours.
-      await client.auth.admin.deleteUser(profileId).catch(() => undefined);
+    let identifiant: string;
+    if (reconnu.profil !== null) {
+      identifiant = reconnu.profil.profile_id;
       existant += 1;
-
-      const { data: connu } = await client.rpc("etab_profil_par_login", {
-        p_acteur: options.acteur,
-        p_login: login,
-      });
-      if (typeof connu !== "string") {
-        echecs.push({
-          ligne: 0,
-          raison: `${personne.prenom} ${personne.nom} : compte existant introuvable`,
-        });
+    } else {
+      const login = proposerLogin(personne.prenom, personne.nom, pris);
+      pris.add(login);
+      const motDePasse = genererMotDePasseTemporaire(16);
+      const alias = genererAliasTechnique(options.domaineAlias);
+      const creation = await client.auth.admin.createUser({ email: alias, password: motDePasse, email_confirm: true });
+      if (creation.error !== null || creation.data.user === null) {
+        echecs.push({ ligne: 0, raison: `${personne.prenom} ${personne.nom} : compte non créé` });
         continue;
       }
-      identifiant = connu;
-    } else {
-      cree += 1;
-      acces.push({
-        prenom: personne.prenom,
-        nom: personne.nom,
-        classe: "Professeur",
-        login,
-        motDePasseTemporaire: motDePasse,
+      identifiant = creation.data.user.id;
+      const { data: resultat, error } = await client.rpc("etab_creer_membre", {
+        p_acteur: options.acteur, p_profile: identifiant,
+        p_prenom: personne.prenom, p_nom: personne.nom, p_login: login,
+        p_alias: alias, p_role: "professeur", p_classe: null, p_email: personne.email,
       });
+      // Une collision concurrente n'autorise jamais à affecter le compte qui a pris le login.
+      if (error !== null || resultat !== "cree") {
+        await client.auth.admin.deleteUser(identifiant).catch(() => undefined);
+        echecs.push({ ligne: 0, raison: `${personne.prenom} ${personne.nom} : création refusée, vérifiez les comptes puis réimportez cette ligne` });
+        continue;
+      }
+      connus.push({ profile_id: identifiant, local_login: login, prenom: personne.prenom, nom: personne.nom, email: personne.email });
+      cree += 1;
+      acces.push({ prenom: personne.prenom, nom: personne.nom, classe: "Professeur", login, motDePasseTemporaire: motDePasse });
     }
 
     for (const affectation of personne.affectations) {

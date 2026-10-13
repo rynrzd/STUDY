@@ -187,7 +187,10 @@ export class DepotSupabase implements DepotAuthentification {
       p_empreinte: enHexa(empreinte),
       p_nouvelle_idle: nouvelleEcheance.toISOString(),
     });
-    if (error !== null) journaliser("prolongation_session", error.code);
+    if (error !== null) {
+      journaliser("prolongation_session", error.code);
+      throw new Error("La prolongation de session n’a pas pu être confirmée.");
+    }
   }
 
   /**

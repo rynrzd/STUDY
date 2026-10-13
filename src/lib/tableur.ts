@@ -1,3 +1,4 @@
+import { TAILLE_MAX_DEPOT } from "./limites-depot.ts";
 import { inflateRawSync } from "node:zlib";
 
 /**
@@ -16,13 +17,13 @@ import { inflateRawSync } from "node:zlib";
  * d'élèves est pire que de ne pas la lire.
  *
  * Limites de sécurité appliquées à tout fichier :
- *  - 5 Mo compressés au maximum ;
+ *  - 4 Mo compressés au maximum ;
  *  - 40 Mo décompressés au maximum, cumulés (protection contre une archive
  *    piégée qui décompresserait en gigaoctets) ;
  *  - 5 000 lignes et 40 colonnes au maximum.
  */
 
-export const TAILLE_MAXIMALE = 5 * 1024 * 1024;
+export const TAILLE_MAXIMALE = TAILLE_MAX_DEPOT;
 const DECOMPRESSE_MAXIMUM = 40 * 1024 * 1024;
 export const LIGNES_MAXIMUM = 5000;
 const COLONNES_MAXIMUM = 40;
@@ -42,7 +43,7 @@ export interface Tableau {
 /** Point d'entrée : choisit le lecteur d'après le nom du fichier. */
 export function lireTableur(nom: string, contenu: Buffer): Tableau {
   if (contenu.length > TAILLE_MAXIMALE) {
-    throw new FichierIllisible("Le fichier dépasse 5 Mo. Réduisez-le ou découpez-le.");
+    throw new FichierIllisible("Le fichier dépasse 4 Mo. Réduisez-le ou découpez-le.");
   }
   if (contenu.length === 0) {
     throw new FichierIllisible("Le fichier est vide.");
