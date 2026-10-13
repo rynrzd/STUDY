@@ -39,7 +39,7 @@ const nextConfig: NextConfig = {
   // affichage (~14 Ko compressés, Tailwind). Mesuré sur la landing :
   // docs/study-v7-mapping.md, section « Performance ». La CSP autorise déjà
   // style-src 'unsafe-inline'.
-  experimental: { inlineCss: true },
+  experimental: { inlineCss: true, serverActions: { bodySizeLimit: 4_200_000 } },
   poweredByHeader: false,
   // Les images distantes ne sont pas autorisees : tout support vient du stockage prive via le BFF.
   images: { remotePatterns: [] },

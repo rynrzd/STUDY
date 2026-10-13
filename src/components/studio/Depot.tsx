@@ -78,7 +78,7 @@ export function Depot() {
         <Attente />
 
         <p className="m-0 mt-4 text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)]">
-          PDF avec du texte, ou document Word (.docx). 30 Mo et 50 pages au
+          PDF avec du texte, ou document Word (.docx). 4 Mo et 50 pages au
           maximum. Les documents numérisés ne sont pas encore reconnus.
         </p>
 

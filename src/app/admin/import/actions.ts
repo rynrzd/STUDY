@@ -109,7 +109,7 @@ export async function lireColonnes(cible: "eleves" | "professeurs", _precedent: 
   const retenus = donnees.getAll("fichiers").filter((f): f is File => f instanceof File && f.size > 0);
   if (retenus.length === 0) return { etat: "erreur", message: "Choisissez au moins un fichier." };
   if (retenus.length > FICHIERS_MAXIMUM) return { etat: "erreur", message: `Déposez au plus ${FICHIERS_MAXIMUM} fichiers à la fois.` };
-  if (retenus.reduce((n, f) => n + f.size, 0) > TAILLE_MAXIMALE * 8) {
+  if (retenus.reduce((n, f) => n + f.size, 0) > TAILLE_MAXIMALE) {
     return { etat: "erreur", message: "L'ensemble déposé est trop volumineux. Procédez en deux fois." };
   }
 
@@ -178,10 +178,9 @@ export async function deposerFichiers(
     };
   }
 
-  // Le cumul est plafonné aussi : quarante fichiers de cinq mégaoctets
-  // tiendraient la mémoire du serveur pendant toute la lecture.
+  // Le cumul reste sous la limite de transport, même avec plusieurs fichiers.
   const cumul = retenus.reduce((total, fichier) => total + fichier.size, 0);
-  if (cumul > TAILLE_MAXIMALE * 8) {
+  if (cumul > TAILLE_MAXIMALE) {
     return { etat: "erreur", message: "L'ensemble déposé est trop volumineux. Procédez en deux fois." };
   }
 
@@ -361,7 +360,7 @@ export async function deposerProfesseurs(
   }
 
   const cumul = retenus.reduce((total, fichier) => total + fichier.size, 0);
-  if (cumul > TAILLE_MAXIMALE * 8) {
+  if (cumul > TAILLE_MAXIMALE) {
     return {
       etat: "erreur",
       message: "L'ensemble déposé est trop volumineux. Procédez en deux fois.",

@@ -598,7 +598,7 @@ const TYPES = [
   { cle: "exercice", libelle: "Exercice", aide: "Une consigne d'exercice, à faire en classe ou à la maison." },
   { cle: "lien", libelle: "Lien", aide: "Une page, une vidéo, une ressource en ligne." },
   { cle: "devoir", libelle: "Devoir", aide: "Un travail à rendre, avec une échéance. Il apparaît dans « À faire » chez l'élève." },
-  { cle: "document", libelle: "Document", aide: `Un fichier joint, conservé tel quel : ${FORMATS_ACCEPTES}. 20 Mo au maximum. Un PDF se lit directement dans la séance, sans conversion.` },
+  { cle: "document", libelle: "Document", aide: `Un fichier joint, conservé tel quel : ${FORMATS_ACCEPTES}. 4 Mo au maximum. Un PDF se lit directement dans la séance, sans conversion.` },
 ] as const;
 
 function AjoutBloc({ seance }: { seance: string }) {
