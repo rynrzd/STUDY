@@ -2,10 +2,11 @@ import Link from "next/link";
 import { Check, School } from "lucide-react";
 import { AjouterPersonne } from "@/components/admin/AjouterPersonne";
 import { ProfesseurPrincipal } from "@/components/admin/ProfesseurPrincipal";
-import { FormulaireAffectation, FormulaireClasse, FormulaireMatiere } from "@/components/admin/Formulaires";
+import { FormulaireAffectation, FormulaireClasse, FormulaireMatiere, FormulaireSerieClasses } from "@/components/admin/Formulaires";
 import { EnTetePage, EtatVide } from "@/components/study/ui";
 import type { affectations, classes } from "@/lib/etablissement";
 import { RubriqueClasses } from "@/components/study/Rubriques";
+import { AideTrois } from "@/components/study/AideTrois";
 
 type Classe = Awaited<ReturnType<typeof classes>>[number];
 type Affectation = Awaited<ReturnType<typeof affectations>>[number];
@@ -49,6 +50,7 @@ export function VueClasses({
         sousTitre="Un cours s'ouvre en trois étapes : une classe, une matière, puis le professeur qui l'enseigne. Il apparaît alors dans « Mes cours » du professeur et chez les élèves."
         actions={<AjouterPersonne listeClasses={optionsClasses} libelle="Ajouter un élève ou un prof" variante="secondaire" />}
       />
+      <AideTrois pourquoi="Un cours naît d'une classe, d'une matière et d'un professeur : sans les trois, personne ne peut rien publier." quiVoit="Le professeur voit le cours dans « Mes cours » ; les élèves de la classe le voient dès qu'une séance y est publiée." apres="Le professeur prépare ses séances. Vous pouvez désigner le professeur principal depuis la fiche de la classe." />
 
       <ol className="parcours mb-8" aria-label="Étapes pour ouvrir un cours">
         {etapes.map((etape, i) => (
@@ -69,6 +71,9 @@ export function VueClasses({
       <div className="grid gap-4 lg:grid-cols-2">
         <FormulaireClasse />
         <FormulaireMatiere />
+      </div>
+      <div className="mt-4">
+        <FormulaireSerieClasses existantes={listeClasses.map((c) => c.label)} />
       </div>
 
       <div className="mt-4 scroll-mt-24" id="affecter">

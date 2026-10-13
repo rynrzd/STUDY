@@ -120,7 +120,7 @@ export async function revision(jeton: string, revisionId: string): Promise<Revis
 /* -------------------------------------------------------------------------- */
 
 export type ResultatImport =
-  | { readonly etat: "ok"; readonly document: string }
+  | { readonly etat: "ok"; readonly document: string; readonly deja?: boolean }
   | { readonly etat: "refus"; readonly message: string };
 
 /**
@@ -155,6 +155,15 @@ export async function importer(options: {
   const octets = Buffer.from(await options.fichier.arrayBuffer());
   const client = clientUtilisateur(options.jeton);
   const titre = titreDepuisNom(options.fichier.name);
+  const empreinte = createHash("sha256").update(octets).digest("hex");
+
+  // DATA-11 : le même fichier, déjà déposé par cette personne, n'est pas
+  // stocké une seconde fois — on rouvre son document. La base borne la
+  // recherche à l'auteur courant ; un autre professeur garde sa propre copie.
+  const { data: identique } = await client.rpc("prof_document_identique", { p_sha256: empreinte });
+  if (typeof identique === "string" && identique !== "") {
+    return { etat: "ok", document: identique, deja: true };
+  }
 
   // 1. Le document, d'abord : il donne l'identifiant qui sert de chemin.
   const { data: cree, error: erreurDocument } = await client
@@ -219,7 +228,7 @@ export async function importer(options: {
     p_fichier: fileId,
     p_mime_detecte: "application/octet-stream",
     p_taille: octets.length,
-    p_sha256: `\\x${createHash("sha256").update(octets).digest("hex")}`,
+    p_sha256: `\\x${empreinte}`,
   });
 
   await client

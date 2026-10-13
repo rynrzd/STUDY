@@ -29,7 +29,7 @@ export function Depot() {
 
   useEffect(() => {
     if (etat.etat === "envoi" && etat.document) {
-      routeur.push(`/professeur/studio/${etat.document}`);
+      routeur.push(`/professeur/studio/${etat.document}${etat.deja ? "?deja=1" : ""}`);
     }
   }, [etat, routeur]);
 

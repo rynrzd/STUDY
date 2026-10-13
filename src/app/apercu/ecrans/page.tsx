@@ -382,7 +382,7 @@ const ECRANS: Record<string, Ecran> = {
     titre: "Studio",
     ctx: PROF,
     chemin: "/studio",
-    rendu: () => <VueStudio cours={[...F.coursProf]} choisi={F.coursProf[0]} chapitres={[...F.chapitresProf]} seances={[...F.seancesCours]} sansChapitre={[]} brouillons={1} />,
+    rendu: () => <VueStudio cours={[...F.coursProf]} choisi={F.coursProf[0]} chapitres={[...F.chapitresProf]} seances={[...F.seancesCours]} sansChapitre={[]} brouillons={1} statistiques={[{ lecon: F.seancesCours[0].id, titre: F.seancesCours[0].title, effectif: 31, eleves_exercices: 24, reussite: 68, incompris: null, masque: true }]} />,
   },
   T02b: { titre: "Studio d'import", ctx: PROF, chemin: "/professeur/studio", rendu: () => <VueStudioDocuments documents={[...F.documents]} /> },
   T03: {
@@ -499,6 +499,7 @@ const ECRANS: Record<string, Ecran> = {
         listeClasses={[...F.classesEtab]}
         imports={F.imports.map((i) => ({ ...i, rapport: { ...i.rapport } }))}
         conservation={36}
+        effacements={[{ profil: "p", prenom: "Inès", nom: "Moreau", depuis: "2026-10-12T09:00:00Z" }]}
       />
     ),
   },

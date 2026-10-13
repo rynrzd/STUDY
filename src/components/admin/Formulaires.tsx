@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Archive, BookOpen, CircleAlert, CircleCheck, Link2, School } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
   affecterUnProfesseur,
+  creerSerieDeClasses,
   creerUneClasse,
   creerUneMatiere,
   fixerUneConservation,
@@ -231,5 +232,65 @@ function Retour({ etat }: { etat: EtatAdmin }) {
     >
       <Icone size={18} strokeWidth={1.75} aria-hidden="true" className="shrink-0" /> {etat.message}
     </p>
+  );
+}
+
+/* ------------------------------------------- Classes en série (CL-10) ----- */
+
+const plat = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "");
+const cle = (v: string) => plat(v).replace(/^(seconde|2nde|2de)/, "2").replace(/^(premiere|1ere|1re)/, "1").replace(/^(terminale|term|tle)/, "t");
+
+/** Créer « 2nde 1 » à « 2nde 8 » d'un coup, avec aperçu ; les équivalentes existantes sont sautées. */
+export function FormulaireSerieClasses({ existantes }: { existantes: readonly string[] }) {
+  const [prefixe, setPrefixe] = useState("");
+  const [de, setDe] = useState(1);
+  const [a, setA] = useState(4);
+  const [etat, action] = useActionState<EtatAdmin, FormData>(creerSerieDeClasses, ETAT_ADMIN_INITIAL);
+  const cles = new Set(existantes.map(cle));
+  const libelles = prefixe.trim().length > 0 && a >= de && a - de < 40 ? Array.from({ length: a - de + 1 }, (_, i) => `${prefixe.trim()} ${de + i}`) : [];
+  const nouveaux = libelles.filter((l) => !cles.has(cle(l)));
+
+  return (
+    <form action={action} className="panneau flex flex-col">
+      <p className="m-0 font-bold">Plusieurs classes d&apos;un coup</p>
+      <p className="meta m-0 mt-1">Un préfixe et une plage : « 2nde », de 1 à 8. Les classes déjà présentes sont sautées.</p>
+      <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+        <div>
+          <label className="etiquette" htmlFor="serie-prefixe">
+            Préfixe
+          </label>
+          <input id="serie-prefixe" className="champ" value={prefixe} onChange={(e) => setPrefixe(e.target.value)} placeholder="2nde" maxLength={60} />
+        </div>
+        <div>
+          <label className="etiquette" htmlFor="serie-de">
+            De
+          </label>
+          <input id="serie-de" type="number" min={0} max={99} className="champ" value={de} onChange={(e) => setDe(Number(e.target.value) || 0)} />
+        </div>
+        <div>
+          <label className="etiquette" htmlFor="serie-a">
+            À
+          </label>
+          <input id="serie-a" type="number" min={0} max={99} className="champ" value={a} onChange={(e) => setA(Number(e.target.value) || 0)} />
+        </div>
+      </div>
+      {libelles.length > 0 ? (
+        <p className="m-0 mt-3 flex flex-wrap gap-1.5">
+          {libelles.map((l) => (
+            <span key={l} className="puce-cours" data-ton={cles.has(cle(l)) ? "attention" : undefined}>
+              {l}
+              {cles.has(cle(l)) ? " · déjà là" : ""}
+            </span>
+          ))}
+        </p>
+      ) : null}
+      <input type="hidden" name="libelles" value={JSON.stringify(nouveaux)} />
+      <div className="mt-3">
+        <button type="submit" className="bouton bouton-secondaire" disabled={nouveaux.length === 0}>
+          {nouveaux.length === 0 ? "Créer" : `Créer ${nouveaux.length} classe${nouveaux.length > 1 ? "s" : ""}`}
+        </button>
+      </div>
+      <Retour etat={etat} />
+    </form>
   );
 }

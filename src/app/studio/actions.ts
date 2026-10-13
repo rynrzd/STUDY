@@ -6,6 +6,7 @@ import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { deposerSupport } from "@/lib/documents";
 import { dupliquerSeance } from "@/lib/duplication";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
+import { MODELES_LECON, type ModeleLecon } from "@/lib/modeles-lecon";
 import type { EtatStudio } from "./etats";
 
 /**
@@ -223,6 +224,16 @@ export async function creerSeance(
 
   if (error !== null) return REFUS;
 
+  // Modèle de forme (EDIT-13) : des intitulés à compléter, rien d'inventé.
+  const modele = String(donnees.get("modele") ?? "vide");
+  if (modele in MODELES_LECON && modele !== "vide") {
+    const blocs = MODELES_LECON[modele as ModeleLecon].blocs;
+    const organisation = await organisationDuCours(jeton, analyse.data.cours);
+    await clientUtilisateur(jeton)
+      .from("lesson_blocks")
+      .insert(blocs.map((b, i) => ({ organization_id: organisation, lesson_id: data.id, kind: b.kind, position: i, contenu: b.contenu, created_by: personne.profileId })));
+  }
+
   revalidatePath("/studio");
   return { etat: "ok", message: "Séance créée.", cree: data.id };
 }
@@ -358,7 +369,7 @@ export async function publierSeance(
 
   const { data: blocs } = await client
     .from("lesson_blocks")
-    .select("kind, position, contenu, file_id, assignment_id")
+    .select("id, kind, position, contenu, file_id, assignment_id")
     .eq("lesson_id", analyse.data.id)
     .order("position");
 
@@ -969,5 +980,65 @@ export async function dupliquerVersUneClasse(
       `Copie créée en brouillon, ${resultat.blocsCopies} bloc` +
       `${resultat.blocsCopies > 1 ? "s" : ""} repris.${devoirs}`,
     cree: resultat.seance,
+  };
+}
+
+/**
+ * Publier les retouches d'une séance déjà publiée (PUB-07, PUB-11) : son
+ * contenu actuel devient la version que lisent les élèves. Avant cela, les
+ * retouches restent privées. La base vérifie que la personne enseigne le cours.
+ */
+export async function republierSeance(_precedent: EtatStudio, donnees: FormData): Promise<EtatStudio> {
+  const jeton = await jetonDuProfesseur();
+  if (jeton === null) return REFUS;
+  const id = String(donnees.get("id") ?? "");
+  if (!z.string().uuid().safeParse(id).success) return REFUS;
+  const { data, error } = await clientUtilisateur(jeton).rpc("prof_republier_seance", { p_seance: id });
+  if (error !== null) return REFUS;
+  revalidatePath(`/studio/${id}`);
+  revalidatePath("/app");
+  return { etat: "ok", message: `Modifications publiées (version ${data as number}). Les élèves voient désormais la séance à jour.` };
+}
+
+/** Épingler ou retirer un cours de ses favoris (TEACH-17) ; à soi seul, sous RLS. */
+export async function basculerFavori(_precedent: EtatStudio, donnees: FormData): Promise<EtatStudio> {
+  const jeton = await jetonDuProfesseur();
+  const personne = await sessionCourante();
+  if (jeton === null || personne === null) return REFUS;
+  const cours = String(donnees.get("cours") ?? "");
+  if (!z.string().uuid().safeParse(cours).success) return REFUS;
+  const client = clientUtilisateur(jeton);
+  const retirer = donnees.get("favori") === "oui";
+  const { error } = retirer
+    ? await client.from("cours_favoris").delete().eq("teaching_space_id", cours)
+    : await client.from("cours_favoris").insert({ profile_id: personne.profileId, teaching_space_id: cours });
+  if (error !== null) return REFUS;
+  revalidatePath("/studio");
+  return { etat: "ok", message: retirer ? "Retiré des favoris." : "Ajouté aux favoris." };
+}
+
+/**
+ * Copier la structure d'un cours vers celui-ci (COURS-08, COURS-09) : les
+ * chapitres seuls, ou avec les séances en brouillon (sans devoir), ou en
+ * publiant les séances déjà publiées dans la source. La base revérifie les
+ * deux cours ; la source peut être un cours d'une année passée (COURS-15).
+ */
+export async function copierStructure(_precedent: EtatStudio, donnees: FormData): Promise<EtatStudio> {
+  const jeton = await jetonDuProfesseur();
+  if (jeton === null) return REFUS;
+  const source = String(donnees.get("source") ?? "");
+  const cible = String(donnees.get("cible") ?? "");
+  const mode = String(donnees.get("mode") ?? "");
+  if (!z.string().uuid().safeParse(source).success || !z.string().uuid().safeParse(cible).success) {
+    return { etat: "erreur", message: "Choisissez le cours d'origine." };
+  }
+  if (!["structure", "brouillons", "publier"].includes(mode)) return { etat: "erreur", message: "Choisissez ce qu'il faut copier." };
+  const { data, error } = await clientUtilisateur(jeton).rpc("prof_copier_structure", { p_source: source, p_cible: cible, p_mode: mode });
+  if (error !== null) return REFUS;
+  const r = data as { chapitres: number; seances: number; publiees: number };
+  revalidatePath("/studio");
+  return {
+    etat: "ok",
+    message: `${r.chapitres} chapitre${r.chapitres > 1 ? "s" : ""} créé${r.chapitres > 1 ? "s" : ""}${mode !== "structure" ? `, ${r.seances} séance${r.seances > 1 ? "s" : ""} copiée${r.seances > 1 ? "s" : ""}` : ""}${mode === "publier" ? `, dont ${r.publiees} publiée${r.publiees > 1 ? "s" : ""}` : ""}.`,
   };
 }

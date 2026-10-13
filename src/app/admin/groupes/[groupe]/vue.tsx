@@ -1,5 +1,5 @@
 import { BookOpen, Layers, Users } from "lucide-react";
-import { AffecterProfesseurGroupe, AjouterEleves, DescriptionGroupe, MembresGroupe } from "@/components/admin/GroupeFormulaires";
+import { AffecterProfesseurGroupe, AjouterEleves, CoordinateurGroupe, DescriptionGroupe, MembresGroupe } from "@/components/admin/GroupeFormulaires";
 import { EnTetePage } from "@/components/study/ui";
 import type { CoursGroupe, GroupeEtab, MembreGroupe } from "@/lib/etablissement";
 
@@ -16,7 +16,10 @@ export function VueGroupe({
   plus = false,
   classes = [],
   description = null,
+  coordinateur = null,
 }: {
+  /** Coordinateur (0082, GR-12). */
+  coordinateur?: { id: string; nom: string } | null;
   /** Description facultative (0081, GR-02). */
   description?: string | null;
   groupe: GroupeEtab;
@@ -43,7 +46,12 @@ export function VueGroupe({
         sousTitre={`${groupe.annee} · ${membres.length} élève${membres.length > 1 ? "s" : ""}${classesSources.length > 1 ? ` de ${classesSources.length} classes` : ""} · ${cours.length} cours`}
       />
 
-      <DescriptionGroupe groupe={groupe.id} description={description} />
+      <div className="mb-8 grid gap-4 lg:grid-cols-2">
+        <DescriptionGroupe groupe={groupe.id} description={description} />
+        <div className="panneau">
+          <CoordinateurGroupe groupe={groupe.id} actuel={coordinateur} professeurs={professeurs} />
+        </div>
+      </div>
 
       <section aria-labelledby="cours" className="mb-8">
         <h2 id="cours" className="titre-section mb-3">

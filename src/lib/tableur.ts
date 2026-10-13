@@ -166,6 +166,13 @@ function deviner(texte: string): string {
  * exactement ce qu'affichait le tableur.
  */
 export function lireXlsx(contenu: Buffer): Tableau {
+  // Un classeur protégé par mot de passe n'est plus une archive ZIP : Excel
+  // le chiffre dans un conteneur OLE (signature D0 CF 11 E0).
+  if (contenu.length >= 4 && contenu.readUInt32BE(0) === 0xd0cf11e0) {
+    throw new FichierIllisible(
+      "Ce classeur est protégé par un mot de passe. Retirez la protection dans votre tableur (Fichier › Informations › Protéger le classeur), puis déposez-le à nouveau, ou exportez-le en .csv.",
+    );
+  }
   const fichiers = lireZip(contenu);
 
   const feuille =
@@ -181,6 +188,15 @@ export function lireXlsx(contenu: Buffer): Tableau {
   const partagees = lireChainesPartagees(fichiers.get("xl/sharedStrings.xml"));
   const xml = feuille.toString("utf8");
 
+  // Cellules fusionnées : seule la première porte la valeur, les autres
+  // seraient lues vides. Plutôt que de deviner, on le dit (IMP-11).
+  const fusions = [...xml.matchAll(/<mergeCell\s+ref="([A-Z]+\d+:[A-Z]+\d+)"/g)].map((m) => m[1]!);
+  if (fusions.length > 0) {
+    throw new FichierIllisible(
+      `Le classeur contient des cellules fusionnées (${fusions.slice(0, 3).join(", ")}${fusions.length > 3 ? "…" : ""}). Défusionnez-les (une valeur par cellule, une ligne par élève), puis déposez-le à nouveau.`,
+    );
+  }
+
   const lignes: string[][] = [];
 
   for (const brute of xml.split("<row ").slice(1)) {
@@ -191,6 +207,20 @@ export function lireXlsx(contenu: Buffer): Tableau {
       const colonne = reference === undefined ? ligne.length : indiceColonne(reference);
       if (colonne >= COLONNES_MAXIMUM) continue;
 
+      // Formules : leur dernière valeur calculée est reprise. Sans valeur
+      // (fichier généré sans calcul) ou en erreur (#REF!, #N/A…), la cellule
+      // serait lue vide ou fausse : on s'arrête en nommant la cellule.
+      const ici = /r="([A-Z]+\d+)"/.exec(celluleBrute)?.[1] ?? "?";
+      const fin = celluleBrute.indexOf("</c>");
+      const cellule = fin < 0 ? celluleBrute : celluleBrute.slice(0, fin);
+      if (/^[^>]*\bt="e"/.test(cellule)) {
+        const code = /<v>([\s\S]*?)<\/v>/.exec(cellule)?.[1] ?? "#ERREUR";
+        throw new FichierIllisible(`La cellule ${ici} contient une erreur de formule (${decoderEntites(code)}). Corrigez-la ou remplacez la formule par sa valeur.`);
+      }
+      if (/<f[\s>/]/.test(cellule) && !/<v>/.test(cellule)) {
+        throw new FichierIllisible(`La cellule ${ici} contient une formule jamais calculée. Ouvrez le fichier dans un tableur et enregistrez-le, ou exportez-le en .csv.`);
+      }
+
       while (ligne.length < colonne) ligne.push("");
       ligne[colonne] = valeurCellule(celluleBrute, partagees);
     }
@@ -199,6 +229,15 @@ export function lireXlsx(contenu: Buffer): Tableau {
     if (lignes.length > LIGNES_MAXIMUM) {
       throw new FichierIllisible(`Le fichier dépasse ${LIGNES_MAXIMUM} lignes.`);
     }
+  }
+
+  if (lignes.length === 0) {
+    const feuilles = [...fichiers.keys()].filter((nom) => nom.startsWith("xl/worksheets/sheet")).length;
+    throw new FichierIllisible(
+      feuilles > 1
+        ? "La première feuille du classeur est vide. Placez la liste sur la première feuille, ou exportez la bonne feuille en .csv."
+        : "La feuille du classeur est vide.",
+    );
   }
 
   return enTableau(lignes);

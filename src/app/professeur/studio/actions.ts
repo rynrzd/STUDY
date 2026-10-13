@@ -68,7 +68,7 @@ export async function importerDocument(
   }
 
   revalidatePath("/professeur/studio");
-  return { etat: "envoi", document: resultat.document };
+  return { etat: "envoi", document: resultat.document, deja: resultat.deja === true };
 }
 
 /* -------------------------------------------------------- Sauvegarde ---- */

@@ -4,7 +4,8 @@ import { BookOpen } from "lucide-react";
 import { RubriqueCours } from "@/components/study/Rubriques";
 import { EnTetePage, EtatVide } from "@/components/study/ui";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
-import { chapitresArchives, chapitresDuCours, coursDuProfesseur, seancesDuCours } from "@/lib/studio";
+import { chapitresArchives, chapitresDuCours, coursDuProfesseur, coursFavoris, seancesDuCours, statistiquesCours } from "@/lib/studio";
+import { coursArchives } from "@/lib/archives-professeur";
 import { VueStudio } from "./vue";
 
 /**
@@ -18,7 +19,7 @@ export const dynamic = "force-dynamic";
 export default async function PageStudio({
   searchParams,
 }: {
-  searchParams: Promise<{ cours?: string }>;
+  searchParams: Promise<{ cours?: string; q?: string; etat?: string }>;
 }) {
   const personne = await sessionCourante();
   if (personne === null) redirect("/connexion");
@@ -48,10 +49,28 @@ export default async function PageStudio({
   const parametres = await searchParams;
   const choisi = cours.find((c) => c.id === parametres.cours) ?? cours[0]!;
 
-  const [chapitres, seances, archives] = await Promise.all([chapitresDuCours(jeton!, choisi.id), seancesDuCours(jeton!, choisi.id), chapitresArchives(jeton!, choisi.id)]);
+  const [chapitres, seances, archives, favoris, passes, statistiques] = await Promise.all([
+    chapitresDuCours(jeton!, choisi.id),
+    seancesDuCours(jeton!, choisi.id),
+    chapitresArchives(jeton!, choisi.id),
+    coursFavoris(jeton!),
+    coursArchives(jeton!),
+    statistiquesCours(jeton!, choisi.id),
+  ]);
+  const sourcesCopie = [
+    ...cours.filter((c) => c.id !== choisi.id).map((c) => ({ id: c.id, libelle: c.libelle })),
+    ...(passes ?? []).map((c) => ({ id: c.espace, libelle: `${c.matiere} — ${c.cible} (${c.annee})` })),
+  ];
 
-  const sansChapitre = seances.filter((seance) => seance.chapter_id === null);
+  // TEACH-13 : chercher une séance par titre, filtrer par état.
+  const recherche = {
+    q: (parametres.q ?? "").trim().slice(0, 80),
+    etat: ["brouillon", "programmee", "publiee"].includes(parametres.etat ?? "") ? (parametres.etat as string) : "",
+  };
+  const plat = (v: string) => v.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const filtrees = seances.filter((s) => (!recherche.q || plat(s.title).includes(plat(recherche.q))) && (!recherche.etat || s.state === recherche.etat));
+  const sansChapitre = filtrees.filter((seance) => seance.chapter_id === null);
   const brouillons = seances.filter((s) => s.state !== "publiee").length;
 
-  return <VueStudio cours={cours} choisi={choisi} chapitres={chapitres} seances={seances} sansChapitre={sansChapitre} brouillons={brouillons} archives={archives} />;
+  return <VueStudio cours={cours} choisi={choisi} chapitres={chapitres} seances={filtrees} sansChapitre={sansChapitre} recherche={recherche} total={seances.length} brouillons={brouillons} archives={archives} favoris={[...favoris]} sourcesCopie={sourcesCopie} statistiques={statistiques} />;
 }

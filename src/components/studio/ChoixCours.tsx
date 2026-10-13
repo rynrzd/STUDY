@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
+import { Star } from "lucide-react";
+import { basculerFavori } from "@/app/studio/actions";
+import { ETAT_STUDIO_INITIAL, type EtatStudio } from "@/app/studio/etats";
 
 type Cours = { readonly id: string; readonly libelle: string; readonly matiere: string; readonly classe: string | null; readonly groupe: string | null };
 
@@ -24,13 +27,14 @@ function niveau(c: Cours): string {
  * classe ou groupe. Le filtrage est local : la liste vient déjà du serveur,
  * restreinte par la base aux cours de la personne.
  */
-export function ChoixCours({ cours, choisi }: { cours: readonly Cours[]; choisi: string }) {
+export function ChoixCours({ cours, choisi, favoris = [] }: { cours: readonly Cours[]; choisi: string; favoris?: readonly string[] }) {
   const [q, setQ] = useState("");
   const [matiere, setMatiere] = useState("");
   const [niv, setNiv] = useState("");
   const matieres = useMemo(() => [...new Set(cours.map((c) => c.matiere))].sort((a, b) => a.localeCompare(b, "fr")), [cours]);
   const niveaux = useMemo(() => [...new Set(cours.map(niveau))], [cours]);
-  const visibles = cours.filter(
+  // Les favoris d'abord (TEACH-17), puis l'ordre habituel.
+  const visibles = [...cours].sort((x, y) => Number(favoris.includes(y.id)) - Number(favoris.includes(x.id))).filter(
     (c) => (!q || plat(c.libelle).includes(plat(q))) && (!matiere || c.matiere === matiere) && (!niv || niveau(c) === niv),
   );
   const filtres = cours.length > 6;
@@ -66,11 +70,26 @@ export function ChoixCours({ cours, choisi }: { cours: readonly Cours[]; choisi:
       <nav aria-label="Choisir un cours" className="flex flex-wrap gap-2">
         {visibles.map((autre) => (
           <Link key={autre.id} href={`/studio?cours=${autre.id}`} aria-current={autre.id === choisi ? "page" : undefined} className="pilule">
+            {favoris.includes(autre.id) ? <Star size={13} strokeWidth={2} aria-label="Favori" className="mr-1 inline fill-current" /> : null}
             {autre.libelle}
           </Link>
         ))}
         {visibles.length === 0 ? <p className="meta m-0">Aucun cours ne correspond.</p> : null}
       </nav>
+      <Favori cours={choisi} favori={favoris.includes(choisi)} />
     </div>
+  );
+}
+
+function Favori({ cours, favori }: { cours: string; favori: boolean }) {
+  const [, action] = useActionState<EtatStudio, FormData>(basculerFavori, ETAT_STUDIO_INITIAL);
+  return (
+    <form action={action} className="mt-2">
+      <input type="hidden" name="cours" value={cours} />
+      <input type="hidden" name="favori" value={favori ? "oui" : "non"} />
+      <button type="submit" className="inline-flex items-center gap-1.5 text-[0.8125rem] font-semibold text-[color:var(--color-accent)]">
+        <Star size={14} strokeWidth={1.75} aria-hidden="true" className={favori ? "fill-current" : ""} /> {favori ? "Retirer ce cours des favoris" : "Mettre ce cours en favori"}
+      </button>
+    </form>
   );
 }

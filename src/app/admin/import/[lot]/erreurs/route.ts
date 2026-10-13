@@ -1,4 +1,5 @@
 import { csvErreursEleves } from "@/lib/fichiers-import";
+import { journaliserExport } from "@/lib/etablissement";
 import { assuranceSuffisante } from "@/lib/garde-assurance";
 import { lireLot } from "@/lib/lot-rentree";
 import { sessionCourante } from "@/lib/session-serveur";
@@ -22,6 +23,9 @@ export async function GET(_requete: Request, { params }: { params: Promise<{ lot
   if (!UUID.test(lot)) return new Response("Introuvable.", { status: 404 });
   const complet = await lireLot(personne.profileId, lot);
   if (complet === null) return new Response("Introuvable.", { status: 404 });
+  if (!(await journaliserExport(personne.profileId, "lignes_import", complet.lignes.length))) {
+    return new Response("L'export n'a pas pu être journalisé ; il n'est pas servi.", { status: 503 });
+  }
 
   return new Response(csvErreursEleves(complet.lignes), {
     headers: {

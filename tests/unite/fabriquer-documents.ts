@@ -177,3 +177,29 @@ export function pdf(lignes: readonly string[]): Buffer {
 export function pdfSansTexte(): Buffer {
   return pdf([]);
 }
+
+/**
+ * Un .docx dont le corps est écrit en WordprocessingML brut (exposants,
+ * tableaux, images) : pour le jeu de référence de conversion (CONV-07, CONV-10).
+ * `images` : nombre d'images PNG jointes, référencées rId101, rId102…
+ */
+export function docxBrut(corps: string, images = 0): Buffer {
+  const document = `<?xml version="1.0" encoding="UTF-8"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+<w:body>${corps}</w:body>
+</w:document>`;
+  const relations = Array.from({ length: images }, (_, i) => `<Relationship Id="rId${101 + i}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image${i + 1}.png"/>`).join("");
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64");
+  return zip([
+    { nom: "[Content_Types].xml", contenu: Buffer.from(TYPES.replace("</Types>", `<Default Extension="png" ContentType="image/png"/>\n</Types>`), "utf8") },
+    { nom: "_rels/.rels", contenu: Buffer.from(RELS, "utf8") },
+    { nom: "word/document.xml", contenu: Buffer.from(document, "utf8") },
+    { nom: "word/_rels/document.xml.rels", contenu: Buffer.from(`<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${relations}</Relationships>`, "utf8") },
+    ...Array.from({ length: images }, (_, i) => ({ nom: `word/media/image${i + 1}.png`, contenu: png })),
+  ]);
+}
+
+/** Une image en ligne, à placer dans un run (rId101 pour la première). */
+export function imageEnLigne(numero: number): string {
+  return `<w:r><w:drawing><wp:inline><wp:extent cx="100" cy="100"/><wp:docPr id="${numero}" name="Image ${numero}"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="${numero}" name="image${numero}.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId${100 + numero}"/></pic:blipFill><pic:spPr/></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
+}

@@ -23,7 +23,7 @@ import { engendrer, lireCatalogue } from "../../scripts/engendrer-retour-arriere
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const RETOUR = (f) => path.resolve(ICI, "..", "..", "supabase", "retour-arriere", f);
-const ORDRE = ["retour-0081.sql", "retour-0080.sql", "retour-0079.sql", "retour-0078.sql", "retour-0077.sql", "retour-0076.sql", "retour-0075.sql", "retour-0074.sql", "retour-0073.sql", "retour-0072.sql", "retour-0071.sql", "retour-0070.sql", "retour-0069.sql", "retour-0068.sql", "retour-0067.sql", "retour-0066.sql", "retour-0065.sql", "retour-0064.sql", "retour-0063.sql", "retour-0062.sql", "retour-0061.sql", "retour-0060.sql", "retour-0059-0058.sql", "retour-0057-0045.sql"];
+const ORDRE = ["retour-0084.sql", "retour-0083.sql", "retour-0082.sql", "retour-0081.sql", "retour-0080.sql", "retour-0079.sql", "retour-0078.sql", "retour-0077.sql", "retour-0076.sql", "retour-0075.sql", "retour-0074.sql", "retour-0073.sql", "retour-0072.sql", "retour-0071.sql", "retour-0070.sql", "retour-0069.sql", "retour-0068.sql", "retour-0067.sql", "retour-0066.sql", "retour-0065.sql", "retour-0064.sql", "retour-0063.sql", "retour-0062.sql", "retour-0061.sql", "retour-0060.sql", "retour-0059-0058.sql", "retour-0057-0045.sql"];
 const empreinte = (s) => createHash("sha256").update(s).digest();
 
 /** Empreinte du contenu de chaque table existant en 0044, ligne par ligne. */
@@ -69,7 +69,10 @@ test("retour complet 0060 → 0044 : catalogue identique, données d'avant conse
   // par ajout ; aucune ligne d'avant n'a disparu ni changé.
   const contenuApres = await contenu(db, tablesAvant);
   const changees = Object.keys(contenuAvant).filter((k) => contenuAvant[k] !== contenuApres[k]).sort();
-  const attendues = ["study.academic_years", "study.audit_events"];
+  // 0083 fige, pour chaque séance publiée, la version que voyaient déjà les
+  // élèves (nouvelles lignes content_versions, lessons qui y pointent) ; le
+  // retour arrière la conserve : le contenu montré est le même.
+  const attendues = ["study.academic_years", "study.audit_events", "study.content_versions", "study.lessons"];
   assert.equal((await db.query("select count(*)::int n from study_prive.jobs where kind in ('fiche_revision', 'recherche_indexer')")).rows[0].n, 0, "aucun travail inconnu du worker de 0044 ne reste en file");
   assert.deepEqual(changees.filter((k) => !attendues.includes(k)), [], "aucune autre table d'avant n'a changé");
   assert.equal((await db.query("select count(*)::int n from study.academic_years where label = '2027-2028'")).rows[0].n, 1, "l'année préparée est conservée");

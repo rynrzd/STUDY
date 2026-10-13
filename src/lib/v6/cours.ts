@@ -2,7 +2,7 @@ import "server-only";
 
 import { texteDuBloc, type DocumentCours, type ReglagesPresentation } from "../document-cours.ts";
 import { revision } from "../studio-documents.ts";
-import { blocsDeLaSeance, type Bloc } from "../studio.ts";
+import { blocsDeLaSeance, blocsPublies, type Bloc } from "../studio.ts";
 import { clientUtilisateur } from "../supabase-serveur.ts";
 
 /**
@@ -149,8 +149,10 @@ export async function seanceDetail(jeton: string, id: string): Promise<SeanceDet
     teaching_spaces: { class_id: string | null; subjects: { label: string } | null } | null;
   };
 
+  // PUB-07 : une séance publiée se lit dans sa version publiée ; les
+  // retouches du professeur restent privées jusqu'à la prochaine publication.
   const [blocs, doc] = await Promise.all([
-    blocsDeLaSeance(jeton, id),
+    l.state === "publiee" ? blocsPublies(jeton, id).then((b) => b ?? blocsDeLaSeance(jeton, id)) : blocsDeLaSeance(jeton, id),
     l.content_version_id === null ? Promise.resolve(null) : revision(jeton, l.content_version_id),
   ]);
 

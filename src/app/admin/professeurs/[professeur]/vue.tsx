@@ -2,6 +2,8 @@ import Link from "next/link";
 import { BookOpen, Presentation, UserRoundCheck } from "lucide-react";
 import { AffecterPlusieurs } from "@/components/admin/AffecterPlusieurs";
 import { TerminerAffectation } from "@/components/admin/TerminerAffectation";
+import { TransfertCours } from "@/components/admin/TransfertCours";
+import { DemandeEffacement } from "@/components/admin/GestesEleve";
 import { EnTetePage, EtatVide, Etiquette, dateLisible } from "@/components/study/ui";
 import type { FicheProfesseur } from "@/lib/etablissement";
 
@@ -13,6 +15,7 @@ const ETATS_COMPTE: Record<string, { texte: string; ton: "succes" | "attention" 
   a_activer: { texte: "Jamais connecté", ton: "attention" },
   suspendu: { texte: "Suspendu", ton: "erreur" },
   sorti: { texte: "Sorti", ton: "neutre" },
+  en_suppression: { texte: "Effacement demandé", ton: "erreur" },
 };
 const SECTIONS = [
   ["en_cours", "En cours"],
@@ -28,7 +31,10 @@ export function VueFicheProfesseur({
   classes,
   groupes,
   matieres,
+  collegues = [],
 }: {
+  /** Les autres professeurs, pour reprendre des cours (PROF-13). */
+  collegues?: readonly Option[];
   professeur: string;
   fiche: FicheProfesseur;
   classes: readonly Option[];
@@ -92,6 +98,16 @@ export function VueFicheProfesseur({
           </p>
         </div>
       </section>
+
+      {enCours.length > 0 && collegues.length > 0 ? (
+        <div className="mb-6">
+          <TransfertCours nom={nom} cours={enCours.map((a) => ({ id: a.id, matiere: a.matiere, cible: a.cible, cible_id: a.cible_id, genre: a.genre, role: a.role }))} professeurs={collegues} />
+        </div>
+      ) : null}
+
+      <div className="mb-6">
+        <DemandeEffacement profil={professeur} retour={`/admin/professeurs/${professeur}`} enCours={identite.etat_compte === "en_suppression"} />
+      </div>
 
       {affectations.length === 0 ? (
         <EtatVide

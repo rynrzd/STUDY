@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Download, FileText, Maximize, Minimize, Minus, Plus } from "lucide-react";
+import { Bookmark, ChevronLeft, ChevronRight, Download, FileText, LayoutGrid, Maximize, Minimize, Minus, Plus } from "lucide-react";
+import { densiteDeRendu } from "@/lib/rendu-pdf";
 
 type Document = Awaited<ReturnType<typeof import("unpdf")["getDocumentProxy"]>>;
 type Etat = { genre: "attente" } | { genre: "pret"; total: number } | { genre: "erreur"; message: string; telechargeable: boolean };
@@ -33,6 +34,12 @@ export function LecteurPdf({ fichier, nom, source }: { fichier: string; nom: str
   const [zoom, setZoom] = useState(1);
   const [largeur, setLargeur] = useState(0);
   const [pleinEcran, setPleinEcran] = useState(false);
+  // PDF-11 : un document sans texte (numérisé) n'est pas lisible par un lecteur d'écran.
+  const [sansTexte, setSansTexte] = useState(false);
+  // PDF-14 : signets du document, quand il en a (leur absence est normale).
+  const [signets, setSignets] = useState<{ titre: string; page: number }[]>([]);
+  const [vignettes, setVignettes] = useState(false);
+  const [docPret, setDocPret] = useState<Document | null>(null);
 
   // N'ouvrir le fichier qu'à l'approche de l'écran.
   useEffect(() => {
@@ -91,7 +98,28 @@ export function LecteurPdf({ fichier, nom, source }: { fichier: string; nom: str
           return;
         }
         pdf.current = doc;
+        setDocPret(doc);
         setEtat({ genre: "pret", total: doc.numPages });
+        void (async () => {
+          try {
+            const contenu = await (await doc.getPage(1)).getTextContent();
+            if (!annule) setSansTexte(contenu.items.length === 0);
+          } catch {
+            /* sans conséquence : l'avertissement n'est qu'une aide */
+          }
+          try {
+            const plan = (await doc.getOutline()) ?? [];
+            const lus: { titre: string; page: number }[] = [];
+            for (const entree of plan.slice(0, 60)) {
+              const dest = typeof entree.dest === "string" ? await doc.getDestination(entree.dest) : entree.dest;
+              const ref = Array.isArray(dest) ? dest[0] : null;
+              if (ref && typeof ref === "object") lus.push({ titre: String(entree.title).slice(0, 120), page: (await doc.getPageIndex(ref as never)) + 1 });
+            }
+            if (!annule) setSignets(lus);
+          } catch {
+            /* pas de signets : rien à afficher */
+          }
+        })();
       } catch (erreur) {
         if (annule) return;
         const nomErreur = (erreur as { name?: string } | null)?.name ?? "";
@@ -126,7 +154,9 @@ export function LecteurPdf({ fichier, nom, source }: { fichier: string; nom: str
       const base = p.getViewport({ scale: 1 });
       const echelle = (largeur / base.width) * zoom;
       const vue = p.getViewport({ scale: echelle });
-      const densite = Math.min(window.devicePixelRatio || 1, 2);
+      // PDF-10 : une page démesurée (affiche, plan) ne doit pas saturer la
+      // mémoire d'un téléphone : la surface dessinée est plafonnée.
+      const densite = densiteDeRendu(vue.width, vue.height, window.devicePixelRatio);
       canevas.width = Math.floor(vue.width * densite);
       canevas.height = Math.floor(vue.height * densite);
       canevas.style.width = `${Math.floor(vue.width)}px`;
@@ -209,7 +239,26 @@ export function LecteurPdf({ fichier, nom, source }: { fichier: string; nom: str
               <ChevronRight size={20} strokeWidth={1.75} aria-hidden="true" />
             </button>
           </span>
+          {signets.length > 0 ? (
+            <label className="flex items-center gap-1 text-[0.875rem]">
+              <Bookmark size={16} strokeWidth={1.75} aria-hidden="true" />
+              <span className="sr-only">Aller au signet</span>
+              <select className="champ h-9 max-w-[200px] py-0 text-[0.8125rem]" value="" onChange={(e) => e.target.value && aller(Number(e.target.value))}>
+                <option value="">Signets…</option>
+                {signets.map((g, i) => (
+                  <option key={`${g.page}-${i}`} value={g.page}>
+                    {g.titre} (p. {g.page})
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           <span className="flex items-center gap-1">
+            {total > 1 ? (
+              <button type="button" className="lecteur-pdf-bouton" onClick={() => setVignettes((v) => !v)} aria-pressed={vignettes} aria-label="Vignettes des pages">
+                <LayoutGrid size={18} strokeWidth={1.75} aria-hidden="true" />
+              </button>
+            ) : null}
             <button type="button" className="lecteur-pdf-bouton" onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))} disabled={zoom <= 0.5} aria-label="Dézoomer">
               <Minus size={18} strokeWidth={1.75} aria-hidden="true" />
             </button>
@@ -226,6 +275,25 @@ export function LecteurPdf({ fichier, nom, source }: { fichier: string; nom: str
         </div>
       ) : null}
 
+      {etat.genre === "pret" && vignettes && docPret ? (
+        <ul className="lecteur-pdf-vignettes" aria-label="Pages du document">
+          {Array.from({ length: Math.min(total, 60) }, (_, i) => (
+            <li key={i}>
+              <button type="button" onClick={() => { aller(i + 1); setVignettes(false); }} aria-label={`Aller à la page ${i + 1}`} aria-current={page === i + 1 ? "page" : undefined}>
+                <Vignette doc={docPret} numero={i + 1} />
+                <span className="meta">{i + 1}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {etat.genre === "pret" && sansTexte ? (
+        <p className="lecteur-pdf-note m-0" role="note">
+          Ce PDF ne contient pas de texte lisible par un lecteur d&apos;écran (document numérisé). Si vous en avez besoin, demandez une version accessible à votre professeur.
+        </p>
+      ) : null}
+
       {etat.genre === "pret" ? (
         <p className="lecteur-pdf-note m-0">
           Le document est affiché tel que votre professeur l&apos;a déposé. Pour une lecture vocale, téléchargez-le et ouvrez-le dans votre lecteur de PDF.
@@ -233,4 +301,30 @@ export function LecteurPdf({ fichier, nom, source }: { fichier: string; nom: str
       ) : null}
     </div>
   );
+}
+
+/** Vignette d'une page (PDF-14), dessinée petite et à la demande. */
+function Vignette({ doc, numero }: { doc: Document; numero: number }) {
+  const toile = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    let annule = false;
+    let tache: { cancel: () => void; promise: Promise<void> } | null = null;
+    (async () => {
+      const p = await doc.getPage(numero);
+      if (annule || !toile.current) return;
+      const base = p.getViewport({ scale: 1 });
+      const vue = p.getViewport({ scale: 96 / base.width });
+      toile.current.width = Math.floor(vue.width);
+      toile.current.height = Math.floor(vue.height);
+      const contexte = toile.current.getContext("2d");
+      if (!contexte) return;
+      tache = p.render({ canvasContext: contexte, viewport: vue, canvas: toile.current }) as unknown as { cancel: () => void; promise: Promise<void> };
+      await tache.promise.catch(() => undefined);
+    })();
+    return () => {
+      annule = true;
+      tache?.cancel();
+    };
+  }, [doc, numero]);
+  return <canvas ref={toile} aria-hidden="true" />;
 }

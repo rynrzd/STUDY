@@ -189,6 +189,31 @@ const FONCTIONS = [
   { nom: "etab_lot_rapprochement", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_lot: "00000000-0000-4000-8000-000000000000" } },
   { nom: "etab_groupe_decrire", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_groupe: "00000000-0000-4000-8000-000000000000", p_description: "x" } },
   { nom: "etab_groupe_description", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_groupe: "00000000-0000-4000-8000-000000000000" } },
+
+  // 0082 — Administration complétée : service_role seulement.
+  { nom: "etab_designer_coordinateur", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_groupe: "00000000-0000-4000-8000-000000000000", p_professeur: null } },
+  { nom: "etab_coordinateur", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_groupe: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_export_groupes", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_effectif_classe", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_classe: "00000000-0000-4000-8000-000000000000", p_date: "2026-10-01" } },
+  { nom: "etab_preinscrire_eleve", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_eleve: "00000000-0000-4000-8000-000000000000", p_classe: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_cours_a_reconduire", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_cible: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_reconduire_cours", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_cible: "00000000-0000-4000-8000-000000000000", p_lignes: [] } },
+  { nom: "etab_comparaison_annees", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_journaliser_export", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_type: "groupes", p_lignes: 1 } },
+  { nom: "etab_activite_inhabituelle", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_limites", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
+
+  // 0083 — Version publiée, structure : rien sans compte.
+  { nom: "eleve_blocs_publies", corps: { p_seance: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "prof_copier_structure", corps: { p_source: "00000000-0000-4000-8000-000000000000", p_cible: "00000000-0000-4000-8000-000000000000", p_mode: "structure" } },
+  { nom: "prof_republier_seance", corps: { p_seance: "00000000-0000-4000-8000-000000000000" } },
+
+  // 0084 — Statistiques, dédoublonnage, effacement : rien sans compte.
+  { nom: "prof_statistiques_espace", corps: { p_espace: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "prof_document_identique", corps: { p_sha256: "abababababababababababababababababababababababababababababababab" } },
+  { nom: "etab_demander_effacement", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_profil: "00000000-0000-4000-8000-000000000000", p_motif: "sonde sans compte" } },
+  { nom: "etab_annuler_effacement", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_profil: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_effacements_en_attente", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
 ];
 
 let defauts = 0;

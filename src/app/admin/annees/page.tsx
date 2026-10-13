@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
+import { comparaisonAnnees, coursAReconduire } from "@/lib/etablissement";
+import { sessionCourante } from "@/lib/session-serveur";
 import { contexteApp } from "@/lib/v6/contexte";
 import type { Annee, Apercu, ClasseAnnee, EleveSansClasse } from "./vue";
 import { VueAnnees, type GroupeAReconduire } from "./vue";
@@ -43,7 +45,11 @@ export default async function PageAnnees() {
   for (const e of (effectifs?.data ?? []) as { class_id: string }[]) parClasse.set(e.class_id, (parClasse.get(e.class_id) ?? 0) + 1);
   const debutSuivant = courante ? Number(courante.label.slice(0, 4)) + 1 : new Date().getFullYear();
   // Étape réelle, déduite de l'état en base (pas d'un paramètre d'adresse).
+  const personne = await sessionCourante();
+  const [comparaison, coursReconduire] = personne === null
+    ? [null, null]
+    : await Promise.all([comparaisonAnnees(personne.profileId), cible ? coursAReconduire(personne.profileId, cible.id) : Promise.resolve(null)]);
   const etape = !cible ? 1 : classesCible.length === 0 ? 2 : (resume?.inscriptions_cible ?? 0) === 0 ? 3 : 4;
 
-  return <VueAnnees etape={etape} erreurAnnees={erreurAnnees} courante={courante} cible={cible} classesCourantes={classesCourantes} classesCible={classesCible} debutSuivant={debutSuivant} parClasse={parClasse} resume={resume} eleves={eleves} liste={liste} groupes={groupes} />;
+  return <VueAnnees etape={etape} erreurAnnees={erreurAnnees} courante={courante} cible={cible} classesCourantes={classesCourantes} classesCible={classesCible} debutSuivant={debutSuivant} parClasse={parClasse} resume={resume} eleves={eleves} liste={liste} groupes={groupes} coursAReconduire={coursReconduire ?? []} comparaison={comparaison} />;
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { contexte, ficheClasse, tousLesMembres } from "@/lib/etablissement";
+import { contexte, effectifClasse, ficheClasse, groupes, tousLesMembres } from "@/lib/etablissement";
 import { sessionCourante } from "@/lib/session-serveur";
 import { VueFicheClasse } from "./vue";
 
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export default async function PageFicheClasse({ params }: { params: Promise<{ classe: string }> }) {
+export default async function PageFicheClasse({ params, searchParams }: { params: Promise<{ classe: string }>; searchParams: Promise<{ date?: string }> }) {
   const personne = await sessionCourante();
   if (personne === null) redirect("/connexion");
   if ((await contexte(personne.profileId)) === null) redirect("/admin");
@@ -23,11 +23,25 @@ export default async function PageFicheClasse({ params }: { params: Promise<{ cl
   const { classe } = await params;
   if (!UUID.test(classe)) notFound();
 
-  const [fiche, profs] = await Promise.all([ficheClasse(personne.profileId, classe), tousLesMembres(personne.profileId, { role: "professeur" })]);
+  const { date } = await searchParams;
+  const dateValide = date !== undefined && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null;
+  const [fiche, profs, listeGroupes, effectif] = await Promise.all([
+    ficheClasse(personne.profileId, classe),
+    tousLesMembres(personne.profileId, { role: "professeur" }),
+    groupes(personne.profileId),
+    dateValide === null ? Promise.resolve(null) : effectifClasse(personne.profileId, classe, dateValide),
+  ]);
   if (fiche === null) notFound();
 
   const professeurs = profs
     .filter((m) => m.roles.includes("professeur"))
     .map((m) => ({ id: m.profile_id, label: `${m.nom} ${m.prenom}` }));
-  return <VueFicheClasse fiche={fiche} professeurs={professeurs} />;
+  return (
+    <VueFicheClasse
+      fiche={fiche}
+      professeurs={professeurs}
+      groupesEtab={listeGroupes.map((g) => ({ id: g.id, label: g.label }))}
+      effectifA={dateValide === null ? null : { date: dateValide, n: effectif }}
+    />
+  );
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BookOpen, GraduationCap, Layers, Users } from "lucide-react";
 import { AjouterPersonne } from "@/components/admin/AjouterPersonne";
 import { ProfesseurPrincipal } from "@/components/admin/ProfesseurPrincipal";
+import { ElevesClasse } from "@/components/admin/GroupeFormulaires";
 import { CarteChiffre, EnTetePage, EtatVide, Etiquette, ICONE, Ligne, ListeLignes } from "@/components/study/ui";
 import type { FicheClasse } from "@/lib/etablissement";
 
@@ -13,7 +14,19 @@ const ETATS: Record<string, { texte: string; ton: "succes" | "attention" | "erre
 };
 
 /** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
-export function VueFicheClasse({ fiche, professeurs }: { fiche: FicheClasse; professeurs: readonly { id: string; label: string }[] }) {
+export function VueFicheClasse({
+  fiche,
+  professeurs,
+  groupesEtab = [],
+  effectifA = null,
+}: {
+  fiche: FicheClasse;
+  professeurs: readonly { id: string; label: string }[];
+  /** Groupes de l'établissement, pour y ajouter des élèves cochés (EL-06). */
+  groupesEtab?: readonly { id: string; label: string }[];
+  /** Effectif à une date choisie (CL-09). */
+  effectifA?: { date: string; n: number | null } | null;
+}) {
   const { classe, eleves, cours, groupes } = fiche;
   const sansProf = cours.filter((c) => !c.professeurs).length;
   return (
@@ -57,23 +70,48 @@ export function VueFicheClasse({ fiche, professeurs }: { fiche: FicheClasse; pro
           {eleves.length === 0 ? (
             <EtatVide icone={Users} titre="Aucun élève dans cette classe." texte="Ajoutez-en un avec le bouton en haut, ou importez la liste depuis « Personnes »." />
           ) : (
-            <ListeLignes>
-              {eleves.map((e) => {
-                const etat = ETATS[e.etat_compte] ?? { texte: e.etat_compte, ton: "neutre" as const };
-                return (
-                  <Ligne
-                    key={e.id}
-                    href={`/admin/eleves/${e.id}`}
-                    icone={Users}
-                    titre={`${e.nom} ${e.prenom}`}
-                    detail={e.identifiant}
-                    fin={etat.ton === "succes" ? null : <Etiquette ton={etat.ton}>{etat.texte}</Etiquette>}
-                  />
-                );
-              })}
-            </ListeLignes>
+            <div className="panneau p-3 md:p-4">
+              <ElevesClasse
+                classe={classe.id}
+                eleves={eleves}
+                groupes={groupesEtab}
+                contenus={Object.fromEntries(
+                  eleves.map((e) => {
+                    const etat = ETATS[e.etat_compte] ?? { texte: e.etat_compte, ton: "neutre" as const };
+                    return [
+                      e.id,
+                      <Link key={e.id} href={`/admin/eleves/${e.id}`} className="flex min-h-[48px] items-center justify-between gap-3 border-b border-[color:var(--color-bordure)] py-2 text-[color:var(--color-encre)] no-underline hover:text-[color:var(--color-accent)]">
+                        <span className="min-w-0">
+                          <span className="block font-semibold">
+                            {e.nom} {e.prenom}
+                          </span>
+                          <span className="meta block">{e.identifiant}</span>
+                        </span>
+                        {etat.ton === "succes" ? null : <Etiquette ton={etat.ton}>{etat.texte}</Etiquette>}
+                      </Link>,
+                    ];
+                  }),
+                )}
+              />
+            </div>
           )}
           <p className="meta m-0 mt-2">Pour changer un élève de classe, ouvrez sa fiche.</p>
+          <form method="get" className="mt-4 flex flex-wrap items-end gap-2">
+            <div>
+              <label className="etiquette" htmlFor="effectif-date">
+                Effectif à une date
+              </label>
+              <input id="effectif-date" name="date" type="date" defaultValue={effectifA?.date ?? ""} className="champ" />
+            </div>
+            <button type="submit" className="bouton bouton-compact bouton-secondaire">
+              Voir
+            </button>
+            {effectifA ? (
+              <span className="meta" role="status">
+                {effectifA.n === null ? "Indisponible." : `${effectifA.n} élève${effectifA.n > 1 ? "s" : ""} inscrit${effectifA.n > 1 ? "s" : ""} le ${new Date(effectifA.date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}.`}
+              </span>
+            ) : null}
+          </form>
         </section>
 
         <div className="space-y-8">

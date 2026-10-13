@@ -35,6 +35,8 @@ export function VueProfesseurs({
   titulairesMultiples = [],
   coursSansProfesseur,
   cherche,
+  filtres = { matiere: "", cible: "", role: "", etat: "" },
+  optionsFiltres = { matieres: [], cibles: [] },
   optionsClasses,
   optionsGroupes = [],
   optionsMatieres = [],
@@ -49,6 +51,9 @@ export function VueProfesseurs({
   titulairesMultiples?: readonly { cours: string; noms: string }[];
   coursSansProfesseur: readonly Affectation[];
   cherche: string;
+  /** Filtres PROF-15 : matière, classe ou groupe, rôle, état du compte. */
+  filtres?: { matiere: string; cible: string; role: string; etat: string };
+  optionsFiltres?: { matieres: readonly string[]; cibles: readonly string[] };
   optionsClasses: readonly { id: string; label: string }[];
   optionsGroupes?: readonly { id: string; label: string }[];
   optionsMatieres?: readonly { id: string; label: string }[];
@@ -174,14 +179,38 @@ export function VueProfesseurs({
             <h2 id="equipe" className="titre-section flex items-center gap-2">
               L&apos;équipe <span className="nombre">{enseignants.length}</span>
             </h2>
-            <form action="/admin/professeurs" method="get" role="search" className="flex w-full max-w-[420px] items-center gap-2">
+            <form action="/admin/professeurs" method="get" role="search" className="grid w-full gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))_auto] lg:items-end">
               <label htmlFor="recherche-profs" className="sr-only">
                 Rechercher un professeur
               </label>
-              <span className="relative min-w-0 flex-1">
+              <span className="relative min-w-0">
                 <Search size={18} strokeWidth={1.75} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[color:var(--color-encre-faible)]" />
                 <input id="recherche-profs" name="q" type="search" defaultValue={cherche} placeholder="Nom, prénom ou identifiant" className="champ pl-10" />
               </span>
+              <select name="matiere" defaultValue={filtres.matiere} className="champ" aria-label="Matière">
+                <option value="">Toutes les matières</option>
+                {optionsFiltres.matieres.map((m) => (
+                  <option key={m}>{m}</option>
+                ))}
+              </select>
+              <select name="cible" defaultValue={filtres.cible} className="champ" aria-label="Classe ou groupe">
+                <option value="">Toutes les classes et groupes</option>
+                {optionsFiltres.cibles.map((m) => (
+                  <option key={m}>{m}</option>
+                ))}
+              </select>
+              <select name="role" defaultValue={filtres.role} className="champ" aria-label="Rôle">
+                <option value="">Tous les rôles</option>
+                <option value="titulaire">Titulaire</option>
+                <option value="co_intervenant">Co-intervenant</option>
+                <option value="remplacant">Remplaçant</option>
+              </select>
+              <select name="etat" defaultValue={filtres.etat} className="champ" aria-label="État du compte">
+                <option value="">Tous les comptes</option>
+                <option value="actif">Actifs</option>
+                <option value="a_activer">Jamais connectés</option>
+                <option value="suspendu">Suspendus</option>
+              </select>
               <button type="submit" className="bouton bouton-secondaire">
                 Rechercher
               </button>

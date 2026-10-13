@@ -32,13 +32,40 @@ export function VerificationRentree({
   const sorts = rapprochement === null ? null : Object.values(rapprochement);
   const compte = (s: string) => (sorts ?? []).filter((x) => x.statut === s).length;
   const conflits = lot.lignes.filter((l) => rapprochement?.[l.id]?.statut === "conflit");
-  const [creation, creer] = useActionState<EtatCreation, FormData>(
-    creerLesComptes,
-    ETAT_CREATION_INITIAL,
-  );
+  // Les tranches s'additionnent : compteurs et fiches d'accès s'accumulent
+  // jusqu'à la dernière, pour tout imprimer à la fin (IMP-12).
+  const [creation, creer] = useActionState<EtatCreation, FormData>(async (precedent, donnees) => {
+    const r = await creerLesComptes(precedent, donnees);
+    if (precedent.etat !== "termine" || r.etat !== "termine") return r;
+    const somme = (k: "cree" | "existant" | "reinscrit" | "erreurs" | "ecartes") => (precedent[k] ?? 0) + (r[k] ?? 0);
+    return {
+      ...r,
+      cree: somme("cree"),
+      existant: somme("existant"),
+      reinscrit: somme("reinscrit"),
+      erreurs: somme("erreurs"),
+      ecartes: r.ecartes,
+      acces: [...(precedent.acces ?? []), ...(r.acces ?? [])],
+      echecs: [...(precedent.echecs ?? []), ...(r.echecs ?? [])],
+    };
+  }, ETAT_CREATION_INITIAL);
 
   if (creation.etat === "termine") {
-    return <Rapport creation={creation} codeEtablissement={codeEtablissement} />;
+    return (
+      <>
+        {(creation.restantes ?? 0) > 0 ? (
+          <form action={creer} className="carte mb-6 flex flex-wrap items-center justify-between gap-3 p-5 print:hidden">
+            <input type="hidden" name="lot" value={lot.id} />
+            <p className="m-0">
+              <span className="font-bold">Il reste {creation.restantes} élève{(creation.restantes ?? 0) > 1 ? "s" : ""} à traiter.</span>{" "}
+              Les comptes sont créés par tranches ; une interruption ne perd rien, et reprendre ne recrée personne.
+            </p>
+            <BoutonContinuer />
+          </form>
+        ) : null}
+        <Rapport creation={creation} codeEtablissement={codeEtablissement} />
+      </>
+    );
   }
 
   if (lot.etat === "applique") {
@@ -735,5 +762,14 @@ function BoutonCreer({ bloque, nombre }: { bloque: boolean; nombre: number }) {
         </p>
       ) : null}
     </>
+  );
+}
+
+function BoutonContinuer() {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" className="bouton bouton-primaire" disabled={pending}>
+      {pending ? "Création en cours…" : "Continuer"}
+    </button>
   );
 }

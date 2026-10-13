@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { changerEtatCompte } from "@/lib/acces";
-import { apercuChangementClasse, changerClasse, departEleve, type MouvementCours } from "@/lib/etablissement";
+import { annulerEffacement, apercuChangementClasse, changerClasse, demanderEffacement, departEleve, preinscrireEleve, type MouvementCours } from "@/lib/etablissement";
 import { assuranceSuffisante, REFUS_ASSURANCE } from "@/lib/garde-assurance";
 import { sessionCourante } from "@/lib/session-serveur";
 
@@ -89,4 +89,47 @@ export async function enregistrerDepart(_precedent: EtatAdmin, donnees: FormData
   revalidatePath(`/admin/eleves/${eleve}`);
   revalidatePath("/admin/utilisateurs");
   return { etat: "ok", message: `Départ enregistré : ${r.classes} inscription(s) et ${r.groupes} groupe(s) clos. Les copies et l'historique sont conservés.${suite}` };
+}
+
+/**
+ * Choisir la classe de l'an prochain d'un élève (EL-08) : redoublement,
+ * changement de filière. Remplace sa préinscription dans l'année préparée ;
+ * rien ne change avant la bascule.
+ */
+export async function preinscrireAutrement(_precedent: EtatAdmin, donnees: FormData): Promise<EtatAdmin> {
+  const acteur = await exigerAdministrateur();
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const eleve = String(donnees.get("eleve") ?? "");
+  const classe = String(donnees.get("classe") ?? "");
+  if (!uuid.test(eleve) || !uuid.test(classe)) return { etat: "erreur", message: "Choisissez une classe." };
+  const r = await preinscrireEleve(acteur, eleve, classe);
+  if (r === null) return { etat: "erreur", message: "Refusé : la classe doit appartenir à l'année préparée." };
+  revalidatePath(`/admin/eleves/${eleve}`);
+  return { etat: "ok", message: r === "deja" ? "C'était déjà sa classe de l'an prochain." : "Classe de l'an prochain enregistrée ; elle s'applique à la bascule." };
+}
+
+/**
+ * SEC-18 — demande d'effacement d'un compte (élève ou professeur). Le compte
+ * est fermé tout de suite ; l'effacement définitif suit l'arbitrage du
+ * responsable de traitement. Une erreur se corrige avec « Annuler la demande ».
+ */
+export async function gererEffacement(_precedent: EtatAdmin, donnees: FormData): Promise<EtatAdmin> {
+  const acteur = await exigerAdministrateur();
+  const profil = String(donnees.get("profil") ?? "");
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(profil)) return { etat: "erreur", message: "Compte introuvable." };
+  const chemin = String(donnees.get("retour") ?? "");
+  const retour = /^\/admin\/(eleves|professeurs)\/[0-9a-f-]{36}$/.test(chemin) ? chemin : "/admin";
+  if (donnees.get("geste") === "annuler") {
+    const ok = await annulerEffacement(acteur, profil);
+    revalidatePath(retour);
+    revalidatePath("/admin");
+    return ok ? { etat: "ok", message: "Demande annulée : le compte retrouve son état d'avant." } : { etat: "erreur", message: "Aucune demande en cours pour ce compte." };
+  }
+  const motif = String(donnees.get("motif") ?? "").trim();
+  if (motif.length < 10) return { etat: "erreur", message: "Indiquez l'origine de la demande (au moins dix caractères) : elle est gardée au journal." };
+  const r = await demanderEffacement(acteur, profil, motif);
+  if (r === null) return { etat: "erreur", message: "Refusé. Un compte d'administration se retire par l'exploitant." };
+  revalidatePath(retour);
+  revalidatePath("/admin");
+  return { etat: "ok", message: r === "deja" ? "Une demande est déjà en cours." : "Demande enregistrée : le compte est fermé dès maintenant." };
 }

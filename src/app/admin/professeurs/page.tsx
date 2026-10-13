@@ -29,7 +29,7 @@ export const dynamic = "force-dynamic";
 export default async function PageProfesseurs({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; matiere?: string; cible?: string; role?: string; etat?: string }>;
 }) {
   const personne = await sessionCourante();
   if (personne === null) redirect("/connexion");
@@ -75,6 +75,14 @@ export default async function PageProfesseurs({
     .filter((e) => e.ids.length > 1)
     .map((e) => ({ cours: e.cours, noms: e.ids.map((id) => noms.get(id) ?? "?").join(", ") }));
 
+  // PROF-15 : nom ou identifiant, et matière, classe ou groupe, rôle, état du
+  // compte. En GET : l'adresse garde la recherche.
+  const filtres = {
+    matiere: (parametres.matiere ?? "").slice(0, 80),
+    cible: (parametres.cible ?? "").slice(0, 80),
+    role: ["titulaire", "co_intervenant", "remplacant"].includes(parametres.role ?? "") ? (parametres.role as string) : "",
+    etat: ["actif", "a_activer", "suspendu"].includes(parametres.etat ?? "") ? (parametres.etat as string) : "",
+  };
   const enseignants = listeMembres
     .filter((membre) => membre.roles.includes("professeur"))
     .filter((membre) => {
@@ -82,7 +90,20 @@ export default async function PageProfesseurs({
       return `${membre.nom} ${membre.prenom} ${membre.local_login}`
         .toLowerCase()
         .includes(recherche);
+    })
+    .filter((membre) => {
+      const siennes = parProfesseur.get(membre.profile_id) ?? [];
+      if (filtres.matiere && !siennes.some((l) => l.matiere === filtres.matiere)) return false;
+      if (filtres.cible && !siennes.some((l) => l.cible === filtres.cible)) return false;
+      if (filtres.role && !siennes.some((l) => l.role === filtres.role)) return false;
+      if (filtres.etat && membre.account_state !== filtres.etat) return false;
+      return true;
     });
+  const lignesToutes = [...parProfesseur.values()].flat();
+  const optionsFiltres = {
+    matieres: [...new Set(lignesToutes.map((l) => l.matiere))].sort((x, y) => x.localeCompare(y, "fr")),
+    cibles: [...new Set(lignesToutes.map((l) => l.cible))].sort((x, y) => x.localeCompare(y, "fr", { numeric: true })),
+  };
 
   const coursSansProfesseur = listeAffectations.filter((lien) => lien.professeur_id === null);
   const total = listeMembres.filter((membre) => membre.roles.includes("professeur")).length;
@@ -97,6 +118,8 @@ export default async function PageProfesseurs({
       titulairesMultiples={titulairesMultiples}
       coursSansProfesseur={coursSansProfesseur}
       cherche={cherche}
+      filtres={filtres}
+      optionsFiltres={optionsFiltres}
       optionsClasses={optionsClasses}
       optionsGroupes={listeGroupes.map((g) => ({ id: g.id, label: g.label }))}
       optionsMatieres={listeMatieres.map((m) => ({ id: m.id, label: m.label }))}

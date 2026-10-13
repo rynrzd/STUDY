@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { EtatFormulaire } from "@/components/study/formulaire";
+import { reconduireCours } from "@/lib/etablissement";
+import { assuranceSuffisante } from "@/lib/garde-assurance";
+import { sessionCourante } from "@/lib/session-serveur";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 import { contexteApp, idRequete } from "@/lib/v6/contexte";
 import { traduire } from "@/lib/v6/erreurs";
@@ -95,4 +98,34 @@ export async function reconduireGroupes(annee: string, _p: EtatFormulaire, donne
         ? "Ces groupes existaient déjà dans l'année suivante : rien n'a été dupliqué."
         : `${crees} groupe${crees > 1 ? "s" : ""} reconduit${crees > 1 ? "s" : ""}${avecCours ? `, ${cours} cours` : ""}. Ajoutez leurs élèves depuis « Groupes » une fois la composition connue.`,
   };
+}
+
+/**
+ * Reconduire des cours de classe et leurs professeurs vers l'année préparée
+ * (PROF-18, YR-08) : chaque ligne nomme le cours d'origine, la classe d'arrivée
+ * et les professeurs écartés (qui partent, ou changent de service). Jamais
+ * d'élève, jamais de remplaçant ; rejouer ne duplique rien.
+ */
+export async function reconduireDesCours(annee: string, _p: EtatFormulaire, donnees: FormData): Promise<EtatFormulaire> {
+  const personne = await sessionCourante();
+  if (personne === null || !personne.roles.includes("admin_etablissement") || !(await assuranceSuffisante(personne))) {
+    return { ok: false, message: "Action refusée." };
+  }
+  if (!uuid.safeParse(annee).success) return { ok: false, message: "Année invalide." };
+  let lignes: { espace: string; classe: string; exclus: string[] }[] = [];
+  try {
+    const lu = JSON.parse(String(donnees.get("lignes") ?? "[]"));
+    if (Array.isArray(lu)) {
+      lignes = lu
+        .filter((l) => l && uuid.safeParse(l.espace).success && uuid.safeParse(l.classe).success)
+        .map((l) => ({ espace: l.espace, classe: l.classe, exclus: Array.isArray(l.exclus) ? l.exclus.filter((x: unknown) => uuid.safeParse(x).success) : [] }));
+    }
+  } catch {
+    return { ok: false, message: "Sélection illisible." };
+  }
+  if (lignes.length === 0) return { ok: false, message: "Cochez au moins un cours et choisissez sa classe d'arrivée." };
+  const r = await reconduireCours(personne.profileId, annee, lignes);
+  if (r === null) return { ok: false, message: "La reconduction a été refusée." };
+  revalidatePath("/admin/annees");
+  return { ok: true, message: `${r.cours} cours créé${r.cours > 1 ? "s" : ""} dans l'année préparée${r.refusees > 0 ? `, ${r.refusees} ligne${r.refusees > 1 ? "s" : ""} refusée${r.refusees > 1 ? "s" : ""}` : ""}. Les professeurs gardés y sont affectés à la rentrée.` };
 }

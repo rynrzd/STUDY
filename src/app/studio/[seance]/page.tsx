@@ -2,7 +2,8 @@ import { notFound, redirect } from "next/navigation";
 import { OngletsSeance } from "@/components/studio/OngletsSeance";
 import { Dupliquer } from "@/components/studio/Dupliquer";
 import { Editeur } from "@/components/studio/Editeur";
-import { chapitresDuCours, coursDuProfesseur, seanceComplete } from "@/lib/studio";
+import { blocsPublies, chapitresDuCours, coursDuProfesseur, seanceComplete } from "@/lib/studio";
+import { comparerBlocs, resumeDifferences } from "@/lib/diff-blocs";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 
 /**
@@ -29,10 +30,13 @@ export default async function PageSeance({
   const ensemble = await seanceComplete(jeton, id);
   if (ensemble === null) notFound();
 
-  const [chapitres, cours] = await Promise.all([
+  const [chapitres, cours, publies] = await Promise.all([
     chapitresDuCours(jeton, ensemble.seance.teaching_space_id),
     coursDuProfesseur(jeton),
+    ensemble.seance.state === "publiee" ? blocsPublies(jeton, id) : Promise.resolve(null),
   ]);
+  const ecarts = publies === null ? null : comparerBlocs(publies, ensemble.blocs);
+  const differences = ecarts === null ? null : { texte: resumeDifferences(ecarts), modifiee: ecarts.ajoutes + ecarts.modifies + ecarts.retires > 0 || ecarts.deplaces };
 
   return (
     <>
@@ -43,6 +47,7 @@ export default async function PageSeance({
         blocs={ensemble.blocs}
         chapitres={chapitres}
         libelleCours={ensemble.cours?.libelle ?? "Cours"}
+        differences={differences}
       />
 
       <div className="mt-10">

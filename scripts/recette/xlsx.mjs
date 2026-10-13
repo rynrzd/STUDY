@@ -167,3 +167,17 @@ export function classeur(lignes) {
     ["xl/worksheets/sheet1.xml", feuille(lignes)],
   ]);
 }
+
+/** Classeur dont la feuille est fournie telle quelle : pour éprouver les cas difficiles (fusions, formules). */
+export function classeurBrut(lignesXml, apres = "") {
+  return zip([
+    ["[Content_Types].xml", CONTENT_TYPES],
+    ["_rels/.rels", RELS],
+    ["xl/workbook.xml", WORKBOOK],
+    ["xl/_rels/workbook.xml.rels", WORKBOOK_RELS],
+    [
+      "xl/worksheets/sheet1.xml",
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${lignesXml}</sheetData>${apres}</worksheet>`,
+    ],
+  ]);
+}

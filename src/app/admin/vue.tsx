@@ -7,7 +7,13 @@ import type { ControleComplement, ControleOuverture, classes, contexte } from "@
 import type { historiqueImports } from "@/lib/lot-rentree";
 
 /** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
-export function VueAdmin({ situation, nbSignalements, nbRecuperations, nbEleves, nbEnseignants, nbAActiver, sansProfesseur, listeClasses, imports, conservation = null, controle = null, complement = null, nbMatieres = null, nbAffectations = null }: {
+export function VueAdmin({ situation, nbSignalements, nbRecuperations, nbEleves, nbEnseignants, nbAActiver, sansProfesseur, listeClasses, imports, conservation = null, controle = null, complement = null, nbMatieres = null, nbAffectations = null, alertes = [], limites = null, effacements = [] }: {
+  /** Demandes d'effacement en cours (SEC-18) : comptes fermés, en attente de décision. */
+  effacements?: readonly { profil: string; prenom: string; nom: string; depuis: string | null }[];
+  /** Activité inhabituelle sur 24 h (0082, SEC-20). */
+  alertes?: readonly { alerte: string; nombre: number }[];
+  /** Limites de l'établissement (0082, SEC-15). */
+  limites?: { groupes_max: number; groupes: number } | null;
   /** Mise en route (ONB-02) : comptes réels, pour situer chaque étape. */
   nbMatieres?: number | null;
   nbAffectations?: number | null;
@@ -60,6 +66,37 @@ export function VueAdmin({ situation, nbSignalements, nbRecuperations, nbEleves,
           </Link>
         </div>
       </section>
+
+      {alertes.length > 0 || effacements.length > 0 || (limites !== null && limites.groupes >= limites.groupes_max * 0.8) ? (
+        <section role="alert" aria-labelledby="vigilance" className="mt-6 rounded-[var(--radius-carte)] border border-[color:var(--color-attention)] bg-[color:var(--color-attention-fond)] p-5">
+          <h2 id="vigilance" className="titre-section m-0">
+            À surveiller
+          </h2>
+          <ul className="m-0 mt-2 grid gap-1 pl-5 text-[0.9375rem]">
+            {alertes.map((a) => (
+              <li key={a.alerte}>
+                {a.alerte === "exports"
+                  ? `${a.nombre} exports de listes nominatives en 24 h.`
+                  : a.alerte === "reinitialisations"
+                    ? `${a.nombre} réinitialisations d'accès en 24 h.`
+                    : `${a.nombre} changements d'affectation en 24 h.`}{" "}
+                Si ce n&apos;est pas vous ou votre équipe, changez votre mot de passe et prévenez votre interlocuteur AvecStudy.
+              </li>
+            ))}
+            {effacements.length > 0 ? (
+              <li>
+                {effacements.length === 1 ? "Une demande d'effacement attend" : `${effacements.length} demandes d'effacement attendent`} la décision du responsable de traitement :{" "}
+                {effacements.map((e) => `${e.prenom} ${e.nom}`).join(", ")}. Les comptes sont déjà fermés.
+              </li>
+            ) : null}
+            {limites !== null && limites.groupes >= limites.groupes_max * 0.8 ? (
+              <li>
+                {limites.groupes} groupes sur {limites.groupes_max} autorisés : archivez ceux qui ne servent plus, ou demandez un relèvement.
+              </li>
+            ) : null}
+          </ul>
+        </section>
+      ) : null}
 
       <MiseEnRoute
         etapes={[
@@ -263,10 +300,24 @@ function ControleAvantOuverture({ controle, complement = null, nbAActiver, sansP
 function MiseEnRoute({ etapes }: { etapes: readonly { titre: string; detail: string; fait: boolean; href: string }[] }) {
   const faites = etapes.filter((e) => e.fait).length;
   if (faites === etapes.length) {
+    // ONB-08 : le guide se revoit à volonté, sans rien effacer.
     return (
-      <p className="m-0 mt-6 flex items-center gap-2 font-semibold text-[color:var(--color-succes)]">
-        <CircleCheck size={18} strokeWidth={1.75} aria-hidden="true" /> Mise en route terminée : les six étapes sont faites.
-      </p>
+      <details className="mt-6">
+        <summary className="flex cursor-pointer items-center gap-2 font-semibold text-[color:var(--color-succes)]">
+          <CircleCheck size={18} strokeWidth={1.75} aria-hidden="true" /> Mise en route terminée : les six étapes sont faites. <span className="text-[0.875rem] text-[color:var(--color-accent)]">Revoir les étapes</span>
+        </summary>
+        <ol className="parcours mt-3" aria-label="Étapes de mise en route">
+          {etapes.map((e, i) => (
+            <li key={e.titre} data-fait="">
+              <span className="parcours-numero" aria-hidden="true">{i + 1}</span>
+              <span className="min-w-0">
+                <Link href={e.href} className="block font-bold text-[color:var(--color-encre)] hover:text-[color:var(--color-accent)]">{e.titre}</Link>
+                <span className="meta block">{e.detail}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+      </details>
     );
   }
   const suivante = etapes.findIndex((e) => !e.fait);

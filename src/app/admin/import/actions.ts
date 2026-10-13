@@ -9,6 +9,7 @@ import {
   analyserLotProfesseurs,
   appliquerLotProfesseurs,
   corrigerLigneProfesseur,
+  renommerMatiereDuLot,
 } from "@/lib/lot-professeurs";
 import {
   analyserLot,
@@ -328,6 +329,7 @@ export async function creerLesComptes(
     reinscrit: rapport.reinscrit,
     erreurs: rapport.erreurs,
     ecartes: rapport.ecartes,
+    restantes: rapport.restantes,
     acces: rapport.acces,
     echecs: rapport.echecs,
   };
@@ -558,4 +560,16 @@ export async function importerGroupes(_precedent: EtatImportGroupes, donnees: Fo
     revalidatePath("/admin");
   }
   return { etat: "ok", resultat };
+}
+
+/** IMP-17 : utiliser une matière déjà créée à la place de celle du fichier, sur choix explicite. */
+export async function utiliserMatiereExistante(_precedent: EtatCorrection, donnees: FormData): Promise<EtatCorrection> {
+  const acteur = await exigerAdministrateur();
+  const lot = String(donnees.get("lot") ?? "");
+  const de = String(donnees.get("de") ?? "");
+  const vers = String(donnees.get("vers") ?? "");
+  const n = await renommerMatiereDuLot({ acteur, lot, de, vers });
+  if (n === null) return { etat: "erreur", message: "Le remplacement n'a pas pu être fait." };
+  revalidatePath(`/admin/import/profs/${lot}`);
+  return { etat: "ok", message: `« ${de} » remplacée par « ${vers} » sur ${n} ligne${n > 1 ? "s" : ""}.` };
 }

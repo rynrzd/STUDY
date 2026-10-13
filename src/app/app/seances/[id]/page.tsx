@@ -13,7 +13,7 @@ import { dejaSignales } from "@/lib/moderation";
 import { filsDeLaSeance } from "@/lib/parcours-eleve";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 import { contexteApp } from "@/lib/v6/contexte";
-import { exercicesDeLaSeance, notePersonnelle, reperesDeLaSeance, seanceDetail } from "@/lib/v6/cours";
+import { exercicesDeLaSeance, mesCours, notePersonnelle, reperesDeLaSeance, seanceDetail } from "@/lib/v6/cours";
 import { mesPassagesIncompris, passagesIncomprisDeLaSeance } from "@/lib/v6/passages";
 import { questionsDeLaSeance } from "@/lib/v6/questions-seance";
 import { basculerRepere, sEntrainer } from "../actions";
@@ -52,7 +52,7 @@ export default async function PageSeance({
     return <AccesIndisponible retour="/app/cours" />;
   }
 
-  const [exercices, note, reperes, salon, fils, signales, questionsClasse, mesPassages, passagesClasse] = await Promise.all([
+  const [exercices, note, reperes, salon, fils, signales, questionsClasse, mesPassages, passagesClasse, cours] = await Promise.all([
     exercicesDeLaSeance(ctx.jeton, id),
     notePersonnelle(ctx.jeton, id),
     reperesDeLaSeance(ctx.jeton, id),
@@ -62,7 +62,12 @@ export default async function PageSeance({
     onglet === "questions" ? questionsDeLaSeance(ctx.jeton, ctx.personne.profileId, id) : Promise.resolve([]),
     ctx.roles.eleve ? mesPassagesIncompris(ctx.jeton, id) : Promise.resolve(null),
     ctx.roles.professeur ? passagesIncomprisDeLaSeance(ctx.jeton, id) : Promise.resolve(null),
+    mesCours(ctx.jeton),
   ]);
+  // STU-08 : d'où vient la séance — matière, classe ou groupe, chapitre — et
+  // qui l'enseigne.
+  const leCours = (cours ?? []).find((c) => c.id === seance.coursId) ?? null;
+  const origine = [seance.matiere, leCours?.classe, seance.chapitre].filter(Boolean).join(" · ");
 
   const salonLien =
     salon.data && (salon.data as { class_id: string | null }).class_id
@@ -77,8 +82,14 @@ export default async function PageSeance({
           { href: `/app/cours/${seance.coursId}`, libelle: seance.matiere ?? "Cours" },
           ...(seance.chapitre ? [{ href: `/app/cours/${seance.coursId}`, libelle: seance.chapitre }] : []),
         ]}
+        sourcil={origine || null}
         titre={seance.titre}
-        sousTitre={seance.objectif}
+        sousTitre={
+          <>
+            {seance.objectif ? <span className="block">{seance.objectif}</span> : null}
+            {leCours?.enseignants ? <span className="meta block">Avec {leCours.enseignants}</span> : null}
+          </>
+        }
       />
 
       <nav className="onglets-liens mb-6" aria-label="Sections de la séance">

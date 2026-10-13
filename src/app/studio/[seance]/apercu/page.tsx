@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { VueSeance } from "@/components/seance/VueSeance";
+import { OutilsApercu } from "@/components/studio/OutilsApercu";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { seanceComplete } from "@/lib/studio";
 
@@ -35,10 +36,11 @@ export default async function PageApercu({
 
   return (
     <>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <Link href={`/studio/${id}`} className="lien-fleche text-[length:var(--text-tableau)]">
           <span aria-hidden="true">←</span> Retour à l&apos;édition
         </Link>
+        <OutilsApercu seance={id} />
         <span className={`pastille ${publiee ? "pastille-publie" : "pastille-brouillon"}`}>
           {publiee ? "Publiée" : "Brouillon — aucun élève ne la voit"}
         </span>
@@ -46,9 +48,10 @@ export default async function PageApercu({
 
       <div
         role="note"
-        className="mb-6 rounded-[var(--radius-carte)] bg-[color:var(--color-rose-clair)] px-4 py-3 text-[length:var(--text-tableau)] text-[color:var(--color-accent)]"
+        className="mb-6 print:hidden rounded-[var(--radius-carte)] bg-[color:var(--color-rose-clair)] px-4 py-3 text-[length:var(--text-tableau)] text-[color:var(--color-accent)]"
       >
-        Vous voyez cette séance exactement comme un élève de la classe la verra.
+        Vous voyez la séance telle qu&apos;elle est dans l&apos;éditeur, mise en page pour les élèves.
+        {publiee ? " Déjà publiée : la classe voit la dernière version publiée, tant que vous ne publiez pas vos retouches." : ""}
       </div>
 
       <VueSeance

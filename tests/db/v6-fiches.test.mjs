@@ -7,7 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { ACTEURS, OBJETS, baseDeTest, doitEchouer, enTantQue, lirePour } from "./harness.mjs";
+import { ACTEURS, OBJETS, baseDeTest, doitEchouer, enTantQue, lirePour, republier } from "./harness.mjs";
 import { traiterFiche } from "../../src/lib/revision/moteur-fiches.ts";
 
 /** Une seance publiee avec un vrai contenu, dont un passage hostile (AI-01). */
@@ -28,6 +28,7 @@ async function ajouterContenu(db) {
       );
     }
   });
+  await republier(db, OBJETS.seanceA1);
 }
 
 /** Le moteur, appele comme le drain l'appelle : avec un acces de service. */
@@ -149,6 +150,7 @@ test("COURSE-01 — source modifiee : la fiche le signale sans etre ecrasee", as
   await enTantQue(db, ACTEURS.profMartin, (d) =>
     d.query("update study.lesson_blocks set contenu = '{\"texte\": \"Nouvelle formulation du cours.\"}' where lesson_id = $1 and position = 0", [OBJETS.seanceA1]),
   );
+  await republier(db, OBJETS.seanceA1);
   const apres = (await lirePour(db, ACTEURS.eleveA1Rayan, "select * from study.fiche_lire($1)", [fiche.id]))[0];
   assert.equal(apres.source_modifiee, true);
   assert.deepEqual(apres.sections, avant.sections, "la fiche n'est pas reecrite");

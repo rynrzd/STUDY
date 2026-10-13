@@ -186,3 +186,26 @@ test("PUBM-07 — aucune des trois fonctions n'est exécutable depuis une sessio
     assert.equal((await db.query("select has_function_privilege('service_role', $1, 'execute') as ok", [f])).rows[0].ok, true);
   }
 });
+
+test("PUBM-PDF13 — retirer le document d'un cours le laisse dans la bibliothèque et dans les autres cours", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+  const { document } = await documentPret(db);
+  await publier(db, document, [A1, A2]);
+  const lecons = (await db.query("select id, teaching_space_id from study.lessons where origin_studio_document = $1", [document])).rows;
+  assert.equal(lecons.length, 2);
+  const enA1 = lecons.find((l) => l.teaching_space_id === A1).id;
+  const enA2 = lecons.find((l) => l.teaching_space_id === A2).id;
+
+  // Le geste du Studio « Dépublier », sous les droits de Mme Martin.
+  await enTantQue(db, ACTEURS.profMartin, () => db.query("update study.lessons set state = 'brouillon', published_at = null where id = $1", [enA1]));
+
+  const doc = (await db.query("select archived_at, current_revision_id from study.studio_documents where id = $1", [document])).rows[0];
+  assert.equal(doc.archived_at, null, "le document reste dans la bibliothèque");
+  assert.ok(doc.current_revision_id, "sa révision demeure");
+  assert.equal((await db.query("select state from study.lessons where id = $1", [enA2])).rows[0].state, "publiee", "l'autre cours le garde");
+  const samir = await lirePour(db, ACTEURS.eleveA2Samir, "select id from study.lessons where id = $1", [enA2]);
+  assert.equal(samir.length, 1, "les élèves de l'autre classe le lisent toujours");
+  const rayan = await lirePour(db, ACTEURS.eleveA1Rayan, "select id from study.lessons where id = $1", [enA1]);
+  assert.equal(rayan.length, 0, "dans le cours retiré, plus rien");
+});

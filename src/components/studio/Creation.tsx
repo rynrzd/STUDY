@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { MODELES_LECON } from "@/lib/modeles-lecon";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -154,6 +155,22 @@ export function NouvelleSeance({
           />
         </div>
       </div>
+
+      {mode === "ecrire" ? (
+        <div className="mt-3">
+          <label className="etiquette" htmlFor={`modele-${cours}`}>
+            Partir d&apos;un modèle
+          </label>
+          <select id={`modele-${cours}`} name="modele" className="champ" defaultValue="vide">
+            {Object.entries(MODELES_LECON).map(([v, m]) => (
+              <option key={v} value={v}>
+                {m.libelle}
+              </option>
+            ))}
+          </select>
+          <p className="aide-champ">Des intitulés à compléter (objectifs, à retenir, exercices…) : aucun contenu n&apos;est inventé.</p>
+        </div>
+      ) : null}
 
       {chapitres.length > 0 ? (
         <div className="mt-3">

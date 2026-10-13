@@ -1065,3 +1065,126 @@ export async function groupeDecrire(acteur: string, groupe: string, texte: strin
   }
   return true;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Administration complétée (0082)                                            */
+/* -------------------------------------------------------------------------- */
+
+const appel = (fonction: string, args: Record<string, unknown>) => clientExploitation("administration_des_comptes").rpc(fonction, args);
+
+/** Coordinateur d'un groupe (GR-12) ; `null` si aucun. */
+export async function coordinateurGroupe(acteur: string, groupe: string): Promise<{ id: string; nom: string } | null> {
+  const { data, error } = await appel("etab_coordinateur", { p_acteur: acteur, p_groupe: groupe });
+  if (error !== null) return null;
+  const l = ((data ?? []) as { profil: string; nom: string }[])[0];
+  return l ? { id: l.profil, nom: l.nom } : null;
+}
+
+export async function designerCoordinateur(acteur: string, groupe: string, professeur: string | null): Promise<boolean> {
+  const { error } = await appel("etab_designer_coordinateur", { p_acteur: acteur, p_groupe: groupe, p_professeur: professeur });
+  return error === null;
+}
+
+export interface LigneExportGroupe {
+  readonly groupe: string; readonly type: string; readonly annee: string; readonly identifiant: string;
+  readonly nom: string; readonly prenom: string; readonly classe: string | null; readonly depuis: string;
+}
+export async function exportGroupes(acteur: string): Promise<LigneExportGroupe[] | null> {
+  const { data, error } = await appel("etab_export_groupes", { p_acteur: acteur });
+  return error === null ? ((data ?? []) as LigneExportGroupe[]) : null;
+}
+
+/** Effectif d'une classe à une date (CL-09) ; `null` : refusé. */
+export async function effectifClasse(acteur: string, classe: string, date: string): Promise<number | null> {
+  const { data, error } = await appel("etab_effectif_classe", { p_acteur: acteur, p_classe: classe, p_date: date });
+  return error === null ? (data as number) : null;
+}
+
+/** Préinscription individuelle dans l'année préparée (EL-08). */
+export async function preinscrireEleve(acteur: string, eleve: string, classe: string): Promise<"preinscrit" | "modifie" | "deja" | null> {
+  const { data, error } = await appel("etab_preinscrire_eleve", { p_acteur: acteur, p_eleve: eleve, p_classe: classe });
+  return error === null ? (data as "preinscrit" | "modifie" | "deja") : null;
+}
+
+export interface CoursAReconduire {
+  readonly espace: string; readonly classe: string; readonly classe_label: string; readonly matiere: string;
+  readonly professeurs: readonly { id: string; nom: string; role: string }[]; readonly suggestion: string | null; readonly deja: boolean;
+}
+export async function coursAReconduire(acteur: string, cible: string): Promise<CoursAReconduire[] | null> {
+  const { data, error } = await appel("etab_cours_a_reconduire", { p_acteur: acteur, p_cible: cible });
+  return error === null ? ((data ?? []) as CoursAReconduire[]) : null;
+}
+export async function reconduireCours(acteur: string, cible: string, lignes: readonly { espace: string; classe: string; exclus: readonly string[] }[]): Promise<{ cours: number; refusees: number } | null> {
+  const { data, error } = await appel("etab_reconduire_cours", { p_acteur: acteur, p_cible: cible, p_lignes: lignes });
+  return error === null ? (data as { cours: number; refusees: number }) : null;
+}
+
+export interface ComparaisonAnnee {
+  readonly annee: string; readonly label: string; readonly courante: boolean; readonly archivee: boolean;
+  readonly classes: number; readonly eleves: number; readonly groupes: number; readonly cours: number; readonly cours_sans_professeur: number;
+}
+export async function comparaisonAnnees(acteur: string): Promise<ComparaisonAnnee[] | null> {
+  const { data, error } = await appel("etab_comparaison_annees", { p_acteur: acteur });
+  return error === null ? ((data ?? []) as ComparaisonAnnee[]) : null;
+}
+
+/** Trace d'un export nominatif (SEC-19). Un échec de journal empêche l'export. */
+export async function journaliserExport(acteur: string, type: string, lignes: number): Promise<boolean> {
+  const { error } = await appel("etab_journaliser_export", { p_acteur: acteur, p_type: type, p_lignes: lignes });
+  return error === null;
+}
+
+export async function activiteInhabituelle(acteur: string): Promise<{ alerte: string; nombre: number; depuis: string }[] | null> {
+  const { data, error } = await appel("etab_activite_inhabituelle", { p_acteur: acteur });
+  return error === null ? ((data ?? []) as { alerte: string; nombre: number; depuis: string }[]) : null;
+}
+
+export async function limitesEtablissement(acteur: string): Promise<{ groupes_max: number; groupes: number; lignes_import_max: number } | null> {
+  const { data, error } = await appel("etab_limites", { p_acteur: acteur });
+  if (error !== null) return null;
+  return ((data ?? []) as { groupes_max: number; groupes: number; lignes_import_max: number }[])[0] ?? null;
+}
+
+/**
+ * L'année préparée (non courante, non archivée) et ses classes, pour une
+ * préinscription individuelle (EL-08). L'établissement est recalculé depuis
+ * l'acteur ; `null` s'il n'y a pas d'année préparée.
+ */
+export async function anneePreparee(acteur: string): Promise<{ label: string; classes: { id: string; label: string }[] } | null> {
+  const situation = await contexte(acteur);
+  if (situation === null) return null;
+  const client = clientExploitation("administration_des_comptes");
+  const { data: annee } = await client
+    .from("academic_years")
+    .select("id, label")
+    .eq("organization_id", situation.organizationId)
+    .eq("is_current", false)
+    .is("archived_at", null)
+    .order("starts_on")
+    .limit(1)
+    .maybeSingle();
+  if (annee === null) return null;
+  const { data: liste } = await client
+    .from("classes")
+    .select("id, label")
+    .eq("academic_year_id", (annee as { id: string }).id)
+    .is("archived_at", null)
+    .order("label");
+  return { label: (annee as { label: string }).label, classes: (liste ?? []) as { id: string; label: string }[] };
+}
+
+/** SEC-18 : demande d'effacement (compte fermé, journalisé, réversible). */
+export async function demanderEffacement(acteur: string, profil: string, motif: string): Promise<"demandee" | "deja" | null> {
+  const { data, error } = await appel("etab_demander_effacement", { p_acteur: acteur, p_profil: profil, p_motif: motif });
+  return error === null ? (data as "demandee" | "deja") : null;
+}
+
+export async function annulerEffacement(acteur: string, profil: string): Promise<boolean> {
+  const { data, error } = await appel("etab_annuler_effacement", { p_acteur: acteur, p_profil: profil });
+  return error === null && data === true;
+}
+
+export async function effacementsEnAttente(acteur: string): Promise<{ profil: string; prenom: string; nom: string; depuis: string | null }[]> {
+  const { data, error } = await appel("etab_effacements_en_attente", { p_acteur: acteur });
+  return error === null ? ((data ?? []) as { profil: string; prenom: string; nom: string; depuis: string | null }[]) : [];
+}

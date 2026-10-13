@@ -281,3 +281,39 @@ function journaliser(contexte: string, code: string | undefined): void {
   if (code === "42501" || code === "PGRST116") return;
   console.error(JSON.stringify({ niveau: "erreur", contexte, code: code ?? "inconnu" }));
 }
+
+/**
+ * Les blocs de la version publiée d'une séance (0083) : ce que lisent les
+ * élèves. `null` si la séance n'a pas de version de séance (contenu importé
+ * du Studio) ou si la lecture est refusée.
+ */
+export async function blocsPublies(jeton: string, seanceId: string): Promise<Bloc[] | null> {
+  const { data, error } = await clientUtilisateur(jeton).rpc("eleve_blocs_publies", { p_seance: seanceId });
+  if (error !== null || !Array.isArray(data)) return null;
+  return (data as { id?: string; kind: TypeBloc; position: number; contenu: Record<string, unknown>; file_id?: string | null; assignment_id?: string | null }[])
+    .map((b) => ({
+      id: b.id ?? `p${b.position}`,
+      kind: b.kind,
+      position: b.position,
+      contenu: b.contenu ?? {},
+      file_id: b.file_id ?? null,
+      assignment_id: b.assignment_id ?? null,
+    }))
+    .sort((x, y) => x.position - y.position);
+}
+
+/** Les cours épinglés par la personne (TEACH-17). */
+export async function coursFavoris(jeton: string): Promise<Set<string>> {
+  const { data, error } = await clientUtilisateur(jeton).from("cours_favoris").select("teaching_space_id");
+  if (error !== null) return new Set();
+  return new Set(((data ?? []) as { teaching_space_id: string }[]).map((f) => f.teaching_space_id));
+}
+
+export type StatistiqueSeance = { lecon: string; titre: string; effectif: number; eleves_exercices: number | null; reussite: number | null; incompris: number | null; masque: boolean };
+
+/** Statistiques agrégées d'un cours, par séance publiée (PED-10, 0084) : masquées sous cinq élèves. */
+export async function statistiquesCours(jeton: string, espace: string): Promise<StatistiqueSeance[]> {
+  const { data, error } = await clientUtilisateur(jeton).rpc("prof_statistiques_espace", { p_espace: espace });
+  if (error !== null) return [];
+  return (data ?? []) as StatistiqueSeance[];
+}

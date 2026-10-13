@@ -7,7 +7,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ACTEURS, baseDeTest, doitEchouer } from "./harness.mjs";
+import { ACTEURS, baseDeTest, doitEchouer, lirePour } from "./harness.mjs";
 
 const ORG = ACTEURS.lyceeA;
 
@@ -86,7 +86,9 @@ test("GROUPE-02 — idempotence et historique : rien n'est dupliqué, un retrait
   assert.equal(second, 0, "déjà membre : pas de seconde ligne");
   assert.equal((await db.query("select count(*)::int n from study.group_memberships where group_id = $1 and profile_id = $2", [g1, ACTEURS.eleveA1Rayan])).rows[0].n, 1);
 
-  // Retrait : la ligne est clôturée, pas supprimée.
+  // Retrait : la ligne est clôturée la veille, pas supprimée (0084). Une
+  // appartenance commencée le jour même, elle, n'a pas d'historique.
+  await db.query("update study.group_memberships set starts_on = current_date - 10 where group_id = $1", [g1]);
   await db.query("select study.etab_groupe_retirer_eleve($1, $2, $3)", [ACTEURS.adminA, g1, ACTEURS.eleveA1Rayan]);
   const ligne = (await db.query("select ends_on from study.group_memberships where group_id = $1 and profile_id = $2", [g1, ACTEURS.eleveA1Rayan])).rows;
   assert.equal(ligne.length, 1, "la ligne demeure");
@@ -137,4 +139,26 @@ test("GROUPE-04 — aucune fonction de groupe n'est exécutable sans compte", as
     }
     assert.equal((await db.query("select has_function_privilege('service_role', $1, 'execute') as ok", [f])).rows[0].ok, true, `service_role exécute ${f}`);
   }
+});
+
+test("GROUPE-SALON (PED-08) — le salon d'un cours de groupe suit l'appartenance au groupe", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+  const an = await annee(db, ACTEURS.adminA);
+  const maths = await matiere(db, ACTEURS.adminA, "Option Latin");
+  const groupe = (await db.query("select study.etab_creer_groupe($1, $2, 'Latin B', 'interclasses') as id", [ACTEURS.adminA, an])).rows[0].id;
+  await db.query("select study.etab_groupe_ajouter_eleves($1, $2, $3)", [ACTEURS.adminA, groupe, [ACTEURS.eleveA1Rayan]]);
+  const espace = (await db.query("select study.etab_affecter_professeur_groupe($1, $2, $3, $4, $5) as id", [ACTEURS.adminA, ACTEURS.profMartin, groupe, maths, an])).rows[0].id;
+  const salon = (await db.query("select id from study.salons where kind = 'matiere' and teaching_space_id = $1", [espace])).rows[0]?.id;
+  assert.ok(salon, "un salon est créé avec le cours du groupe");
+
+  const voitSalon = async (eleve) => (await lirePour(db, eleve, "select id from study.salons where id = $1", [salon])).length === 1;
+  assert.equal(await voitSalon(ACTEURS.eleveA1Rayan), true, "membre : le salon est visible");
+  assert.equal(await voitSalon(ACTEURS.eleveA1Lina), false, "même classe, non membre : invisible");
+
+  // Ajout : le salon devient visible ; retrait : il disparaît aussitôt.
+  await db.query("select study.etab_groupe_ajouter_eleves($1, $2, $3)", [ACTEURS.adminA, groupe, [ACTEURS.eleveA1Lina]]);
+  assert.equal(await voitSalon(ACTEURS.eleveA1Lina), true, "ajoutée au groupe : visible");
+  await db.query("select study.etab_groupe_retirer_eleve($1, $2, $3)", [ACTEURS.adminA, groupe, ACTEURS.eleveA1Rayan]);
+  assert.equal(await voitSalon(ACTEURS.eleveA1Rayan), false, "retiré du groupe : plus d'accès");
 });

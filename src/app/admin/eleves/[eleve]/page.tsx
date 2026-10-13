@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { classes, contexte, ficheEleve } from "@/lib/etablissement";
+import { anneePreparee, classes, contexte, ficheEleve } from "@/lib/etablissement";
 import { sessionCourante } from "@/lib/session-serveur";
 import { VueFicheEleve } from "./vue";
 
@@ -27,7 +27,7 @@ export default async function PageFicheEleve({ params }: { params: Promise<{ ele
   const { eleve } = await params;
   if (!UUID.test(eleve)) notFound();
 
-  const [fiche, listeClasses] = await Promise.all([ficheEleve(personne.profileId, eleve), classes(personne.profileId)]);
+  const [fiche, listeClasses, anneeSuivante] = await Promise.all([ficheEleve(personne.profileId, eleve), classes(personne.profileId), anneePreparee(personne.profileId)]);
   if (fiche === null) notFound();
 
   return (
@@ -36,6 +36,7 @@ export default async function PageFicheEleve({ params }: { params: Promise<{ ele
       fiche={fiche}
       classes={listeClasses.map((c) => ({ id: c.id, label: c.label }))}
       codeEtablissement={situation.publicCode}
+      anneeSuivante={anneeSuivante}
     />
   );
 }

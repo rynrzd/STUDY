@@ -18,6 +18,7 @@ import {
   fixerConservationJournal,
   inscrireEleve,
   loginsPris,
+  matieres as listerMatieres,
 } from "@/lib/etablissement";
 import { classeNormalisee } from "@/lib/assistant-rentree";
 import { proposerLogin } from "@/lib/import-rentree";
@@ -508,5 +509,100 @@ export async function changerProfesseurPrincipal(_precedent: EtatAdmin, donnees:
   return {
     etat: "ok",
     message: issue === "retire" ? "Professeur principal retiré." : issue === "inchange" ? "Rien n'a changé." : "Professeur principal désigné.",
+  };
+}
+
+/**
+ * Plusieurs classes d'un coup (CL-10) : « 2nde 1 » à « 2nde 8 ». Les libellés
+ * viennent de l'aperçu, et sont revérifiés ici : longueur, nombre, et
+ * équivalence avec une classe existante (« Seconde 3 » existe : « 2nde 3 »
+ * n'est pas créée). Chaque classe est créée seule : un refus n'arrête pas
+ * les autres, et le compte rendu les distingue.
+ */
+export async function creerSerieDeClasses(_precedent: EtatAdmin, donnees: FormData): Promise<EtatAdmin> {
+  const acteur = await exigerAdministrateur();
+  let libelles: string[] = [];
+  try {
+    const lu = JSON.parse(String(donnees.get("libelles") ?? "[]"));
+    if (Array.isArray(lu)) libelles = lu.filter((x): x is string => typeof x === "string").map((x) => x.trim()).filter((x) => x.length >= 2 && x.length <= 80);
+  } catch {
+    return { etat: "erreur", message: "Liste illisible." };
+  }
+  if (libelles.length === 0) return { etat: "erreur", message: "Aucune classe à créer." };
+  if (libelles.length > 40) return { etat: "erreur", message: "Au plus 40 classes à la fois." };
+
+  const annee = await anneeCourante(acteur);
+  if (annee === null) return { etat: "erreur", message: "L'année scolaire n'a pas pu être préparée." };
+  const existantes = new Set((await listerClasses(acteur)).map((c) => classeNormalisee(c.label)));
+
+  let creees = 0;
+  let sautees = 0;
+  let refusees = 0;
+  for (const label of libelles) {
+    const cle = classeNormalisee(label);
+    if (existantes.has(cle)) {
+      sautees++;
+      continue;
+    }
+    if ((await creerClasse(acteur, annee, label)) === null) refusees++;
+    else {
+      creees++;
+      existantes.add(cle);
+    }
+  }
+  revalidatePath("/admin/classes");
+  revalidatePath("/admin");
+  return {
+    etat: refusees === 0 ? "ok" : "erreur",
+    message: `${creees} classe${creees > 1 ? "s" : ""} créée${creees > 1 ? "s" : ""}${sautees > 0 ? `, ${sautees} déjà présente${sautees > 1 ? "s" : ""}` : ""}${refusees > 0 ? `, ${refusees} refusée${refusees > 1 ? "s" : ""}` : ""}.`,
+  };
+}
+
+/**
+ * Transférer des cours d'un professeur à un autre (PROF-13) : à la date
+ * choisie, le nouveau professeur est affecté avec le même rôle, puis
+ * l'ancienne affectation se termine la veille. Si l'affectation du nouveau
+ * est refusée, l'ancienne n'est pas touchée : personne ne se retrouve sans
+ * cours par accident. Les contenus publiés restent dans le cours.
+ */
+export async function transfererDesCours(_precedent: EtatAdmin, donnees: FormData): Promise<EtatAdmin> {
+  const acteur = await exigerAdministrateur();
+  const cible = identifiant(donnees, "cible");
+  if (cible === null) return { etat: "erreur", message: "Choisissez le professeur qui reprend ces cours." };
+  const date = texte(donnees, "date", 10) || new Date().toISOString().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { etat: "erreur", message: "La date est illisible." };
+  let lignes: { id: string; genre: "classe" | "groupe"; cible: string; matiere: string; role: RoleAffectation }[] = [];
+  try {
+    const lu = JSON.parse(String(donnees.get("cours") ?? "[]"));
+    if (Array.isArray(lu)) lignes = lu.filter((l) => l && typeof l.id === "string" && (l.genre === "classe" || l.genre === "groupe")).slice(0, 60);
+  } catch {
+    return { etat: "erreur", message: "Sélection illisible." };
+  }
+  if (lignes.length === 0) return { etat: "erreur", message: "Cochez au moins un cours." };
+
+  const idsMatieres = new Map((await listerMatieres(acteur)).map((m) => [m.label, m.id]));
+  const veille = new Date(new Date(`${date}T12:00:00Z`).getTime() - 86_400_000).toISOString().slice(0, 10);
+  let transferes = 0;
+  let refuses = 0;
+  for (const l of lignes) {
+    const matiere = idsMatieres.get(l.matiere);
+    const role: RoleAffectation = ["titulaire", "co_intervenant", "remplacant"].includes(l.role) ? l.role : "titulaire";
+    if (matiere === undefined || role === "remplacant") {
+      refuses++;
+      continue;
+    }
+    const issue = await affecterPlusieurs(acteur, cible, [{ genre: l.genre, cible: l.cible, matiere, role, debut: date }]);
+    if (issue === null || issue[0]?.resultat === "refusee") {
+      refuses++;
+      continue;
+    }
+    if ((await terminerAffectation(acteur, l.id, veille)) === null) refuses++;
+    else transferes++;
+  }
+  revalidatePath("/admin/professeurs");
+  revalidatePath("/admin/classes");
+  return {
+    etat: refuses === 0 ? "ok" : "erreur",
+    message: `${transferes} cours transféré${transferes > 1 ? "s" : ""} à partir du ${new Date(`${date}T12:00:00Z`).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}${refuses > 0 ? ` ; ${refuses} non transféré${refuses > 1 ? "s" : ""} (remplacement, ou refus) — leur affectation d'origine est intacte` : ""}.`,
   };
 }

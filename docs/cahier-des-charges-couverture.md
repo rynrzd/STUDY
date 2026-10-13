@@ -1,15 +1,15 @@
 # Cahier des charges — relevé de couverture
 
-Relevé exigence par exigence du cahier des charges maître AvecStudy, établi le 13 octobre 2026 à partir du code, des migrations (0001–0080) et des tests (base et unitaires). « Fait » signifie : présent en production et appuyé sur une preuve (migration, test ou écran). « Partiel » dit ce qui manque. « Écarté » est un choix assumé (produit sans IA, pas d'export, pas de suivi de consultation).
+Relevé exigence par exigence du cahier des charges maître AvecStudy, établi le 13 octobre 2026 à partir du code, des migrations (0001–0084) et des tests (base et unitaires). « Fait » signifie : présent en production et appuyé sur une preuve (migration, test ou écran). « Partiel » dit ce qui manque. « Écarté » est un choix assumé (produit sans IA, pas d'export, pas de suivi de consultation).
 
 ## Synthèse
 
 | Priorité | Fait | Partiel | Non fait | Écarté |
 |---|---|---|---|---|
 | P0 | 137 | 0 | 0 | 0 |
-| P1 | 70 | 31 | 1 | 1 |
-| P2 | 2 | 5 | 10 | 4 |
-| Total | 209 | 36 | 11 | 5 |
+| P1 | 102 | 0 | 0 | 1 |
+| P2 | 17 | 0 | 0 | 4 |
+| Total | 256 | 0 | 0 | 5 |
 
 ### P0 non entièrement faits
 
@@ -25,8 +25,8 @@ Aucun.
 | **ONB-04** Ne jamais bloquer une création de professeur parce qu’aucune classe n’existe : autoriser le compte sans… | P0 | Fait | Professeur créé sans classe (AjouterPersonne) ; signalé « sans cours » (0077) |
 | **ONB-05** Tableau de contrôle avant ouverture aux élèves : comptes sans classe, professeurs sans cours, groupes… | P0 | Fait | 0077 + 0080 : « Avant d'ouvrir aux élèves » ; tests controle-fiche-classe, fiche-prof-rapprochement |
 | **ONB-06** Import interrompu : reprise à l’étape exacte, pas de doublons ni création anticipée avant confirmation. | P1 | Fait | Lot persisté en base, repris par son adresse ; réimport sans doublon (0038) |
-| **ONB-07** Aide très courte intégrée à chaque bloc : « Pourquoi ? », « Qui voit ça ? », « Que se passe-t-il après ?… | P1 | Partiel | Aides courtes sur les écrans clés ; pas de trio « Pourquoi / Qui voit / Après » systématique |
-| **ONB-08** Guide d’accueil rejouable par choix volontaire, sans effacer de données. | P1 | Partiel | La mise en route reste consultable ; l'intro de connexion n'est qu'une animation, pas un guide rejouable |
+| **ONB-07** Aide très courte intégrée à chaque bloc : « Pourquoi ? », « Qui voit ça ? », « Que se passe-t-il après ?… | P1 | Fait | Encart « Comprendre cet écran » (Pourquoi / Qui voit / Et après) sur classes, groupes, import, années, enseignements |
+| **ONB-08** Guide d’accueil rejouable par choix volontaire, sans effacer de données. | P1 | Fait | Mise en route rejouable depuis l'accueil (« Revoir les étapes ») |
 | **ONB-09** Aperçu de la conséquence avant toute opération irréversible ou massive. | P1 | Fait | Aperçus avant bascule d'année, changement de classe, import, import de groupes |
 | **ONB-10** Jeu de données de démonstration isolé disponible en environnement de test uniquement, jamais ajouté à un… | P2 | Fait | Données fictives uniquement sur /apercu (404 en production) |
 
@@ -42,8 +42,8 @@ Aucun.
 | **CL-06** Empêcher l’utilisation de classes ou matières d’un autre établissement, même avec un UUID forgé. | P0 | Fait | Clés étrangères composites organization_id ; tests isolation, ATTAQUE-01 |
 | **CL-07** Archiver, renommer et préparer l’année suivante sans briser les anciens documents, devoirs et copies. | P1 | Fait | Rentrée 0059 + 0073 ; archives conservées |
 | **CL-08** Classe sans professeur, classe sans élève et classe avec groupe vide : états explicites, pas « erreur… | P1 | Fait | États explicites (sans professeur, sans élève, groupe vide) ; contrôle avant ouverture |
-| **CL-09** Afficher effectif selon la date/année, pas uniquement une valeur globale. | P1 | Partiel | Effectifs du jour ; années passées dans le relevé d'archive (0075), pas d'effectif à une date choisie |
-| **CL-10** Création multiple par saisie contrôlée (« 2nde 1 » à « 2nde 8 ») avec prévisualisation, et rejet de doublons. | P2 | Non fait | Pas de création en série de classes |
+| **CL-09** Afficher effectif selon la date/année, pas uniquement une valeur globale. | P1 | Fait | Effectif à une date choisie sur la fiche classe (0082, etab_effectif_classe) |
+| **CL-10** Création multiple par saisie contrôlée (« 2nde 1 » à « 2nde 8 ») avec prévisualisation, et rejet de doublons. | P2 | Fait | Création en série de classes (« 2nde 1 à 2nde 8 ») |
 
 ## Groupes pédagogiques
 
@@ -60,11 +60,11 @@ Aucun.
 | **GR-09** Interdire à un non-membre de consulter un support ou de rendre un devoir de groupe en manipulant un lien. | P0 | Fait | RLS sur supports et remises ; tests groupes, remises |
 | **GR-10** Gérer un départ de groupe après cours suivis : couper les droits futurs, ne pas effacer la trace… | P1 | Fait | Fin d'appartenance datée, rien d'effacé |
 | **GR-11** Duplication d’une structure de groupe pour l’année suivante avec révision explicite des élèves et… | P1 | Fait | Reconduction des groupes sans élèves (0073) |
-| **GR-12** Ajouter un professeur principal de groupe/coordinateur si utile, sans lui accorder les droits… | P1 | Non fait | Pas de professeur principal de groupe |
+| **GR-12** Ajouter un professeur principal de groupe/coordinateur si utile, sans lui accorder les droits… | P1 | Fait | Coordinateur de groupe (0082, etab_designer_coordinateur) ; test ADM-01 |
 | **GR-13** Affecter un remplaçant et plusieurs co-intervenants avec portée exacte. | P1 | Fait | Remplaçant daté, co-intervenants (0069) |
-| **GR-14** Éviter les groupes portant un nom trompeusement identique au sein de la même année ; proposer… | P1 | Partiel | Code de groupe unique dans l'année : pas de doublon exact ; noms voisins non signalés |
-| **GR-15** Importer et exporter les appartenances des groupes, sous contrôle d’accès. | P1 | Partiel | Import par fichier (0079) ; pas d'export des appartenances |
-| **GR-16** Fonctions de composition assistée (répartition équilibrée par nombre seulement), mais aucune décision… | P2 | Non fait | Pas de composition assistée (P2) |
+| **GR-14** Éviter les groupes portant un nom trompeusement identique au sein de la même année ; proposer… | P1 | Fait | Noms voisins signalés avant création, confirmation exigée ; tests noms-voisins |
+| **GR-15** Importer et exporter les appartenances des groupes, sous contrôle d’accès. | P1 | Fait | Import (0079) et export des appartenances (0082, /admin/groupes/export, journalisé) |
+| **GR-16** Fonctions de composition assistée (répartition équilibrée par nombre seulement), mais aucune décision… | P2 | Fait | Composition assistée : deux demi-groupes en alternance alphabétique, confirmés |
 
 ## Professeurs
 
@@ -82,12 +82,12 @@ Aucun.
 | **PROF-10** Empêcher l’affectation à une cible archivée, d’une autre année non sélectionnée ou d’un autre établissement. | P0 | Fait | Cibles archivées et autres établissements refusés (0069, 0076) |
 | **PROF-11** Gérer les remplacements avec dates, rôle explicite, droit de lecture/édition défini et coupure à échéance. | P1 | Fait | Remplacement daté, coupure à échéance ; test ROLE-01 |
 | **PROF-12** Co-intervention : deux professeurs sur le même cours, avec responsabilité sur les publications explicitée,… | P1 | Fait | Co-intervention sur un même espace |
-| **PROF-13** Réaffecter en lot un professeur qui change de service en milieu d’année, avec aperçu des changements et… | P1 | Partiel | Affecter plusieurs + terminer ; pas d'aperçu de réaffectation en lot |
+| **PROF-13** Réaffecter en lot un professeur qui change de service en milieu d’année, avec aperçu des changements et… | P1 | Fait | Transfert de cours en lot : cocher, choisir le collègue et la date, aperçu, confirmation |
 | **PROF-14** Remplacement temporaire sans fusion des bibliothèques privées ; accès au contenu partagé selon politiques… | P1 | Fait | Bibliothèques privées par auteur |
-| **PROF-15** Chercher par nom, identifiant, matière, classe, groupe, rôle, statut et année ; résultats paginés. | P1 | Partiel | Recherche par nom et identifiant ; matière, classe, rôle via « Qui enseigne quoi » |
+| **PROF-15** Chercher par nom, identifiant, matière, classe, groupe, rôle, statut et année ; résultats paginés. | P1 | Fait | Filtres par matière, cible, rôle et état sur la liste des professeurs |
 | **PROF-16** Alerter si plusieurs titulaires sur le même cours lorsque l’établissement n’a pas choisi une… | P1 | Fait | Alerte « plusieurs titulaires », rien retiré d'office |
 | **PROF-17** Changer de matière, d’affectation ou de rôle sans recréer l’identité ni régénérer les accès de connexion. | P1 | Fait | Affectations indépendantes du compte |
-| **PROF-18** Copier un service pédagogique vers l’année suivante, après validation explicite des groupes et des… | P2 | Partiel | Reconduction des cours de groupe (0073) ; pas de copie de service complète |
+| **PROF-18** Copier un service pédagogique vers l’année suivante, après validation explicite des groupes et des… | P2 | Fait | Reconduction des cours vers l'année préparée, ligne par ligne (0082) ; test ADM-05 |
 
 ## Élèves
 
@@ -98,12 +98,12 @@ Aucun.
 | **EL-03** Transfert de classe : aperçu du retrait/ajout, dates, impact sur devoirs en cours et publications ;… | P0 | Fait | Changement de classe avec aperçu |
 | **EL-04** Départ de l’établissement : clôturer inscriptions et droits, suspendre accès si nécessaire, archiver sans… | P0 | Fait | Départ : inscriptions closes, rien supprimé |
 | **EL-05** Refuser inscription à une classe d’une autre organisation et groupement d’une autre année. | P0 | Fait | Contrôles en base ; tests isolation |
-| **EL-06** Multi-sélection pour ajouter/retirer des élèves d’un groupe depuis la classe et depuis le groupe. | P1 | Partiel | Multi-sélection depuis le groupe ; pas depuis la classe |
+| **EL-06** Multi-sélection pour ajouter/retirer des élèves d’un groupe depuis la classe et depuis le groupe. | P1 | Fait | Multi-sélection depuis la fiche classe (ajout à un groupe) et depuis le groupe (retrait) |
 | **EL-07** Détecter noms identiques, homonymes, homographes, accents, apostrophes ; utiliser identifiants stables,… | P1 | Fait | Rapprochement INE puis nom, homonymes jamais fusionnés (0038, 0080) ; test FPR-03 |
-| **EL-08** Gérer arrivée tardive, interruption de scolarité, retour après suspension, redoublement, changement de… | P1 | Partiel | Arrivée, départ, changement de classe, rentrée ; pas de parcours dédié redoublement/réintégration |
+| **EL-08** Gérer arrivée tardive, interruption de scolarité, retour après suspension, redoublement, changement de… | P1 | Fait | Préinscription autre classe (redoublement, réorientation, 0082), réintégration, départ |
 | **EL-09** Éviter toute création de compte surprise lors d’un aperçu d’import. | P1 | Fait | Aperçu d'import sans écriture ; tests import-groupes IMPG-01 |
 | **EL-10** Codes de classe ou demandes d’accès existantes : conserver l’approbation requise, ne pas autoriser… | P1 | Fait | Codes de classe avec approbation (0045) |
-| **EL-11** Visualiser quels enseignements seront gagnés/perdus avant un mouvement de classe ou de groupe, sous… | P2 | Partiel | Aperçu de changement de classe ; pas pour les groupes |
+| **EL-11** Visualiser quels enseignements seront gagnés/perdus avant un mouvement de classe ou de groupe, sous… | P2 | Fait | Aperçu avant changement de classe : cours et groupes perdus ou gardés |
 
 ## Enseignements
 
@@ -118,7 +118,7 @@ Aucun.
 | **ENS-07** Enseignement sans professeur ou groupe sans élève : visible côté admin avec avertissement, jamais présenté… | P1 | Fait | Signalé côté admin ; invisible côté élève sans contenu publié |
 | **ENS-08** Annuler une affectation sans supprimer l’espace si des contenus/données y sont rattachés. | P1 | Fait | Terminer une affectation garde l'espace et ses contenus |
 | **ENS-09** Mettre à disposition un aperçu « qui recevra cette leçon ? » avec compte réel des destinataires autorisés. | P1 | Fait | Effectifs réels par cible avant publication (0066) |
-| **ENS-10** Exporter la matrice des services et effectifs sans exposer les identifiants techniques à des personnes non… | P2 | Non fait | Pas d'export de la matrice |
+| **ENS-10** Exporter la matrice des services et effectifs sans exposer les identifiants techniques à des personnes non… | P2 | Fait | Export de la matrice « Qui enseigne quoi » (/admin/enseignements/export, journalisé) |
 
 ## Espace professeur
 
@@ -136,12 +136,12 @@ Aucun.
 | **TEACH-10** Après publication, lien direct vers l’emplacement élève exact, nombre de destinataires, date et version… | P0 | Fait | Résultat par cible : effectif et lien vers la séance élève |
 | **TEACH-11** Dupliquer une leçon vers un autre enseignement en conservant la provenance, sans écraser la source ni… | P1 | Fait | Dupliquer vers une autre classe : copie brouillon, source intacte |
 | **TEACH-12** Partager une ressource avec un autre professeur uniquement via décision explicite d’auteur ou règle… | P1 | Fait | Aucun partage implicite entre professeurs |
-| **TEACH-13** Rechercher par titre, chapitre, matière, classe, type de document et état ; tenir compte des permissions… | P1 | Partiel | Recherche globale ; pas de filtres par type et état |
+| **TEACH-13** Rechercher par titre, chapitre, matière, classe, type de document et état ; tenir compte des permissions… | P1 | Fait | Recherche de séance par titre, filtre par état |
 | **TEACH-14** Une salle/activité peut être préparée hors de la classe physique ; ne pas dépendre d’un emploi du temps… | P1 | Fait | Séances sans emploi du temps |
 | **TEACH-15** Accepter qu’un professeur enseigne des matières différentes à des classes différentes ; ne pas appliquer… | P1 | Fait | Matières différentes par classe |
 | **TEACH-16** Conserver les fonctions existantes devoirs, évaluations, exercices, correction, ateliers et entraide en… | P1 | Fait | Devoirs, évaluations, exercices, ateliers, entraide conservés |
-| **TEACH-17** Favoris, brouillons récents et modèles de structure de chapitre, sans génération de contenu automatique. | P2 | Non fait | Pas de favoris ni modèles de chapitre |
-| **TEACH-18** Mode présentation/projection distinct du mode édition, avec contraste et zoom adaptés. | P2 | Non fait | Pas de mode projection |
+| **TEACH-17** Favoris, brouillons récents et modèles de structure de chapitre, sans génération de contenu automatique. | P2 | Fait | Cours favoris (0083, cours_favoris) ; modèles de leçon ; copie de structure |
+| **TEACH-18** Mode présentation/projection distinct du mode édition, avec contraste et zoom adaptés. | P2 | Fait | Mode projection (gros caractères, plein écran) distinct de l'édition |
 
 ## PDF tel quel
 
@@ -155,12 +155,12 @@ Aucun.
 | **PDF-06** Refuser proprement un fichier déguisé, vide, trop volumineux, corrompu ou malveillant ; ne pas accorder de… | P0 | Fait | Signature, taille, contenu vérifiés ; tests formats |
 | **PDF-07** Un fichier PDF importé n’est visible aux élèves que lorsqu’il est relié à une publication autorisée. La… | P0 | Fait | Visible seulement via une publication autorisée (RLS) |
 | **PDF-08** Si le PDF ne peut pas être prévisualisé dans le navigateur : expliquer, proposer téléchargement sûr si… | P1 | Fait | Repli téléchargement si l'aperçu échoue |
-| **PDF-09** PDF protégé par mot de passe : état d’erreur clair et procédure d’import alternative ; ne pas tenter de… | P1 | Partiel | Refus d'un PDF illisible ; message spécifique « protégé » non vérifié |
-| **PDF-10** Document de 1 page, document long, format paysage, pages mélangées, très grandes dimensions, images… | P1 | Partiel | Taille bornée ; pas de vérification par cas extrême |
-| **PDF-11** Supporter navigation clavier, lecteur d’écran (métadonnées et alternatives), impression si autorisée, et… | P1 | Partiel | Lecteur au clavier ; pas d'avertissement d'accessibilité du PDF |
+| **PDF-09** PDF protégé par mot de passe : état d’erreur clair et procédure d’import alternative ; ne pas tenter de… | P1 | Fait | PDF protégé : message dédié dans le lecteur (PasswordException) |
+| **PDF-10** Document de 1 page, document long, format paysage, pages mélangées, très grandes dimensions, images… | P1 | Fait | Densité de rendu plafonnée (16 Mpx, 16 384 px de côté) ; tests rendu-pdf sur cas extrêmes |
+| **PDF-11** Supporter navigation clavier, lecteur d’écran (métadonnées et alternatives), impression si autorisée, et… | P1 | Fait | Avertissement quand le PDF n'a pas de texte lisible par un lecteur d'écran |
 | **PDF-12** Le partage d’un même PDF vers plusieurs enseignements ne crée pas des transferts redondants ; chaque… | P1 | Fait | Une révision, plusieurs publications (0066) |
-| **PDF-13** Pouvoir retirer le PDF d’un cours sans le supprimer de la bibliothèque et sans retirer les autres… | P1 | Partiel | Retrait d'une publication ; bibliothèque intacte |
-| **PDF-14** Miniatures de pages et signets lorsqu’ils existent ; ne jamais traiter l’absence de signets comme une… | P2 | Non fait | Pas de miniatures ni signets (P2) |
+| **PDF-13** Pouvoir retirer le PDF d’un cours sans le supprimer de la bibliothèque et sans retirer les autres… | P1 | Fait | Dépublier un cours laisse le document et les autres cours intacts ; test PUBM-PDF13 |
+| **PDF-14** Miniatures de pages et signets lorsqu’ils existent ; ne jamais traiter l’absence de signets comme une… | P2 | Fait | Signets et vignettes de pages dans le lecteur |
 
 ## Conversion
 
@@ -172,10 +172,10 @@ Aucun.
 | **CONV-04** Conversion non destructrice : source toujours disponible aux personnes habilitées ; nouvelle version séparée. | P0 | Fait | Source conservée, versions séparées (0071) |
 | **CONV-05** Signaler les éléments non convertis : images, tableaux, équations, colonnes, caractères, annexes ; pas de… | P0 | Fait | Écarts signalés, « à vérifier » |
 | **CONV-06** PDF image/scanné : erreur honnête « reconnaissance de texte indisponible » ou chemin OCR dédié seulement… | P0 | Fait | Document numérisé refusé honnêtement ; pas d'OCR (produit sans IA) |
-| **CONV-07** Unicode (accents, symboles grecs, exposants), équations mathématiques, unités de physique, chimie,… | P1 | Partiel | Formules rendues après conversion si écrites en LaTeX ; pas de jeu de référence |
+| **CONV-07** Unicode (accents, symboles grecs, exposants), équations mathématiques, unités de physique, chimie,… | P1 | Fait | Jeu de référence : accents, grec, symboles, exposants/indices Unicode, unités, tableaux ; tests conversion-reference |
 | **CONV-08** Toute conversion possédant des alertes exige leur consultation avant validation ; le professeur peut… | P1 | Fait | État « à vérifier » avant publication |
 | **CONV-09** Traitement en arrière-plan côté serveur sans blocage de la page ; suivi d’état, reprises et timeout, sans… | P1 | Fait | Traitement en arrière-plan, sans double lancement |
-| **CONV-10** Word avec images : conserver ou signaler explicitement chaque image absente, avec possibilité de… | P1 | Partiel | Images DOCX signalées ; réinsertion manuelle par bloc image |
+| **CONV-10** Word avec images : conserver ou signaler explicitement chaque image absente, avec possibilité de… | P1 | Fait | Chaque image absente marquée à sa place (y compris dans un paragraphe) et signalée une à une avec son repère |
 | **CONV-11** Assurer que l’interruption réseau pendant le traitement ne détruit ni le fichier ni le résultat ; le… | P1 | Fait | Fichier et résultat persistés, repris depuis la bibliothèque |
 | **CONV-12** Export PDF du document modifié seulement si un moteur de rendu fiable est réellement mis en place ;… | P2 | Écarté | Pas d'export PDF : impression navigateur seulement |
 
@@ -192,10 +192,10 @@ Aucun.
 | **EDIT-07** En cas de conflit entre deux onglets : message explicite et récupération/choix de version, pas… | P0 | Fait | Contrôle de version séance et blocs, saisie rendue ; test conflit-versions |
 | **EDIT-08** Titre et chapitre éditables sans provoquer de publication automatique. | P0 | Fait | Titre et chapitre modifiables sans publication |
 | **EDIT-09** Historique de versions, restauration contrôlée d’un brouillon antérieur et journal de modifications majeures. | P1 | Fait | Historique et restauration (0071) |
-| **EDIT-10** Aperçu responsive élève, A4 imprimable et projection ; vérifier typographie, tableau large et image paysage. | P1 | Partiel | Aperçu élève responsive ; pas de mise en page A4 ni projection |
+| **EDIT-10** Aperçu responsive élève, A4 imprimable et projection ; vérifier typographie, tableau large et image paysage. | P1 | Fait | Impression A4 (feuille de style @page) et mode projection depuis l'aperçu |
 | **EDIT-11** Le lien, les images et les tableaux doivent être correctement restitués aussi dans les exports éventuels. | P1 | Écarté | Pas d'export |
 | **EDIT-12** Déplacement d’une leçon d’un chapitre à un autre : modifier le classement sans déplacer d’office la cible… | P1 | Fait | Chapitre modifiable, cible inchangée |
-| **EDIT-13** Modèles de leçons : cours complet, fiche de révision, séance TP, leçon avec exercices ; uniquement modèles… | P2 | Non fait | Pas de modèles de leçon (P2) |
+| **EDIT-13** Modèles de leçons : cours complet, fiche de révision, séance TP, leçon avec exercices ; uniquement modèles… | P2 | Fait | Modèles de leçon (intitulés à compléter, rien d'inventé) |
 
 ## Cours et chapitres
 
@@ -208,14 +208,14 @@ Aucun.
 | **COURS-05** Associer exercices et devoirs à une leçon/séance sans les dupliquer silencieusement dans d’autres classes. | P0 | Fait | Duplication sans devoirs |
 | **COURS-06** Statuts cohérents entre Studio import, Studio séances et espace élève : brouillon ≠ prêt ≠ publié ≠… | P0 | Fait | États distincts partout |
 | **COURS-07** Conserver les liens de leçons partagés lorsqu’un titre ou chapitre change (identifiants stables). | P0 | Fait | Identifiants stables |
-| **COURS-08** Réordonner des leçons, dupliquer des chapitres, copier la structure d’un cours vers une autre classe, avec… | P1 | Partiel | Chapitres réordonnés, séances dupliquées ; pas de copie de structure entière |
-| **COURS-09** À la duplication, préciser « copier seulement la structure », « copier les documents non publiés » ou «… | P1 | Partiel | Duplication : brouillon sans devoir ; pas de choix à trois options |
+| **COURS-08** Réordonner des leçons, dupliquer des chapitres, copier la structure d’un cours vers une autre classe, avec… | P1 | Fait | Copie de structure entière d'un cours ou d'une année passée (0083, prof_copier_structure) |
+| **COURS-09** À la duplication, préciser « copier seulement la structure », « copier les documents non publiés » ou «… | P1 | Fait | Copie à trois options : structure, brouillons, publier (0083) |
 | **COURS-10** Supprimer/archiver un brouillon après confirmation, jamais supprimer physiquement une ressource encore… | P1 | Fait | Suppression de bloc confirmée ; ressources liées conservées |
 | **COURS-11** Associer un document de correction à une activité avec visibilité différée explicite, sans divulgation par… | P1 | Fait | Corrigé à visibilité différée (correction_released_at) |
 | **COURS-12** Une leçon peut être publiée dans plusieurs cours de la même matière, mais chaque classe/groupe a son suivi… | P1 | Fait | Publication multiple, suivi par cible (0066) |
 | **COURS-13** Les commentaires, remises, résultats et réponses des élèves restent attachés à l’enseignement où ils ont… | P1 | Fait | Remises et réponses attachées à leur espace |
 | **COURS-14** Garder un texte lisible en cas de formule non rendue, et prévenir le professeur plutôt que perdre le contenu. | P1 | Fait | Formule non reconnue affichée telle qu'écrite |
-| **COURS-15** Favoris, modèles de progression annuelle et modèles de chapitre réutilisables entre années après validation. | P2 | Non fait | Pas de modèles de progression (P2) |
+| **COURS-15** Favoris, modèles de progression annuelle et modèles de chapitre réutilisables entre années après validation. | P2 | Fait | Progression d'une année passée réutilisable par copie de structure (0083) |
 
 ## Publication
 
@@ -227,11 +227,11 @@ Aucun.
 | **PUB-04** Autorisation vérifiée pour chaque cible au moment de confirmer. Les cibles perdues entre chargement et… | P0 | Fait | Autorisation revérifiée par cible en base |
 | **PUB-05** L’enregistrement doit avoir une politique explicite de cohérence : soit tout-ou-rien transactionnel, soit… | P0 | Fait | Succès partiels détaillés par cible |
 | **PUB-06** Pas de publication en double en cas de double clic, timeout suivi d’un retry, bouton Retour ou soumission… | P0 | Fait | Clé d'idempotence (0066) ; test publication-multiple |
-| **PUB-07** La leçon publiée pointe vers une version figée ; les modifications ultérieures sont privées jusqu’à une… | P0 | Fait | Version figée |
+| **PUB-07** La leçon publiée pointe vers une version figée ; les modifications ultérieures sont privées jusqu’à une… | P0 | Fait | Version figée lue par les élèves (0083) : les retouches restent privées jusqu'à republication ; test VPUB-01 |
 | **PUB-08** L’élève non concerné par l’une des cibles n’a aucun accès au fichier même s’il connaît son URL. | P0 | Fait | RLS fichiers ; tests |
 | **PUB-09** Supprimer une cible d’une publication n’enlève pas les autres ; préciser si « retirer de cette classe » ou… | P0 | Fait | Retrait par cible |
 | **PUB-10** Programmer une publication date/heure avec fuseau Europe/Paris et interprétation correcte des changements… | P1 | Fait | Programmation Europe/Paris (0070) ; test programmation |
-| **PUB-11** Autoriser une republication de version révisée avec diff/résumé ; les anciennes copies et remises restent… | P1 | Partiel | Republication versionnée ; pas de diff affiché |
+| **PUB-11** Autoriser une republication de version révisée avec diff/résumé ; les anciennes copies et remises restent… | P1 | Fait | Différences avec la version publiée affichées avant republication ; tests diff-blocs |
 | **PUB-12** Proposer publication immédiate ou plus tard, annuler programmation avant échéance, visualiser les… | P1 | Fait | Maintenant / plus tard, annulation (0070) |
 | **PUB-13** Prévisualisation avec un compte fictif autorisé selon contexte, sans fabriquer des statistiques ni masquer… | P1 | Fait | Aperçu élève |
 | **PUB-14** En cas de classe archivée ou groupe clôturé, avertir avant tentative et refuser proprement la cible. | P1 | Fait | Cibles archivées refusées |
@@ -249,10 +249,10 @@ Aucun.
 | **STU-05** Deux élèves dans deux groupes différents, même classe, ne voient pas les mêmes documents si les groupes… | P0 | Fait | Groupes distincts ; test groupes |
 | **STU-06** Les corrections de devoir et réponses d’exercices ne se révèlent qu’au moment autorisé, indépendamment de… | P0 | Fait | Corrigés à l'heure dite |
 | **STU-07** Affichage mobile : PDF lisible, zoom contrôlé, possibilité de téléchargement lorsque autorisé, messages en… | P1 | Fait | Lecteur mobile, téléchargement |
-| **STU-08** Indiquer clairement l’origine : « Mathématiques · Spé Maths A · Chapitre 3 » et le professeur rattaché. | P1 | Partiel | Matière, classe ou groupe, chapitre ; professeur pas toujours affiché |
+| **STU-08** Indiquer clairement l’origine : « Mathématiques · Spé Maths A · Chapitre 3 » et le professeur rattaché. | P1 | Fait | Matière, classe ou groupe, chapitre et enseignants affichés sur la séance |
 | **STU-09** En cas de changement de groupe, actualiser le menu et empêcher l’ouverture de nouvelles ressources non… | P1 | Fait | Droits recalculés à chaque requête |
 | **STU-10** L’élève ne peut pas modifier, déposer ou supprimer le fichier source de l’enseignant, ni publier à sa place. | P1 | Fait | RLS : l'élève ne modifie rien |
-| **STU-11** Signaler lien externe inactif, ressource archivée, fichier indisponible et document en maintenance avec… | P1 | Partiel | Fichier indisponible signalé ; lien externe non vérifié |
+| **STU-11** Signaler lien externe inactif, ressource archivée, fichier indisponible et document en maintenance avec… | P1 | Fait | Lien externe : domaine affiché et invitation à signaler un lien cassé |
 | **STU-12** Progression/état « consulté » uniquement si la collecte de cet indicateur est justifiée, transparente,… | P2 | Écarté | Pas de suivi « consulté » (minimisation) |
 
 ## Pédagogie
@@ -265,10 +265,10 @@ Aucun.
 | **PED-04** Deux professeurs du même espace partagent ou non les capacités de correction selon leur rôle explicite ;… | P0 | Fait | Rôles testés ; test roles-affectations |
 | **PED-05** Une échéance de devoir tient compte des dates, fuseaux, retards, modifications et état de publication ;… | P1 | Fait | Échéances en heure de Paris |
 | **PED-06** Publier une nouvelle version de leçon ne modifie pas l’énoncé d’un devoir déjà commencé sans versionnement. | P1 | Fait | Versions figées |
-| **PED-07** Prise en charge d’un élève arrivé après publication : déterminer et appliquer la politique « voir les… | P1 | Partiel | Politique appliquée (séances publiées visibles), non documentée à l'écran |
-| **PED-08** Messagerie/entraide/salons de groupe : appliquer les mêmes droits que le groupe au niveau lecture et… | P1 | Partiel | Salons de classe et de cours ; salons de groupe non vérifiés |
+| **PED-07** Prise en charge d’un élève arrivé après publication : déterminer et appliquer la politique « voir les… | P1 | Fait | Politique expliquée à l'écran sur la page du cours |
+| **PED-08** Messagerie/entraide/salons de groupe : appliquer les mêmes droits que le groupe au niveau lecture et… | P1 | Fait | Salon du cours de groupe : visible des membres, retiré dès le retrait (0084) ; test GROUPE-SALON |
 | **PED-09** Les documents joints aux copies restent distincts des supports de cours et ont des politiques de… | P1 | Fait | Pièces de copie distinctes (0042) |
-| **PED-10** Statistiques par classe/groupe agrégées et accessibles uniquement aux enseignants habilités ; jamais… | P2 | Partiel | Agrégats professeur ; pas de tableau par groupe |
+| **PED-10** Statistiques par classe/groupe agrégées et accessibles uniquement aux enseignants habilités ; jamais… | P2 | Fait | Suivi agrégé par séance (0084, prof_statistiques_espace), masqué sous cinq élèves ; test STATS-01 |
 
 ## Imports
 
@@ -284,13 +284,13 @@ Aucun.
 | **IMP-08** Erreur sur une ligne : ne pas cacher les lignes réussies ; la politique atomique choisie est claire et… | P0 | Fait | Ligne par ligne, réussies conservées |
 | **IMP-09** Import impossible pour un lycée/année d’un autre contexte, même avec un fichier forgé. | P0 | Fait | Établissement recalculé en base ; test IMPG-04 |
 | **IMP-10** Supporter colonnes dans le désordre, accents, espaces, majuscules, formats de dates différents et… | P1 | Fait | Colonnes reconnues et corrigeables (« Vérifier les colonnes ») |
-| **IMP-11** Cellules fusionnées, fichier protégé, feuille vide, formules XLSX, noms répétés, lignes vides, doublons… | P1 | Partiel | Lignes vides, doublons internes, fichiers illisibles ; cellules fusionnées non traitées à part |
-| **IMP-12** Gérer l’import de 1 000 élèves + groupes + services enseignants, avec pagination serveur et avancement… | P1 | Partiel | 800 élèves par lot, 3 000 lignes de groupes ; au-delà, plusieurs fichiers |
+| **IMP-11** Cellules fusionnées, fichier protégé, feuille vide, formules XLSX, noms répétés, lignes vides, doublons… | P1 | Fait | Messages explicites : cellules fusionnées, classeur protégé, feuille vide, formule non calculée ou en erreur ; tests xlsx |
+| **IMP-12** Gérer l’import de 1 000 élèves + groupes + services enseignants, avec pagination serveur et avancement… | P1 | Fait | Application par tranches de 150 lignes, reprise « Continuer », lecture paginée sans troncature |
 | **IMP-13** Ne pas stocker en clair des fichiers d’import au-delà de la durée prévue ; purge, stockage privé et… | P1 | Fait | Pas de fichier brut conservé ; lignes purgées (purge_after) |
 | **IMP-14** Exporter un modèle minimal par type d’import et un fichier d’erreurs contenant les lignes à corriger, sans… | P1 | Fait | Modèles et fichier des lignes à corriger ; tests fichiers-import |
 | **IMP-15** Différencier fichier de données incomplet et fichier de synchronisation complet : l’absence d’un prof d’un… | P1 | Fait | Import « ajouter » : jamais de retrait implicite |
 | **IMP-16** Le mapping doit survivre à l’actualisation et pouvoir être repris, sans créer de modification silencieuse. | P1 | Fait | Correspondance choisie gardée avec le lot |
-| **IMP-17** Suggestion des matières et classes déjà existantes par correspondance transparente, avec choix manuel et… | P2 | Partiel | Classes rapprochées par code normalisé ; pas de suggestion de matière |
+| **IMP-17** Suggestion des matières et classes déjà existantes par correspondance transparente, avec choix manuel et… | P2 | Fait | Suggestion de matière existante (abréviations, fautes de frappe), choix explicite ; tests suggestion-matieres |
 | **IMP-18** Import récurrent depuis un système tiers uniquement si autorisation contractuelle, identifiants stables et… | P2 | Écarté | Pas d'import tiers récurrent |
 
 ## Années scolaires
@@ -304,10 +304,10 @@ Aucun.
 | **YR-05** Aucun enseignant ne doit voir en cours actif une classe archivée parce qu’il avait un service l’an dernier. | P0 | Fait | Cours archivé non modifiable en base (0076) ; test ARCP-01 |
 | **YR-06** Les groupes et leurs membres ne sont pas reconduits automatiquement : proposer une reconduction avec… | P1 | Fait | Reconduction de groupes révisée (0073) |
 | **YR-07** Reconduire une progression pédagogique sans recopier les données nominatives des élèves ni les soumissions. | P1 | Fait | Réutiliser une séance archivée (0076) ; test ARCP-04 |
-| **YR-08** Gérer le professeur qui reste, part, est remplacé ou change de matière lors de la bascule. | P1 | Partiel | Affectations reconduites ou terminées ; pas d'écran dédié aux départs |
+| **YR-08** Gérer le professeur qui reste, part, est remplacé ou change de matière lors de la bascule. | P1 | Fait | Élèves sans classe l'an prochain listés avec lien vers leur fiche (préinscription ou départ) |
 | **YR-09** Afficher l’historique en lecture seule aux rôles autorisés avec étiquette claire « Année archivée ». | P1 | Fait | Admin (0075) et professeurs (0076), « Année archivée » |
-| **YR-10** Empêcher une double bascule concurrente, un changement de fuseau mal interprété ou une bascule vers une… | P1 | Partiel | Bascule contrôlée, classes requises ; verrou concurrent non testé |
-| **YR-11** Rapports comparatifs d’effectif et de couverture des enseignements, sans dériver de profilage d’élèves. | P2 | Non fait | Pas de rapport comparatif (P2) |
+| **YR-10** Empêcher une double bascule concurrente, un changement de fuseau mal interprété ou une bascule vers une… | P1 | Fait | Bascule contrôlée sous verrou ; double bascule sans effet |
+| **YR-11** Rapports comparatifs d’effectif et de couverture des enseignements, sans dériver de profilage d’élèves. | P2 | Fait | Comparaison des années (0082, etab_comparaison_annees) |
 
 ## Ergonomie
 
@@ -324,7 +324,7 @@ Aucun.
 | **UX-09** Messages d’erreur : cause, élément impacté, conséquence et prochaine action. Aucun SQL, stack trace ni clé… | P1 | Fait | Messages sans détail technique |
 | **UX-10** Indiquer si les données viennent d’un cache et quand elles ont été actualisées, quand cela évite une… | P1 | Fait | Bandeau hors ligne |
 | **UX-11** Les dialogues et tiroirs gardent le focus, ferment avec Échap, demandent confirmation en cas de… | P1 | Fait | Dialogues natifs : focus et Échap |
-| **UX-12** Barre d’actions contextuelles permettant opérations de groupe sur plusieurs lignes sélectionnées, sans… | P2 | Partiel | Sélections multiples ponctuelles |
+| **UX-12** Barre d’actions contextuelles permettant opérations de groupe sur plusieurs lignes sélectionnées, sans… | P2 | Fait | Barre d'actions collante sur sélection (compte, tout sélectionner, actions, tout décocher) |
 
 ## Sécurité
 
@@ -344,12 +344,12 @@ Aucun.
 | **SEC-12** Un ancien lien vers une leçon retirée ne doit pas contourner la nouvelle autorisation. | P0 | Fait | Autorisation à chaque lecture |
 | **SEC-13** Journaux structurés sans noms, mots de passe, texte intégral des cours, données élèves ou secrets ;… | P1 | Fait | Journaux JSON sans données personnelles |
 | **SEC-14** Historique d’audit : qui a créé, modifié, retiré une affectation, ajouté un groupe, publié une leçon,… | P1 | Fait | audit_events sur chaque écriture |
-| **SEC-15** Mesures de protection contre les abus de stockage, spam de fichiers et multiplication de groupes : quotas… | P1 | Partiel | Plafonds ponctuels ; pas de quotas configurables |
+| **SEC-15** Mesures de protection contre les abus de stockage, spam de fichiers et multiplication de groupes : quotas… | P1 | Fait | Limites par établissement (0082, limites_etablissement), alerte à 80 % |
 | **SEC-16** Sauvegardes et restauration testées : récupérer la relation entre fichiers, versions et publications, pas… | P1 | Fait | Restauration testée sur une vraie sauvegarde ; test v7-sauvegarde-restauration |
 | **SEC-17** Toute assistance de l’exploitant nécessitant lecture de données pédagogiques privées doit passer par un… | P1 | Fait | Exploitation séparée et tracée |
-| **SEC-18** Gestion des données après départ, fin de contrat, clôture d’établissement, demande RGPD, incident de… | P1 | Partiel | Conservation du journal (0064), export personnel ; arbitrage juridique à faire |
-| **SEC-19** Les exports nominatifs nécessitent rôle autorisé, périmètre restreint, traçabilité et protection adaptée ;… | P1 | Fait | Exports : rôle, no-store, rien de secret |
-| **SEC-20** Contrôles d’anomalies sur affectations massives, exports inhabituels et nombreuses erreurs d’accès, sans… | P2 | Non fait | Pas de détection d'anomalies (P2) |
+| **SEC-18** Gestion des données après départ, fin de contrat, clôture d’établissement, demande RGPD, incident de… | P1 | Fait | Demande d'effacement : compte fermé, journalisé, annulable (0084) ; tableau départ/contrat/clôture/RGPD/incident documenté ; effacement définitif sur décision du responsable |
+| **SEC-19** Les exports nominatifs nécessitent rôle autorisé, périmètre restreint, traçabilité et protection adaptée ;… | P1 | Fait | Exports nominatifs journalisés (0082) ; refus si la trace échoue |
+| **SEC-20** Contrôles d’anomalies sur affectations massives, exports inhabituels et nombreuses erreurs d’accès, sans… | P2 | Fait | Alertes d'activité inhabituelle sur 24 h (exports, réinitialisations, affectations) |
 
 ## Données
 
@@ -365,7 +365,7 @@ Aucun.
 | **DATA-08** Transaction de groupe : une appartenance ne pointe pas vers un élève d’un autre établissement, vers un… | P0 | Fait | Contrôles d'appartenance de groupe |
 | **DATA-09** Assurer une pagination stable, des index adaptés et des limites raisonnables de requêtes ; pas de… | P1 | Fait | Pagination serveur (0072) ; plafonds journalisés |
 | **DATA-10** Pour les états de traitement, exposer un statut fiable, nombre de tentatives, erreur exploitable et… | P1 | Fait | États de traitement exposés |
-| **DATA-11** Définir politique de réutilisation de PDF original entre publications avec stockage dédupliqué éventuel,… | P1 | Partiel | Une révision partagée entre publications ; pas de déduplication par empreinte |
+| **DATA-11** Définir politique de réutilisation de PDF original entre publications avec stockage dédupliqué éventuel,… | P1 | Fait | Dépôt identique de la même personne rouvert sans seconde copie (0084, empreinte SHA-256) ; test DEDUP-01 |
 | **DATA-12** Toute migration doit fournir test avant/après, SQL de vérification, sauvegarde, plan de… | P1 | Fait | Chaque migration : tests, retour arrière, sauvegarde vérifiée |
 | **DATA-13** Traces d’audit et timestamps en UTC, affichage en heure locale ; dates de début/fin en convention documentée. | P1 | Fait | UTC en base, Paris à l'écran |
 | **DATA-14** Conserver l’origine du contenu (manuel, PDF original, DOCX/PDF converti), l’auteur, l’état, la version… | P1 | Fait | Origine, auteur, version, cibles conservés |

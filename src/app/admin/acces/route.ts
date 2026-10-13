@@ -1,4 +1,5 @@
 import { csvAcces, listeAcces } from "@/lib/acces";
+import { journaliserExport } from "@/lib/etablissement";
 import { sessionCourante } from "@/lib/session-serveur";
 
 /**
@@ -28,6 +29,10 @@ export async function GET(requete: Request): Promise<Response> {
   const filtre = classe !== null && UUID.test(classe) ? classe : undefined;
 
   const lignes = await listeAcces(personne.profileId, filtre);
+  // SEC-19 : un export nominatif laisse une trace, ou n'est pas servi.
+  if (!(await journaliserExport(personne.profileId, "acces", lignes.length))) {
+    return new Response("L'export n'a pas pu être journalisé ; il n'est pas servi.", { status: 503 });
+  }
   const contenu = csvAcces(lignes);
 
   const jour = new Date().toISOString().slice(0, 10);

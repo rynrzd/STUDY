@@ -38,6 +38,7 @@ export interface EtatCreation {
   readonly reinscrit?: number;
   readonly erreurs?: number;
   readonly ecartes?: number;
+  readonly restantes?: number;
   readonly acces?: readonly AccesCree[];
   readonly echecs?: readonly { ligne: number; raison: string }[];
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BookOpen, History, KeyRound, Layers, LogOut, School } from "lucide-react";
 import { GestesCompte } from "@/components/admin/GestesCompte";
-import { ChangerClasse, DepartEleve } from "@/components/admin/GestesEleve";
+import { ChangerClasse, DemandeEffacement, DepartEleve, PreinscriptionEleve } from "@/components/admin/GestesEleve";
 import { EnTetePage, Etiquette, TuileIcone, dateLisible } from "@/components/study/ui";
 import type { FicheEleve } from "@/lib/etablissement";
 
@@ -11,7 +11,10 @@ export function VueFicheEleve({
   fiche,
   classes,
   codeEtablissement,
+  anneeSuivante = null,
 }: {
+  /** Année préparée et ses classes, pour la préinscription individuelle (EL-08). */
+  anneeSuivante?: { label: string; classes: readonly { id: string; label: string }[] } | null;
   eleve: string;
   fiche: FicheEleve;
   classes: readonly { id: string; label: string }[];
@@ -21,7 +24,7 @@ export function VueFicheEleve({
   const nom = `${identite.prenom} ${identite.nom}`;
   const groupesActifs = fiche.groupes.filter((g) => g.actif);
   const encorePresent = fiche.classe !== null || fiche.classe_a_venir !== null || groupesActifs.length > 0;
-  const etat = identite.etat_compte === "actif" ? { ton: "succes" as const, texte: "Actif" } : identite.etat_compte === "a_activer" ? { ton: "attention" as const, texte: "À activer" } : { ton: "neutre" as const, texte: "Désactivé" };
+  const etat = identite.etat_compte === "actif" ? { ton: "succes" as const, texte: "Actif" } : identite.etat_compte === "a_activer" ? { ton: "attention" as const, texte: "À activer" } : identite.etat_compte === "en_suppression" ? { ton: "erreur" as const, texte: "Effacement demandé" } : { ton: "neutre" as const, texte: "Désactivé" };
 
   // Frise : inscriptions et groupes, du plus récent au plus ancien.
   const frise = [
@@ -69,9 +72,15 @@ export function VueFicheEleve({
             </p>
           ) : null}
           <div className="mt-5 border-t border-[color:var(--bordure-douce,var(--color-bordure))] pt-4">
-            <p className="m-0 mb-3 font-semibold">Changer de classe</p>
+            <p className="m-0 mb-3 font-semibold">{fiche.classe ? "Changer de classe" : "Réintégrer dans une classe"}</p>
             <ChangerClasse eleve={eleve} classes={classes} actuelle={fiche.classe?.label ?? null} />
           </div>
+          {anneeSuivante && anneeSuivante.classes.length > 0 ? (
+            <div className="mt-5 border-t border-[color:var(--bordure-douce,var(--color-bordure))] pt-4">
+              <p className="m-0 mb-3 font-semibold">L&apos;an prochain</p>
+              <PreinscriptionEleve eleve={eleve} annee={anneeSuivante.label} classes={anneeSuivante.classes} actuelle={fiche.classe_a_venir?.label ?? null} />
+            </div>
+          ) : null}
         </section>
 
         <section aria-labelledby="acces" className="bento-carte lg-5 md-6">
@@ -90,6 +99,7 @@ export function VueFicheEleve({
             actif={identite.etat_compte !== "suspendu" && identite.actif}
             codeEtablissement={codeEtablissement}
           />
+          <DemandeEffacement profil={eleve} retour={`/admin/eleves/${eleve}`} enCours={identite.etat_compte === "en_suppression"} />
         </section>
 
         <section aria-labelledby="groupes" className="bento-carte lg-5 md-6">

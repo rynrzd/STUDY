@@ -7,7 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { ACTEURS, OBJETS, baseDeTest, enTantQue, lirePour } from "./harness.mjs";
+import { ACTEURS, OBJETS, baseDeTest, enTantQue, lirePour, republier } from "./harness.mjs";
 
 async function bloc(db, prof, org, lecon, position, texte) {
   await enTantQue(db, prof, (d) =>
@@ -17,6 +17,8 @@ async function bloc(db, prof, org, lecon, position, texte) {
       [org, lecon, position, JSON.stringify({ texte }), prof],
     ),
   );
+  // Le professeur republie : la retouche devient visible (0083, PUB-07).
+  await republier(db, lecon);
 }
 
 async function preparer(db) {

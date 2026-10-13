@@ -197,6 +197,12 @@ const EXECUTABLES_PAR_AUTHENTICATED = new Set([
   "prof_archive_cours",
   "prof_archive_seance",
   "prof_cours_archives",
+  // 0083, 0084 — Version publiée, structure, statistiques, dédoublonnage : relisent l'appelant.
+  "eleve_blocs_publies",
+  "prof_copier_structure",
+  "prof_document_identique",
+  "prof_republier_seance",
+  "prof_statistiques_espace",
   "projet_archiver",
   "projet_creer",
   "projet_editeur",

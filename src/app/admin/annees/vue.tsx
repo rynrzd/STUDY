@@ -2,7 +2,9 @@ import Link from "next/link";
 import { Archive } from "lucide-react";
 import { EnTetePage, Encadre, EtatVide, Etapes, Etiquette, Panneau, dateLisible } from "@/components/study/ui";
 import { FormulaireAnnee } from "./FormulaireAnnee";
-import { FormulaireBascule, FormulaireClasse, FormulairePreinscription, FormulaireReconduireGroupes } from "./Formulaires";
+import { FormulaireBascule, FormulaireClasse, FormulairePreinscription, FormulaireReconduireCours, FormulaireReconduireGroupes } from "./Formulaires";
+import type { ComparaisonAnnee, CoursAReconduire } from "@/lib/etablissement";
+import { AideTrois } from "@/components/study/AideTrois";
 
 export interface Annee {
   id: string;
@@ -46,7 +48,11 @@ export interface GroupeAReconduire {
   readonly deja_reconduit: boolean;
 }
 
-export function VueAnnees({ etape, erreurAnnees, courante, cible, classesCourantes, classesCible, debutSuivant, parClasse, resume, eleves, liste, groupes = [] }: {
+export function VueAnnees({ etape, erreurAnnees, courante, cible, classesCourantes, classesCible, debutSuivant, parClasse, resume, eleves, liste, groupes = [], coursAReconduire = [], comparaison = null }: {
+  /** Cours de classe à reconduire (0082, PROF-18). */
+  coursAReconduire?: readonly CoursAReconduire[];
+  /** Comparaison des années (0082, YR-11). */
+  comparaison?: readonly ComparaisonAnnee[] | null;
   /** Groupes de l'année courante, à reconduire ou déjà reconduits (0073). */
   groupes?: readonly GroupeAReconduire[];
   etape: number;
@@ -64,6 +70,7 @@ export function VueAnnees({ etape, erreurAnnees, courante, cible, classesCourant
   return (
     <div className="mx-auto max-w-[1000px]">
       <EnTetePage sourcil="Administration" titre="Préparer la nouvelle année scolaire" sousTitre="Préparer l'année suivante, reconduire les élèves, vérifier, puis basculer. Rien n'est supprimé." />
+      <AideTrois pourquoi="Préparer l'année suivante sans rien changer à l'année en cours, puis basculer le jour venu." quiVoit="Rien n'est visible des élèves avant la bascule ; après, ils voient leurs nouvelles classes." apres="L'année quittée est archivée et reste consultable en lecture seule, par vous et par ses professeurs." />
       <div className="mb-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="panneau">
           <Etapes
@@ -152,6 +159,18 @@ export function VueAnnees({ etape, erreurAnnees, courante, cible, classesCourant
             </div>
           ) : null}
 
+          {coursAReconduire.length > 0 && classesCible.length > 0 ? (
+            <div className="mt-6">
+              <Panneau titre="3 ter. Reconduire les cours et leurs professeurs">
+                <p className="meta m-0 mb-3">
+                  Chaque cours de cette année, avec la classe de {cible.label} qui reçoit ses élèves. Décochez un cours qui ne continue pas, ou un
+                  professeur qui part ou change de service : il ne sera pas reconduit. Aucun élève, aucun remplaçant n&apos;est recopié.
+                </p>
+                <FormulaireReconduireCours annee={cible.id} cours={coursAReconduire} classesCible={classesCible.map((c) => ({ id: c.id, label: c.label }))} />
+              </Panneau>
+            </div>
+          ) : null}
+
           <div className="mt-6">
             <Panneau titre={`4. Contrôler et basculer vers ${cible.label}`}>
               {resume === null ? (
@@ -175,10 +194,16 @@ export function VueAnnees({ etape, erreurAnnees, courante, cible, classesCourant
                       <p className="m-0 font-semibold text-[color:var(--color-attention)]">
                         {eleves.length} élève{eleves.length > 1 ? "s" : ""} actif{eleves.length > 1 ? "s" : ""} sans classe en {cible.label}
                       </p>
+                      <p className="meta m-0 mt-1">
+                        Pour chacun, ouvrez la fiche : « Classe en {cible.label} » pour un redoublement ou une réorientation, ou « Enregistrer le départ » s&apos;il quitte l&apos;établissement (YR-08).
+                      </p>
                       <ul className="m-0 mt-2 grid max-h-[240px] gap-1 overflow-y-auto pl-5 text-[0.875rem]">
                         {eleves.map((e) => (
                           <li key={e.profile_id}>
-                            {e.prenom} {e.nom} · {e.identifiant}
+                            <Link href={`/admin/eleves/${e.profile_id}`}>
+                              {e.prenom} {e.nom}
+                            </Link>{" "}
+                            · {e.identifiant}
                             {e.classe_actuelle ? ` · actuellement en ${e.classe_actuelle}` : ""}
                           </li>
                         ))}
@@ -209,6 +234,42 @@ export function VueAnnees({ etape, erreurAnnees, courante, cible, classesCourant
           </div>
         </>
       )}
+
+      {comparaison !== null && comparaison.length > 1 ? (
+        <div className="mt-6">
+          <Panneau titre="Comparer les années">
+            <div className="tableau-seance">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Année</th>
+                    <th scope="col">Classes</th>
+                    <th scope="col">Élèves</th>
+                    <th scope="col">Groupes</th>
+                    <th scope="col">Cours</th>
+                    <th scope="col">Sans professeur</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparaison.map((y) => (
+                    <tr key={y.annee}>
+                      <th scope="row">
+                        {y.label} {y.courante ? <span className="meta">(en cours)</span> : y.archivee ? <span className="meta">(archivée)</span> : <span className="meta">(préparée)</span>}
+                      </th>
+                      <td>{y.classes}</td>
+                      <td>{y.eleves}</td>
+                      <td>{y.groupes}</td>
+                      <td>{y.cours}</td>
+                      <td>{y.cours_sans_professeur}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="meta m-0 mt-2">Des totaux par année, jamais de détail par élève.</p>
+          </Panneau>
+        </div>
+      ) : null}
 
       {liste.some((a) => a.archived_at) ? (
         <div className="mt-6">

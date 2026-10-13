@@ -11,6 +11,7 @@ import {
   majSeance,
   modifierBloc,
   publierSeance,
+  republierSeance,
   supprimerBloc,
 } from "@/app/studio/actions";
 import { ETAT_STUDIO_INITIAL, type EtatStudio } from "@/app/studio/etats";
@@ -34,11 +35,14 @@ export function Editeur({
   blocs,
   chapitres,
   libelleCours,
+  differences = null,
 }: {
   seance: Seance;
   blocs: Bloc[];
   chapitres: Chapitre[];
   libelleCours: string;
+  /** Résumé des retouches depuis la publication (PUB-11) ; `null` : brouillon ou indisponible. */
+  differences?: { texte: string; modifiee: boolean } | null;
 }) {
   const publiee = seance.state === "publiee";
 
@@ -78,6 +82,7 @@ export function Editeur({
 
       <aside className="space-y-4 lg:sticky lg:top-24">
         <Publication seance={seance} publiee={publiee} />
+        {publiee && differences !== null ? <Republier seance={seance.id} differences={differences} /> : null}
 
         <div className="bloc border border-[color:var(--color-bordure)] p-4">
           <h2 className="titre-bloc m-0 font-bold">
@@ -231,8 +236,8 @@ function Publication({ seance, publiee }: { seance: Seance; publiee: boolean }) 
           <>
             Cette séance est visible par la classe depuis le{" "}
             {jourLisible(seance.published_at)}
-            . Vous pouvez continuer à la modifier : les élèves voient la date de
-            dernière modification.
+            . Vos retouches restent privées jusqu&apos;à ce que vous les publiiez :
+            la classe garde la version publiée.
           </>
         ) : (
           <>
@@ -967,5 +972,24 @@ function EtatSauvegarde({ auto }: { auto: ReturnType<typeof useSauvegardeAuto> }
         </button>
       ) : null}
     </span>
+  );
+}
+
+/** Retouches d'une séance publiée : ce qui a changé, et les publier (PUB-07, PUB-11). */
+function Republier({ seance, differences }: { seance: string; differences: { texte: string; modifiee: boolean } }) {
+  const [etat, action] = useActionState<EtatStudio, FormData>(republierSeance, ETAT_STUDIO_INITIAL);
+  return (
+    <form action={action} className="mt-3 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] p-4" data-testid="republication">
+      <input type="hidden" name="id" value={seance} />
+      <p className="m-0 text-[length:var(--text-aide)]" role="status">
+        {differences.texte}
+      </p>
+      {differences.modifiee ? (
+        <div className="mt-3">
+          <Bouton libelle="Publier les modifications" variante="rose" pleineLargeur marque="republier" />
+        </div>
+      ) : null}
+      <Retour etat={etat} />
+    </form>
   );
 }

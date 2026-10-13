@@ -7,6 +7,7 @@ import { contexte } from "@/lib/etablissement";
 import { historiqueImports } from "@/lib/lot-rentree";
 import { sessionCourante } from "@/lib/session-serveur";
 import { RubriquePersonnes } from "@/components/study/Rubriques";
+import { AideTrois } from "@/components/study/AideTrois";
 
 /**
  * Assistant de rentrée — le dépôt (cahier V5, §5.1).
@@ -42,6 +43,7 @@ export default async function PageImport() {
         n&apos;aurez pas validé.
       </p>
       <EtapesImport courante={1} />
+      <AideTrois pourquoi="Créer d'un coup les élèves, les professeurs et les groupes d'une rentrée, à partir de vos fichiers." quiVoit="Personne tant que vous n'avez pas validé : l'analyse ne crée aucun compte." apres="Vous relisez, corrigez, puis créez. Les fiches d'accès s'impriment à la fin ; les élèves choisissent leur mot de passe." />
 
       <section aria-labelledby="titre-eleves" className="mt-10">
         <h2

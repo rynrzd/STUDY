@@ -119,7 +119,7 @@ l'outille.
 |---|---|
 | Accès | Un élève voit dans son espace l'ensemble de ce qui le concerne : devoirs, remises, corrections, preuves de remise. Un administrateur d'établissement dispose d'un export des accès. |
 | Rectification | Les données d'identité proviennent de l'établissement et se corrigent par lui (écrans d'administration, import de rentrée). |
-| Effacement | Sur décision de l'établissement. Les suppressions passent par les écrans d'administration ; le journal d'audit en garde la trace. |
+| Effacement | Sur décision de l'établissement. Depuis la migration 0084, la fiche d'un élève ou d'un professeur porte « Demande d'effacement des données » : le compte est fermé à l'instant (état `en_suppression`, sessions révoquées, plus aucun accès aux cours), la demande et son origine sont journalisées, et elle reste annulable. L'accueil d'administration liste les demandes en attente. L'effacement définitif suit la décision du responsable de traitement (voir ci-dessous). Vérifié par `tests/db/statistiques-espace.test.mjs` (EFFACEMENT-01). |
 | Portabilité | Export au format tableur des accès et des listes. **Depuis le 8 octobre 2026** (branche `refonte-r2`, non déployée) : chaque personne télécharge elle-même, en un geste, ses données au format JSON (« Réglages › Confidentialité », route `/app/reglages/export`), copies, versions et appréciations publiées comprises. Lectures sous sa session, vérifiées par `tests/db/export-personnel.test.mjs`. |
 | Opposition, limitation | À traiter par l'établissement au cas par cas. |
 
@@ -128,6 +128,24 @@ l'outille.
 > toutes accessibles et exportables, mais l'opération demande aujourd'hui une
 > intervention de l'éditeur. Pour un délai d'un mois, c'est tenable ; ce n'est
 > pas satisfaisant.
+
+## Après le départ : ce qui est technique, ce qui reste à arbitrer
+
+Cahier des charges, exigence SEC-18.
+
+| Situation | Ce que fait le produit | Ce qui reste à décider (responsable de traitement) |
+|---|---|---|
+| Départ d'un élève | « Enregistrer le départ » clôt classes et groupes à la date dite ; l'accès aux cours cesse. L'historique (remises, corrections) reste lisible par l'établissement. | Durée de conservation des travaux d'un élève parti. |
+| Retrait d'un groupe, changement de classe | Accès coupé dès le geste (0084), plus le soir ; l'appartenance passée reste datée. | — |
+| Fin de contrat d'un professeur | Désactivation du compte ; ses cours se transfèrent à un collègue (« Transférer des cours »). | Sort des contenus créés par le professeur. |
+| Demande RGPD (effacement) | Compte fermé à l'instant, demande journalisée, annulable ; liste des demandes sur l'accueil. | Effacement définitif, au regard des obligations de conservation ; exécuté par l'exploitant sur instruction écrite. |
+| Clôture d'établissement | Export du journal et des listes ; suspension des comptes par l'exploitant, compte par compte (`admin_suspendre_compte`, motif obligatoire). | Calendrier de restitution et de destruction. |
+| Incident de sécurité | Journal d'audit, alertes « À surveiller » (exports, réinitialisations, affectations inhabituels). | Notification à l'autorité et aux personnes (voir 12 — Incidents). |
+
+> **Point ouvert.** L'effacement définitif n'est pas automatisé, volontairement :
+> effacer des copies ou des appréciations engage l'établissement, qui doit
+> d'abord arbitrer ses durées de conservation. Le produit garantit que plus
+> personne n'accède au compte entre la demande et la décision.
 
 ## Minimisation, en pratique
 

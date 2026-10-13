@@ -8,6 +8,8 @@ import {
   affecterUnProfesseurAuGroupe,
   ajouterDesEleves,
   chercherElevesPourGroupe,
+  choisirCoordinateur,
+  creerDemiGroupes,
   creerUnGroupe,
   decrireUnGroupe,
   retirerPlusieursEleves,
@@ -69,10 +71,19 @@ export function CreerGroupe() {
         Nom du groupe
       </label>
       <div className="flex flex-wrap gap-2">
-        <input id="groupe-label" name="label" type="text" className="champ min-w-0 flex-1" placeholder="Spé Maths A" required minLength={2} maxLength={80} />
+        <input key={etat.saisie ?? "vide"} defaultValue={etat.saisie} id="groupe-label" name="label" type="text" className="champ min-w-0 flex-1" placeholder="Spé Maths A" required minLength={2} maxLength={80} />
         <BoutonSoumettre libelle="Créer le groupe" enCours="Création…" />
       </div>
       <Retour etat={etat} />
+      {etat.equivalente ? (
+        <label className="mt-3 flex items-start gap-3 text-[0.9375rem]">
+          <input type="checkbox" name="confirmer" value="oui" className="mt-1 size-4 shrink-0 accent-[color:var(--color-accent)]" />
+          <span>
+            C&apos;est bien un autre groupe que « {etat.equivalente} » : créer « {etat.saisie} ».
+            <span className="aide-champ">Sinon, précisez le nom (« Spé Maths A — mardi ») ou utilisez le groupe existant.</span>
+          </span>
+        </label>
+      ) : null}
     </form>
   );
 }
@@ -355,7 +366,7 @@ export function MembresGroupe({ groupe, membres }: { groupe: string; membres: re
         ))}
       </ul>
       {coches.length > 0 ? (
-        <form action={action} className="mt-3 flex flex-wrap items-center gap-2 rounded-[var(--rayon-m)] bg-[color:var(--color-fond)] p-3">
+        <form action={action} className="barre-selection mt-3 flex flex-wrap items-center gap-2 rounded-[var(--rayon-m)] bg-[color:var(--color-fond)] p-3" aria-label="Actions sur la sélection">
           <input type="hidden" name="groupe" value={groupe} />
           {coches.map((c) => (
             <input key={c} type="hidden" name="eleve" value={c} />
@@ -363,7 +374,7 @@ export function MembresGroupe({ groupe, membres }: { groupe: string; membres: re
           {confirmer ? (
             <>
               <span className="text-[0.875rem]">
-                Retirer {coches.length} élève{coches.length > 1 ? "s" : ""} du groupe ? Leurs droits sur ses cours s&apos;arrêtent aujourd&apos;hui ; rien n&apos;est effacé.
+                Retirer {coches.length} élève{coches.length > 1 ? "s" : ""} du groupe ? Leurs droits sur ses cours s&apos;arrêtent tout de suite ; rien n&apos;est effacé.
               </span>
               <button type="submit" className="bouton bouton-compact bouton-primaire">
                 Confirmer le retrait
@@ -378,6 +389,11 @@ export function MembresGroupe({ groupe, membres }: { groupe: string; membres: re
               <button type="button" className="bouton bouton-compact bouton-secondaire" onClick={() => setConfirmer(true)}>
                 <UserMinus size={16} strokeWidth={1.75} aria-hidden="true" /> Retirer la sélection
               </button>
+              {coches.length < membres.length ? (
+                <button type="button" className="bouton bouton-compact bouton-discret" onClick={() => setCoches(membres.map((m) => m.profile_id))}>
+                  Tout sélectionner
+                </button>
+              ) : null}
               <button type="button" className="bouton bouton-compact bouton-discret" onClick={() => setCoches([])}>
                 Tout décocher
               </button>
@@ -406,7 +422,7 @@ export function DescriptionGroupe({ groupe, description }: { groupe: string; des
     }
   }, ETAT_ADMIN_INITIAL);
   return (
-    <form action={action} className="panneau mb-8">
+    <form action={action} className="panneau">
       <input type="hidden" name="groupe" value={groupe} />
       <label className="etiquette" htmlFor={`description-${groupe}`}>
         Description (facultative)
@@ -423,5 +439,164 @@ export function DescriptionGroupe({ groupe, description }: { groupe: string; des
         ) : null}
       </div>
     </form>
+  );
+}
+
+/* ---------------------------------------------------- Coordinateur -------- */
+
+/** Coordinateur du groupe (GR-12) : un professeur référent, sans droit d'administration. */
+export function CoordinateurGroupe({ groupe, actuel, professeurs }: { groupe: string; actuel: { id: string; nom: string } | null; professeurs: readonly { id: string; label: string }[] }) {
+  const [etat, action] = useActionState<EtatAdmin, FormData>(async (p, d) => {
+    try {
+      return await choisirCoordinateur(p, d);
+    } catch {
+      return { etat: "erreur", message: "La réponse du serveur n'est pas arrivée." };
+    }
+  }, ETAT_ADMIN_INITIAL);
+  return (
+    <form action={action} className="flex flex-wrap items-end gap-2">
+      <input type="hidden" name="groupe" value={groupe} />
+      <div className="min-w-[220px] flex-1">
+        <label className="etiquette" htmlFor={`coord-${groupe}`}>
+          Coordinateur (facultatif)
+        </label>
+        <select id={`coord-${groupe}`} name="professeur" defaultValue={actuel?.id ?? ""} className="champ">
+          <option value="">Aucun</option>
+          {professeurs.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <button type="submit" className="bouton bouton-compact bouton-secondaire">
+        Enregistrer
+      </button>
+      {etat.message ? (
+        <span role="status" className={`w-full text-[0.875rem] ${etat.etat === "ok" ? "text-[color:var(--color-succes)]" : "text-[color:var(--color-erreur)]"}`}>
+          {etat.message}
+        </span>
+      ) : null}
+      <span className="aide-champ w-full">Le professeur référent du groupe. Il ne gagne aucun droit d&apos;administration.</span>
+    </form>
+  );
+}
+
+/* ------------------------------------------- Élèves d'une classe ---------- */
+
+/**
+ * Les élèves d'une classe (fiche classe) : cocher plusieurs élèves et les
+ * ajouter à un groupe (EL-06), ou répartir la classe en deux demi-groupes
+ * équilibrés par nombre (GR-16), après confirmation.
+ */
+export function ElevesClasse({
+  classe,
+  eleves,
+  groupes,
+  contenus,
+}: {
+  classe: string;
+  eleves: readonly { id: string; prenom: string; nom: string }[];
+  groupes: readonly { id: string; label: string }[];
+  /** La ligne affichée pour chaque élève, rendue par la page. */
+  contenus: Readonly<Record<string, React.ReactNode>>;
+}) {
+  const [coches, setCoches] = useState<string[]>([]);
+  const [confirmer, setConfirmer] = useState(false);
+  const [etatAjout, actionAjout] = useActionState<EtatAdmin, FormData>(async (p, d) => {
+    try {
+      const r = await ajouterDesEleves(p, d);
+      if (r.etat === "ok") setCoches([]);
+      return r;
+    } catch {
+      return { etat: "erreur", message: "La réponse du serveur n'est pas arrivée." };
+    }
+  }, ETAT_ADMIN_INITIAL);
+  const [etatDemi, actionDemi] = useActionState<EtatAdmin, FormData>(async (p, d) => {
+    try {
+      const r = await creerDemiGroupes(p, d);
+      setConfirmer(false);
+      return r;
+    } catch {
+      return { etat: "erreur", message: "La réponse du serveur n'est pas arrivée." };
+    }
+  }, ETAT_ADMIN_INITIAL);
+  const basculer = (id: string) => setCoches((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
+
+  return (
+    <div>
+      <ul className="m-0 list-none p-0">
+        {eleves.map((e) => (
+          <li key={e.id} className="flex items-center gap-3">
+            <input type="checkbox" aria-label={`Sélectionner ${e.prenom} ${e.nom}`} checked={coches.includes(e.id)} onChange={() => basculer(e.id)} className="size-4 shrink-0 accent-[color:var(--color-accent)]" />
+            <div className="min-w-0 flex-1">{contenus[e.id]}</div>
+          </li>
+        ))}
+      </ul>
+
+      {coches.length > 0 ? (
+        <form action={actionAjout} className="barre-selection mt-3 flex flex-wrap items-center gap-2 rounded-[var(--rayon-m)] bg-[color:var(--color-fond)] p-3" aria-label="Actions sur la sélection">
+          {coches.map((c) => (
+            <input key={c} type="hidden" name="eleve" value={c} />
+          ))}
+          <span className="text-[0.875rem] font-semibold">{coches.length} sélectionné{coches.length > 1 ? "s" : ""}</span>
+          <label className="sr-only" htmlFor={`groupe-${classe}`}>
+            Groupe
+          </label>
+          <select id={`groupe-${classe}`} name="groupe" required className="champ h-10 min-w-[200px] flex-1 py-0 text-[0.875rem]" defaultValue="">
+            <option value="" disabled>
+              Choisir un groupe…
+            </option>
+            {groupes.map((x) => (
+              <option key={x.id} value={x.id}>
+                {x.label}
+              </option>
+            ))}
+          </select>
+          <button type="submit" className="bouton bouton-compact bouton-primaire">
+            Ajouter au groupe
+          </button>
+          {coches.length < eleves.length ? (
+            <button type="button" className="bouton bouton-compact bouton-discret" onClick={() => setCoches(eleves.map((e) => e.id))}>
+              Tout sélectionner
+            </button>
+          ) : null}
+          <button type="button" className="bouton bouton-compact bouton-discret" onClick={() => setCoches([])}>
+            Tout décocher
+          </button>
+        </form>
+      ) : null}
+      {etatAjout.message ? (
+        <p role="status" className={`m-0 mt-2 text-[0.875rem] ${etatAjout.etat === "ok" ? "text-[color:var(--color-succes)]" : "text-[color:var(--color-erreur)]"}`}>
+          {etatAjout.message}
+        </p>
+      ) : null}
+
+      {eleves.length >= 2 ? (
+        <form action={actionDemi} className="mt-4">
+          <input type="hidden" name="classe" value={classe} />
+          {confirmer ? (
+            <span className="flex flex-wrap items-center gap-2 text-[0.875rem]">
+              Créer « Groupe A » et « Groupe B » ({Math.ceil(eleves.length / 2)} et {Math.floor(eleves.length / 2)} élèves, par ordre alphabétique en alternance) ?
+              <button type="submit" className="bouton bouton-compact bouton-primaire">
+                Confirmer
+              </button>
+              <button type="button" className="bouton bouton-compact bouton-discret" onClick={() => setConfirmer(false)}>
+                Annuler
+              </button>
+            </span>
+          ) : (
+            <button type="button" className="bouton bouton-compact bouton-secondaire" onClick={() => setConfirmer(true)}>
+              Répartir en deux demi-groupes
+            </button>
+          )}
+          {etatDemi.message ? (
+            <p role="status" className={`m-0 mt-2 text-[0.875rem] ${etatDemi.etat === "ok" ? "text-[color:var(--color-succes)]" : "text-[color:var(--color-erreur)]"}`}>
+              {etatDemi.message}
+            </p>
+          ) : null}
+        </form>
+      ) : null}
+    </div>
   );
 }

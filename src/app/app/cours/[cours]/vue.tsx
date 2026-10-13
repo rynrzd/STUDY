@@ -25,6 +25,10 @@ export function VueUnCours({ id, cours, chapitres, nbSeances, requete }: {
           ) : null
         }
       />
+      {/* PED-07 : la règle, dite à l'élève. */}
+      <p className="meta m-0 mb-6 max-w-[70ch]">
+        Tu vois toutes les séances publiées de ce cours, y compris celles publiées avant ton arrivée. Les copies et les réponses des autres élèves ne sont jamais visibles.
+      </p>
       {chapitres === null ? (
         <EtatErreur requestId={requete} action={<Link href={`/app/cours/${id}`} className="bouton bouton-secondaire">Réessayer</Link>} />
       ) : chapitres.length === 0 ? (

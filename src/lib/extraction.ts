@@ -301,6 +301,16 @@ async function extraireDocx(octets: Buffer): Promise<DocumentCours> {
           ? "Une image du document n'a pas été reprise : sa place est marquée, à vous de la remettre."
           : `${images} images du document n'ont pas été reprises : leur place est marquée, à vous de les remettre.`,
     });
+    // CONV-10 : chaque image absente est signalée, avec ce qui la précède,
+    // pour la retrouver dans l'original et la remettre à sa place.
+    let rang = 0;
+    blocs.forEach((bloc, i) => {
+      if (bloc.type !== "image") return;
+      rang += 1;
+      const avant = blocs.slice(0, i).reverse().find((b) => b.type === "titre" || b.type === "paragraphe");
+      const repere = avant && "texte" in avant ? ` (après « ${avant.texte.slice(0, 60)}${avant.texte.length > 60 ? "…" : ""} »)` : " (en tête du document)";
+      alertes.push({ gravite: "verifier", message: `Image ${rang} sur ${images}${repere} : à remettre depuis votre fichier d'origine.` });
+    });
   }
 
   return {
@@ -341,16 +351,48 @@ function lireHtmlSimple(html: string): { blocs: BlocCours[]; images: number } {
     if (balise === "img") {
       viderListe();
       images += 1;
-      blocs.push({ type: "image", fileId: null, alt: "Image du document d'origine" });
+      blocs.push({ type: "image", fileId: null, alt: `Image ${images} du document d'origine` });
       continue;
     }
 
+    // Mammoth place une image dans son paragraphe (« <p><img/></p> ») : elle
+    // disparaissait avec le balisage. Chaque image garde maintenant sa place,
+    // juste après le texte qui l'accompagne.
+    const imagesIncluses = balise === "table" ? 0 : (trouve[2] ?? "").match(/<img\b/gi)?.length ?? 0;
+    const placerImages = () => {
+      for (let k = 0; k < imagesIncluses; k++) {
+        images += 1;
+        blocs.push({ type: "image", fileId: null, alt: `Image ${images} du document d'origine` });
+      }
+    };
+
     const texte = nettoyer(trouve[2] ?? "");
-    if (texte === "") continue;
+    if (texte === "") {
+      if (imagesIncluses > 0) {
+        viderListe();
+        placerImages();
+      }
+      continue;
+    }
+    if (imagesIncluses > 0 && balise !== "li") {
+      viderListe();
+      const avant = blocs.length;
+      blocs.push({ type: "paragraphe", texte });
+      if (balise.startsWith("h")) {
+        const niveau = Number(balise.slice(1));
+        blocs[avant] = { type: "titre", niveau: (niveau <= 1 ? 1 : niveau === 2 ? 2 : 3) as NiveauTitre, texte };
+      }
+      placerImages();
+      continue;
+    }
 
     if (balise === "li") {
       listeEnCours ??= [];
       listeEnCours.push(texte);
+      if (imagesIncluses > 0) {
+        viderListe();
+        placerImages();
+      }
       continue;
     }
 
@@ -400,8 +442,25 @@ function lireHtmlSimple(html: string): { blocs: BlocCours[]; images: number } {
 }
 
 /** Enlève les balises restantes et rend les entités. Ne produit que du texte. */
+const EXPOSANTS: Record<string, string> = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "+": "⁺", "-": "⁻", "−": "⁻", "=": "⁼", "(": "⁽", ")": "⁾", n: "ⁿ", i: "ⁱ" };
+const INDICES: Record<string, string> = { "0": "₀", "1": "₁", "2": "₂", "3": "₃", "4": "₄", "5": "₅", "6": "₆", "7": "₇", "8": "₈", "9": "₉", "+": "₊", "-": "₋", "−": "₋", "=": "₌", "(": "₍", ")": "₎" };
+
+/**
+ * Exposant ou indice Word (CONV-07) : en caractères Unicode quand ils
+ * existent (x², H₂O, m·s⁻²), sinon noté ^(…) ou _(…) — jamais « x 2 ».
+ */
+function decaler(texte: string, table: Record<string, string>, repli: string): string {
+  const brut = texte.replace(/<[^>]*>/g, "").trim();
+  if (brut === "") return "";
+  return [...brut].every((c) => c in table) ? [...brut].map((c) => table[c]).join("") : `${repli}(${brut})`;
+}
+
 function nettoyer(fragment: string): string {
   return fragment
+    .replace(/<sup\b[^>]*>([\s\S]*?)<\/sup>/gi, (_, x: string) => decaler(x, EXPOSANTS, "^"))
+    .replace(/<sub\b[^>]*>([\s\S]*?)<\/sub>/gi, (_, x: string) => decaler(x, INDICES, "_"))
+    // Les balises de mise en forme ne séparent pas les mots : « pré<strong>fixe</strong> ».
+    .replace(/<\/?(strong|em|b|i|u|s|a|span)\b[^>]*>/gi, "")
     .replace(/<[^>]*>/g, " ")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")

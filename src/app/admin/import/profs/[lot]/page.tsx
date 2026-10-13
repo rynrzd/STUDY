@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { VerificationProfesseurs } from "@/components/admin/VerificationProfesseurs";
-import { contexte } from "@/lib/etablissement";
+import { MatieresDuLot } from "@/components/admin/MatieresDuLot";
+import { contexte, matieres } from "@/lib/etablissement";
+import { suggererMatieres } from "@/lib/suggestion-matieres";
 import { lireLotProfesseurs } from "@/lib/lot-professeurs";
 import { sessionCourante } from "@/lib/session-serveur";
 
@@ -29,6 +31,8 @@ export default async function PageVerificationProfesseurs({
   const { lot: identifiant } = await params;
   const lot = await lireLotProfesseurs(personne.profileId, identifiant);
   if (lot === null) notFound();
+  const existantes = lot.etat === "applique" ? [] : (await matieres(personne.profileId)).map((m) => m.label);
+  const suggestions = lot.etat === "applique" ? [] : suggererMatieres(lot.lignes.flatMap((l) => l.affectations.map((a) => a.matiere)), existantes);
 
   return (
     <div className="max-w-[72rem]">
@@ -46,6 +50,10 @@ export default async function PageVerificationProfesseurs({
           Relisez qui enseigne quoi, et où. Chaque affectation ouvre un cours,
           et seulement celui-là.
         </p>
+      </div>
+
+      <div className="mt-8 print:hidden">
+        <MatieresDuLot lot={lot.id} suggestions={suggestions} />
       </div>
 
       <div className="mt-8">

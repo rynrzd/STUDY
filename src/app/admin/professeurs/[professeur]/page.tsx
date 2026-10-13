@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { classes, contexte, ficheProfesseur, groupes, matieres } from "@/lib/etablissement";
+import { classes, contexte, ficheProfesseur, groupes, matieres, tousLesMembres } from "@/lib/etablissement";
 import { sessionCourante } from "@/lib/session-serveur";
 import { VueFicheProfesseur } from "./vue";
 
@@ -23,11 +23,12 @@ export default async function PageFicheProfesseur({ params }: { params: Promise<
   const { professeur } = await params;
   if (!UUID.test(professeur)) notFound();
 
-  const [fiche, listeClasses, listeGroupes, listeMatieres] = await Promise.all([
+  const [fiche, listeClasses, listeGroupes, listeMatieres, listeProfs] = await Promise.all([
     ficheProfesseur(personne.profileId, professeur),
     classes(personne.profileId),
     groupes(personne.profileId),
     matieres(personne.profileId),
+    tousLesMembres(personne.profileId, { role: "professeur" }),
   ]);
   if (fiche === null) notFound();
 
@@ -38,6 +39,7 @@ export default async function PageFicheProfesseur({ params }: { params: Promise<
       classes={listeClasses.map((c) => ({ id: c.id, label: c.label }))}
       groupes={listeGroupes.map((g) => ({ id: g.id, label: g.label }))}
       matieres={listeMatieres.map((m) => ({ id: m.id, label: m.label }))}
+      collegues={listeProfs.filter((m) => m.roles.includes("professeur") && m.profile_id !== professeur).map((m) => ({ id: m.profile_id, label: `${m.nom} ${m.prenom}` }))}
     />
   );
 }

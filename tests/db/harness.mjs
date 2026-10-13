@@ -190,3 +190,24 @@ export const OBJETS = {
   espaceMathsB1: "bbbbbbbb-4444-4000-8000-000000000001",
   seanceB1: "bbbbbbbb-5555-4000-8000-000000000001",
 };
+
+/**
+ * Republie une séance comme le ferait son professeur (0083) : son contenu
+ * actuel devient la version publiée, lue par les élèves, la recherche et les
+ * fiches. À appeler après avoir modifié les blocs d'une séance publiée.
+ */
+export async function republier(db, lecon) {
+  await db.query(
+    `with v as (
+       insert into study.content_versions (organization_id, body, version_number, sealed_at, created_by)
+       select l.organization_id,
+              jsonb_build_object('blocs', coalesce((select jsonb_agg(jsonb_build_object('id', b.id, 'kind', b.kind, 'position', b.position,
+                                                     'contenu', b.contenu, 'file_id', b.file_id, 'assignment_id', b.assignment_id) order by b.position)
+                                                     from study.lesson_blocks b where b.lesson_id = l.id), '[]'::jsonb)),
+              99, now(), l.created_by
+         from study.lessons l where l.id = $1 and l.state = 'publiee'
+       returning id)
+     update study.lessons set content_version_id = (select id from v) where id = $1 and exists (select 1 from v)`,
+    [lecon],
+  );
+}

@@ -26,8 +26,10 @@ export const dynamic = "force-dynamic";
 
 export default async function PageMiseEnPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ document: string }>;
+  searchParams: Promise<{ deja?: string }>;
 }) {
   const personne = await sessionCourante();
   if (personne === null) redirect("/connexion");
@@ -74,6 +76,7 @@ export default async function PageMiseEnPage({
 
   const courante = await revision(jeton, doc.revisionId);
   if (courante === null) notFound();
+  const deja = (await searchParams).deja === "1";
 
   return (
     <>
@@ -83,6 +86,11 @@ export default async function PageMiseEnPage({
           <History size={16} strokeWidth={1.75} aria-hidden="true" /> Historique des versions
         </Link>
       </div>
+      {deja ? (
+        <p className="encadre-seance mt-4" role="status">
+          Ce fichier était déjà importé : votre document existant est rouvert, sans seconde copie. Ses publications et ses versions restent les mêmes.
+        </p>
+      ) : null}
       <div className="mt-4">
         <EditeurDocument
           initial={{

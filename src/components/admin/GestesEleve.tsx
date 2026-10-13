@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { ArrowRightLeft, CircleAlert, CircleCheck, LogOut, Minus, Plus, Equal } from "lucide-react";
-import { apercuDuChangement, changerDeClasse, enregistrerDepart } from "@/app/admin/eleves/actions";
+import { apercuDuChangement, changerDeClasse, enregistrerDepart, gererEffacement, preinscrireAutrement } from "@/app/admin/eleves/actions";
 import { ETAT_ADMIN_INITIAL, type EtatAdmin } from "@/app/admin/etats";
 
 interface MouvementCours {
@@ -182,5 +182,83 @@ function Retour({ etat }: { etat: EtatAdmin }) {
     <p role="status" className="resultat-publication m-0 mt-3" data-ton={ok ? "ok" : "erreur"}>
       <Icone size={18} strokeWidth={1.75} aria-hidden="true" className="shrink-0" /> {etat.message}
     </p>
+  );
+}
+
+/** Classe de l'an prochain d'un élève (EL-08) : redoublement, changement de filière. */
+export function PreinscriptionEleve({ eleve, annee, classes, actuelle }: { eleve: string; annee: string; classes: readonly Option[]; actuelle: string | null }) {
+  const [etat, action] = useActionState<EtatAdmin, FormData>(securiser(preinscrireAutrement), ETAT_ADMIN_INITIAL);
+  return (
+    <form action={action} className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+      <input type="hidden" name="eleve" value={eleve} />
+      <div className="min-w-0">
+        <label className="etiquette" htmlFor="classe-an-prochain">
+          Classe en {annee}
+        </label>
+        <select id="classe-an-prochain" name="classe" className="champ" defaultValue="" required>
+          <option value="" disabled>
+            {actuelle ? `Aujourd'hui prévue : ${actuelle}` : "Choisir…"}
+          </option>
+          {classes.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <button type="submit" className="bouton bouton-secondaire">
+        Enregistrer
+      </button>
+      {etat.message ? (
+        <p role="status" className={`m-0 text-[0.875rem] sm:col-span-2 ${etat.etat === "ok" ? "text-[color:var(--color-succes)]" : "text-[color:var(--color-erreur)]"}`}>
+          {etat.message}
+        </p>
+      ) : null}
+      <p className="aide-champ m-0 sm:col-span-2">Pour un redoublement ou un changement de filière : l&apos;élève ne suit pas sa classe. Rien ne change avant la bascule.</p>
+    </form>
+  );
+}
+
+/**
+ * Demande d'effacement (RGPD) — cahier des charges ch. 18 (SEC-18). Le compte
+ * est fermé à l'instant et la demande journalisée ; l'effacement définitif
+ * des données suit l'arbitrage du responsable de traitement.
+ */
+export function DemandeEffacement({ profil, retour, enCours }: { profil: string; retour: string; enCours: boolean }) {
+  const [etat, action] = useActionState<EtatAdmin, FormData>(securiser(gererEffacement), ETAT_ADMIN_INITIAL);
+  return (
+    <details className="mt-4">
+      <summary className="cursor-pointer text-[0.875rem] font-semibold text-[color:var(--color-encre-faible)]">
+        {enCours ? "Demande d'effacement en cours" : "Demande d'effacement des données (RGPD)"}
+      </summary>
+      <form action={action} className="mt-3 grid gap-2">
+        <input type="hidden" name="profil" value={profil} />
+        <input type="hidden" name="retour" value={retour} />
+        {enCours ? (
+          <>
+            <p className="meta m-0">Le compte est fermé. L&apos;effacement définitif des données suit la décision du responsable de traitement de l&apos;établissement.</p>
+            <button type="submit" name="geste" value="annuler" className="bouton bouton-compact bouton-secondaire justify-self-start">
+              Annuler la demande
+            </button>
+          </>
+        ) : (
+          <>
+            <label className="etiquette" htmlFor={`motif-effacement-${profil}`}>
+              Origine de la demande
+            </label>
+            <input id={`motif-effacement-${profil}`} name="motif" className="champ" minLength={10} maxLength={500} required placeholder="Ex. : courrier des responsables légaux du 12 octobre" />
+            <p className="aide-champ m-0">Le compte est fermé tout de suite (plus de connexion, plus d&apos;accès aux cours). Rien n&apos;est effacé sans décision du responsable de traitement ; la demande reste annulable.</p>
+            <button type="submit" name="geste" value="demander" className="bouton bouton-compact bouton-danger justify-self-start">
+              Enregistrer la demande
+            </button>
+          </>
+        )}
+        {etat.message ? (
+          <p role="status" className={`m-0 text-[0.875rem] ${etat.etat === "ok" ? "text-[color:var(--color-succes)]" : "text-[color:var(--color-erreur)]"}`}>
+            {etat.message}
+          </p>
+        ) : null}
+      </form>
+    </details>
   );
 }

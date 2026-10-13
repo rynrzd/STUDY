@@ -4,6 +4,7 @@ import { RubriqueClasses } from "@/components/study/Rubriques";
 import { EnTetePage, EtatVide, ICONE } from "@/components/study/ui";
 import { classeNormalisee } from "@/lib/assistant-rentree";
 import type { Enseignement } from "@/lib/etablissement";
+import { AideTrois } from "@/components/study/AideTrois";
 
 export interface FiltresEnseignements {
   readonly niveau: "" | "2" | "1" | "t" | "groupes" | "autres";
@@ -53,8 +54,16 @@ export function VueEnseignements({ enseignements, filtres }: { enseignements: re
       <EnTetePage
         sourcil="Classes et groupes"
         titre="Qui enseigne quoi"
+        actions={
+          tous.length > 0 ? (
+            <a href="/admin/enseignements/export" className="bouton bouton-secondaire" download>
+              Exporter (CSV)
+            </a>
+          ) : null
+        }
         sousTitre={`Chaque classe et chaque groupe, matière par matière, avec ses professeurs. ${tous.length} enseignement${tous.length > 1 ? "s" : ""}${vacants > 0 ? `, dont ${vacants} sans professeur` : ""}.`}
       />
+      <AideTrois pourquoi="Voir d'un coup d'œil qui enseigne quoi, et repérer les cours sans professeur." quiVoit="Vous seul : cette vue est réservée à l'administration de l'établissement." apres="Cliquez une classe ou un groupe pour agir ; l'export CSV garde une trace dans le journal." />
 
       {enseignements === null ? (
         <p role="alert" className="m-0 text-[color:var(--color-erreur)]">

@@ -10,6 +10,8 @@ export interface EtatImportStudio {
   readonly etat: "vierge" | "envoi" | "erreur";
   readonly message?: string;
   /** Identifiant du document créé, pour ouvrir l'éditeur. */
+  /** Le même fichier était déjà importé (DATA-11) : on rouvre son document. */
+  readonly deja?: boolean;
   readonly document?: string;
 }
 

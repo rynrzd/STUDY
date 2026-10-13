@@ -574,3 +574,29 @@ export async function appliquerLotProfesseurs(options: {
 
   return { cree, existant, affectations, erreurs: echecs.length, acces, echecs };
 }
+
+/**
+ * Utiliser une matière déjà créée à la place de celle lue dans le fichier
+ * (IMP-17) : toutes les affectations du lot qui la citent sont réécrites.
+ * Seulement sur choix explicite de l'administration, et avant application.
+ */
+export async function renommerMatiereDuLot(options: { acteur: string; lot: string; de: string; vers: string }): Promise<number | null> {
+  const client = clientExploitation("administration_des_comptes");
+  const lot = await lireLotProfesseurs(options.acteur, options.lot);
+  if (lot === null || lot.etat === "applique") return null;
+  const vers = options.vers.trim();
+  if (vers === "" || vers.length > 120) return null;
+
+  const cle = (v: string) => v.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+  let modifiees = 0;
+  for (const ligne of lot.lignes) {
+    if (!ligne.affectations.some((a) => cle(a.matiere) === cle(options.de))) continue;
+    const { data } = await client.from("import_rows").select("payload").eq("id", ligne.id).maybeSingle();
+    const payload = (data as { payload: PayloadProfesseur } | null)?.payload;
+    if (payload === undefined) continue;
+    const affectations = (payload.affectations ?? []).map((a) => (cle(a.matiere) === cle(options.de) ? { ...a, matiere: vers } : a));
+    const { error } = await client.from("import_rows").update({ payload: { ...payload, affectations }, corrige: true }).eq("id", ligne.id);
+    if (error === null) modifiees += 1;
+  }
+  return modifiees;
+}

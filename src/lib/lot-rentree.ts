@@ -51,6 +51,9 @@ interface PayloadLigne {
 
 const PURGE_JOURS = 30;
 
+/** Élèves traités par appel : sous le délai d'une requête, même à 1 000 élèves (IMP-12). */
+const TRANCHE = 150;
+
 /* -------------------------------------------------------------------------- */
 /* Analyse                                                                     */
 /* -------------------------------------------------------------------------- */
@@ -293,7 +296,7 @@ export interface LigneDuLot {
    * créer non plus. Le confondre avec « à corriger » ferait clignoter un
    * bloquant pour une ligne qui ne demande aucune action.
    */
-  readonly etat: "valide" | "a_corriger" | "ignoree";
+  readonly etat: "valide" | "a_corriger" | "ignoree" | "appliquee";
   readonly probleme: string | null;
 }
 
@@ -366,15 +369,23 @@ export async function lireLot(acteur: string, lot: string): Promise<LotComplet |
     lignes: job.rows_total,
   }));
 
-  const { data: rows } = await client
-    .from("import_rows")
-    .select("id, row_number, payload, state, issue_detail, import_job_id")
-    .in("import_job_id", fichiers.map((fichier) => fichier.jobId))
-    .order("row_number")
-    .limit(2000);
+  // Toutes les lignes, par pages : une limite fixe tronquait en silence les
+  // lots de plus de 2 000 élèves (DATA-09, IMP-12).
+  const rows: unknown[] = [];
+  for (let debut = 0; ; debut += 1000) {
+    const { data: page } = await client
+      .from("import_rows")
+      .select("id, row_number, payload, state, issue_detail, import_job_id")
+      .in("import_job_id", fichiers.map((fichier) => fichier.jobId))
+      .order("import_job_id")
+      .order("row_number")
+      .range(debut, debut + 999);
+    rows.push(...(page ?? []));
+    if ((page ?? []).length < 1000 || debut >= 20_000) break;
+  }
 
   const lignes: LigneDuLot[] = (
-    (rows ?? []) as unknown as {
+    rows as {
       id: string;
       row_number: number;
       payload: PayloadLigne;
@@ -391,7 +402,13 @@ export async function lireLot(acteur: string, lot: string): Promise<LotComplet |
     email: row.payload.email,
     identifiantExterne: row.payload.identifiantExterne ?? null,
     etat:
-      row.state === "valide" ? "valide" : row.state === "ignore" ? "ignoree" : "a_corriger",
+      row.state === "valide"
+        ? "valide"
+        : row.state === "ignore"
+          ? "ignoree"
+          : row.state === "applique"
+            ? "appliquee"
+            : "a_corriger",
     probleme: row.issue_detail,
   }));
 
@@ -580,6 +597,8 @@ export interface RapportLot {
   readonly erreurs: number;
   /** Lignes « à confirmer » écartées faute d'accord (IMP-02) : rien n'a été fusionné. */
   readonly ecartes: number;
+  /** Élèves encore à traiter : l'application se fait par tranches (IMP-12). */
+  readonly restantes: number;
   readonly acces: readonly AccesCree[];
   readonly echecs: readonly { ligne: number; raison: string }[];
 }
@@ -606,7 +625,11 @@ export async function appliquerLot(options: {
   const complet = await lireLot(options.acteur, options.lot);
   if (complet === null) return { erreur: "Ce lot est introuvable." };
   if (complet.etat === "applique") return { erreur: "Ce lot a déjà été appliqué." };
-  if (complet.blocages.length > 0) {
+  // Les blocages se vérifient avant de commencer. Une fois des lignes
+  // appliquées, une ligne en échec d'une tranche précédente n'empêche pas de
+  // finir les autres : elle reste signalée, à corriger à part.
+  const commence = complet.lignes.some((ligne) => ligne.etat === "appliquee");
+  if (!commence && complet.blocages.length > 0) {
     return { erreur: "Des erreurs restent à corriger avant de créer les comptes." };
   }
 
@@ -622,8 +645,13 @@ export async function appliquerLot(options: {
     for (const r of (rappro ?? []) as { ligne: string; statut: string }[]) if (r.statut === "conflit") ecarter.add(r.ligne);
   }
 
-  const aTraiter: LigneEleve[] = complet.lignes
-    .filter((ligne) => ligne.etat === "valide" && !ecarter.has(ligne.id))
+  // Par tranches (IMP-12) : chaque ligne traitée est marquée « applique » ;
+  // une interruption ne perd rien, la reprise ne recrée rien.
+  const candidates = complet.lignes.filter((ligne) => ligne.etat === "valide" && !ecarter.has(ligne.id));
+  const tranche = candidates.slice(0, TRANCHE);
+  const restantes = candidates.length - tranche.length;
+  const identifiantDe = new Map<LigneEleve, string>();
+  const aTraiter: LigneEleve[] = tranche
     .map((ligne) => ({
       fichier: ligne.fichier,
       numero: ligne.numero,
@@ -633,7 +661,16 @@ export async function appliquerLot(options: {
       email: ligne.email,
       identifiantExterne: ligne.identifiantExterne,
       anomalies: [],
-    }));
+      __id: ligne.id,
+    }))
+    .map(({ __id, ...l }) => {
+      identifiantDe.set(l, __id);
+      return l;
+    });
+  const marquer = async (ligne: LigneEleve, etat: "applique" | "rejete", detail: string | null) => {
+    const id = identifiantDe.get(ligne);
+    if (id !== undefined) await client.from("import_rows").update({ state: etat, issue_detail: detail }).eq("id", id);
+  };
 
   // On propose une **racine**, pas un identifiant définitif.
   //
@@ -665,6 +702,7 @@ export async function appliquerLot(options: {
 
     if (creation.error !== null || creation.data.user === null) {
       echecs.push({ ligne: ligne.numero, raison: "Compte de connexion non créé" });
+      await marquer(ligne, "rejete", "Compte de connexion non créé : réessayez cette ligne.");
       continue;
     }
 
@@ -685,15 +723,15 @@ export async function appliquerLot(options: {
 
     if (error !== null) {
       await client.auth.admin.deleteUser(profileId).catch(() => undefined);
-      echecs.push({
-        ligne: ligne.numero,
-        raison: error.code === "23505" ? "Identifiant déjà utilisé" : "Écriture refusée",
-      });
+      const raison = error.code === "23505" ? "Identifiant déjà utilisé" : "Écriture refusée";
+      echecs.push({ ligne: ligne.numero, raison });
+      await marquer(ligne, "rejete", raison);
       continue;
     }
 
     const resultat = (Array.isArray(data) ? data[0] : null)?.resultat ?? "erreur";
 
+    await marquer(ligne, "applique", null);
     if (resultat === "cree") {
       cree += 1;
 
@@ -729,17 +767,21 @@ export async function appliquerLot(options: {
     reinscrit,
     erreurs: echecs.length,
     ecartes: ecarter.size,
+    restantes,
     acces,
     echecs,
   };
 
   // Le compte rendu écrit en base ne contient ni mot de passe ni identité :
   // seulement des nombres.
-  await client.rpc("lot_clore", {
-    p_acteur: options.acteur,
-    p_lot: options.lot,
-    p_rapport: { cree, existant, reinscrit, erreur: echecs.length, ecarte: ecarter.size },
-  });
+  // Le lot ne se clôt qu'une fois tout traité.
+  if (restantes === 0) {
+    await client.rpc("lot_clore", {
+      p_acteur: options.acteur,
+      p_lot: options.lot,
+      p_rapport: { cree, existant, reinscrit, erreur: echecs.length, ecarte: ecarter.size },
+    });
+  }
 
   return rapport;
 }

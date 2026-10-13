@@ -112,6 +112,10 @@ function BlocLu({ bloc }: { bloc: Bloc }) {
           {String(bloc.contenu.titre ?? url)}
           <span aria-hidden="true" className="fleche">↗</span>
         </a>
+        {/* STU-11 : un lien externe se reconnaît, et se signale s'il ne répond plus. */}
+        <span className="meta mt-0.5 block">
+          Site externe : {domaineDe(url)} · s&apos;ouvre dans un nouvel onglet. Lien cassé ? Signale-le dans les questions de la séance.
+        </span>
       </p>
     );
   }
@@ -193,4 +197,12 @@ function BlocLu({ bloc }: { bloc: Bloc }) {
       )}
     </section>
   );
+}
+
+function domaineDe(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www./, "");
+  } catch {
+    return "adresse illisible";
+  }
 }

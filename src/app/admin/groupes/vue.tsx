@@ -4,6 +4,7 @@ import { CreerGroupe } from "@/components/admin/GroupeFormulaires";
 import { EnTetePage, EtatVide, ICONE } from "@/components/study/ui";
 import type { DetailGroupe, GroupeEtab } from "@/lib/etablissement";
 import { RubriqueClasses } from "@/components/study/Rubriques";
+import { AideTrois } from "@/components/study/AideTrois";
 
 export interface FiltresGroupes {
   readonly q: string;
@@ -55,7 +56,15 @@ export function VueGroupes({
         sourcil="Classes et groupes"
         titre="Groupes pédagogiques"
         sousTitre="Spécialités, langues, options, demi-groupes : un groupe réunit des élèves choisis, de plusieurs classes si besoin. Sa composition ne touche pas la classe principale des élèves."
+        actions={
+          liste.length > 0 ? (
+            <a href="/admin/groupes/export" className="bouton bouton-secondaire" download>
+              Exporter les membres (CSV)
+            </a>
+          ) : null
+        }
       />
+      <AideTrois pourquoi="Spécialités, langues, options : des élèves de plusieurs classes suivent un même cours, sans quitter leur classe." quiVoit="Seuls les membres du groupe et ses professeurs voient ses cours. Les autres élèves des mêmes classes, non." apres="Ajoutez les élèves, affectez un professeur pour une matière : le cours apparaît chez eux aussitôt." />
 
       <CreerGroupe />
       <p className="meta m-0 mt-2">
