@@ -423,3 +423,146 @@
 @media (prefers-reduced-motion: reduce) {
   .page a.button { transition: none; transform: none; }
 }
+
+/* Seconde partie de la landing : compositions dédiées, sans changer le héros. */
+.lowerLanding { background: #fcfafb; }
+.lowerLanding h2 { text-wrap: balance; }
+.lowerCopy { display: grid; gap: 20px; }
+.lowerCopy > p:not(.lowerEyebrow) { color: var(--muted); line-height: 1.75; }
+.lowerEyebrow { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; color: var(--primary); }
+.page a.textLink { display: inline-flex; align-items: center; gap: 10px; width: fit-content; min-height: 44px; text-decoration: none; font-size: 14px; font-weight: 700; color: var(--primary); }
+.page a.textLink:hover { text-decoration: underline; text-underline-offset: 5px; }
+.conversationSection { display: grid; grid-template-columns: .9fr 1.1fr; gap: 90px; align-items: center; padding-block: 100px; }
+.conversationFigure { margin: 0; padding: 28px; background: #f1e4e9; border-radius: 32px; background-image: radial-gradient(#81445b24 .8px, transparent .8px); background-size: 16px 16px; }
+.conversationWindow { border-radius: 20px; background: white; overflow: hidden; box-shadow: 0 18px 44px -26px #4c233955; border: 1px solid #ebdce2; }
+.windowHeading { display: flex; gap: 12px; align-items: center; padding: 20px; border-bottom: 1px solid #f0e9ed; }
+.windowIcon { display: grid; place-items: center; height: 40px; width: 40px; border-radius: 13px; background: var(--rose-light); color: var(--primary); }
+.windowHeading strong { font-size: 14px; }
+.windowHeading div > span { display: block; color: var(--muted); font-size: 11px; margin-top: 3px; }
+.messages { padding: 22px 20px; display: grid; gap: 20px; }
+.page .messageDay { font-size: 10px; color: var(--muted); text-align: center; }
+.message { display: flex; align-items: flex-start; gap: 10px; }
+.personAvatar { flex: 0 0 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: #ede9e4; color: #615648; font-size: 11px; font-weight: 700; }
+.message > div { min-width: 0; }
+.message strong { font-size: 12px; }
+.message strong span { font-size: 10px; font-weight: 400; color: var(--muted); margin-left: 5px; }
+.message p { font-size: 13px; line-height: 1.65; margin-top: 5px; }
+.teacherMessage { padding: 16px 12px; border-radius: 16px; background: #fcf3f6; margin-left: 18px; }
+.teacherMessage .personAvatar { background: var(--primary); color: white; }
+.formula { margin-top: 10px; font-size: 17px; letter-spacing: .04em; }
+.formula b { color: var(--primary); }
+.conversationFigure figcaption, .studioFigure figcaption { font-size: 10px; color: var(--muted); margin-top: 16px; text-align: center; }
+.teacherSection { padding-block: 26px 88px; }
+.teacherIntro { display: grid; grid-template-columns: 1.4fr 1fr; align-items: end; gap: 80px; margin-bottom: 36px; }
+.teacherIntro h2 span { color: var(--primary); }
+.teacherIntro > p { color: var(--muted); line-height: 1.75; font-size: 15px; padding-bottom: 5px; }
+.studioFeature { display: grid; grid-template-columns: 1fr 1.2fr; border-radius: 32px; overflow: hidden; background: #302831; }
+.workflow { padding: 50px 42px; display: flex; flex-direction: column; gap: 30px; justify-content: center; color: #fff; }
+.workflow > div { display: flex; gap: 18px; }
+.workflow > div > span { color: #e5b9cb; font-size: 12px; letter-spacing: .08em; padding-top: 3px; }
+.page .workflow h3 { font-size: 18px; }
+.workflow p { font-size: 14px; color: #d5cbd5; margin-top: 8px; line-height: 1.7; }
+.page .workflow .textLink { color: #f2cadb; }
+.studioFigure { margin: 0; padding: 42px 42px 20px; background-color: #efe4e9; background-image: linear-gradient(#81445b09 1px, transparent 1px), linear-gradient(90deg, #81445b09 1px, transparent 1px); background-size: 28px 28px; }
+.studioWindow { background: #fff; border: 1px solid #e3d8df; border-radius: 20px; box-shadow: 0 22px 35px -25px #54314466; overflow: hidden; transform: rotate(-2deg); }
+.studioBar { padding: 15px 20px; display: flex; justify-content: space-between; gap: 10px; align-items: center; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 700; }
+.draftBadge { background: #f4f1f4; color: var(--muted); padding: 4px 9px; border-radius: 20px; font-size: 10px; font-weight: 500; }
+.studioBody { padding: 24px; }
+.studioBody .lowerEyebrow { font-size: 9px; }
+.page .studioBody h3 { font-size: 23px; letter-spacing: -.035em; margin-top: 10px; }
+.documentPreview { display: flex; gap: 12px; align-items: center; padding: 15px; background: #faf7f9; border: 1px solid #eee6eb; border-radius: 12px; margin-block: 22px; font-size: 12px; }
+.documentPreview > span { color: var(--primary); }
+.documentPreview > svg { margin-left: auto; color: #426954; flex-shrink: 0; }
+.documentPreview p { font-size: 10px; color: var(--muted); margin-top: 3px; }
+.studioInstruction { border-left: 2px solid #d6b4c3; padding-left: 12px; font-size: 12px; }
+.studioInstruction p { color: var(--muted); margin-top: 6px; line-height: 1.6; }
+.page .recipientLabel { margin-block: 22px 8px; font-size: 11px; font-weight: 700; }
+.classChips { display: flex; gap: 8px; flex-wrap: wrap; }
+.classChips > span { display: inline-flex; align-items: center; gap: 5px; background: var(--rose-light); color: var(--primary); border: 1px solid #ead6df; border-radius: 8px; padding: 6px 9px; font-size: 11px; }
+.publishPreview { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; font-size: 12px; font-weight: 650; border-radius: 10px; padding: 12px 15px; margin-top: 22px; }
+.schoolSection { padding: 48px; background: #f2ede9; border: 1px solid #e9e1dc; border-radius: 28px; }
+.schoolHeading { display: flex; gap: 22px; align-items: flex-start; }
+.schoolIcon { display: grid; place-items: center; width: 56px; height: 56px; background: #fff; color: var(--primary); border-radius: 18px; flex-shrink: 0; }
+.schoolHeading .lowerCopy { gap: 13px; }
+.page .schoolHeading h2 { font-size: clamp(28px, 3vw, 38px); }
+.schoolSteps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; border-top: 1px solid #dcd2ca; padding-top: 28px; margin-top: 26px; }
+.schoolSteps svg { color: var(--primary); margin-bottom: 14px; }
+.page .schoolSteps h3 { font-size: 15px; }
+.schoolSteps p { font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.7; }
+.faqSection { display: grid; grid-template-columns: .9fr 1.1fr; gap: 80px; padding-block: 100px; align-items: start; }
+.faqList { border-top: 1px solid var(--line); }
+.page .faqList details { padding: 0; animation: none; }
+.page .faqList summary { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-block: 24px; list-style: none; font-size: 15px; }
+.page .faqList summary::-webkit-details-marker { display: none; }
+.faqList summary svg { color: var(--primary); flex-shrink: 0; transition: transform 180ms; }
+.faqList details[open] summary svg { transform: rotate(45deg); }
+.page .faqList details p { color: var(--muted); font-size: 14px; line-height: 1.75; margin: 0 30px 24px 0; }
+.finalSection { padding-bottom: 64px; }
+.finalCard { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 64px 28px; border-radius: 32px; background: #81445b; color: #fff; isolation: isolate; }
+.finalMark { position: absolute; right: -20px; bottom: -160px; font-size: 520px; font-weight: 800; line-height: 1; letter-spacing: -.1em; color: #ffffff08; z-index: -1; pointer-events: none; }
+.finalCard .lowerEyebrow { color: #f4dbe5; font-size: 10px; }
+.page .finalCard h2 { font-size: clamp(38px, 4.8vw, 64px); margin-block: 20px; }
+.finalCard > p:not(.lowerEyebrow) { color: #f4dbe5; font-size: 15px; }
+.page a.finalButton { display: inline-flex; align-items: center; justify-content: center; gap: 20px; min-height: 54px; background: #fff; color: #71374c; padding: 15px 22px; border-radius: 12px; text-decoration: none; font-size: 14px; font-weight: 750; margin-top: 28px; transition: background 180ms; }
+.page a.finalButton:hover { background: #f9e7ed; }
+.finalNote { font-size: 12px; margin-top: 20px; color: #f4dbe5; }
+.finalNote a { color: white; text-underline-offset: 3px; }
+.page .finalCard a:focus-visible { outline-color: white; }
+.newFooter { padding-block: 16px 28px; }
+.footerTop { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; padding-block: 28px 40px; }
+.footerIdentity p { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.footerTop nav { display: flex; flex-direction: column; align-items: flex-start; }
+.footerTop nav p { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 750; margin-bottom: 10px; }
+.page .newFooter nav a { font-size: 13px; color: var(--muted); min-height: 36px; display: inline-flex; align-items: center; text-decoration: none; }
+.page .newFooter a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.footerBottom { display: flex; align-items: center; justify-content: space-between; gap: 20px; border-top: 1px solid var(--line); padding-top: 20px; font-size: 11px; color: var(--muted); }
+.footerBottom > div { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.page .footerBottom a { min-height: 32px; display: inline-flex; align-items: center; text-decoration: none; }
+@media (max-width: 1000px) and (min-width: 768px) {
+  .conversationSection, .teacherIntro, .faqSection { gap: 36px; }
+  .workflow { padding: 32px 26px; }
+  .studioFigure { padding: 32px 24px 20px; }
+}
+@media (max-width: 767px) {
+  .conversationSection { grid-template-columns: 1fr; gap: 28px; padding-block: 56px; }
+  .lowerCopy { gap: 16px; }
+  .lowerCopy > p:not(.lowerEyebrow) { font-size: 15px; line-height: 1.7; }
+  .lowerEyebrow { font-size: 10px; }
+  .conversationFigure { padding: 16px; border-radius: 24px; }
+  .windowHeading { padding: 16px 14px; }
+  .windowHeading strong { font-size: 13px; }
+  .messages { padding: 18px 13px; gap: 18px; }
+  .teacherMessage { margin-left: 5px; padding: 12px 10px; }
+  .message strong span { display: block; margin: 0; }
+  .message p { font-size: 12px; }
+  .teacherSection { padding-block: 10px 52px; }
+  .teacherIntro { grid-template-columns: 1fr; gap: 18px; margin-bottom: 26px; }
+  .teacherIntro > p { font-size: 15px; }
+  .studioFeature { grid-template-columns: 1fr; border-radius: 24px; }
+  .workflow { padding: 28px 24px; gap: 24px; }
+  .workflow p { font-size: 13px; }
+  .studioFigure { padding: 28px 22px 18px; }
+  .studioBody { padding: 20px; }
+  .page .studioBody h3 { font-size: 22px; }
+  .schoolSection { padding: 28px 24px; border-radius: 24px; }
+  .schoolHeading { display: block; }
+  .schoolIcon { margin-bottom: 20px; width: 44px; height: 44px; border-radius: 14px; }
+  .schoolSteps { grid-template-columns: 1fr; gap: 22px; margin-top: 18px; padding-top: 24px; }
+  .schoolSteps > div { display: grid; grid-template-columns: 22px 1fr; gap: 5px 14px; }
+  .schoolSteps svg { grid-row: span 2; margin: 1px 0 0; }
+  .schoolSteps p { grid-column: 2; margin: 0; }
+  .faqSection { grid-template-columns: 1fr; gap: 24px; padding-block: 56px; }
+  .page .faqList summary { font-size: 14px; padding-block: 21px; }
+  .finalSection { padding-bottom: 32px; }
+  .finalCard { padding: 40px 22px; border-radius: 24px; }
+  .finalCard .lowerEyebrow { font-size: 9px; letter-spacing: .1em; }
+  .page .finalCard h2 { font-size: clamp(32px, 9vw, 44px); }
+  .page a.finalButton { gap: 10px; padding: 14px; font-size: 12px; width: 100%; }
+  .finalMark { font-size: 360px; bottom: -90px; }
+  .footerTop { grid-template-columns: 1fr 1fr; gap: 28px 20px; padding-block: 16px 24px; }
+  .footerIdentity { grid-column: 1 / -1; }
+  .page .newFooter nav a { min-height: 44px; font-size: 12px; }
+  .footerBottom { flex-direction: column; align-items: flex-start; gap: 12px; font-size: 10px; }
+  .footerBottom > div { gap: 6px 16px; }
+  .page .footerBottom a { min-height: 44px; }
+}
