@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { classes, contexte, groupeCours, groupeMembres, groupes, matieres, rechercherMembres, tousLesMembres } from "@/lib/etablissement";
+import { classes, contexte, groupeCours, groupeDescription, groupeMembres, groupes, matieres, rechercherMembres, tousLesMembres } from "@/lib/etablissement";
 import { sessionCourante } from "@/lib/session-serveur";
 import { VueGroupe } from "./vue";
 
@@ -24,7 +24,7 @@ export default async function PageGroupe({ params }: { params: Promise<{ groupe:
   const { groupe: id } = await params;
   const acteur = personne.profileId;
 
-  const [liste, listeMembres, listeCours, listeMatieres, premiersEleves, listeProfesseurs, listeClasses] = await Promise.all([
+  const [liste, listeMembres, listeCours, listeMatieres, premiersEleves, listeProfesseurs, listeClasses, description] = await Promise.all([
     groupes(acteur),
     groupeMembres(acteur, id),
     groupeCours(acteur, id),
@@ -33,6 +33,7 @@ export default async function PageGroupe({ params }: { params: Promise<{ groupe:
     rechercherMembres(acteur, { role: "eleve", limite: 80 }),
     tousLesMembres(acteur, { role: "professeur" }),
     classes(acteur),
+    groupeDescription(acteur, id),
   ]);
 
   const groupe = liste.find((g) => g.id === id);
@@ -58,6 +59,7 @@ export default async function PageGroupe({ params }: { params: Promise<{ groupe:
       classes={listeClasses.map((c) => c.label)}
       professeurs={professeurs}
       matieres={optionsMatieres}
+      description={description}
     />
   );
 }

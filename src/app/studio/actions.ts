@@ -110,6 +110,68 @@ export async function renommerChapitre(
   return { etat: "ok", message: "Chapitre renommé." };
 }
 
+/**
+ * Déplacer un chapitre d'un cran (COURS-02). Les positions du cours sont
+ * renumérotées dans l'ordre affiché : l'ordre voulu par le professeur est
+ * celui que verront toutes les vues. Sous RLS : seul un professeur du cours
+ * écrit.
+ */
+export async function deplacerChapitre(_precedent: EtatStudio, donnees: FormData): Promise<EtatStudio> {
+  const jeton = await jetonDuProfesseur();
+  if (jeton === null) return REFUS;
+  const id = String(donnees.get("id") ?? "");
+  const sens = donnees.get("sens") === "haut" ? -1 : 1;
+  if (!z.string().uuid().safeParse(id).success) return REFUS;
+
+  const client = clientUtilisateur(jeton);
+  const { data: ch } = await client.from("chapters").select("teaching_space_id").eq("id", id).maybeSingle();
+  if (ch === null) return REFUS;
+  const { data: tous, error } = await client
+    .from("chapters")
+    .select("id, position")
+    .eq("teaching_space_id", (ch as { teaching_space_id: string }).teaching_space_id)
+    .is("archived_at", null)
+    .order("position")
+    .order("created_at");
+  if (error !== null) return REFUS;
+
+  const ordre = ((tous ?? []) as { id: string; position: number }[]).map((c) => c.id);
+  const i = ordre.indexOf(id);
+  const j = i + sens;
+  if (i < 0 || j < 0 || j >= ordre.length) return { etat: "ok", message: "Déjà en place." };
+  [ordre[i], ordre[j]] = [ordre[j]!, ordre[i]!];
+
+  const actuelles = new Map(((tous ?? []) as { id: string; position: number }[]).map((c) => [c.id, c.position]));
+  for (const [position, cle] of ordre.entries()) {
+    if (actuelles.get(cle) === position) continue;
+    const { error: refus } = await client.from("chapters").update({ position }).eq("id", cle);
+    if (refus !== null) return REFUS;
+  }
+  revalidatePath("/studio");
+  return { etat: "ok", message: "Chapitre déplacé." };
+}
+
+/**
+ * Archiver ou restaurer un chapitre (COURS-02). Ses séances restent attachées
+ * et ne sont ni dépubliées ni supprimées : le chapitre quitte seulement la
+ * liste de travail du professeur.
+ */
+export async function archiverChapitre(_precedent: EtatStudio, donnees: FormData): Promise<EtatStudio> {
+  const jeton = await jetonDuProfesseur();
+  if (jeton === null) return REFUS;
+  const id = String(donnees.get("id") ?? "");
+  if (!z.string().uuid().safeParse(id).success) return REFUS;
+  const archiver = donnees.get("archiver") === "oui";
+  const { data, error } = await clientUtilisateur(jeton)
+    .from("chapters")
+    .update({ archived_at: archiver ? new Date().toISOString() : null })
+    .eq("id", id)
+    .select("id");
+  if (error !== null || (data ?? []).length === 0) return REFUS;
+  revalidatePath("/studio");
+  return { etat: "ok", message: archiver ? "Chapitre archivé." : "Chapitre restauré." };
+}
+
 /* ========================================================================== */
 /* Séances                                                                     */
 /* ========================================================================== */
@@ -218,13 +280,13 @@ export async function majSeance(
     })
     .eq("id", analyse.data.id);
   if (version !== "") requete = requete.eq("updated_at", version);
-  const { data: ecrites, error } = await requete.select("id");
+  const { data: ecrites, error } = await requete.select("id, updated_at");
 
   if (error !== null) return REFUS;
   if ((ecrites ?? []).length === 0) return conflit(`${analyse.data.titre}${analyse.data.objectif ? `\n${analyse.data.objectif}` : ""}`);
 
   revalidatePath(`/studio/${analyse.data.id}`);
-  return { etat: "ok", message: "Enregistré." };
+  return { etat: "ok", message: "Enregistré.", version: (ecrites as { updated_at: string }[])[0]?.updated_at };
 }
 
 /**
@@ -656,7 +718,7 @@ export async function modifierBloc(
   const version = String(donnees.get("version") ?? "");
   let ecriture = client.from("lesson_blocks").update({ contenu }).eq("id", id);
   if (version !== "") ecriture = ecriture.eq("updated_at", version);
-  const { data: ecrits, error } = await ecriture.select("id");
+  const { data: ecrits, error } = await ecriture.select("id, updated_at");
   if (error !== null) return REFUS;
   if ((ecrits ?? []).length === 0) {
     return conflit(Object.values(contenu).filter((v) => typeof v === "string" && v !== "").join("\n"));
@@ -682,7 +744,7 @@ export async function modifierBloc(
 
   revalidatePath(`/studio/${seanceId}`);
   revalidatePath("/app");
-  return { etat: "ok", message: "Bloc modifié." };
+  return { etat: "ok", message: "Bloc modifié.", version: (ecrits as { updated_at: string }[])[0]?.updated_at };
 }
 
 export async function supprimerBloc(

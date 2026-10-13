@@ -15,6 +15,8 @@ export interface EtatStudio {
    * ouverture. Rien n'est écrasé ; la saisie est rendue ici pour être copiée.
    */
   readonly conflit?: string;
+  /** Nouvelle version après écriture (EDIT-06) : la suivante partira de celle-ci. */
+  readonly version?: string;
 }
 
 export const ETAT_STUDIO_INITIAL: EtatStudio = { etat: "vierge" };

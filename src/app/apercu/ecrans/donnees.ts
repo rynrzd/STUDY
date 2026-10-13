@@ -266,5 +266,18 @@ export const SEANCE_FORMULES = {
     { id: "b2", kind: "texte" as const, position: 2, contenu: { texte: "$$\\Delta = b^2 - 4ac$$" }, file_id: null, assignment_id: null },
     { id: "b3", kind: "texte" as const, position: 3, contenu: { texte: "Si $\\Delta > 0$, deux solutions : $$x_{1,2} = \\frac{-b \\pm \\sqrt{\\Delta}}{2a}$$ Le manuel coûte 5 $ : ce n'est pas une formule." }, file_id: null, assignment_id: null },
     { id: "b4", kind: "exercice" as const, position: 4, contenu: { consigne: "Résoudre $2x^2 - 3x + 1 = 0$." }, file_id: null, assignment_id: null },
+    { id: "b5", kind: "texte" as const, position: 5, contenu: { texte: "## Méthode\n1. Calculer $\\Delta$.\n2. Comparer $\\Delta$ à 0.\n3. Conclure.\n> À retenir : si $\\Delta < 0$, aucune solution réelle.\n| $\\Delta$ | Solutions |\n|---|---|\n| $> 0$ | deux |\n| $= 0$ | une |\n| $< 0$ | aucune |" }, file_id: null, assignment_id: null },
   ],
 };
+
+/** D14 — fiche professeur (0080). */
+export const FICHE_PROF = {
+  identite: { prenom: "Claire", nom: "Exemple", identifiant: "claire.exemple", etat_compte: "actif", actif: true, roles: ["professeur"], courriel: null },
+  affectations: [
+    { id: "a1", espace: "s1", matiere: "Mathématiques", cible: "Seconde 2", genre: "classe" as const, cible_id: "c2", annee: "2026-2027", role: "titulaire", debut: "2026-09-01", fin: null, etat: "en_cours" as const },
+    { id: "a2", espace: "s2", matiere: "Mathématiques", cible: "Spé Maths A", genre: "groupe" as const, cible_id: "g1", annee: "2026-2027", role: "co_intervenant", debut: "2026-09-01", fin: null, etat: "en_cours" as const },
+    { id: "a3", espace: "s3", matiere: "Mathématiques", cible: "Première 3", genre: "classe" as const, cible_id: "c3", annee: "2026-2027", role: "remplacant", debut: "2026-11-03", fin: "2026-11-17", etat: "a_venir" as const },
+    { id: "a4", espace: "s4", matiere: "Mathématiques", cible: "Seconde 1", genre: "classe" as const, cible_id: "c1", annee: "2025-2026", role: "titulaire", debut: "2025-09-01", fin: null, etat: "archive" as const },
+  ],
+  principal_de: [{ id: "c2", label: "Seconde 2" }],
+} satisfies import("@/lib/etablissement").FicheProfesseur;

@@ -211,7 +211,9 @@ export function VueProfesseurs({
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="m-0 font-bold">
-                          {membre.prenom} {membre.nom}
+                          <Link href={`/admin/professeurs/${membre.profile_id}`} className="text-[color:var(--color-encre)] hover:text-[color:var(--color-accent)]">
+                            {membre.prenom} {membre.nom}
+                          </Link>
                         </p>
                         <p className="m-0 font-mono text-[0.8125rem] text-[color:var(--color-encre-faible)]">{membre.local_login}</p>
                       </div>
@@ -250,6 +252,7 @@ export function VueProfesseurs({
 
                     <div className="mt-auto flex flex-wrap gap-2 border-t border-[color:var(--bordure-douce,var(--color-bordure))] pt-3">
                       <AffecterPlusieurs
+                        existantes={siennes.map((s) => `${s.cible}|${s.matiere}`)}
                         professeur={membre.profile_id}
                         nom={`${membre.prenom} ${membre.nom}`}
                         classes={optionsClasses}

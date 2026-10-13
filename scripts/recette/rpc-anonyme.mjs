@@ -182,6 +182,13 @@ const FONCTIONS = [
   { nom: "etab_groupes_details", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
   { nom: "etab_matrice_enseignements", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
   { nom: "etab_import_groupes", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_lignes: [], p_appliquer: false, p_appartenances: false, p_enseignements: false } },
+
+  // 0080, 0081 — Fiche professeur, controle, rapprochement, description de groupe : service_role seulement.
+  { nom: "etab_fiche_professeur", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_prof: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_controle_complement", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_lot_rapprochement", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_lot: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_groupe_decrire", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_groupe: "00000000-0000-4000-8000-000000000000", p_description: "x" } },
+  { nom: "etab_groupe_description", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_groupe: "00000000-0000-4000-8000-000000000000" } },
 ];
 
 let defauts = 0;

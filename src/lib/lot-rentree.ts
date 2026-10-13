@@ -578,6 +578,8 @@ export interface RapportLot {
   readonly existant: number;
   readonly reinscrit: number;
   readonly erreurs: number;
+  /** Lignes « à confirmer » écartées faute d'accord (IMP-02) : rien n'a été fusionné. */
+  readonly ecartes: number;
   readonly acces: readonly AccesCree[];
   readonly echecs: readonly { ligne: number; raison: string }[];
 }
@@ -598,6 +600,8 @@ export async function appliquerLot(options: {
   annee: string;
   lot: string;
   domaineAlias: string;
+  /** L'administrateur a confirmé que les lignes « à confirmer » sont les mêmes élèves. */
+  confirmerConflits?: boolean;
 }): Promise<RapportLot | { erreur: string }> {
   const complet = await lireLot(options.acteur, options.lot);
   if (complet === null) return { erreur: "Ce lot est introuvable." };
@@ -608,9 +612,18 @@ export async function appliquerLot(options: {
 
   const client = clientExploitation("administration_des_comptes");
 
+  // IMP-02 : même nom qu'un élève d'une autre classe, sans INE pour trancher.
+  // Sans accord explicite, ces lignes ne sont pas appliquées : on ne fusionne
+  // pas deux homonymes, et on ne déplace pas un élève sur une supposition.
+  const ecarter = new Set<string>();
+  if (!options.confirmerConflits) {
+    const { data: rappro, error: refusRappro } = await client.rpc("etab_lot_rapprochement", { p_acteur: options.acteur, p_lot: options.lot });
+    if (refusRappro !== null) return { erreur: "Le rapprochement avec les élèves existants n'a pas pu être fait. Rien n'a été créé." };
+    for (const r of (rappro ?? []) as { ligne: string; statut: string }[]) if (r.statut === "conflit") ecarter.add(r.ligne);
+  }
 
   const aTraiter: LigneEleve[] = complet.lignes
-    .filter((ligne) => ligne.etat === "valide")
+    .filter((ligne) => ligne.etat === "valide" && !ecarter.has(ligne.id))
     .map((ligne) => ({
       fichier: ligne.fichier,
       numero: ligne.numero,
@@ -715,6 +728,7 @@ export async function appliquerLot(options: {
     existant,
     reinscrit,
     erreurs: echecs.length,
+    ecartes: ecarter.size,
     acces,
     echecs,
   };
@@ -724,7 +738,7 @@ export async function appliquerLot(options: {
   await client.rpc("lot_clore", {
     p_acteur: options.acteur,
     p_lot: options.lot,
-    p_rapport: { cree, existant, reinscrit, erreur: echecs.length },
+    p_rapport: { cree, existant, reinscrit, erreur: echecs.length, ecarte: ecarter.size },
   });
 
   return rapport;

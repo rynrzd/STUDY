@@ -4,7 +4,7 @@ import { BookOpen } from "lucide-react";
 import { RubriqueCours } from "@/components/study/Rubriques";
 import { EnTetePage, EtatVide } from "@/components/study/ui";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
-import { chapitresDuCours, coursDuProfesseur, seancesDuCours } from "@/lib/studio";
+import { chapitresArchives, chapitresDuCours, coursDuProfesseur, seancesDuCours } from "@/lib/studio";
 import { VueStudio } from "./vue";
 
 /**
@@ -48,10 +48,10 @@ export default async function PageStudio({
   const parametres = await searchParams;
   const choisi = cours.find((c) => c.id === parametres.cours) ?? cours[0]!;
 
-  const [chapitres, seances] = await Promise.all([chapitresDuCours(jeton!, choisi.id), seancesDuCours(jeton!, choisi.id)]);
+  const [chapitres, seances, archives] = await Promise.all([chapitresDuCours(jeton!, choisi.id), seancesDuCours(jeton!, choisi.id), chapitresArchives(jeton!, choisi.id)]);
 
   const sansChapitre = seances.filter((seance) => seance.chapter_id === null);
   const brouillons = seances.filter((s) => s.state !== "publiee").length;
 
-  return <VueStudio cours={cours} choisi={choisi} chapitres={chapitres} seances={seances} sansChapitre={sansChapitre} brouillons={brouillons} />;
+  return <VueStudio cours={cours} choisi={choisi} chapitres={chapitres} seances={seances} sansChapitre={sansChapitre} brouillons={brouillons} archives={archives} />;
 }

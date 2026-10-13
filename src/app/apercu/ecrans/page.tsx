@@ -54,7 +54,8 @@ import { Editeur } from "@/components/studio/Editeur";
 import { OngletsSeance } from "@/components/studio/OngletsSeance";
 import { CircleHelp, ClipboardCheck, Library } from "lucide-react";
 import { CONTEXTE_FICTIF } from "../fictif";
-import { F, NOMS_FICTIFS, ANNEE_ARCHIVEE, ARCHIVES_PROF, ARCHIVE_COURS, CONTROLE, FICHE_CLASSE, MATRICE, SEANCE_FORMULES } from "./donnees";
+import { F, NOMS_FICTIFS, ANNEE_ARCHIVEE, ARCHIVES_PROF, ARCHIVE_COURS, CONTROLE, FICHE_CLASSE, MATRICE, SEANCE_FORMULES, FICHE_PROF } from "./donnees";
+import { VueFicheProfesseur } from "@/app/admin/professeurs/[professeur]/vue";
 import { VueSeance } from "@/components/seance/VueSeance";
 import { VueEnseignements } from "@/app/admin/enseignements/vue";
 import { VueFicheClasse } from "@/app/admin/classes/[classe]/vue";
@@ -649,6 +650,7 @@ const ECRANS: Record<string, Ecran> = {
     ),
   },
   D02c: { titre: "Import · vérifier les colonnes", ctx: ADMIN, chemin: "/admin/import", rendu: () => <div className="mx-auto max-w-[900px]"><ApercuColonnes /></div> },
+  D14: { titre: "Fiche professeur", ctx: ADMIN, chemin: "/admin/professeurs/x", rendu: () => <VueFicheProfesseur professeur="p" fiche={FICHE_PROF} classes={[]} groupes={[]} matieres={[]} /> },
   D13: { titre: "Qui enseigne quoi", ctx: ADMIN, chemin: "/admin/enseignements", rendu: () => <VueEnseignements enseignements={MATRICE} filtres={{ niveau: "", professeur: "", vacants: false }} /> },
   D12: { titre: "Fiche classe", ctx: ADMIN, chemin: "/admin/classes/x", rendu: () => <VueFicheClasse fiche={FICHE_CLASSE} professeurs={[{ id: "pp", label: "Exemple Claire" }]} /> },
   D11: { titre: "Année archivée", ctx: ADMIN, chemin: "/admin/annees/x", rendu: () => <VueAnneeArchivee releve={ANNEE_ARCHIVEE} /> },

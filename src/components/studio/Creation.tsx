@@ -48,7 +48,7 @@ export function NouvelleSeance({
     return (
       <details className="menu-deroulant ajouter-lecon">
         <summary data-testid="ajouter-lecon" className="bouton bouton-rose">
-          + Ajouter une leçon
+          + Ajouter
         </summary>
         <div className="menu-deroulant-panneau right-0 mt-2 w-[320px] max-w-[calc(100vw-32px)]">
           <button
@@ -77,6 +77,19 @@ export function NouvelleSeance({
           <Link href="/professeur/studio#depot" className="choix-lecon">
             <span className="font-semibold">Importer pour le transformer</span>
             <span className="meta">Word ou PDF converti en séance modifiable, à relire</span>
+          </Link>
+          <hr className="my-1 border-0 border-t border-[color:var(--color-bordure)]" />
+          <a href="#nouveau-chapitre" className="choix-lecon">
+            <span className="font-semibold">Nouveau chapitre</span>
+            <span className="meta">Pour ranger les séances de ce cours</span>
+          </a>
+          <Link href="/studio/exercices" className="choix-lecon">
+            <span className="font-semibold">Un exercice</span>
+            <span className="meta">Depuis la banque, à ajouter dans une séance</span>
+          </Link>
+          <Link href="/professeur/devoirs#donner" className="choix-lecon">
+            <span className="font-semibold">Un devoir</span>
+            <span className="meta">Avec échéance, rendu en ligne ou sur papier</span>
           </Link>
         </div>
       </details>

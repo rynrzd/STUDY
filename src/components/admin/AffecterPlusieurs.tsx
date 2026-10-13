@@ -28,7 +28,10 @@ export function AffecterPlusieurs({
   matieres,
   libelle = "Affecter à des cours",
   variante = "secondaire",
+  existantes = [],
 }: {
+  /** Cours déjà affectés, « classe|matière » (libellés) : pour le résumé avant envoi (PROF-05). */
+  existantes?: readonly string[];
   professeur: string;
   nom: string;
   classes: readonly Option[];
@@ -66,7 +69,7 @@ export function AffecterPlusieurs({
         }}
       >
         {ouvert ? (
-          <Contenu key={cle} idTitre={idTitre} professeur={professeur} nom={nom} classes={classes} groupes={groupes} matieres={matieres} fermer={() => setOuvert(false)} />
+          <Contenu key={cle} idTitre={idTitre} professeur={professeur} nom={nom} classes={classes} groupes={groupes} matieres={matieres} existantes={existantes} fermer={() => setOuvert(false)} />
         ) : null}
       </dialog>
     </>
@@ -89,6 +92,7 @@ function Contenu({
   classes,
   groupes,
   matieres,
+  existantes,
   fermer,
 }: {
   idTitre: string;
@@ -97,6 +101,7 @@ function Contenu({
   classes: readonly Option[];
   groupes: readonly Option[];
   matieres: readonly Option[];
+  existantes: readonly string[];
   fermer: () => void;
 }) {
   const [etat, action] = useActionState<EtatAffectations, FormData>(async (precedent, donnees) => {
@@ -120,6 +125,10 @@ function Contenu({
   // Une ligne est complète quand elle a un cours, une matière et, pour un
   // remplacement, une date de fin.
   const completes = lignes.filter((l) => l.cible !== "" && l.matiere !== "" && (l.role !== "remplacant" || l.fin !== ""));
+  // Résumé avant envoi (PROF-05) : ce qui existe déjà, ce qui est en double.
+  const cles = completes.map((l) => `${nomDe.get(l.cible) ?? ""}|${matiereDe.get(l.matiere) ?? ""}`);
+  const dejaEnPlace = cles.filter((c) => existantes.includes(c)).length;
+  const enDouble = cles.length - new Set(cles).size;
   const charge = JSON.stringify(
     completes.map((l) => {
       const [genre, cible] = l.cible.split(":");
@@ -281,7 +290,7 @@ function Contenu({
 
       <div className="ajout-actions">
         <span className="meta">
-          {completes.length === 0 ? "Aucune ligne complète" : `${completes.length} cours à affecter`}
+          {completes.length === 0 ? "Aucune ligne complète" : `${completes.length} cours à affecter${dejaEnPlace > 0 ? `, dont ${dejaEnPlace} déjà en place (rien ne sera dupliqué)` : ""}${enDouble > 0 ? ` · ${enDouble} ligne${enDouble > 1 ? "s" : ""} en double` : ""}`}
           {completes.length < lignes.length ? ` · ${lignes.length - completes.length} ligne${lignes.length - completes.length > 1 ? "s" : ""} incomplète${lignes.length - completes.length > 1 ? "s" : ""}, ignorée${lignes.length - completes.length > 1 ? "s" : ""}` : ""}
         </span>
         <div className="flex flex-wrap gap-2">

@@ -1,5 +1,6 @@
 import { LecteurPdf } from "@/components/seance/LecteurPdf";
 import { TexteAvecFormules } from "@/components/seance/TexteAvecFormules";
+import { TexteRiche } from "@/components/seance/TexteRiche";
 import { tailleLisible } from "@/lib/formats-documents";
 import type { Bloc, Seance } from "@/lib/studio";
 
@@ -82,11 +83,7 @@ export function VueSeance({
 
 function BlocLu({ bloc }: { bloc: Bloc }) {
   if (bloc.kind === "texte") {
-    return (
-      <p className="m-0 max-w-[var(--spacing-lecture)] whitespace-pre-line">
-        <TexteAvecFormules texte={String(bloc.contenu.texte ?? "")} />
-      </p>
-    );
+    return <TexteRiche texte={String(bloc.contenu.texte ?? "")} />;
   }
 
   if (bloc.kind === "exercice") {

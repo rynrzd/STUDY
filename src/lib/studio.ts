@@ -87,11 +87,28 @@ export async function chapitresDuCours(jeton: string, cours: string): Promise<Ch
     .from("chapters")
     .select("id, label, position")
     .eq("teaching_space_id", cours)
+    .is("archived_at", null)
     .order("position")
     .limit(200);
 
   if (error !== null) {
     journaliser("studio.chapitres", error.code);
+    return [];
+  }
+  return (data ?? []) as unknown as Chapitre[];
+}
+
+/** Chapitres archivés d'un cours (COURS-02) : leurs séances restent attachées. */
+export async function chapitresArchives(jeton: string, cours: string): Promise<Chapitre[]> {
+  const { data, error } = await clientUtilisateur(jeton)
+    .from("chapters")
+    .select("id, label, position")
+    .eq("teaching_space_id", cours)
+    .not("archived_at", "is", null)
+    .order("position")
+    .limit(200);
+  if (error !== null) {
+    journaliser("studio.chapitres_archives", error.code);
     return [];
   }
   return (data ?? []) as unknown as Chapitre[];

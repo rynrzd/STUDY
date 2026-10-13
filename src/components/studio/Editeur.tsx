@@ -3,7 +3,7 @@
 import { instantLisible, jourLisible } from "@/lib/horodatage";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
   ajouterBloc,
@@ -111,15 +111,19 @@ function EnteteSeance({
   libelleCours: string;
 }) {
   const [etat, action] = useActionState<EtatStudio, FormData>(majSeance, ETAT_STUDIO_INITIAL);
+  const formulaire = useRef<HTMLFormElement>(null);
+  const auto = useSauvegardeAuto(seance.updated_at, formulaire);
 
   return (
     <form
       action={action}
+      ref={formulaire}
+      onChange={auto.planifier}
       data-testid="seance-entete"
       className="panneau"
     >
       <input type="hidden" name="id" value={seance.id} />
-      <input type="hidden" name="version" value={seance.updated_at} />
+      <input type="hidden" name="version" value={auto.version} />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="m-0 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
@@ -194,12 +198,13 @@ function EnteteSeance({
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <Bouton libelle="Enregistrer la séance" variante="secondaire" marque="seance-enregistrer" />
+        <EtatSauvegarde auto={auto} />
         <p className="m-0 text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)]">
           Dernière modification {instantLisible(seance.updated_at)}
         </p>
       </div>
 
-      <Retour etat={etat} />
+      <Retour etat={auto.dernier ?? etat} />
     </form>
   );
 }
@@ -274,6 +279,9 @@ function BlocEditable({
     modifierBloc,
     ETAT_STUDIO_INITIAL,
   );
+  // EDIT-06 : le bloc en cours de modification s'enregistre seul, comme l'en-tête.
+  const formulaireBloc = useRef<HTMLFormElement>(null);
+  const autoBloc = useSauvegardeAuto(bloc.updated_at ?? "", formulaireBloc, modifierBloc);
   const [etatSuppr, actionSuppr] = useActionState<EtatStudio, FormData>(
     supprimerBloc,
     ETAT_STUDIO_INITIAL,
@@ -346,15 +354,16 @@ function BlocEditable({
 
       <div className="mt-2">
         {edition ? (
-          <form action={actionModif} data-testid="bloc-edition">
+          <form action={actionModif} ref={formulaireBloc} onChange={bloc.updated_at ? autoBloc.planifier : undefined} data-testid="bloc-edition">
             <input type="hidden" name="id" value={bloc.id} />
             <input type="hidden" name="seance" value={seance} />
-            {bloc.updated_at ? <input type="hidden" name="version" value={bloc.updated_at} /> : null}
+            {bloc.updated_at ? <input type="hidden" name="version" value={autoBloc.version} /> : null}
             <ChampsDuType bloc={bloc} texte={texte} />
-            <div className="mt-2 flex gap-2">
+            <div className="mt-2 flex flex-wrap items-center gap-3">
               <Bouton libelle="Enregistrer ce bloc" variante="secondaire" marque="bloc-enregistrer" />
+              <EtatSauvegarde auto={autoBloc} />
             </div>
-            <Retour etat={etatModif} />
+            <Retour etat={autoBloc.dernier ?? etatModif} />
           </form>
         ) : (
           <Apercu bloc={bloc} texte={texte} />
@@ -525,7 +534,7 @@ function ChampsDuType({ bloc, texte }: { bloc: Bloc; texte: string }) {
         maxLength={5000}
         className="champ min-h-[7rem] py-2.5"
       />
-      <p className="aide-champ">Formules : <code>{"$x^2$"}</code> dans la phrase, <code>{"$$\\frac{a}{b}$$"}</code> sur sa propre ligne.</p>
+      <p className="aide-champ">Mise en forme : <code>{"# Titre"}</code>, <code>{"- puce"}</code>, <code>{"1. étape"}</code>, <code>{"> à retenir"}</code>, <code>{"| a | b |"}</code> pour un tableau. Formules : <code>{"$x^2$"}</code> dans la phrase, <code>{"$$\\frac{a}{b}$$"}</code> sur sa ligne.</p>
     </>
   );
 }
@@ -680,7 +689,7 @@ function AjoutBloc({ seance }: { seance: string }) {
               autoFocus
               className="champ min-h-[7rem] py-2.5"
             />
-            <p className="aide-champ">Formules : <code>{"$x^2$"}</code> dans la phrase, <code>{"$$\\frac{a}{b}$$"}</code> sur sa propre ligne.</p>
+            <p className="aide-champ">Mise en forme : <code>{"# Titre"}</code>, <code>{"- puce"}</code>, <code>{"1. étape"}</code>, <code>{"> à retenir"}</code>, <code>{"| a | b |"}</code> pour un tableau. Formules : <code>{"$x^2$"}</code> dans la phrase, <code>{"$$\\frac{a}{b}$$"}</code> sur sa ligne.</p>
           </div>
         )}
 
@@ -866,5 +875,97 @@ function Retour({ etat }: { etat: EtatStudio }) {
         </span>
       ) : null}
     </p>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Sauvegarde automatique — cahier des charges ch. 11 (EDIT-06)                */
+/* -------------------------------------------------------------------------- */
+
+type EtatAuto = "repos" | "en_attente" | "enregistrement" | "enregistre" | "echec";
+
+/**
+ * Enregistre l'en-tête 1,2 s après la dernière frappe. L'appel passe hors du
+ * mécanisme de formulaire, qui viderait les champs à chaque envoi : ce qu'on
+ * tape pendant l'enregistrement n'est jamais effacé. La version renvoyée par
+ * le serveur est gardée ici : deux enregistrements rapprochés ne se prennent
+ * pas pour un conflit, et un vrai conflit (autre onglet) n'écrase rien.
+ */
+function useSauvegardeAuto(versionInitiale: string, formulaire: React.RefObject<HTMLFormElement | null>, enregistreur: (p: EtatStudio, d: FormData) => Promise<EtatStudio> = majSeance) {
+  const minuteur = useRef<number | null>(null);
+  const [version, setVersion] = useState(versionInitiale);
+  const [etat, setEtat] = useState<EtatAuto>("repos");
+  const [heure, setHeure] = useState<string | null>(null);
+  const [dernier, setDernier] = useState<EtatStudio | null>(null);
+  const versionRef = useRef(versionInitiale);
+
+  // Une version plus récente arrivée du serveur (rechargement) prend le relais.
+  useEffect(() => {
+    if (versionInitiale > versionRef.current) {
+      versionRef.current = versionInitiale;
+      setVersion(versionInitiale);
+    }
+  }, [versionInitiale]);
+
+  const enregistrer = useCallback(async () => {
+    const f = formulaire.current;
+    if (f === null) return;
+    const donnees = new FormData(f);
+    donnees.set("version", versionRef.current);
+    setEtat("enregistrement");
+    try {
+      const r = await enregistreur(ETAT_STUDIO_INITIAL, donnees);
+      if (r.etat === "ok") {
+        if (r.version) {
+          versionRef.current = r.version;
+          setVersion(r.version);
+        }
+        setEtat("enregistre");
+        setHeure(new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }));
+        setDernier(null);
+      } else {
+        setEtat("echec");
+        setDernier(r);
+      }
+    } catch {
+      setEtat("echec");
+      setDernier({ etat: "erreur", message: "La connexion a été perdue. Rien n'est perdu ici : réessayez." });
+    }
+  }, [formulaire, enregistreur]);
+
+  const planifier = useCallback(() => {
+    if (minuteur.current !== null) window.clearTimeout(minuteur.current);
+    setEtat("en_attente");
+    minuteur.current = window.setTimeout(() => void enregistrer(), 1200);
+  }, [enregistrer]);
+
+  useEffect(() => () => {
+    if (minuteur.current !== null) window.clearTimeout(minuteur.current);
+  }, []);
+
+  return { version, etat, heure, dernier, planifier, enregistrer };
+}
+
+function EtatSauvegarde({ auto }: { auto: ReturnType<typeof useSauvegardeAuto> }) {
+  const texte =
+    auto.etat === "en_attente"
+      ? "Modifications en attente…"
+      : auto.etat === "enregistrement"
+        ? "Enregistrement…"
+        : auto.etat === "enregistre"
+          ? `Enregistré à ${auto.heure}`
+          : auto.etat === "echec"
+            ? "Échec de l'enregistrement"
+            : null;
+  if (texte === null) return null;
+  return (
+    <span role="status" className={`inline-flex items-center gap-2 text-[length:var(--text-aide)] ${auto.etat === "echec" ? "text-[color:var(--color-erreur)]" : "text-[color:var(--color-encre-faible)]"}`}>
+      {texte}
+      {auto.etat === "echec" ? (
+        <button type="button" className="font-semibold text-[color:var(--color-accent)] underline underline-offset-2" onClick={() => void auto.enregistrer()}>
+          Réessayer
+        </button>
+      ) : null}
+    </span>
   );
 }

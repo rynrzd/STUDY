@@ -22,10 +22,16 @@ import { FicheImprimable } from "./FicheImprimable";
 export function VerificationRentree({
   lot,
   codeEtablissement,
+  rapprochement = null,
 }: {
   lot: LotComplet;
   codeEtablissement: string;
+  /** Sort de chaque ligne valide face aux élèves existants (IMP-04) ; `null` : indisponible. */
+  rapprochement?: Readonly<Record<string, { statut: "nouveau" | "existant" | "reinscription" | "conflit"; classeActuelle: string | null }>> | null;
 }) {
+  const sorts = rapprochement === null ? null : Object.values(rapprochement);
+  const compte = (s: string) => (sorts ?? []).filter((x) => x.statut === s).length;
+  const conflits = lot.lignes.filter((l) => rapprochement?.[l.id]?.statut === "conflit");
   const [creation, creer] = useActionState<EtatCreation, FormData>(
     creerLesComptes,
     ETAT_CREATION_INITIAL,
@@ -44,6 +50,41 @@ export function VerificationRentree({
   return (
     <div className="space-y-8">
       <Compteurs lot={lot} />
+
+      {sorts !== null && sorts.length > 0 ? (
+        <section aria-labelledby="titre-rapprochement" className="rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] p-5">
+          <h2 id="titre-rapprochement" className="m-0 text-[length:var(--text-h3)] leading-[var(--text-h3--line-height)]">
+            Qui est déjà là ?
+          </h2>
+          <p className="m-0 mt-1 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
+            Chaque élève du fichier, comparé à ceux de l&apos;établissement — par l&apos;INE d&apos;abord, puis par le nom. Rien n&apos;est encore écrit.
+          </p>
+          <dl className="m-0 mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Chiffre terme="Nouveaux" valeur={compte("nouveau")} accent />
+            <Chiffre terme="Déjà présents" valeur={compte("existant")} />
+            <Chiffre terme="Changent de classe" valeur={compte("reinscription")} />
+            <Chiffre terme="À confirmer" valeur={compte("conflit")} alerte={compte("conflit") > 0} />
+          </dl>
+          {conflits.length > 0 ? (
+            <div className="mt-4">
+              <p className="m-0 font-semibold">
+                Même nom qu&apos;un élève d&apos;une autre classe, sans INE pour trancher : homonyme, ou changement de classe ?
+              </p>
+              <ul className="m-0 mt-2 grid max-h-[240px] gap-1 overflow-y-auto pl-5 text-[length:var(--text-tableau)]">
+                {conflits.slice(0, 60).map((l) => (
+                  <li key={l.id}>
+                    {l.prenom} {l.nom} — dans le fichier : {l.classe}
+                    {rapprochement?.[l.id]?.classeActuelle ? ` · aujourd'hui : ${rapprochement[l.id]!.classeActuelle}` : " · plusieurs élèves portent ce nom"}
+                  </li>
+                ))}
+              </ul>
+              <p className="m-0 mt-2 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
+                Par défaut, ces lignes sont écartées : rien n&apos;est fusionné, personne n&apos;est déplacé. Ajoutez une colonne INE au fichier pour lever le doute, ou confirmez plus bas.
+              </p>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       <section aria-labelledby="titre-fichiers">
         <h2 id="titre-fichiers" className="text-[length:var(--text-h3)] leading-[var(--text-h3--line-height)]">
@@ -153,6 +194,15 @@ export function VerificationRentree({
 
         <form action={creer} data-testid="creation-comptes" className="mt-5">
           <input type="hidden" name="lot" value={lot.id} />
+          {conflits.length > 0 ? (
+            <label className="mb-4 flex items-start gap-3 text-[length:var(--text-tableau)]">
+              <input type="checkbox" name="confirmer_conflits" value="oui" className="mt-1 size-4 shrink-0 accent-[color:var(--color-accent)]" />
+              <span>
+                J&apos;ai vérifié : les {conflits.length} élève{conflits.length > 1 ? "s" : ""} « à confirmer » sont bien les mêmes personnes, qui changent de classe.
+                <span className="block text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">Sans cette case, ces lignes sont écartées et comptées à part.</span>
+              </span>
+            </label>
+          ) : null}
           <BoutonCreer bloque={lot.blocages.length > 0} nombre={lot.compte.valides} />
         </form>
       </section>
@@ -497,6 +547,7 @@ function Rapport({
         <dl className="m-0 mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <Chiffre terme="Comptes créés" valeur={creation.cree ?? 0} accent />
           <Chiffre terme="Déjà présents" valeur={creation.existant ?? 0} />
+          {(creation.ecartes ?? 0) > 0 ? <Chiffre terme="Écartés (à confirmer)" valeur={creation.ecartes ?? 0} alerte /> : null}
           <Chiffre terme="Changements de classe" valeur={creation.reinscrit ?? 0} />
           <Chiffre terme="En erreur" valeur={creation.erreurs ?? 0} alerte={(creation.erreurs ?? 0) > 0} />
         </dl>

@@ -93,7 +93,7 @@ export default async function PageDevoirsProfesseur() {
         </div>
       ) : (
         <>
-          <section className="mt-8 print:hidden">
+          <section id="donner" className="mt-8 scroll-mt-24 print:hidden">
             <h2 className="m-0 mb-4 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
               Donner un devoir
             </h2>

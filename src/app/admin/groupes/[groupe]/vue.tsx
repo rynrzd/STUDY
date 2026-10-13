@@ -1,5 +1,5 @@
 import { BookOpen, Layers, Users } from "lucide-react";
-import { AffecterProfesseurGroupe, AjouterEleves, RetirerEleve } from "@/components/admin/GroupeFormulaires";
+import { AffecterProfesseurGroupe, AjouterEleves, DescriptionGroupe, MembresGroupe } from "@/components/admin/GroupeFormulaires";
 import { EnTetePage } from "@/components/study/ui";
 import type { CoursGroupe, GroupeEtab, MembreGroupe } from "@/lib/etablissement";
 
@@ -15,7 +15,10 @@ export function VueGroupe({
   matieres,
   plus = false,
   classes = [],
+  description = null,
 }: {
+  /** Description facultative (0081, GR-02). */
+  description?: string | null;
   groupe: GroupeEtab;
   membres: readonly MembreGroupe[];
   cours: readonly CoursGroupe[];
@@ -39,6 +42,8 @@ export function VueGroupe({
         titre={groupe.label}
         sousTitre={`${groupe.annee} · ${membres.length} élève${membres.length > 1 ? "s" : ""}${classesSources.length > 1 ? ` de ${classesSources.length} classes` : ""} · ${cours.length} cours`}
       />
+
+      <DescriptionGroupe groupe={groupe.id} description={description} />
 
       <section aria-labelledby="cours" className="mb-8">
         <h2 id="cours" className="titre-section mb-3">
@@ -92,17 +97,7 @@ export function VueGroupe({
             {membres.length === 0 ? (
               <p className="meta m-0 mt-3">Aucun élève pour l&apos;instant. Ajoutez-en avec la liste à droite.</p>
             ) : (
-              <ul className="m-0 mt-3 list-none p-0">
-                {membres.map((m) => (
-                  <li key={m.profile_id} className="flex items-center justify-between gap-3 border-b border-[color:var(--bordure-douce,var(--color-bordure))] py-2.5 last:border-0">
-                    <span className="min-w-0">
-                      <span className="font-semibold">{m.nom.toUpperCase()}</span> {m.prenom}
-                      <span className="meta block">{m.classe ?? "Sans classe"}</span>
-                    </span>
-                    <RetirerEleve groupe={groupe.id} eleve={m.profile_id} nom={`${m.prenom} ${m.nom}`} />
-                  </li>
-                ))}
-              </ul>
+              <MembresGroupe groupe={groupe.id} membres={membres} />
             )}
           </div>
 

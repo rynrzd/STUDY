@@ -2,7 +2,7 @@ import Link from "next/link";
 import { EtapesImport } from "@/components/admin/EtapesImport";
 import { notFound, redirect } from "next/navigation";
 import { VerificationRentree } from "@/components/admin/VerificationRentree";
-import { contexte } from "@/lib/etablissement";
+import { contexte, rapprochementLot } from "@/lib/etablissement";
 import { lireLot } from "@/lib/lot-rentree";
 import { sessionCourante } from "@/lib/session-serveur";
 
@@ -30,6 +30,8 @@ export default async function PageVerification({
   const { lot: identifiant } = await params;
   const lot = await lireLot(personne.profileId, identifiant);
   if (lot === null) notFound();
+  // IMP-04 : qui est déjà là, avant de créer quoi que ce soit.
+  const rappro = lot.etat === "applique" ? null : await rapprochementLot(personne.profileId, identifiant);
 
   return (
     <div className="max-w-[72rem]">
@@ -51,7 +53,7 @@ export default async function PageVerification({
       </div>
 
       <div className="mt-8">
-        <VerificationRentree lot={lot} codeEtablissement={situation.publicCode} />
+        <VerificationRentree lot={lot} codeEtablissement={situation.publicCode} rapprochement={rappro === null ? null : Object.fromEntries(rappro)} />
       </div>
     </div>
   );

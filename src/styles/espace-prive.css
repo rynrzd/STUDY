@@ -604,3 +604,13 @@
   .formule-bloc { display: block; margin: 12px 0; overflow-x: auto; overflow-y: hidden; text-align: center; }
   .formule-brute { padding: 1px 4px; border-radius: 4px; background: var(--color-fond); font-size: 0.9em; }
 }
+
+/* Bloc texte mis en forme (EDIT-01) : encadré et tableau. Un tableau large
+   défile dans son cadre, jamais la page. */
+@layer components {
+  .encadre-seance { margin: 0; padding: 12px 16px; border-left: 3px solid var(--color-accent); border-radius: 0 12px 12px 0; background: var(--color-rose-clair); }
+  .tableau-seance { overflow-x: auto; }
+  .tableau-seance table { border-collapse: collapse; min-width: 100%; font-size: 0.9375rem; }
+  .tableau-seance th, .tableau-seance td { padding: 8px 12px; border: 1px solid var(--color-bordure); text-align: left; vertical-align: top; }
+  .tableau-seance th { background: var(--color-fond); font-weight: 700; }
+}

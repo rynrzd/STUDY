@@ -1004,3 +1004,64 @@ export async function importGroupes(
   }
   return data as ResultatImportGroupes;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Fiche professeur, contrôle complété, rapprochement d'import (0080)         */
+/* -------------------------------------------------------------------------- */
+
+export interface FicheProfesseur {
+  readonly identite: { prenom: string; nom: string; identifiant: string; etat_compte: string; actif: boolean; roles: readonly string[]; courriel: string | null };
+  readonly affectations: readonly {
+    id: string; espace: string; matiere: string; cible: string; genre: "classe" | "groupe"; cible_id: string; annee: string;
+    role: string; debut: string; fin: string | null; etat: "en_cours" | "a_venir" | "termine" | "archive";
+  }[];
+  readonly principal_de: readonly { id: string; label: string }[];
+}
+
+/** La fiche d'un professeur de l'établissement (PROF-07) ; `null` sinon. */
+export async function ficheProfesseur(acteur: string, professeur: string): Promise<FicheProfesseur | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_fiche_professeur", { p_acteur: acteur, p_prof: professeur });
+  if (error !== null) return null;
+  return data as FicheProfesseur;
+}
+
+export interface ControleComplement {
+  readonly comptes_suspendus: PointDeControle;
+  readonly publications_non_autorisees: PointDeControle;
+}
+
+/** Comptes suspendus et séances d'un professeur qui n'enseigne plus le cours (ONB-05). */
+export async function controleComplement(acteur: string): Promise<ControleComplement | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_controle_complement", { p_acteur: acteur });
+  if (error !== null) return null;
+  return data as ControleComplement;
+}
+
+export type StatutRapprochement = "nouveau" | "existant" | "reinscription" | "conflit";
+
+/** Sort de chaque ligne valide d'un lot avant application (IMP-02, IMP-04) ; `null` : indisponible. */
+export async function rapprochementLot(acteur: string, lot: string): Promise<Map<string, { statut: StatutRapprochement; classeActuelle: string | null }> | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_lot_rapprochement", { p_acteur: acteur, p_lot: lot });
+  if (error !== null) return null;
+  return new Map(((data ?? []) as { ligne: string; statut: StatutRapprochement; classe_actuelle: string | null }[]).map((r) => [r.ligne, { statut: r.statut, classeActuelle: r.classe_actuelle }]));
+}
+
+/* -------------------------------------------------------------------------- */
+/* Description d'un groupe (0081, GR-02)                                      */
+/* -------------------------------------------------------------------------- */
+
+export async function groupeDescription(acteur: string, groupe: string): Promise<string | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_groupe_description", { p_acteur: acteur, p_groupe: groupe });
+  if (error !== null) return null;
+  return (data as string | null) ?? null;
+}
+
+/** Écrit (ou retire, si vide) la description ; `false` si refusé. */
+export async function groupeDecrire(acteur: string, groupe: string, texte: string): Promise<boolean> {
+  const { error } = await clientExploitation("administration_des_comptes").rpc("etab_groupe_decrire", { p_acteur: acteur, p_groupe: groupe, p_description: texte });
+  if (error !== null) {
+    journaliserGroupe("groupe_decrire", error.code);
+    return false;
+  }
+  return true;
+}

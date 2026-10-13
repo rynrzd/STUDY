@@ -3,11 +3,16 @@ import { ArrowRight, BookOpen, Building2, ChevronRight, CircleCheck, GraduationC
 import { AjouterPersonne } from "@/components/admin/AjouterPersonne";
 import { FormulaireConservation } from "@/components/admin/Formulaires";
 import { CarteChiffre, EnTetePage, Etiquette, ICONE, Ligne, ListeLignes, TuileIcone } from "@/components/study/ui";
-import type { ControleOuverture, classes, contexte } from "@/lib/etablissement";
+import type { ControleComplement, ControleOuverture, classes, contexte } from "@/lib/etablissement";
 import type { historiqueImports } from "@/lib/lot-rentree";
 
 /** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
-export function VueAdmin({ situation, nbSignalements, nbRecuperations, nbEleves, nbEnseignants, nbAActiver, sansProfesseur, listeClasses, imports, conservation = null, controle = null }: {
+export function VueAdmin({ situation, nbSignalements, nbRecuperations, nbEleves, nbEnseignants, nbAActiver, sansProfesseur, listeClasses, imports, conservation = null, controle = null, complement = null, nbMatieres = null, nbAffectations = null }: {
+  /** Mise en route (ONB-02) : comptes réels, pour situer chaque étape. */
+  nbMatieres?: number | null;
+  nbAffectations?: number | null;
+  /** Comptes suspendus, publications non autorisées (0080, ONB-05). */
+  complement?: ControleComplement | null;
   /** Contrôle avant ouverture (0077, ONB-05) ; `null` : indisponible. */
   controle?: ControleOuverture | null;
   situation: NonNullable<Awaited<ReturnType<typeof contexte>>>;
@@ -56,6 +61,28 @@ export function VueAdmin({ situation, nbSignalements, nbRecuperations, nbEleves,
         </div>
       </section>
 
+      <MiseEnRoute
+        etapes={[
+          { titre: "Année scolaire", detail: situation.anneeLabel ?? "à définir", fait: situation.anneeLabel !== null, href: "/admin/annees" },
+          { titre: "Classes", detail: `${listeClasses.length} classe${listeClasses.length > 1 ? "s" : ""}`, fait: listeClasses.length > 0, href: "/admin/classes" },
+          { titre: "Élèves", detail: nbEleves === null ? "—" : `${nbEleves} élève${nbEleves > 1 ? "s" : ""}`, fait: (nbEleves ?? 0) > 0, href: "/admin/import" },
+          { titre: "Matières et groupes", detail: nbMatieres === null ? "—" : `${nbMatieres} matière${nbMatieres > 1 ? "s" : ""}`, fait: (nbMatieres ?? 0) > 0, href: "/admin/classes" },
+          { titre: "Professeurs et cours", detail: nbAffectations === null ? "—" : `${nbEnseignants ?? 0} professeur(s), ${nbAffectations} cours`, fait: (nbEnseignants ?? 0) > 0 && (nbAffectations ?? 0) > 0, href: "/admin/professeurs" },
+          {
+            titre: "Vérification finale",
+            detail: controle === null ? "à vérifier" : "voir « Avant d'ouvrir aux élèves »",
+            fait:
+              controle !== null &&
+              controle.eleves_sans_classe.n === 0 &&
+              controle.cours_sans_professeur.n === 0 &&
+              controle.professeurs_sans_cours.n === 0 &&
+              (complement === null || complement.publications_non_autorisees.n === 0) &&
+              listeClasses.length > 0,
+            href: "#avant-ouverture",
+          },
+        ]}
+      />
+
       {listeClasses.length === 0 ? (
         <section className="mt-6 flex flex-wrap items-center gap-5 rounded-[var(--radius-carte)] bg-[color:var(--color-rose-clair)] p-6" aria-labelledby="demarrer">
           <TuileIcone icone={Building2} ton="neutre" grande />
@@ -102,7 +129,7 @@ export function VueAdmin({ situation, nbSignalements, nbRecuperations, nbEleves,
 
       {listeClasses.length > 0 ? (
         <>
-          <ControleAvantOuverture controle={controle} nbAActiver={nbAActiver} sansProfesseur={sansProfesseur.length} />
+          <ControleAvantOuverture controle={controle} complement={complement} nbAActiver={nbAActiver} sansProfesseur={sansProfesseur.length} />
 
           {imports.length > 0 ? (
             <section className="mt-8" aria-labelledby="imports">
@@ -179,7 +206,7 @@ export function VueAdmin({ situation, nbSignalements, nbRecuperations, nbEleves,
  * l'écran où le régler. Ce qui est réglé disparaît ; quand tout l'est, on le
  * dit.
  */
-function ControleAvantOuverture({ controle, nbAActiver, sansProfesseur }: { controle: ControleOuverture | null; nbAActiver: number | null; sansProfesseur: number }) {
+function ControleAvantOuverture({ controle, complement = null, nbAActiver, sansProfesseur }: { controle: ControleOuverture | null; complement?: ControleComplement | null; nbAActiver: number | null; sansProfesseur: number }) {
   const exemples = (p: { exemples: readonly { nom: string }[]; n: number }) =>
     p.exemples.length === 0 ? "" : ` — ${p.exemples.map((e) => e.nom).join(", ")}${p.n > p.exemples.length ? "…" : ""}`;
   const pluriel = (n: number, un: string, plusieurs: string) => `${n} ${n > 1 ? plusieurs : un}`;
@@ -197,6 +224,12 @@ function ControleAvantOuverture({ controle, nbAActiver, sansProfesseur }: { cont
         { n: controle.matieres_non_enseignees.n, href: "/admin/classes#affecter", icone: BookOpen, titre: pluriel(controle.matieres_non_enseignees.n, "matière sans cours", "matières sans cours"), detail: `Créées mais enseignées nulle part${exemples(controle.matieres_non_enseignees)}.` },
         { n: nbAActiver ?? 0, href: "/admin/utilisateurs?etat=a_activer", icone: KeyRound, titre: pluriel(nbAActiver ?? 0, "compte jamais activé", "comptes jamais activés"), detail: "Remettez la fiche d'accès : la personne choisit son mot de passe à la première connexion." },
       ];
+  if (complement !== null) {
+    points.push(
+      { n: complement.comptes_suspendus.n, href: "/admin/utilisateurs", icone: KeyRound, titre: pluriel(complement.comptes_suspendus.n, "compte suspendu", "comptes suspendus"), detail: `Ces personnes ne peuvent plus se connecter : est-ce voulu ?${exemples(complement.comptes_suspendus)}` },
+      { n: complement.publications_non_autorisees.n, href: "/admin/professeurs", icone: ShieldCheck, titre: pluriel(complement.publications_non_autorisees.n, "séance publiée par un ancien professeur du cours", "séances publiées par d'anciens professeurs du cours"), detail: `Leur auteur n'enseigne plus ce cours : confiez-le à un professeur, qui décidera de les garder${exemples(complement.publications_non_autorisees)}.` },
+    );
+  }
   const restants = points.filter((x) => x.n > 0);
   return (
     <section className="mt-8" aria-labelledby="avant-ouverture">
@@ -217,6 +250,48 @@ function ControleAvantOuverture({ controle, nbAActiver, sansProfesseur }: { cont
           ))}
         </ListeLignes>
       )}
+    </section>
+  );
+}
+
+/**
+ * Mise en route — cahier des charges ch. 05 (ONB-02) : six étapes, dans
+ * l'ordre où elles dépendent l'une de l'autre. Chaque état est calculé sur
+ * les données réelles : on reprend où l'on s'était arrêté, sans rien
+ * mémoriser à part. Une fois tout fait, le panneau se résume à une ligne.
+ */
+function MiseEnRoute({ etapes }: { etapes: readonly { titre: string; detail: string; fait: boolean; href: string }[] }) {
+  const faites = etapes.filter((e) => e.fait).length;
+  if (faites === etapes.length) {
+    return (
+      <p className="m-0 mt-6 flex items-center gap-2 font-semibold text-[color:var(--color-succes)]">
+        <CircleCheck size={18} strokeWidth={1.75} aria-hidden="true" /> Mise en route terminée : les six étapes sont faites.
+      </p>
+    );
+  }
+  const suivante = etapes.findIndex((e) => !e.fait);
+  return (
+    <section className="mt-6" aria-labelledby="mise-en-route">
+      <h2 id="mise-en-route" className="titre-section mb-3 flex items-center gap-2">
+        Mise en route <span className="nombre">{faites} / {etapes.length}</span>
+      </h2>
+      <ol className="parcours" aria-label="Étapes de mise en route">
+        {etapes.map((e, i) => (
+          <li key={e.titre} data-fait={e.fait ? "" : undefined} aria-current={i === suivante ? "step" : undefined}>
+            <span className="parcours-numero" aria-hidden="true">
+              {e.fait ? <CircleCheck size={18} strokeWidth={2.5} /> : i + 1}
+            </span>
+            <span className="min-w-0">
+              <Link href={e.href} className="block font-bold text-[color:var(--color-encre)] hover:text-[color:var(--color-accent)]">
+                {e.titre}
+              </Link>
+              <span className="meta block">
+                {e.detail} · <span className="font-semibold">{e.fait ? "fait" : i === suivante ? "à faire maintenant" : "à faire"}</span>
+              </span>
+            </span>
+          </li>
+        ))}
+      </ol>
     </section>
   );
 }

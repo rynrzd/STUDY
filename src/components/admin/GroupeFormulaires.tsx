@@ -9,6 +9,8 @@ import {
   ajouterDesEleves,
   chercherElevesPourGroupe,
   creerUnGroupe,
+  decrireUnGroupe,
+  retirerPlusieursEleves,
   retirerUnEleve,
 } from "@/app/admin/groupes/actions";
 import { ETAT_ADMIN_INITIAL, type EtatAdmin } from "@/app/admin/etats";
@@ -311,5 +313,115 @@ function Retour({ etat }: { etat: EtatAdmin }) {
     >
       <Icone size={18} strokeWidth={1.75} aria-hidden="true" className="shrink-0" /> {etat.message}
     </p>
+  );
+}
+
+/* ------------------------------------------ Membres, retrait multiple ----- */
+
+/**
+ * Les élèves du groupe, cochables (GR-05) : retirer un élève ou plusieurs
+ * d'un coup. Le retrait multiple passe par une confirmation qui nomme le
+ * nombre et la conséquence ; rien n'est effacé, l'appartenance est close.
+ */
+export function MembresGroupe({ groupe, membres }: { groupe: string; membres: readonly { profile_id: string; prenom: string; nom: string; classe: string | null }[] }) {
+  const [coches, setCoches] = useState<string[]>([]);
+  const [confirmer, setConfirmer] = useState(false);
+  const [etat, action] = useActionState<EtatAdmin, FormData>(async (p, d) => {
+    try {
+      const r = await retirerPlusieursEleves(p, d);
+      setCoches([]);
+      setConfirmer(false);
+      return r;
+    } catch {
+      return { etat: "erreur", message: "La réponse du serveur n'est pas arrivée. Rechargez la page." };
+    }
+  }, ETAT_ADMIN_INITIAL);
+  const basculer = (id: string) => setCoches((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
+
+  return (
+    <div>
+      <ul className="m-0 mt-3 list-none p-0">
+        {membres.map((m) => (
+          <li key={m.profile_id} className="flex items-center justify-between gap-3 border-b border-[color:var(--bordure-douce,var(--color-bordure))] py-2.5 last:border-0">
+            <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+              <input type="checkbox" checked={coches.includes(m.profile_id)} onChange={() => basculer(m.profile_id)} className="size-4 shrink-0 accent-[color:var(--color-accent)]" />
+              <span className="min-w-0">
+                <span className="font-semibold">{m.nom.toUpperCase()}</span> {m.prenom}
+                <span className="meta block">{m.classe ?? "Sans classe"}</span>
+              </span>
+            </label>
+            <RetirerEleve groupe={groupe} eleve={m.profile_id} nom={`${m.prenom} ${m.nom}`} />
+          </li>
+        ))}
+      </ul>
+      {coches.length > 0 ? (
+        <form action={action} className="mt-3 flex flex-wrap items-center gap-2 rounded-[var(--rayon-m)] bg-[color:var(--color-fond)] p-3">
+          <input type="hidden" name="groupe" value={groupe} />
+          {coches.map((c) => (
+            <input key={c} type="hidden" name="eleve" value={c} />
+          ))}
+          {confirmer ? (
+            <>
+              <span className="text-[0.875rem]">
+                Retirer {coches.length} élève{coches.length > 1 ? "s" : ""} du groupe ? Leurs droits sur ses cours s&apos;arrêtent aujourd&apos;hui ; rien n&apos;est effacé.
+              </span>
+              <button type="submit" className="bouton bouton-compact bouton-primaire">
+                Confirmer le retrait
+              </button>
+              <button type="button" className="bouton bouton-compact bouton-discret" onClick={() => setConfirmer(false)}>
+                Annuler
+              </button>
+            </>
+          ) : (
+            <>
+              <span className="text-[0.875rem] font-semibold">{coches.length} sélectionné{coches.length > 1 ? "s" : ""}</span>
+              <button type="button" className="bouton bouton-compact bouton-secondaire" onClick={() => setConfirmer(true)}>
+                <UserMinus size={16} strokeWidth={1.75} aria-hidden="true" /> Retirer la sélection
+              </button>
+              <button type="button" className="bouton bouton-compact bouton-discret" onClick={() => setCoches([])}>
+                Tout décocher
+              </button>
+            </>
+          )}
+        </form>
+      ) : null}
+      {etat.message ? (
+        <p role="status" className={`m-0 mt-2 text-[0.875rem] ${etat.etat === "ok" ? "text-[color:var(--color-succes)]" : "text-[color:var(--color-erreur)]"}`}>
+          {etat.message}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/* -------------------------------------------------- Description ------------ */
+
+/** Description facultative d'un groupe (GR-02) : jours, salle, consignes. */
+export function DescriptionGroupe({ groupe, description }: { groupe: string; description: string | null }) {
+  const [etat, action] = useActionState<EtatAdmin, FormData>(async (p, d) => {
+    try {
+      return await decrireUnGroupe(p, d);
+    } catch {
+      return { etat: "erreur", message: "La réponse du serveur n'est pas arrivée." };
+    }
+  }, ETAT_ADMIN_INITIAL);
+  return (
+    <form action={action} className="panneau mb-8">
+      <input type="hidden" name="groupe" value={groupe} />
+      <label className="etiquette" htmlFor={`description-${groupe}`}>
+        Description (facultative)
+      </label>
+      <textarea id={`description-${groupe}`} name="description" defaultValue={description ?? ""} maxLength={500} rows={2} className="champ min-h-[4.5rem] py-2.5" placeholder="Jours, salle, ce qui réunit ces élèves…" />
+      <div className="mt-2 flex flex-wrap items-center gap-3">
+        <button type="submit" className="bouton bouton-compact bouton-secondaire">
+          Enregistrer
+        </button>
+        {etat.message ? (
+          <span role="status" className={`text-[0.875rem] ${etat.etat === "ok" ? "text-[color:var(--color-succes)]" : "text-[color:var(--color-erreur)]"}`}>
+            {etat.message}
+          </span>
+        ) : null}
+      </div>
+    </form>
   );
 }

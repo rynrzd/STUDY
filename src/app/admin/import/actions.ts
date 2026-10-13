@@ -311,6 +311,7 @@ export async function creerLesComptes(
     annee,
     lot,
     domaineAlias: domaine,
+    confirmerConflits: donnees.get("confirmer_conflits") === "oui",
   });
 
   if ("erreur" in rapport) {
@@ -326,6 +327,7 @@ export async function creerLesComptes(
     existant: rapport.existant,
     reinscrit: rapport.reinscrit,
     erreurs: rapport.erreurs,
+    ecartes: rapport.ecartes,
     acces: rapport.acces,
     echecs: rapport.echecs,
   };

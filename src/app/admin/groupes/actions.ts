@@ -8,6 +8,7 @@ import {
   creerGroupe,
   type GenreGroupe,
   groupeAjouterEleves,
+  groupeDecrire,
   groupeMembres,
   groupeRetirerEleve,
   rechercherMembres,
@@ -171,4 +172,38 @@ export async function chercherElevesPourGroupe(
   // « plus » : la recherche a d'autres résultats que ceux montrés — on invite
   // à l'affiner plutôt que d'annoncer un chiffre approximatif.
   return { eleves, plus: page.total > page.lignes.length || page.lignes.length - eleves.length > 0 && eleves.length === 50 };
+}
+
+/**
+ * Retirer plusieurs élèves d'un groupe (GR-05). Chaque retrait clôt
+ * l'appartenance à la date du jour : les droits futurs s'arrêtent, l'historique
+ * reste. Le compte rendu dit combien ont été retirés, et combien refusés.
+ */
+export async function retirerPlusieursEleves(_precedent: EtatAdmin, donnees: FormData): Promise<EtatAdmin> {
+  const acteur = await exigerAdministrateur();
+  const groupe = identifiant(donnees, "groupe");
+  const eleves = identifiants(donnees, "eleve");
+  if (groupe === null) return { etat: "erreur", message: "Groupe introuvable." };
+  if (eleves.length === 0) return { etat: "erreur", message: "Cochez au moins un élève." };
+  if (eleves.length > 200) return { etat: "erreur", message: "Retirez au plus 200 élèves à la fois." };
+  let retires = 0;
+  for (const eleve of eleves) if (await groupeRetirerEleve(acteur, groupe, eleve)) retires++;
+  revalidatePath(`/admin/groupes/${groupe}`);
+  revalidatePath("/admin/groupes");
+  const refuses = eleves.length - retires;
+  return {
+    etat: refuses === 0 ? "ok" : "erreur",
+    message: `${retires} élève${retires > 1 ? "s" : ""} retiré${retires > 1 ? "s" : ""} du groupe${refuses > 0 ? `, ${refuses} refusé${refuses > 1 ? "s" : ""}` : ""}. Rien n'est effacé : l'historique reste.`,
+  };
+}
+
+/** Description facultative d'un groupe (GR-02). */
+export async function decrireUnGroupe(_precedent: EtatAdmin, donnees: FormData): Promise<EtatAdmin> {
+  const acteur = await exigerAdministrateur();
+  const groupe = identifiant(donnees, "groupe");
+  if (groupe === null) return { etat: "erreur", message: "Groupe introuvable." };
+  const description = texte(donnees, "description", 500);
+  if (!(await groupeDecrire(acteur, groupe, description))) return { etat: "erreur", message: "La description n'a pas pu être enregistrée." };
+  revalidatePath(`/admin/groupes/${groupe}`);
+  return { etat: "ok", message: description === "" ? "Description retirée." : "Description enregistrée." };
 }

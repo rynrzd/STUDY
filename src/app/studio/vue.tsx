@@ -1,12 +1,15 @@
-import Link from "next/link";
 import { FilePen, FileText } from "lucide-react";
 import { NouveauChapitre, NouvelleSeance } from "@/components/studio/Creation";
+import { GestesChapitre } from "@/components/studio/GestesChapitre";
+import { ChoixCours } from "@/components/studio/ChoixCours";
 import { RubriqueCours } from "@/components/study/Rubriques";
 import { EnTetePage, EtatVide, Etiquette, Ligne, ListeLignes } from "@/components/study/ui";
 import type { chapitresDuCours, coursDuProfesseur, seancesDuCours } from "@/lib/studio";
 
 /** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
-export function VueStudio({ cours, choisi, chapitres, seances, sansChapitre, brouillons }: {
+export function VueStudio({ cours, choisi, chapitres, seances, sansChapitre, brouillons, archives = [] }: {
+  /** Chapitres archivés (COURS-02), en fin de page, restaurables. */
+  archives?: Awaited<ReturnType<typeof chapitresDuCours>>;
   cours: Awaited<ReturnType<typeof coursDuProfesseur>>;
   choisi: Awaited<ReturnType<typeof coursDuProfesseur>>[number];
   chapitres: Awaited<ReturnType<typeof chapitresDuCours>>;
@@ -24,15 +27,7 @@ export function VueStudio({ cours, choisi, chapitres, seances, sansChapitre, bro
         actions={<NouvelleSeance cours={choisi.id} chapitres={chapitres} menu />}
       />
 
-      {cours.length > 1 ? (
-        <nav aria-label="Choisir un cours" className="mb-6 flex flex-wrap gap-2">
-          {cours.map((autre) => (
-            <Link key={autre.id} href={`/studio?cours=${autre.id}`} aria-current={autre.id === choisi.id ? "page" : undefined} className="pilule">
-              {autre.libelle}
-            </Link>
-          ))}
-        </nav>
-      ) : null}
+      {cours.length > 1 ? <ChoixCours cours={cours} choisi={choisi.id} /> : null}
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
         <div className="space-y-8">
@@ -44,7 +39,7 @@ export function VueStudio({ cours, choisi, chapitres, seances, sansChapitre, bro
             />
           ) : null}
 
-          {chapitres.map((chapitre) => (
+          {chapitres.map((chapitre, i) => (
             <ListeChapitre
               key={chapitre.id}
               titre={chapitre.label}
@@ -52,13 +47,36 @@ export function VueStudio({ cours, choisi, chapitres, seances, sansChapitre, bro
               cours={choisi.id}
               chapitre={chapitre.id}
               chapitres={chapitres}
+              gestes={<GestesChapitre id={chapitre.id} label={chapitre.label} premier={i === 0} dernier={i === chapitres.length - 1} />}
             />
           ))}
 
           {sansChapitre.length > 0 ? <ListeChapitre titre="Sans chapitre" seances={sansChapitre} cours={choisi.id} chapitre={null} chapitres={chapitres} /> : null}
+
+          {archives.length > 0 ? (
+            <details className="chapitres-archives">
+              <summary className="titre-section cursor-pointer">
+                Chapitres archivés <span className="nombre">{archives.length}</span>
+              </summary>
+              <div className="mt-4 space-y-6">
+                {archives.map((chapitre) => (
+                  <ListeChapitre
+                    key={chapitre.id}
+                    titre={chapitre.label}
+                    seances={seances.filter((seance) => seance.chapter_id === chapitre.id)}
+                    cours={choisi.id}
+                    chapitre={chapitre.id}
+                    chapitres={chapitres}
+                    archive
+                    gestes={<GestesChapitre id={chapitre.id} label={chapitre.label} premier dernier archive />}
+                  />
+                ))}
+              </div>
+            </details>
+          ) : null}
         </div>
 
-        <aside className="rounded-[var(--radius-carte)] bg-[color:var(--color-rose-clair)] p-5 lg:sticky lg:top-24">
+        <aside id="nouveau-chapitre" className="scroll-mt-24 rounded-[var(--radius-carte)] bg-[color:var(--color-rose-clair)] p-5 lg:sticky lg:top-24">
           <NouveauChapitre cours={choisi.id} />
         </aside>
       </div>
@@ -75,7 +93,11 @@ function ListeChapitre({
   cours,
   chapitre,
   chapitres,
+  gestes = null,
+  archive = false,
 }: {
+  gestes?: React.ReactNode;
+  archive?: boolean;
   titre: string;
   seances: { id: string; title: string; state: string; scheduled_for: string | null }[];
   cours: string;
@@ -84,9 +106,12 @@ function ListeChapitre({
 }) {
   return (
     <section aria-label={titre}>
-      <h2 className="titre-section mb-3 flex items-center gap-2">
-        {titre} <span className="nombre">{seances.length}</span>
-      </h2>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="titre-section m-0 flex items-center gap-2">
+          {titre} <span className="nombre">{seances.length}</span>
+        </h2>
+        {gestes}
+      </div>
 
       {seances.length === 0 ? (
         <p className="m-0 text-[color:var(--color-encre-faible)]">Aucune séance dans ce chapitre.</p>
@@ -109,9 +134,11 @@ function ListeChapitre({
         </ListeLignes>
       )}
 
-      <div className="mt-3">
-        <NouvelleSeance cours={cours} chapitres={chapitres} chapitreParDefaut={chapitre} compact />
-      </div>
+      {archive ? null : (
+        <div className="mt-3">
+          <NouvelleSeance cours={cours} chapitres={chapitres} chapitreParDefaut={chapitre} compact />
+        </div>
+      )}
     </section>
   );
 }

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { affectations, classes, comptesMembres, conservationJournal, contexte, controleOuverture } from "@/lib/etablissement";
+import { affectations, classes, comptesMembres, conservationJournal, contexte, controleOuverture, controleComplement, matieres } from "@/lib/etablissement";
 import { historiqueImports } from "@/lib/lot-rentree";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
@@ -37,7 +37,7 @@ export default async function PageAdmin() {
 
   const jeton = await jetonAccesDe(personne);
   const client = jeton ? clientUtilisateur(jeton) : null;
-  const [listeClasses, comptes, listeAffectations, imports, signalementsOuverts, recuperations, conservation, controle] = await Promise.all([
+  const [listeClasses, comptes, listeAffectations, imports, signalementsOuverts, recuperations, conservation, controle, complement, listeMatieres] = await Promise.all([
     classes(personne.profileId),
     comptesMembres(personne.profileId),
     affectations(personne.profileId),
@@ -47,11 +47,13 @@ export default async function PageAdmin() {
     client ? client.rpc("recuperation_a_traiter") : null,
     conservationJournal(personne.profileId),
     controleOuverture(personne.profileId),
+    controleComplement(personne.profileId),
+    matieres(personne.profileId),
   ]);
   const nbSignalements = signalementsOuverts?.error ? null : (signalementsOuverts?.count ?? null);
   const nbRecuperations = recuperations?.error ? null : ((recuperations?.data ?? []) as unknown[]).length;
 
   const sansProfesseur = listeAffectations.filter((lien) => lien.professeur_id === null);
 
-  return <VueAdmin situation={situation} nbSignalements={nbSignalements} nbRecuperations={nbRecuperations} nbEleves={comptes?.eleves ?? null} nbEnseignants={comptes?.professeurs ?? null} nbAActiver={comptes?.a_activer ?? null} sansProfesseur={sansProfesseur} listeClasses={listeClasses} imports={imports} conservation={conservation} controle={controle} />;
+  return <VueAdmin situation={situation} nbSignalements={nbSignalements} nbRecuperations={nbRecuperations} nbEleves={comptes?.eleves ?? null} nbEnseignants={comptes?.professeurs ?? null} nbAActiver={comptes?.a_activer ?? null} sansProfesseur={sansProfesseur} listeClasses={listeClasses} imports={imports} conservation={conservation} controle={controle} complement={complement} nbMatieres={listeMatieres.length} nbAffectations={listeAffectations.filter((l) => l.professeur_id !== null).length} />;
 }
