@@ -2,6 +2,7 @@ import Link from "next/link";
 import { EtapesImport } from "@/components/admin/EtapesImport";
 import { redirect } from "next/navigation";
 import { DepotRentree } from "@/components/admin/DepotRentree";
+import { ImportGroupes } from "@/components/admin/ImportGroupes";
 import { contexte } from "@/lib/etablissement";
 import { historiqueImports } from "@/lib/lot-rentree";
 import { sessionCourante } from "@/lib/session-serveur";
@@ -68,6 +69,23 @@ export default async function PageImport() {
         </p>
         <div className="mt-4">
           <DepotRentree cible="professeurs" />
+        </div>
+      </section>
+
+      <section id="groupes" aria-labelledby="titre-groupes" className="mt-12 scroll-mt-24">
+        <h2
+          id="titre-groupes"
+          className="text-[length:var(--text-h3)] leading-[var(--text-h3--line-height)]"
+        >
+          Groupes (spécialités, langues, options)
+        </h2>
+        <p className="m-0 mt-2 max-w-[70ch] text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-faible)]">
+          Après les élèves et les professeurs. Les élèves sont retrouvés par leur
+          identifiant ou leur INE, jamais par leur nom ; un identifiant douteux est
+          signalé, pas deviné.
+        </p>
+        <div className="mt-4">
+          <ImportGroupes />
         </div>
       </section>
 

@@ -136,6 +136,11 @@ export function DepotRentree({ cible }: { cible: "eleves" | "professeurs" }) {
           Rien n&apos;est créé maintenant : vous verrez d&apos;abord ce qui a été
           compris.
         </p>
+        <p className="m-0 mt-2 text-[length:var(--text-aide)]">
+          <a href={`/admin/import/modele?type=${cible}`} className="lien-fleche" download>
+            Télécharger un modèle de fichier (.csv)
+          </a>
+        </p>
 
         <input
           ref={champ}

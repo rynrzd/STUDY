@@ -46,6 +46,7 @@ export function RubriquePersonnes({ actif }: { actif: (typeof ONGLETS_PERSONNES)
 export const ONGLETS_CLASSES = [
   { href: "/admin/classes", libelle: "Classes et cours" },
   { href: "/admin/groupes", libelle: "Groupes (spécialités, options…)" },
+  { href: "/admin/enseignements", libelle: "Qui enseigne quoi" },
 ] as const satisfies readonly Onglet[];
 
 export function RubriqueClasses({ actif }: { actif: (typeof ONGLETS_CLASSES)[number]["href"] }) {

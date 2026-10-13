@@ -94,6 +94,11 @@ export function VerificationRentree({
             Corrigez-les ici, sans retoucher vos fichiers. Chaque correction est
             enregistrée aussitôt et le compte se met à jour.
           </p>
+          <p className="m-0 mt-2">
+            <a href={`/admin/import/${lot.id}/erreurs`} className="lien-fleche" download>
+              Télécharger {aCorriger.length > 50 ? "toutes " : ""}les lignes à corriger (CSV)
+            </a>
+          </p>
           <div className="mt-4 space-y-3">
             {aCorriger.slice(0, 50).map((ligne) => (
               <LigneCorrigeable key={ligne.id} ligne={ligne} lot={lot.id} />

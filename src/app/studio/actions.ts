@@ -165,6 +165,18 @@ export async function creerSeance(
   return { etat: "ok", message: "Séance créée.", cree: data.id };
 }
 
+/**
+ * Réponse à un conflit de version (EDIT-07) : on n'écrase pas, on le dit, et
+ * on rend la saisie pour qu'elle ne soit pas perdue.
+ */
+function conflit(saisie: string): EtatStudio {
+  return {
+    etat: "erreur",
+    message: "Modifié ailleurs entre-temps (un autre onglet, ou un collègue du cours). Rien n'a été écrasé : rechargez la page pour repartir de la dernière version.",
+    conflit: saisie.slice(0, 4000),
+  };
+}
+
 export async function majSeance(
   _precedent: EtatStudio,
   donnees: FormData,
@@ -190,7 +202,10 @@ export async function majSeance(
 
   if (!analyse.success) return { etat: "erreur", message: "Vérifiez le titre." };
 
-  const { error } = await clientUtilisateur(jeton)
+  // EDIT-07 : la version lue à l'ouverture accompagne l'enregistrement. Si la
+  // séance a changé depuis (autre onglet, co-intervenant), rien n'est écrit.
+  const version = String(donnees.get("version") ?? "");
+  let requete = clientUtilisateur(jeton)
     .from("lessons")
     .update({
       title: analyse.data.titre,
@@ -202,8 +217,11 @@ export async function majSeance(
           : new Date(`${analyse.data.date}T08:00:00`).toISOString(),
     })
     .eq("id", analyse.data.id);
+  if (version !== "") requete = requete.eq("updated_at", version);
+  const { data: ecrites, error } = await requete.select("id");
 
   if (error !== null) return REFUS;
+  if ((ecrites ?? []).length === 0) return conflit(`${analyse.data.titre}${analyse.data.objectif ? `\n${analyse.data.objectif}` : ""}`);
 
   revalidatePath(`/studio/${analyse.data.id}`);
   return { etat: "ok", message: "Enregistré." };
@@ -617,6 +635,13 @@ export async function modifierBloc(
     if (nom === "") return { etat: "erreur", message: "Donnez un nom à ce document." };
     if (trop(nom, 200)) return { etat: "erreur", message: "Ce nom est trop long." };
     contenu = { ...actuel.contenu, nom };
+    // Image (EDIT-05) : légende et texte alternatif, rangés avec le bloc.
+    if (String(actuel.contenu.format ?? "").startsWith("image")) {
+      const legende = lire("legende");
+      const alt = lire("alt");
+      if (trop(legende, 300) || trop(alt, 300)) return { etat: "erreur", message: "Légende ou texte alternatif trop long." };
+      contenu = { ...contenu, legende, alt };
+    }
   } else {
     const texte = lire("texte");
     if (texte === "") return { etat: "erreur", message: "Le bloc ne peut pas être vide." };
@@ -628,8 +653,14 @@ export async function modifierBloc(
       : { ...actuel.contenu, consigne: texte };
   }
 
-  const { error } = await client.from("lesson_blocks").update({ contenu }).eq("id", id);
+  const version = String(donnees.get("version") ?? "");
+  let ecriture = client.from("lesson_blocks").update({ contenu }).eq("id", id);
+  if (version !== "") ecriture = ecriture.eq("updated_at", version);
+  const { data: ecrits, error } = await ecriture.select("id");
   if (error !== null) return REFUS;
+  if ((ecrits ?? []).length === 0) {
+    return conflit(Object.values(contenu).filter((v) => typeof v === "string" && v !== "").join("\n"));
+  }
 
   // Un devoir vit à deux endroits : le bloc du cours, et la ligne qui alimente
   // « À faire » chez l'élève. Ne mettre à jour que le premier ferait diverger

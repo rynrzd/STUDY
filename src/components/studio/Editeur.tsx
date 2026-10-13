@@ -119,6 +119,7 @@ function EnteteSeance({
       className="panneau"
     >
       <input type="hidden" name="id" value={seance.id} />
+      <input type="hidden" name="version" value={seance.updated_at} />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="m-0 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
@@ -348,6 +349,7 @@ function BlocEditable({
           <form action={actionModif} data-testid="bloc-edition">
             <input type="hidden" name="id" value={bloc.id} />
             <input type="hidden" name="seance" value={seance} />
+            {bloc.updated_at ? <input type="hidden" name="version" value={bloc.updated_at} /> : null}
             <ChampsDuType bloc={bloc} texte={texte} />
             <div className="mt-2 flex gap-2">
               <Bouton libelle="Enregistrer ce bloc" variante="secondaire" marque="bloc-enregistrer" />
@@ -492,6 +494,19 @@ function ChampsDuType({ bloc, texte }: { bloc: Bloc; texte: string }) {
           Le fichier lui-même ne change pas. Pour en mettre un autre, ajoutez un
           nouveau bloc « Document » et retirez celui-ci.
         </p>
+        {String(bloc.contenu.format ?? "").startsWith("image") ? (
+          <>
+            <label className="etiquette mt-3" htmlFor={`legende-${bloc.id}`}>
+              Légende (facultative)
+            </label>
+            <input id={`legende-${bloc.id}`} name="legende" type="text" maxLength={300} defaultValue={String(bloc.contenu.legende ?? "")} className="champ" />
+            <label className="etiquette mt-3" htmlFor={`alt-${bloc.id}`}>
+              Texte alternatif
+            </label>
+            <input id={`alt-${bloc.id}`} name="alt" type="text" maxLength={300} defaultValue={String(bloc.contenu.alt ?? "")} className="champ" />
+            <p className="aide-champ">Ce que montre l&apos;image, pour un élève qui ne la voit pas : il est lu par les lecteurs d&apos;écran.</p>
+          </>
+        ) : null}
       </div>
     );
   }
@@ -510,6 +525,7 @@ function ChampsDuType({ bloc, texte }: { bloc: Bloc; texte: string }) {
         maxLength={5000}
         className="champ min-h-[7rem] py-2.5"
       />
+      <p className="aide-champ">Formules : <code>{"$x^2$"}</code> dans la phrase, <code>{"$$\\frac{a}{b}$$"}</code> sur sa propre ligne.</p>
     </>
   );
 }
@@ -664,6 +680,7 @@ function AjoutBloc({ seance }: { seance: string }) {
               autoFocus
               className="champ min-h-[7rem] py-2.5"
             />
+            <p className="aide-champ">Formules : <code>{"$x^2$"}</code> dans la phrase, <code>{"$$\\frac{a}{b}$$"}</code> sur sa propre ligne.</p>
           </div>
         )}
 
@@ -842,6 +859,12 @@ function Retour({ etat }: { etat: EtatStudio }) {
       }`}
     >
       {etat.message}
+      {etat.conflit ? (
+        <span className="mt-2 block">
+          <span className="block font-semibold text-[color:var(--color-encre)]">Votre saisie, à recopier après rechargement :</span>
+          <textarea readOnly className="champ mt-1 min-h-[88px] w-full text-[0.875rem]" value={etat.conflit} aria-label="Votre saisie non enregistrée" />
+        </span>
+      ) : null}
     </p>
   );
 }

@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { decouperCellule, reconnaitreColonnes, type Champ, type Correspondance } from "@/lib/assistant-rentree";
-import { assurerAnnee, contexte } from "@/lib/etablissement";
+import { assurerAnnee, contexte, importGroupes } from "@/lib/etablissement";
+import { lireGroupes } from "@/lib/import-groupes";
 import {
   analyserLotProfesseurs,
   appliquerLotProfesseurs,
@@ -22,6 +23,7 @@ import { FichierIllisible, lireTableur, TAILLE_MAXIMALE } from "@/lib/tableur";
 
 import type {
   EtatColonnes,
+  EtatImportGroupes,
   EtatCorrection,
   EtatCreation,
   EtatCreationProfesseurs,
@@ -514,4 +516,44 @@ export async function creerLesProfesseurs(
     acces: rapport.acces,
     echecs: rapport.echecs,
   };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Groupes (cahier des charges ch. 17, IMP-05)                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Import de groupes depuis un fichier. « Analyser » ne crée rien (IMP-01) ;
+ * « Appliquer » relit le même fichier et n'écrit que ce qui a été coché :
+ * appartenances, enseignements, ou les deux (validation séparée). Rejouable
+ * sans doublon ; l'établissement est recalculé en base.
+ */
+export async function importerGroupes(_precedent: EtatImportGroupes, donnees: FormData): Promise<EtatImportGroupes> {
+  const acteur = await exigerAdministrateur();
+  const fichier = donnees.get("fichier");
+  if (!(fichier instanceof File) || fichier.size === 0) return { etat: "erreur", message: "Choisissez un fichier." };
+  if (fichier.size > TAILLE_MAXIMALE) return { etat: "erreur", message: "Ce fichier est trop volumineux." };
+
+  let tableau;
+  try {
+    tableau = lireTableur(fichier.name, Buffer.from(await fichier.arrayBuffer()));
+  } catch (erreur) {
+    return { etat: "erreur", message: erreur instanceof FichierIllisible ? erreur.message : "Ce fichier n'a pas pu être lu. Déposez un .xlsx ou un .csv." };
+  }
+  const lu = lireGroupes(tableau);
+  if (lu.erreur !== null) return { etat: "erreur", message: lu.erreur };
+  if (lu.lignes.length === 0) return { etat: "erreur", message: "Le fichier ne contient aucune ligne." };
+
+  const appliquer = donnees.get("mode") === "appliquer";
+  const appartenances = donnees.get("appartenances") === "oui";
+  const enseignements = donnees.get("enseignements") === "oui";
+  if (appliquer && !appartenances && !enseignements) return { etat: "erreur", message: "Cochez ce qu'il faut créer : les élèves dans les groupes, les enseignements, ou les deux." };
+
+  const resultat = await importGroupes(acteur, lu.lignes, { appliquer, appartenances, enseignements });
+  if (resultat === null) return { etat: "erreur", message: "L'import n'a pas pu être traité. Réessayez ; rien n'a été créé à moitié pour une ligne." };
+  if (appliquer) {
+    revalidatePath("/admin/groupes");
+    revalidatePath("/admin");
+  }
+  return { etat: "ok", resultat };
 }

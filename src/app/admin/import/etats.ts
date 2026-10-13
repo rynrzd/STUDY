@@ -91,3 +91,12 @@ export interface EtatColonnes {
 }
 
 export const ETAT_COLONNES_INITIAL: EtatColonnes = { etat: "vierge" };
+
+/** Import de groupes (0079) : l'aperçu, puis l'application, sur le même fichier. */
+export interface EtatImportGroupes {
+  readonly etat: "vierge" | "ok" | "erreur";
+  readonly message?: string;
+  readonly resultat?: import("@/lib/etablissement").ResultatImportGroupes;
+}
+
+export const ETAT_IMPORT_GROUPES_INITIAL: EtatImportGroupes = { etat: "vierge" };

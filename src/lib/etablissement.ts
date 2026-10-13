@@ -928,3 +928,79 @@ export async function ficheClasse(acteur: string, classe: string): Promise<Fiche
   if (error !== null) return null;
   return data as FicheClasse;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Filtres des groupes, vue d'ensemble des enseignements (0078)               */
+/* -------------------------------------------------------------------------- */
+
+export interface DetailGroupe {
+  readonly groupe: string;
+  readonly matieres: readonly string[];
+  readonly professeurs: readonly string[];
+  readonly classes_sources: readonly string[];
+}
+
+/** Matières, professeurs et classes d'origine de chaque groupe en cours (GR-01). */
+export async function groupesDetails(acteur: string): Promise<Map<string, DetailGroupe>> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_groupes_details", { p_acteur: acteur });
+  if (error !== null) return new Map();
+  return new Map(((data ?? []) as DetailGroupe[]).map((d) => [d.groupe, d]));
+}
+
+export interface Enseignement {
+  readonly espace: string;
+  readonly genre: "classe" | "groupe";
+  readonly cible: string;
+  readonly cible_label: string;
+  readonly matiere: string;
+  readonly matiere_label: string;
+  readonly intervenants: readonly { nom: string; role: string }[];
+}
+
+/** Chaque enseignement en cours, avec ses intervenants (ENS-02) ; `null` : indisponible. */
+export async function matriceEnseignements(acteur: string): Promise<Enseignement[] | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_matrice_enseignements", { p_acteur: acteur });
+  if (error !== null) return null;
+  return (data ?? []) as Enseignement[];
+}
+
+/* -------------------------------------------------------------------------- */
+/* Import de groupes (0079)                                                   */
+/* -------------------------------------------------------------------------- */
+
+export interface ResultatImportGroupes {
+  readonly applique: boolean;
+  readonly resume: {
+    readonly lignes: number;
+    readonly groupes_nouveaux: number;
+    readonly groupes_existants: number;
+    readonly appartenances_nouvelles: number;
+    readonly deja_membres: number;
+    readonly eleves_inconnus: number;
+    readonly eleves_ambigus: number;
+    readonly enseignements_nouveaux: number;
+    readonly enseignements_existants: number;
+    readonly enseignements_rejetes: number;
+  };
+  readonly lignes: readonly { rang: number; groupe: string; eleve: string | null; enseignement: string | null; raison: string | null }[];
+}
+
+/** Aperçu (rien n'est écrit) ou application d'un import de groupes. */
+export async function importGroupes(
+  acteur: string,
+  lignes: readonly { groupe: string; type?: string; eleve?: string; matiere?: string; professeur?: string }[],
+  options: { appliquer: boolean; appartenances: boolean; enseignements: boolean },
+): Promise<ResultatImportGroupes | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_import_groupes", {
+    p_acteur: acteur,
+    p_lignes: lignes,
+    p_appliquer: options.appliquer,
+    p_appartenances: options.appartenances,
+    p_enseignements: options.enseignements,
+  });
+  if (error !== null) {
+    console.error(JSON.stringify({ niveau: "erreur", contexte: "etab.import_groupes", code: error.code }));
+    return null;
+  }
+  return data as ResultatImportGroupes;
+}

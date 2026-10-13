@@ -1,4 +1,5 @@
 import { LecteurPdf } from "@/components/seance/LecteurPdf";
+import { TexteAvecFormules } from "@/components/seance/TexteAvecFormules";
 import { tailleLisible } from "@/lib/formats-documents";
 import type { Bloc, Seance } from "@/lib/studio";
 
@@ -83,7 +84,7 @@ function BlocLu({ bloc }: { bloc: Bloc }) {
   if (bloc.kind === "texte") {
     return (
       <p className="m-0 max-w-[var(--spacing-lecture)] whitespace-pre-line">
-        {String(bloc.contenu.texte ?? "")}
+        <TexteAvecFormules texte={String(bloc.contenu.texte ?? "")} />
       </p>
     );
   }
@@ -95,7 +96,7 @@ function BlocLu({ bloc }: { bloc: Bloc }) {
           Exercice
         </h2>
         <p className="m-0 mt-1.5 max-w-[var(--spacing-lecture)] whitespace-pre-line">
-          {String(bloc.contenu.consigne ?? "")}
+          <TexteAvecFormules texte={String(bloc.contenu.consigne ?? "")} />
         </p>
       </section>
     );
@@ -129,10 +130,29 @@ function BlocLu({ bloc }: { bloc: Bloc }) {
         </div>
         {bloc.contenu.consigne ? (
           <p className="m-0 mt-2 max-w-[var(--spacing-lecture)] whitespace-pre-line text-[color:var(--color-encre-faible)]">
-            {String(bloc.contenu.consigne)}
+            <TexteAvecFormules texte={String(bloc.contenu.consigne)} />
           </p>
         ) : null}
       </section>
+    );
+  }
+
+  // Image pédagogique (EDIT-05) : affichée dans la séance, avec sa légende et
+  // son texte alternatif. Le format est vérifié sur les octets au dépôt (PNG,
+  // JPEG, WebP — jamais SVG) ; la route vérifie l'accès à chaque requête.
+  if (bloc.file_id !== null && String(bloc.contenu.format ?? "").startsWith("image")) {
+    const legende = String(bloc.contenu.legende ?? "");
+    return (
+      <figure className="m-0">
+        {/* eslint-disable-next-line @next/next/no-img-element -- fichier protégé, servi par notre route à chaque requête */}
+        <img
+          src={`/documents/${bloc.file_id}`}
+          alt={String(bloc.contenu.alt ?? "") || legende || String(bloc.contenu.nom ?? "Image")}
+          loading="lazy"
+          className="block h-auto max-w-full rounded-[var(--rayon-m)] border border-[color:var(--color-bordure)]"
+        />
+        {legende ? <figcaption className="meta mt-2">{legende}</figcaption> : null}
+      </figure>
     );
   }
 

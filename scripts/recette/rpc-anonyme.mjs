@@ -177,6 +177,11 @@ const FONCTIONS = [
   // 0077 — Controle avant ouverture, fiche classe : service_role seulement.
   { nom: "etab_controle_ouverture", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
   { nom: "etab_fiche_classe", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_classe: "00000000-0000-4000-8000-000000000000" } },
+
+  // 0078, 0079 — Filtres, vue d'ensemble, import de groupes : service_role seulement.
+  { nom: "etab_groupes_details", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_matrice_enseignements", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_import_groupes", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_lignes: [], p_appliquer: false, p_appartenances: false, p_enseignements: false } },
 ];
 
 let defauts = 0;

@@ -131,6 +131,11 @@ export function VerificationProfesseurs({
           >
             {aCorriger.length} ligne{aCorriger.length > 1 ? "s" : ""} à corriger
           </h2>
+          <p className="m-0 mt-2">
+            <a href={`/admin/import/profs/${lot.id}/erreurs`} className="lien-fleche" download>
+              Télécharger {aCorriger.length > 50 ? "toutes " : ""}les lignes à corriger (CSV)
+            </a>
+          </p>
           <div className="mt-4 space-y-3">
             {aCorriger.slice(0, 50).map((ligne) => (
               <LigneCorrigeable key={ligne.id} ligne={ligne} lot={lot.id} />

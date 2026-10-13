@@ -245,3 +245,26 @@ export const FICHE_CLASSE = {
   ],
   groupes: [{ id: "g1", label: "Spé Maths A", kind: "interclasses", eleves_de_la_classe: 2 }],
 } satisfies import("@/lib/etablissement").FicheClasse;
+
+/** D13 — qui enseigne quoi (0078). */
+const ens = (espace: string, genre: "classe" | "groupe", cible: string, cible_label: string, matiere: string, matiere_label: string, intervenants: { nom: string; role: string }[]) => ({ espace, genre, cible, cible_label, matiere, matiere_label, intervenants });
+export const MATRICE = [
+  ens("s1", "classe", "c1", "Seconde 1", "m1", "Mathématiques", [{ nom: "Claire Exemple", role: "titulaire" }]),
+  ens("s2", "classe", "c1", "Seconde 1", "m2", "Histoire-géographie", [{ nom: "Marc Fictif", role: "titulaire" }]),
+  ens("s3", "classe", "c1", "Seconde 1", "m3", "Anglais", []),
+  ens("s4", "classe", "c2", "Seconde 2", "m1", "Mathématiques", [{ nom: "Claire Exemple", role: "titulaire" }, { nom: "Léa Remplace", role: "remplacant" }]),
+  ens("s5", "classe", "c2", "Seconde 2", "m2", "Histoire-géographie", [{ nom: "Marc Fictif", role: "titulaire" }]),
+  ens("s6", "classe", "c3", "Première 3", "m1", "Mathématiques", [{ nom: "Claire Exemple", role: "titulaire" }]),
+  ens("s7", "groupe", "g1", "Spé Maths A", "m1", "Mathématiques", [{ nom: "Claire Exemple", role: "titulaire" }, { nom: "Paul Aide", role: "co_intervenant" }]),
+] satisfies import("@/lib/etablissement").Enseignement[];
+
+/** A22 — une séance avec formules (EDIT-04). */
+export const SEANCE_FORMULES = {
+  seance: { id: "s-f", title: "Le second degré", objective: "Résoudre une équation du second degré.", state: "publiee" as const, chapter_id: null, teaching_space_id: "c", scheduled_for: "2026-10-12T08:00:00Z", published_at: "2026-10-12T08:00:00Z", updated_at: "2026-10-12T08:00:00Z" },
+  blocs: [
+    { id: "b1", kind: "texte" as const, position: 1, contenu: { texte: "Une équation du second degré s'écrit $ax^2 + bx + c = 0$ avec $a \\neq 0$. Son discriminant vaut :" }, file_id: null, assignment_id: null },
+    { id: "b2", kind: "texte" as const, position: 2, contenu: { texte: "$$\\Delta = b^2 - 4ac$$" }, file_id: null, assignment_id: null },
+    { id: "b3", kind: "texte" as const, position: 3, contenu: { texte: "Si $\\Delta > 0$, deux solutions : $$x_{1,2} = \\frac{-b \\pm \\sqrt{\\Delta}}{2a}$$ Le manuel coûte 5 $ : ce n'est pas une formule." }, file_id: null, assignment_id: null },
+    { id: "b4", kind: "exercice" as const, position: 4, contenu: { consigne: "Résoudre $2x^2 - 3x + 1 = 0$." }, file_id: null, assignment_id: null },
+  ],
+};

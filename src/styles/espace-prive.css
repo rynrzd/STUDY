@@ -581,3 +581,26 @@
   .app-coque .choix-lecon:hover,
   .app-coque .choix-lecon:focus-visible { background: var(--color-survol); }
 }
+
+/* « Qui enseigne quoi » (ENS-02) : grille sur ordinateur, cartes sur téléphone. */
+@layer components {
+  .app-coque .matrice-enseignements { display: none; overflow-x: auto; }
+  .app-coque .matrice-mobile { display: block; }
+  @media (min-width: 900px) {
+    .app-coque .matrice-enseignements { display: block; }
+    .app-coque .matrice-mobile { display: none; }
+  }
+  .app-coque .matrice-enseignements table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  .app-coque .matrice-enseignements th,
+  .app-coque .matrice-enseignements td { padding: 10px 14px; border-bottom: 1px solid var(--bordure-douce); text-align: left; vertical-align: top; }
+  .app-coque .matrice-enseignements thead th { font-size: 0.8125rem; color: var(--color-encre-faible); white-space: nowrap; }
+  .app-coque .matrice-enseignements tbody th { font-weight: 700; white-space: nowrap; }
+  .app-coque .matrice-enseignements tbody tr:last-child > * { border-bottom: 0; }
+}
+
+/* Formules (EDIT-04) : centrées sur leur ligne quand elles sont en $$…$$ ;
+   une formule non reconnue reste lisible, telle qu'écrite. */
+@layer components {
+  .formule-bloc { display: block; margin: 12px 0; overflow-x: auto; overflow-y: hidden; text-align: center; }
+  .formule-brute { padding: 1px 4px; border-radius: 4px; background: var(--color-fond); font-size: 0.9em; }
+}

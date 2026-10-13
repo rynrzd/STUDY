@@ -164,6 +164,8 @@ export interface Bloc {
   readonly contenu: Record<string, unknown>;
   readonly file_id: string | null;
   readonly assignment_id: string | null;
+  /** Version lue, renvoyée à l'enregistrement (EDIT-07). */
+  readonly updated_at?: string;
 }
 
 export async function blocsDeLaSeance(jeton: string, seanceId: string): Promise<Bloc[]> {
@@ -171,7 +173,7 @@ export async function blocsDeLaSeance(jeton: string, seanceId: string): Promise<
 
   const { data, error } = await client
     .from("lesson_blocks")
-    .select("id, kind, position, contenu, file_id, assignment_id")
+    .select("id, kind, position, contenu, file_id, assignment_id, updated_at")
     .eq("lesson_id", seanceId)
     .order("position")
     .limit(200);

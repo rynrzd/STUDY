@@ -119,7 +119,7 @@ function navigation(espace: Espace): { principales: Destination[]; secondaires: 
     principales: [
       { href: "/admin", libelle: "Accueil", icone: House, exact: true },
       { href: "/admin/utilisateurs", libelle: "Personnes", icone: Users, aussi: ["/admin/professeurs", "/admin/import", "/admin/eleves", "/admin/acces"] },
-      { href: "/admin/classes", libelle: "Classes et groupes", court: "Classes", icone: BookOpen, aussi: ["/admin/groupes"] },
+      { href: "/admin/classes", libelle: "Classes et groupes", court: "Classes", icone: BookOpen, aussi: ["/admin/groupes", "/admin/enseignements"] },
       { href: "/admin/annees", libelle: "Années scolaires", court: "Années", icone: CalendarDays },
       { href: "/admin/recuperation", libelle: "Demandes d’accès", court: "Demandes", icone: KeyRound },
     ],
