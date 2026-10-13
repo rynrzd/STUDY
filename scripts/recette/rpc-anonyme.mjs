@@ -173,6 +173,10 @@ const FONCTIONS = [
   { nom: "prof_archive_cours", corps: { p_espace: "00000000-0000-4000-8000-000000000000" } },
   { nom: "prof_archive_seance", corps: { p_seance: "00000000-0000-4000-8000-000000000000" } },
   { nom: "enseignait_archive", corps: { space: "00000000-0000-4000-8000-000000000000" } },
+
+  // 0077 — Controle avant ouverture, fiche classe : service_role seulement.
+  { nom: "etab_controle_ouverture", corps: { p_acteur: "00000000-0000-4000-8000-000000000000" } },
+  { nom: "etab_fiche_classe", corps: { p_acteur: "00000000-0000-4000-8000-000000000000", p_classe: "00000000-0000-4000-8000-000000000000" } },
 ];
 
 let defauts = 0;
