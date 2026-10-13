@@ -97,6 +97,14 @@ export async function sessionCourante(): Promise<Personne | null> {
  * maintenir une session ouverte indéfiniment sur un poste de salle info.
  */
 export async function marquerActivite(personne: Personne): Promise<void> {
+  const ligne = await depot.lireSession(personne.empreinte);
+  if (ligne === null) return;
+  const echeances = {
+    idleExpiresAt: new Date(ligne.idle_expires_at),
+    absoluteExpiresAt: new Date(ligne.absolute_expires_at),
+    revokedAt: ligne.revoked_at === null ? null : new Date(ligne.revoked_at),
+  };
+  if (!sessionUtilisable(echeances)) return;
   const durees = dureesPour({
     portee: personne.portee,
     appareil: personne.appareil,
@@ -104,10 +112,7 @@ export async function marquerActivite(personne: Personne): Promise<void> {
   });
 
   const prolongee = prolongerSurActivite(
-    {
-      idleExpiresAt: new Date(),
-      absoluteExpiresAt: new Date(Date.now() + durees.absolueHeures * 3_600_000),
-    },
+    echeances,
     durees,
   );
 

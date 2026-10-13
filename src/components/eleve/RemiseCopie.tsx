@@ -89,7 +89,7 @@ export function RemiseCopie({
       />
 
       <p id={`${champ}-aide`} className="aide-champ">
-        PDF, image ou document. 20 Mo au maximum. Le fichier est vérifié sur son
+        PDF, image ou document. 4 Mo au maximum. Le fichier est vérifié sur son
         contenu, pas sur son nom.
       </p>
 

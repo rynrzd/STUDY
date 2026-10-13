@@ -9,7 +9,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ACTEURS, baseDeTest, doitEchouer, lirePour } from "./harness.mjs";
 
-const ORG = ACTEURS.lyceeA;
 
 async function annee(db, acteur) {
   return (await db.query("select academic_year_id a from study.etab_contexte($1)", [acteur])).rows[0].a;

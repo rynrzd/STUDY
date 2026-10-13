@@ -1,3 +1,4 @@
+import { GardeDepots } from "@/components/app/GardeDepots";
 import type { Metadata, Viewport } from "next";
 import "../styles/globals.css";
 import { SynchroEffets } from "@/components/study/mouvement";
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr" style={variablesMouvement() as React.CSSProperties} suppressHydrationWarning>
       <body>
         <SynchroEffets />
+        <GardeDepots />
         <a className="lien-evitement" href="#contenu">
           Aller au contenu principal
         </a>

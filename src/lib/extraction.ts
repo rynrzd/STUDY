@@ -1,3 +1,4 @@
+import { TAILLE_MAX_DEPOT } from "./limites-depot.ts";
 import "server-only";
 
 import mammoth from "mammoth";
@@ -30,7 +31,7 @@ import {
  */
 
 /** Ce que le cahier fixe comme budget initial (S03), ajustable. */
-export const TAILLE_MAXIMALE_IMPORT = 30 * 1024 * 1024;
+export const TAILLE_MAXIMALE_IMPORT = TAILLE_MAX_DEPOT;
 export const PAGES_MAXIMALES = 50;
 
 /** Le DOCX est une archive : on borne ce qu'on accepte d'en décompresser. */

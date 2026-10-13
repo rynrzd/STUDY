@@ -173,11 +173,11 @@ test("un DOCX vide est refusé plutôt que rendu comme un cours sans contenu", a
 test("un fichier vide et un fichier démesuré sont refusés tôt", async () => {
   await assert.rejects(() => extraire(Buffer.alloc(0)), ImportRefuse);
 
-  const enorme = Buffer.alloc(31 * 1024 * 1024);
+  const enorme = Buffer.alloc(4_000_001);
   enorme.write("%PDF-1.4");
   await assert.rejects(() => extraire(enorme), (erreur: unknown) => {
     assert.ok(erreur instanceof ImportRefuse);
-    assert.match(erreur.message, /30 Mo/);
+    assert.match(erreur.message, /4 Mo/);
     return true;
   });
 });
