@@ -62,7 +62,7 @@ const REPERES = [
   ["FAQ", "Comment installer Study dans mon lycée ?"],
   ["Conclusion", "Une classe qui avance ensemble."],
   ["Conclusion", "Parlons de votre établissement."],
-  ["Conclusion", "Demander une démonstration →"],
+  ["Conclusion", "Demander une démonstration"],
   ["Pied de page", "Sécurité et données"],
   ["Pied de page", "Mentions légales"],
 ];

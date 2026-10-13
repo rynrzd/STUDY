@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpen, ChartNoAxesCombined, Check, FileText, Flame, Landmark, Languages, TriangleAlert } from "lucide-react";
+import { ArrowRight, BookOpen, ChartNoAxesCombined, Check, FileText, Flame, Landmark, Languages, MessageCircle, Users, Upload, Plus, ShieldCheck } from "lucide-react";
 import { pagePublique } from "@/lib/metadonnees";
 import s from "./accueil.module.css";
 import { MenuMobile } from "./MenuMobile";
@@ -150,156 +150,95 @@ export default function Accueil() {
           </div>
         </section>
 
-        <section className={`${s.section} ${s.blush}`}>
-          <div className={`${s.wrap} ${s.split}`}>
-            <div className={s.copy}>
+        <div className={s.lowerLanding}>
+          <section className={`${s.wrap} ${s.conversationSection}`}>
+            <div className={s.lowerCopy}>
+              <p className={s.lowerEyebrow}><MessageCircle size={16} aria-hidden="true" /> Apprendre ensemble</p>
               <h2>Une question ne devrait pas te bloquer.</h2>
-              <p>Un espace commun pour échanger avec ta classe et ton professeur, autour des cours et du travail à faire.</p>
+              <p>Le cours reste ouvert à la discussion. Pose ta question dans le salon de ta classe et retrouve les explications de ton professeur.</p>
+              <Link className={s.textLink} href="/produit">Découvrir les échanges <ArrowRight size={18} aria-hidden="true" /></Link>
             </div>
-            <div className={`${s.stack} ${s.desktopOnly}`}>
-              <div className={s.card}>
-                <strong>Lina · Élève</strong>
-                <p>Je ne comprends pas pourquoi on remplace x par 3 dans cet exemple.</p>
-              </div>
-              <div className={s.card}>
-                <strong>Mme Bernard · Professeure</strong>
-                <p>On cherche l’image de 3. On calcule donc f(3) = 2 × 3 + 1 = 7.</p>
-              </div>
-              <p className={s.sample}>Échange illustratif · salon collectif de classe</p>
-            </div>
-            <div className={`${s.chat} ${s.mobileOnly}`} aria-hidden="true">
-              <div className={s.chatMeta}>Salon de la classe · Mathématiques</div>
-              <div className={s.bubbleRow}>
-                <span className={s.avatar}>L</span>
-                <div className={s.bubble}>
-                  <strong>Lina</strong>
-                  <p>Je ne comprends pas pourquoi on remplace x par 3 ici.</p>
+            <figure className={s.conversationFigure}>
+              <div className={s.conversationWindow}>
+                <div className={s.windowHeading}><span className={s.windowIcon}><MessageCircle size={21} aria-hidden="true" /></span><div><strong>Le salon de la classe</strong><span>Seconde 2 · Mathématiques</span></div></div>
+                <div className={s.messages}>
+                  <p className={s.messageDay}>Autour du cours · Fonctions affines</p>
+                  <div className={s.message}><span className={s.personAvatar} aria-hidden="true">L</span><div><strong>Lina <span>Élève</span></strong><p>Pourquoi on remplace x par 3 dans cet exemple ?</p></div></div>
+                  <div className={`${s.message} ${s.teacherMessage}`}><span className={s.personAvatar} aria-hidden="true">B</span><div><strong>Mme Bernard <span>Professeure</span></strong><p>On cherche l’image de 3. On calcule donc :</p><div className={s.formula}>f(3) = 2 × 3 + 1 = <b>7</b></div></div></div>
+                  <div className={s.message}><span className={s.personAvatar} aria-hidden="true">L</span><div><strong>Lina</strong><p>D’accord, merci !</p></div></div>
                 </div>
               </div>
-              <div className={`${s.bubbleRow} ${s.fromProf}`}>
-                <div className={`${s.bubble} ${s.bubbleProf}`}>
-                  <strong>Mme Bernard · Professeure</strong>
-                  <p>On cherche l’image de 3. Donc f(3) = 2 × 3 + 1 = 7.</p>
+              <figcaption>Échange illustratif · salon collectif de classe</figcaption>
+            </figure>
+          </section>
+
+          <section className={`${s.wrap} ${s.teacherSection}`}>
+            <div className={s.teacherIntro}>
+              <div className={s.lowerCopy}>
+                <p className={s.lowerEyebrow}>Pour les professeurs</p>
+                <h2>Préparez une fois.<br /><span>Partagez à la bonne classe.</span></h2>
+              </div>
+              <p>Vos documents deviennent le point de départ. Ajoutez vos consignes, choisissez une classe ou un groupe et publiez.</p>
+            </div>
+            <div className={s.studioFeature}>
+              <div className={s.workflow}>
+                <div><span>01</span><div><h3>Préparer</h3><p>Rassemblez le cours, les documents et les exercices.</p></div></div>
+                <div><span>02</span><div><h3>Choisir la classe</h3><p>Une classe entière ou un groupe : vous choisissez les destinataires.</p></div></div>
+                <div><span>03</span><div><h3>Publier</h3><p>La séance est accessible. Les élèves retrouvent le travail à faire.</p></div></div>
+                <Link className={s.textLink} href="/produit">Explorer la plateforme <ArrowRight size={18} aria-hidden="true" /></Link>
+              </div>
+              <figure className={s.studioFigure}>
+                <div className={s.studioWindow}>
+                  <div className={s.studioBar}><span>Mon espace prof</span><span className={s.draftBadge}>Brouillon</span></div>
+                  <div className={s.studioBody}>
+                    <p className={s.lowerEyebrow}>Mathématiques · Séance 03</p>
+                    <h3>Les fonctions affines</h3>
+                    <div className={s.documentPreview}><span><FileText size={22} aria-hidden="true" /></span><div><strong>Le cours.pdf</strong><p>Document de la séance</p></div><Check size={18} aria-hidden="true" /></div>
+                    <div className={s.studioInstruction}><strong>Le travail à faire</strong><p>Lire le cours, puis réaliser les exercices 1 à 3.</p></div>
+                    <p className={s.recipientLabel}>Partager avec</p>
+                    <div className={s.classChips}><span><Check size={14} aria-hidden="true" /> Seconde 2</span><span><Check size={14} aria-hidden="true" /> Groupe A</span></div>
+                    <div className={s.publishPreview} aria-hidden="true">Publier la séance <ArrowRight size={17} /></div>
+                  </div>
                 </div>
-              </div>
-              <div className={s.chatReacts}><span>👍 4</span><span className={s.chatSame}>J’avais la même question</span></div>
+                <figcaption>Aperçu illustratif de la préparation d’une séance</figcaption>
+              </figure>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section className={`${s.section} ${s.wrap}`}>
-          <div className={s.copy} style={{ marginBottom: 36 }}>
-            <p className={s.eyebrow}>Pour les professeurs</p>
-            <h2>
-              Préparez une fois.
-              <br />
-              Partagez à la bonne classe.
-            </h2>
-            <p>Composez votre contenu, choisissez ses destinataires et publiez votre séance.</p>
-          </div>
-          <div className={s.steps}>
-            <article className={s.card}>
-              <span className={s.number}>1</span>
-              <h3>Préparer</h3>
-              <p>Le cours, les ressources et les consignes.</p>
-              <span className={`${s.mobileOnly} ${s.illu} ${s.illuDoc}`} aria-hidden="true"><b /><i /><i /><i /></span>
-            </article>
-            <article className={s.card}>
-              <span className={s.number}>2</span>
-              <h3>Choisir la classe</h3>
-              <p>Vérifier les destinataires avant publication.</p>
-              <span className={`${s.mobileOnly} ${s.illu} ${s.illuClasses}`} aria-hidden="true"><b data-choisie="oui">Seconde 2 ✓</b><b>Première 3</b></span>
-            </article>
-            <article className={s.card}>
-              <span className={s.number}>3</span>
-              <h3>Publier</h3>
-              <p>Rendre la séance accessible à la classe.</p>
-              <span className={`${s.mobileOnly} ${s.illu} ${s.illuPublier}`} aria-hidden="true"><i /><b>Publiée</b></span>
-            </article>
-          </div>
-        </section>
-
-        <section className={`${s.section} ${s.roseLight}`}>
-          <div className={`${s.wrap} ${s.split}`}>
-            <div className={s.copy}>
-              <h2>Votre établissement, simplement.</h2>
-              <p>Organisez les classes et préparez les accès de vos équipes et de vos élèves.</p>
-              <Link href="/etablissements">Voir la mise en place →</Link>
+          <section className={`${s.wrap} ${s.schoolSection}`}>
+            <div className={s.schoolHeading}><span className={s.schoolIcon}><Users size={25} aria-hidden="true" /></span><div className={s.lowerCopy}><p className={s.lowerEyebrow}>Pour les établissements</p><h2>Votre établissement, simplement.</h2><p>Les classes, les groupes et les accès. Une organisation qui suit celle de votre lycée.</p><Link className={s.textLink} href="/etablissements">Voir la mise en place →</Link></div></div>
+            <div className={s.schoolSteps}>
+              <div><Upload size={20} aria-hidden="true" /><h3>01 · Importer</h3><p>Ajoutez les listes d’élèves et de professeurs.</p></div>
+              <div><ShieldCheck size={20} aria-hidden="true" /><h3>02 · Vérifier</h3><p>Repérez les erreurs et les doublons avant validation.</p></div>
+              <div><Users size={20} aria-hidden="true" /><h3>03 · Préparer les accès</h3><p>Distribuez les invitations à vos équipes et aux élèves.</p></div>
             </div>
-            <div className={s.stack}>
-              <div className={`${s.mobileOnly} ${s.carteImport}`} aria-hidden="true">
-                <p className={s.importTitre}>Import · Seconde 2 <span>liste.csv</span></p>
-                <ul>
-                  <li><span>Camille D.</span><Check size={15} strokeWidth={2.6} /></li>
-                  <li><span>Hugo F.</span><Check size={15} strokeWidth={2.6} /></li>
-                  <li data-alerte="oui"><span>Lina B. · doublon</span><TriangleAlert size={15} strokeWidth={2.2} /></li>
-                </ul>
-                <p className={s.importPied}><strong>32 élèves</strong> · 1 doublon à corriger</p>
-              </div>
-              <div className={s.row}>
-                <strong>01 · Importer</strong>
-                <p>Charger les listes dans le format accepté.</p>
-              </div>
-              <div className={s.row}>
-                <strong>02 · Vérifier</strong>
-                <p>Corriger les erreurs et les doublons.</p>
-              </div>
-              <div className={s.row}>
-                <strong>03 · Préparer les accès</strong>
-                <p>Distribuer les invitations selon votre procédure.</p>
-              </div>
+          </section>
+
+          <section className={`${s.wrap} ${s.faqSection}`}>
+            <div className={s.lowerCopy}><p className={s.lowerEyebrow}>Quelques réponses</p><h2>Questions fréquentes</h2><p>Un autre point à éclaircir ?<br /><Link className={s.textLink} href="/contact">Parlons-en <ArrowRight size={17} aria-hidden="true" /></Link></p></div>
+            <div className={s.faqList}>
+              <details name="faq"><summary>Faut-il un ordinateur par élève ?<Plus size={20} aria-hidden="true" /></summary><p>Non. La projection en classe et le travail sur papier sont prévus ; le cours se consulte ensuite sur n’importe quel appareil, y compris un téléphone.</p></details>
+              <details name="faq"><summary>Qui finance la plateforme ?<Plus size={20} aria-hidden="true" /></summary><p>L’établissement, sur devis. Aucun achat par les familles, aucun abonnement élève, aucune publicité.</p></details>
+              <details name="faq"><summary>Comment installer Study dans mon lycée ?<Plus size={20} aria-hidden="true" /></summary><p><Link href="/contact">Contactez l’équipe</Link> pour présenter vos besoins et préparer la mise en place.</p></details>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section className={`${s.section} ${s.wrap} ${s.split}`}>
-          <h2>Questions fréquentes</h2>
-          <div>
-            <details name="faq">
-              <summary>Faut-il un ordinateur par élève ?</summary>
-              <p>Non. La projection en classe et le travail sur papier sont prévus ; le cours se consulte ensuite sur n’importe quel appareil, y compris un téléphone.</p>
-            </details>
-            <details name="faq">
-              <summary>Qui finance la plateforme ?</summary>
-              <p>L’établissement, sur devis. Aucun achat par les familles, aucun abonnement élève, aucune publicité.</p>
-            </details>
-            <details name="faq">
-              <summary>Comment installer Study dans mon lycée ?</summary>
-              <p>
-                <Link href="/contact">Contactez l’équipe</Link> pour présenter vos besoins et préparer la mise en place.
-              </p>
-            </details>
-          </div>
-        </section>
-
-        <section className={`${s.section} ${s.cta}`}>
-          <div className={`${s.wrap} ${s.split}`}>
-            <div className={s.copy}>
-              <h2>Une classe qui avance ensemble.</h2>
+          <section className={`${s.wrap} ${s.finalSection}`}>
+            <div className={s.finalCard}>
+              <span className={s.finalMark} aria-hidden="true">s.</span>
+              <p className={s.lowerEyebrow}>La suite se construit avec vous</p>
+              <h2>Une classe qui<br />avance ensemble.</h2>
               <p>Parlons de votre établissement.</p>
+              <Link className={s.finalButton} href="/contact">Demander une démonstration <ArrowRight size={19} aria-hidden="true" /></Link>
+              <span className={s.finalNote}>Déjà un accès ? <Link href="/connexion">Se connecter</Link></span>
             </div>
-            <div>
-              <Link className={s.button} href="/contact">
-                Demander une démonstration →
-              </Link>
-            </div>
-          </div>
-        </section>
+          </section>
+        </div>
       </main>
 
-      <footer className={s.footer}>
-        <div className={s.wrap}>
-          <Link className={s.brand} href="/">
-            study<span>.</span>
-          </Link>
-          <Link href="/produit">Produit</Link>
-          <Link href="/offre">Offre</Link>
-          <Link href="/securite">Sécurité et données</Link>
-          <Link href="/confidentialite">Confidentialité</Link>
-          <Link href="/conditions">Conditions</Link>
-          <Link href="/contact">Contact</Link>
-          <Link href="/mentions-legales">Mentions légales</Link>
-        </div>
+      <footer className={`${s.wrap} ${s.newFooter}`}>
+        <div className={s.footerTop}><div className={s.footerIdentity}><Link className={s.brand} href="/">study<span>.</span></Link><p>La classe continue ici.</p></div><nav aria-label="Découvrir Study"><p>Découvrir</p><Link href="/produit">La plateforme</Link><Link href="/etablissements">Établissements</Link><Link href="/offre">Offre</Link></nav><nav aria-label="Informations et aide"><p>Une question ?</p><Link href="/contact">Contact</Link><Link href="/aide">Aide</Link><Link href="/securite">Sécurité et données</Link></nav></div>
+        <div className={s.footerBottom}><span>AvecStudy · La plateforme de votre classe</span><div><Link href="/confidentialite">Confidentialité</Link><Link href="/conditions">Conditions</Link><Link href="/mentions-legales">Mentions légales</Link></div></div>
       </footer>
     </div>
   );
