@@ -39,13 +39,14 @@ export function useMinuteCourante(): number {
 }
 
 /** Une valeur lue dans le stockage du navigateur, sans état synchronisé à la main. */
-export function useStockage(cle: string, type: "local" | "session" = "local"): string | null {
+export function useStockage(cle: string | null, type: "local" | "session" = "local"): string | null {
   return useSyncExternalStore(
     (rappel) => {
       window.addEventListener("storage", rappel);
       return () => window.removeEventListener("storage", rappel);
     },
     () => {
+      if (cle === null) return null;
       try {
         return (type === "local" ? window.localStorage : window.sessionStorage).getItem(cle);
       } catch {

@@ -201,7 +201,7 @@ export default async function PageSeance({
           </section>
           {ctx.roles.eleve ? (
             <section className="panneau">
-              <NotePrivee seance={id} initiale={note.corps} revision={note.revision} />
+              <NotePrivee key={ctx.personne.profileId} proprietaire={ctx.personne.profileId} autoriserBrouillon={ctx.copiesLocales} seance={id} initiale={note.corps} revision={note.revision} />
               <p className="meta m-0 mt-3">Ni tes professeurs ni l&apos;administration ne lisent cette note.</p>
             </section>
           ) : null}

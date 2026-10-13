@@ -22,12 +22,17 @@ export interface EtatNote {
 }
 
 /** Enregistre la note privée sous la révision lue ; un autre onglet plus récent donne un conflit. */
-export async function enregistrerNote(seance: string, corps: string, revisionLue: number): Promise<EtatNote> {
+export async function enregistrerNote(seance: string, corps: string, revisionLue: number, proprietaireAttendu?: string): Promise<EtatNote> {
   const requestId = idRequete();
   if (!uuid.safeParse(seance).success || corps.length > 20_000) {
     return { etat: "erreur", revision: revisionLue, message: "Note trop longue (20 000 caractères au plus)." };
   }
-  const { jeton } = await contexteApp();
+  const { jeton, personne } = await contexteApp();
+  // Un onglet ancien peut utiliser les cookies d'un compte connecté depuis.
+  // Ce paramètre ne donne aucun droit : on le compare à la session serveur.
+  if (proprietaireAttendu !== personne.profileId) {
+    return { etat: "erreur", revision: revisionLue, message: "Le compte connecté a changé. Copie ta note si nécessaire, puis recharge la page avant de continuer." };
+  }
   const { data, error } = await clientUtilisateur(jeton).rpc("note_enregistrer", {
     p_lecon: seance,
     p_corps: corps,
