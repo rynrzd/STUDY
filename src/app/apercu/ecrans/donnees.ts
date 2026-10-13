@@ -219,3 +219,29 @@ export const ARCHIVE_COURS = {
   ],
   devoirs: [{ id: "d-1", title: "Exercices 12 à 15", due_at: "2025-09-26T16:00:00Z", remises: 29 }],
 } satisfies import("@/lib/archives-professeur").ArchiveCours;
+
+/** D01 — contrôle avant ouverture (0077). */
+export const CONTROLE = {
+  eleves_sans_classe: { n: 2, exemples: [{ id: "e1", nom: "Noah Bernard" }, { id: "e2", nom: "Inès Petit" }] },
+  professeurs_sans_cours: { n: 1, exemples: [{ id: "p1", nom: "Marc Fictif" }] },
+  cours_sans_professeur: { n: 1, exemples: [{ id: "c1", nom: "Histoire-géographie · Seconde 2" }] },
+  classes_sans_pp: { n: 2, exemples: [{ id: "k1", nom: "Première 3" }, { id: "k2", nom: "Terminale 1" }] },
+  groupes_vides: { n: 0, exemples: [] },
+  matieres_non_enseignees: { n: 1, exemples: [{ id: "m1", nom: "SES" }] },
+} satisfies import("@/lib/etablissement").ControleOuverture;
+
+/** D12 — fiche classe (0077). */
+export const FICHE_CLASSE = {
+  classe: { id: "00000000-0000-4000-8000-0000000000c1", label: "Seconde 2", annee: "2026-2027", archivee: false },
+  professeur_principal: { id: "pp", nom: "Claire Exemple" },
+  eleves: [
+    { id: "e1", prenom: "Lina", nom: "Martin", identifiant: "lina.martin", etat_compte: "actif", depuis: "2026-09-01" },
+    { id: "e2", prenom: "Noah", nom: "Bernard", identifiant: "noah.bernard", etat_compte: "a_activer", depuis: "2026-09-01" },
+    { id: "e3", prenom: "Camille", nom: "Exemple", identifiant: "camille.exemple", etat_compte: "actif", depuis: "2026-09-01" },
+  ],
+  cours: [
+    { espace: "s1", matiere: "Mathématiques", professeurs: "Claire Exemple" },
+    { espace: "s2", matiere: "Histoire-géographie", professeurs: null },
+  ],
+  groupes: [{ id: "g1", label: "Spé Maths A", kind: "interclasses", eleves_de_la_classe: 2 }],
+} satisfies import("@/lib/etablissement").FicheClasse;

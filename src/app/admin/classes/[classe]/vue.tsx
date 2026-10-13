@@ -1,0 +1,125 @@
+import Link from "next/link";
+import { BookOpen, GraduationCap, Layers, Users } from "lucide-react";
+import { AjouterPersonne } from "@/components/admin/AjouterPersonne";
+import { ProfesseurPrincipal } from "@/components/admin/ProfesseurPrincipal";
+import { CarteChiffre, EnTetePage, EtatVide, Etiquette, ICONE, Ligne, ListeLignes } from "@/components/study/ui";
+import type { FicheClasse } from "@/lib/etablissement";
+
+const ETATS: Record<string, { texte: string; ton: "succes" | "attention" | "erreur" | "neutre" }> = {
+  actif: { texte: "Actif", ton: "succes" },
+  a_activer: { texte: "Jamais connecté", ton: "attention" },
+  suspendu: { texte: "Suspendu", ton: "erreur" },
+  sorti: { texte: "Sorti", ton: "neutre" },
+};
+
+/** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
+export function VueFicheClasse({ fiche, professeurs }: { fiche: FicheClasse; professeurs: readonly { id: string; label: string }[] }) {
+  const { classe, eleves, cours, groupes } = fiche;
+  const sansProf = cours.filter((c) => !c.professeurs).length;
+  return (
+    <>
+      <EnTetePage
+        filAriane={[
+          { href: "/admin/classes", libelle: "Classes et groupes" },
+          { href: `/admin/classes/${classe.id}`, libelle: classe.label },
+        ]}
+        sourcil={`Fiche classe · ${classe.annee}${classe.archivee ? " · Année archivée" : ""}`}
+        titre={classe.label}
+        actions={
+          classe.archivee ? null : (
+            <>
+              <Link href="/admin/classes#affecter" className="bouton bouton-secondaire">
+                <GraduationCap {...ICONE} /> Affecter un cours
+              </Link>
+              <AjouterPersonne listeClasses={[{ id: classe.id, label: classe.label }]} libelle="Ajouter un élève" />
+            </>
+          )
+        }
+      />
+
+      {classe.archivee ? null : (
+        <div className="mb-6 max-w-[560px]">
+          <ProfesseurPrincipal classe={classe.id} libelleClasse={classe.label} actuel={fiche.professeur_principal} professeurs={professeurs} />
+        </div>
+      )}
+
+      <section aria-label="Chiffres de la classe" className="grid gap-3 sm:grid-cols-3">
+        <CarteChiffre icone={Users} libelle="Élèves" valeur={eleves.length} detail={`${eleves.filter((e) => e.etat_compte === "a_activer").length} jamais connecté(s)`} />
+        <CarteChiffre icone={BookOpen} libelle="Cours" valeur={cours.length} detail={sansProf > 0 ? `${sansProf} sans professeur` : "Tous ont un professeur"} />
+        <CarteChiffre icone={Layers} libelle="Groupes" valeur={groupes.length} detail="Où vont ses élèves" />
+      </section>
+
+      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <section aria-labelledby="eleves">
+          <h2 id="eleves" className="titre-section mb-3 flex items-center gap-2">
+            Élèves <span className="nombre">{eleves.length}</span>
+          </h2>
+          {eleves.length === 0 ? (
+            <EtatVide icone={Users} titre="Aucun élève dans cette classe." texte="Ajoutez-en un avec le bouton en haut, ou importez la liste depuis « Personnes »." />
+          ) : (
+            <ListeLignes>
+              {eleves.map((e) => {
+                const etat = ETATS[e.etat_compte] ?? { texte: e.etat_compte, ton: "neutre" as const };
+                return (
+                  <Ligne
+                    key={e.id}
+                    href={`/admin/eleves/${e.id}`}
+                    icone={Users}
+                    titre={`${e.nom} ${e.prenom}`}
+                    detail={e.identifiant}
+                    fin={etat.ton === "succes" ? null : <Etiquette ton={etat.ton}>{etat.texte}</Etiquette>}
+                  />
+                );
+              })}
+            </ListeLignes>
+          )}
+          <p className="meta m-0 mt-2">Pour changer un élève de classe, ouvrez sa fiche.</p>
+        </section>
+
+        <div className="space-y-8">
+          <section aria-labelledby="cours">
+            <h2 id="cours" className="titre-section mb-3">
+              Cours
+            </h2>
+            {cours.length === 0 ? (
+              <p className="meta m-0">Aucun cours : affectez un professeur pour en ouvrir un.</p>
+            ) : (
+              <ListeLignes>
+                {cours.map((c) => (
+                  <Ligne
+                    key={c.espace}
+                    icone={BookOpen}
+                    titre={c.matiere}
+                    detail={c.professeurs ?? "Personne ne peut y publier pour l'instant."}
+                    fin={c.professeurs ? null : <Etiquette ton="attention">Sans professeur</Etiquette>}
+                  />
+                ))}
+              </ListeLignes>
+            )}
+          </section>
+
+          <section aria-labelledby="groupes">
+            <h2 id="groupes" className="titre-section mb-3">
+              Groupes de ses élèves
+            </h2>
+            {groupes.length === 0 ? (
+              <p className="meta m-0">Aucun élève de cette classe n&apos;est dans un groupe.</p>
+            ) : (
+              <ListeLignes>
+                {groupes.map((g) => (
+                  <Ligne
+                    key={g.id}
+                    href={`/admin/groupes/${g.id}`}
+                    icone={Layers}
+                    titre={g.label}
+                    detail={`${g.kind === "interclasses" ? "Interclasses" : "Demi-groupe"} · ${g.eleves_de_la_classe} élève${g.eleves_de_la_classe > 1 ? "s" : ""} de la classe`}
+                  />
+                ))}
+              </ListeLignes>
+            )}
+          </section>
+        </div>
+      </div>
+    </>
+  );
+}

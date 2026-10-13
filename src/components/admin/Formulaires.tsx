@@ -39,10 +39,19 @@ export function FormulaireClasse() {
         Nom de la classe
       </label>
       <div className="flex flex-wrap gap-2">
-        <input id="classe-label" name="label" type="text" className="champ min-w-0 flex-1" placeholder="Seconde 4" required maxLength={80} />
+        <input key={etat.saisie ?? "vide"} id="classe-label" name="label" type="text" className="champ min-w-0 flex-1" placeholder="Seconde 4" required maxLength={80} defaultValue={etat.saisie} />
         <Bouton libelle="Créer" />
       </div>
       <Retour etat={etat} />
+      {etat.equivalente ? (
+        <label className="mt-3 flex items-start gap-3 text-[0.9375rem]">
+          <input type="checkbox" name="confirmer" value="oui" className="mt-1 size-4 shrink-0 accent-[color:var(--color-accent)]" />
+          <span>
+            Ce n&apos;est pas la même classe que « {etat.equivalente} » : créer « {etat.saisie} » quand même.
+            <span className="aide-champ">Sinon, utilisez simplement « {etat.equivalente} » : rien n&apos;est à créer.</span>
+          </span>
+        </label>
+      ) : null}
     </form>
   );
 }

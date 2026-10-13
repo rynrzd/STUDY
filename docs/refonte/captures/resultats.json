@@ -636,18 +636,6 @@
     "ok": true
   },
   {
-    "id": "D01",
-    "chemin": "/apercu/ecrans?ecran=D01",
-    "largeur": 1440,
-    "statut": 200,
-    "debordement": 0,
-    "h1": 1,
-    "canvas": 0,
-    "hauteur": 1452,
-    "erreurs": [],
-    "ok": true
-  },
-  {
     "id": "D02",
     "chemin": "/apercu/ecrans?ecran=D02",
     "largeur": 1440,
@@ -692,18 +680,6 @@
     "h1": 1,
     "canvas": 0,
     "hauteur": 3714,
-    "erreurs": [],
-    "ok": true
-  },
-  {
-    "id": "D01",
-    "chemin": "/apercu/ecrans?ecran=D01",
-    "largeur": 390,
-    "statut": 200,
-    "debordement": 0,
-    "h1": 1,
-    "canvas": 0,
-    "hauteur": 3020,
     "erreurs": [],
     "ok": true
   },
@@ -1356,18 +1332,6 @@
     "ok": true
   },
   {
-    "id": "D07",
-    "chemin": "/apercu/ecrans?ecran=D07",
-    "largeur": 1440,
-    "statut": 200,
-    "debordement": 0,
-    "h1": 1,
-    "canvas": 0,
-    "hauteur": 1317,
-    "erreurs": [],
-    "ok": true
-  },
-  {
     "id": "D11",
     "chemin": "/apercu/ecrans?ecran=D11",
     "largeur": 1440,
@@ -1416,18 +1380,6 @@
     "ok": true
   },
   {
-    "id": "D07",
-    "chemin": "/apercu/ecrans?ecran=D07",
-    "largeur": 390,
-    "statut": 200,
-    "debordement": 0,
-    "h1": 1,
-    "canvas": 0,
-    "hauteur": 2545,
-    "erreurs": [],
-    "ok": true
-  },
-  {
     "id": "D11",
     "chemin": "/apercu/ecrans?ecran=D11",
     "largeur": 390,
@@ -1436,18 +1388,6 @@
     "h1": 1,
     "canvas": 0,
     "hauteur": 2020,
-    "erreurs": [],
-    "ok": true
-  },
-  {
-    "id": "T02",
-    "chemin": "/apercu/ecrans?ecran=T02",
-    "largeur": 1440,
-    "statut": 200,
-    "debordement": 0,
-    "h1": 1,
-    "canvas": 0,
-    "hauteur": 900,
     "erreurs": [],
     "ok": true
   },
@@ -1500,18 +1440,6 @@
     "ok": true
   },
   {
-    "id": "T02",
-    "chemin": "/apercu/ecrans?ecran=T02",
-    "largeur": 390,
-    "statut": 200,
-    "debordement": 0,
-    "h1": 1,
-    "canvas": 0,
-    "hauteur": 1379,
-    "erreurs": [],
-    "ok": true
-  },
-  {
     "id": "T02b",
     "chemin": "/apercu/ecrans?ecran=T02b",
     "largeur": 390,
@@ -1556,6 +1484,102 @@
     "h1": 1,
     "canvas": 0,
     "hauteur": 1031,
+    "erreurs": [],
+    "ok": true
+  },
+  {
+    "id": "T02",
+    "chemin": "/apercu/ecrans?ecran=T02",
+    "largeur": 1440,
+    "statut": 200,
+    "debordement": 0,
+    "h1": 1,
+    "canvas": 0,
+    "hauteur": 900,
+    "erreurs": [],
+    "ok": true
+  },
+  {
+    "id": "D01",
+    "chemin": "/apercu/ecrans?ecran=D01",
+    "largeur": 1440,
+    "statut": 200,
+    "debordement": 0,
+    "h1": 1,
+    "canvas": 0,
+    "hauteur": 1817,
+    "erreurs": [],
+    "ok": true
+  },
+  {
+    "id": "D07",
+    "chemin": "/apercu/ecrans?ecran=D07",
+    "largeur": 1440,
+    "statut": 200,
+    "debordement": 0,
+    "h1": 1,
+    "canvas": 0,
+    "hauteur": 1317,
+    "erreurs": [],
+    "ok": true
+  },
+  {
+    "id": "D12",
+    "chemin": "/apercu/ecrans?ecran=D12",
+    "largeur": 1440,
+    "statut": 200,
+    "debordement": 0,
+    "h1": 1,
+    "canvas": 0,
+    "hauteur": 936,
+    "erreurs": [],
+    "ok": true
+  },
+  {
+    "id": "T02",
+    "chemin": "/apercu/ecrans?ecran=T02",
+    "largeur": 390,
+    "statut": 200,
+    "debordement": 0,
+    "h1": 1,
+    "canvas": 0,
+    "hauteur": 1379,
+    "erreurs": [],
+    "ok": true
+  },
+  {
+    "id": "D01",
+    "chemin": "/apercu/ecrans?ecran=D01",
+    "largeur": 390,
+    "statut": 200,
+    "debordement": 0,
+    "h1": 1,
+    "canvas": 0,
+    "hauteur": 3485,
+    "erreurs": [],
+    "ok": true
+  },
+  {
+    "id": "D07",
+    "chemin": "/apercu/ecrans?ecran=D07",
+    "largeur": 390,
+    "statut": 200,
+    "debordement": 0,
+    "h1": 1,
+    "canvas": 0,
+    "hauteur": 2545,
+    "erreurs": [],
+    "ok": true
+  },
+  {
+    "id": "D12",
+    "chemin": "/apercu/ecrans?ecran=D12",
+    "largeur": 390,
+    "statut": 200,
+    "debordement": 0,
+    "h1": 1,
+    "canvas": 0,
+    "hauteur": 1844,
     "erreurs": [],
     "ok": true
   }

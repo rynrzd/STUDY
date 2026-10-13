@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -20,13 +21,21 @@ export function NouvelleSeance({
   chapitres,
   chapitreParDefaut = null,
   compact = false,
+  menu = false,
 }: {
   cours: string;
   chapitres: { id: string; label: string }[];
   chapitreParDefaut?: string | null;
   compact?: boolean;
+  /**
+   * Une seule entrée « Ajouter une leçon » et ses trois modes (cahier des
+   * charges ch. 10, TEACH-03) : écrire, mettre un PDF tel quel, importer pour
+   * transformer. Rien ne part sans choix explicite.
+   */
+  menu?: boolean;
 }) {
   const [ouvert, setOuvert] = useState(false);
+  const [mode, setMode] = useState<"ecrire" | "pdf">("ecrire");
   const [etat, action] = useActionState<EtatStudio, FormData>(creerSeance, ETAT_STUDIO_INITIAL);
   const routeur = useRouter();
 
@@ -34,6 +43,45 @@ export function NouvelleSeance({
   useEffect(() => {
     if (etat.etat === "ok" && etat.cree) routeur.push(`/studio/${etat.cree}`);
   }, [etat, routeur]);
+
+  if (!ouvert && menu) {
+    return (
+      <details className="menu-deroulant ajouter-lecon">
+        <summary data-testid="ajouter-lecon" className="bouton bouton-rose">
+          + Ajouter une leçon
+        </summary>
+        <div className="menu-deroulant-panneau right-0 mt-2 w-[320px] max-w-[calc(100vw-32px)]">
+          <button
+            type="button"
+            data-testid="ouvrir-nouvelle-seance"
+            className="choix-lecon"
+            onClick={() => {
+              setMode("ecrire");
+              setOuvert(true);
+            }}
+          >
+            <span className="font-semibold">Écrire une séance</span>
+            <span className="meta">Texte, liens, exercices, devoirs</span>
+          </button>
+          <button
+            type="button"
+            className="choix-lecon"
+            onClick={() => {
+              setMode("pdf");
+              setOuvert(true);
+            }}
+          >
+            <span className="font-semibold">Mettre un PDF tel quel</span>
+            <span className="meta">Formules et mise en page intactes</span>
+          </button>
+          <Link href="/professeur/studio#depot" className="choix-lecon">
+            <span className="font-semibold">Importer pour le transformer</span>
+            <span className="meta">Word ou PDF converti en séance modifiable, à relire</span>
+          </Link>
+        </div>
+      </details>
+    );
+  }
 
   if (!ouvert) {
     return (
@@ -55,6 +103,12 @@ export function NouvelleSeance({
       className="bloc border border-[color:var(--color-bordure)] p-4"
     >
       <input type="hidden" name="cours" value={cours} />
+
+      {mode === "pdf" ? (
+        <p className="meta m-0 mb-3">
+          Donnez un titre à la séance : une fois créée, ajoutez votre PDF avec le bloc « Document ». Il reste tel quel, lu sur place par vos élèves.
+        </p>
+      ) : null}
 
       <div className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div>

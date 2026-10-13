@@ -18,6 +18,13 @@ export interface EtatAdmin {
   readonly etat: "vierge" | "ok" | "erreur";
   readonly message?: string;
   readonly acces?: AccesCree;
+  /**
+   * Création de classe (CL-02) : une classe équivalente existe déjà (« 2nde 1 »
+   * pour « Seconde 1 »). L'écran la nomme et demande confirmation ; la saisie
+   * est rendue pour ne pas être perdue.
+   */
+  readonly equivalente?: string;
+  readonly saisie?: string;
 }
 
 export const ETAT_ADMIN_INITIAL: EtatAdmin = { etat: "vierge" };

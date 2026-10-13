@@ -82,6 +82,12 @@ export async function scenarioStudio({ navigateur, base, terrain, sql, verifier,
 
     /* --- Séance ------------------------------------------------------------ */
 
+    // « Ajouter une leçon » ouvre d'abord le choix du mode (TEACH-03).
+
+    const menuLecon = page.locator('[data-testid="ajouter-lecon"]').first();
+
+    if ((await menuLecon.count()) > 0) await menuLecon.click();
+
     const ouvrir = page.locator('[data-testid="ouvrir-nouvelle-seance"]').first();
     if ((await ouvrir.count()) > 0) await ouvrir.click();
 

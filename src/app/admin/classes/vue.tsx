@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Check, School } from "lucide-react";
 import { AjouterPersonne } from "@/components/admin/AjouterPersonne";
 import { ProfesseurPrincipal } from "@/components/admin/ProfesseurPrincipal";
@@ -91,7 +92,9 @@ export function VueClasses({
                       <School size={20} strokeWidth={1.75} />
                     </span>
                     <span className="min-w-0">
-                      <span className="block font-bold">{classe.label}</span>
+                      <Link href={`/admin/classes/${classe.id}`} className="block font-bold text-[color:var(--color-encre)] hover:text-[color:var(--color-accent)]">
+                        {classe.label} <span className="text-[0.8125rem] font-semibold text-[color:var(--color-accent)]">· Ouvrir la fiche</span>
+                      </Link>
                       <span className="meta block">
                         {classe.effectif} élève{classe.effectif > 1 ? "s" : ""} · {cours.length} cours
                       </span>

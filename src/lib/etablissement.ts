@@ -888,3 +888,43 @@ export async function anneeArchivee(acteur: string, annee: string): Promise<Anne
   if (error !== null) return null;
   return data as AnneeArchivee;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Contrôle avant ouverture, fiche classe (0077)                              */
+/* -------------------------------------------------------------------------- */
+
+export interface PointDeControle {
+  readonly n: number;
+  readonly exemples: readonly { id: string; nom: string }[];
+}
+
+export interface ControleOuverture {
+  readonly eleves_sans_classe: PointDeControle;
+  readonly professeurs_sans_cours: PointDeControle;
+  readonly cours_sans_professeur: PointDeControle;
+  readonly classes_sans_pp: PointDeControle;
+  readonly groupes_vides: PointDeControle;
+  readonly matieres_non_enseignees: PointDeControle;
+}
+
+/** Ce qui reste à régler avant d'ouvrir aux élèves (ONB-05) ; `null` : indisponible. */
+export async function controleOuverture(acteur: string): Promise<ControleOuverture | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_controle_ouverture", { p_acteur: acteur });
+  if (error !== null) return null;
+  return data as ControleOuverture;
+}
+
+export interface FicheClasse {
+  readonly classe: { id: string; label: string; annee: string; archivee: boolean };
+  readonly professeur_principal: { id: string; nom: string } | null;
+  readonly eleves: readonly { id: string; prenom: string; nom: string; identifiant: string; etat_compte: string; depuis: string }[];
+  readonly cours: readonly { espace: string; matiere: string; professeurs: string | null }[];
+  readonly groupes: readonly { id: string; label: string; kind: string; eleves_de_la_classe: number }[];
+}
+
+/** Une classe en un écran (CL-03) ; `null` si elle n'est pas de cet établissement. */
+export async function ficheClasse(acteur: string, classe: string): Promise<FicheClasse | null> {
+  const { data, error } = await clientExploitation("administration_des_comptes").rpc("etab_fiche_classe", { p_acteur: acteur, p_classe: classe });
+  if (error !== null) return null;
+  return data as FicheClasse;
+}

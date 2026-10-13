@@ -21,7 +21,7 @@ export function VueStudio({ cours, choisi, chapitres, seances, sansChapitre, bro
         sourcil="Mes cours"
         titre={choisi.libelle}
         sousTitre={`${seances.length} séance${seances.length > 1 ? "s" : ""}, dont ${brouillons} brouillon${brouillons > 1 ? "s" : ""}. Un brouillon reste invisible des élèves.`}
-        actions={<NouvelleSeance cours={choisi.id} chapitres={chapitres} />}
+        actions={<NouvelleSeance cours={choisi.id} chapitres={chapitres} menu />}
       />
 
       {cours.length > 1 ? (

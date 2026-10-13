@@ -561,3 +561,23 @@
   .colonnes-import tr:last-child td { border-bottom: 0; }
   .colonnes-import select { min-width: 200px; }
 }
+
+/* « Ajouter une leçon » : trois modes, un par ligne (TEACH-03). */
+@layer components {
+  .app-coque .ajouter-lecon .menu-deroulant-panneau { border-radius: 18px; padding: 6px; }
+  .app-coque .choix-lecon {
+    display: grid;
+    gap: 2px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--color-encre);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .app-coque .choix-lecon:hover,
+  .app-coque .choix-lecon:focus-visible { background: var(--color-survol); }
+}

@@ -54,7 +54,8 @@ import { Editeur } from "@/components/studio/Editeur";
 import { OngletsSeance } from "@/components/studio/OngletsSeance";
 import { CircleHelp, ClipboardCheck, Library } from "lucide-react";
 import { CONTEXTE_FICTIF } from "../fictif";
-import { F, NOMS_FICTIFS, ANNEE_ARCHIVEE, ARCHIVES_PROF, ARCHIVE_COURS } from "./donnees";
+import { F, NOMS_FICTIFS, ANNEE_ARCHIVEE, ARCHIVES_PROF, ARCHIVE_COURS, CONTROLE, FICHE_CLASSE } from "./donnees";
+import { VueFicheClasse } from "@/app/admin/classes/[classe]/vue";
 import { VueArchivesProfesseur } from "@/app/professeur/archives/vue";
 import { VueArchiveCours } from "@/app/professeur/archives/[cours]/vue";
 
@@ -483,6 +484,7 @@ const ECRANS: Record<string, Ecran> = {
     chemin: "/admin",
     rendu: () => (
       <VueAdmin
+        controle={CONTROLE}
         situation={F.situation}
         nbSignalements={2}
         nbRecuperations={2}
@@ -644,6 +646,7 @@ const ECRANS: Record<string, Ecran> = {
     ),
   },
   D02c: { titre: "Import · vérifier les colonnes", ctx: ADMIN, chemin: "/admin/import", rendu: () => <div className="mx-auto max-w-[900px]"><ApercuColonnes /></div> },
+  D12: { titre: "Fiche classe", ctx: ADMIN, chemin: "/admin/classes/x", rendu: () => <VueFicheClasse fiche={FICHE_CLASSE} professeurs={[{ id: "pp", label: "Exemple Claire" }]} /> },
   D11: { titre: "Année archivée", ctx: ADMIN, chemin: "/admin/annees/x", rendu: () => <VueAnneeArchivee releve={ANNEE_ARCHIVEE} /> },
   D03: { titre: "Récupérations", ctx: ADMIN, chemin: "/admin/recuperation", rendu: () => <VueRecuperation error={null} demandes={[...F.recuperations]} choisie={F.recuperations[0]} /> },
   D04: {

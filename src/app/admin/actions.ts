@@ -19,6 +19,7 @@ import {
   inscrireEleve,
   loginsPris,
 } from "@/lib/etablissement";
+import { classeNormalisee } from "@/lib/assistant-rentree";
 import { proposerLogin } from "@/lib/import-rentree";
 import { assuranceSuffisante, REFUS_ASSURANCE } from "@/lib/garde-assurance";
 import { sessionCourante } from "@/lib/session-serveur";
@@ -100,6 +101,21 @@ export async function creerUneClasse(
   const annee = await anneeCourante(acteur);
   if (annee === null) {
     return { etat: "erreur", message: "L'année scolaire n'a pas pu être préparée." };
+  }
+
+  // CL-02 : « Seconde 1 » et « 2nde 1 » sont sans doute la même classe. On
+  // ne fusionne rien en silence : on le dit, et l'administrateur tranche.
+  if (donnees.get("confirmer") !== "oui") {
+    const cle = classeNormalisee(label);
+    const proche = (await listerClasses(acteur)).find((c) => c.label !== label && classeNormalisee(c.label) === cle);
+    if (proche !== undefined) {
+      return {
+        etat: "erreur",
+        message: `Une classe équivalente existe déjà : « ${proche.label} ».`,
+        equivalente: proche.label,
+        saisie: label,
+      };
+    }
   }
 
   const cree = await creerClasse(acteur, annee, label);
