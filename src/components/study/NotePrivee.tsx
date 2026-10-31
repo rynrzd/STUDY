@@ -3,6 +3,7 @@
 import { Lock } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { enregistrerNote, type EtatNote } from "@/app/app/seances/actions";
+import { cleBrouillonNote, garderBrouillon, retirerBrouillonConfirme } from "@/lib/v6/brouillon-note";
 import { useStockage } from "./horloge";
 
 /**
@@ -11,12 +12,12 @@ import { useStockage } from "./horloge";
  * le conflit est montré et le texte local est conservé, jamais écrasé.
  * Brouillon local de secours si le réseau tombe (même appareil seulement).
  */
-export function NotePrivee({ seance, initiale, revision }: { seance: string; initiale: string; revision: number }) {
+export function NotePrivee({ seance, initiale, revision, proprietaire, autoriserBrouillon = false }: { seance: string; initiale: string; revision: number; proprietaire: string; autoriserBrouillon?: boolean }) {
   const [texte, setTexte] = useState(initiale);
   const [etat, setEtat] = useState<EtatNote>({ etat: "inchange", revision });
   const [enCours, demarrer] = useTransition();
   const dernier = useRef(initiale);
-  const cle = `study-note-${seance}`;
+  const cle = cleBrouillonNote(proprietaire, seance, autoriserBrouillon);
 
   // Un brouillon local plus récent (coupure réseau) est proposé, pas imposé.
   const stocke = useStockage(cle);
@@ -27,30 +28,29 @@ export function NotePrivee({ seance, initiale, revision }: { seance: string; ini
   useEffect(() => {
     if (texte === dernier.current || etat.etat === "conflit") return;
     const minuterie = window.setTimeout(() => {
-      try {
-        window.localStorage.setItem(cle, texte);
-      } catch {
-        /* ignoré */
+      let copieGardee = false;
+      if (cle !== null) {
+        try { copieGardee = garderBrouillon(window.localStorage, cle, texte); } catch { /* stockage bloqué */ }
       }
       demarrer(async () => {
         try {
-          const resultat = await enregistrerNote(seance, texte, etat.revision);
+          const resultat = await enregistrerNote(seance, texte, etat.revision, proprietaire);
           setEtat(resultat);
           if (resultat.etat === "enregistre") {
             dernier.current = texte;
             try {
-              window.localStorage.removeItem(cle);
+              retirerBrouillonConfirme(window.localStorage, cle, texte);
             } catch {
               /* ignoré */
             }
           }
         } catch {
-          setEtat((e) => ({ ...e, etat: "erreur", message: "Hors ligne : la note est gardée sur cet appareil et sera réessayée." }));
+          setEtat((e) => ({ ...e, etat: "erreur", message: copieGardee ? "Enregistrement impossible. Un brouillon est conservé sur cet appareil." : "Enregistrement impossible. Garde cette page ouverte ou copie ton texte avant de la quitter." }));
         }
       });
     }, 900);
     return () => window.clearTimeout(minuterie);
-  }, [texte, seance, etat.revision, etat.etat, cle]);
+  }, [texte, seance, etat.revision, etat.etat, cle, proprietaire]);
 
   const statut =
     enCours

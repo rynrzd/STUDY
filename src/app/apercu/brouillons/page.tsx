@@ -11,7 +11,7 @@ export default async function ApercuBrouillons({ searchParams }: { searchParams:
     <main id="contenu" className="mx-auto max-w-[640px] p-6">
       <p className="meta">Aperçu de développement · données fictives · propriétaire {proprietaire}</p>
       <GardienBrouillons proprietaire={proprietaire}>
-        <NotePrivee seance="00000000-0000-4000-8000-0000000000a1" initiale="" revision={0} />
+        <NotePrivee key={proprietaire} proprietaire={proprietaire} autoriserBrouillon seance="00000000-0000-4000-8000-0000000000a1" initiale="" revision={0} />
       </GardienBrouillons>
     </main>
   );
