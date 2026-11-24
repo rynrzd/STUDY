@@ -99,7 +99,7 @@ export default async function PageMiseEnPage({
             revision: courante.numero,
             document: courante.document,
             reglages: courante.reglages,
-            fichierSource: null,
+            fichierSource: doc.fichierSourceId ?? null,
           }}
         />
       </div>

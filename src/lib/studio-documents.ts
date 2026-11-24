@@ -36,6 +36,8 @@ export interface DocumentStudio {
   readonly etat: EtatDocument;
   readonly erreur: string | null;
   readonly revisionId: string | null;
+  /** Absent seulement dans les anciens aperçus fictifs construits en mémoire. */
+  readonly fichierSourceId?: string | null;
   readonly majLe: string;
 }
 
@@ -45,6 +47,7 @@ interface LigneDocument {
   state: EtatDocument;
   erreur: string | null;
   current_revision_id: string | null;
+  source_file_id: string | null;
   updated_at: string;
 }
 
@@ -55,6 +58,7 @@ function enDocument(ligne: LigneDocument): DocumentStudio {
     etat: ligne.state,
     erreur: ligne.erreur,
     revisionId: ligne.current_revision_id,
+    fichierSourceId: ligne.source_file_id,
     majLe: ligne.updated_at,
   };
 }
@@ -63,7 +67,7 @@ function enDocument(ligne: LigneDocument): DocumentStudio {
 export async function mesDocuments(jeton: string, limite = 40): Promise<DocumentStudio[]> {
   const { data, error } = await clientUtilisateur(jeton)
     .from("studio_documents")
-    .select("id, title, state, erreur, current_revision_id, updated_at")
+    .select("id, title, state, erreur, current_revision_id, source_file_id, updated_at")
     .is("archived_at", null)
     .order("updated_at", { ascending: false })
     .limit(limite);
@@ -75,7 +79,7 @@ export async function mesDocuments(jeton: string, limite = 40): Promise<Document
 export async function document(jeton: string, id: string): Promise<DocumentStudio | null> {
   const { data, error } = await clientUtilisateur(jeton)
     .from("studio_documents")
-    .select("id, title, state, erreur, current_revision_id, updated_at")
+    .select("id, title, state, erreur, current_revision_id, source_file_id, updated_at")
     .eq("id", id)
     .maybeSingle();
 
