@@ -14,7 +14,7 @@ import { changerEtablissement } from "./actions";
 
 export const metadata: Metadata = pagePrivee({
   titre: "Connexion",
-  description: "Entrée réservée aux membres d'un établissement équipé.",
+  description: "Connexion directe des professeurs et des élèves à AvecStudy.",
 });
 
 export const dynamic = "force-dynamic";
@@ -37,7 +37,7 @@ export const dynamic = "force-dynamic";
 export default async function PageConnexion({
   searchParams,
 }: {
-  searchParams: Promise<{ fin?: string; suite?: string; motif?: string; invitation?: string; etablissement?: string; code?: string; changer?: string }>;
+  searchParams: Promise<{ fin?: string; suite?: string; motif?: string; invitation?: string; etablissement?: string; code?: string; changer?: string; historique?: string; confirmation?: string }>;
 }) {
   const p = await searchParams;
   const suite = suiteSure(p.suite);
@@ -72,8 +72,24 @@ export default async function PageConnexion({
     }
   }
 
-  const contexte = await lireContexteEtablissement();
+  const historique = p.historique === "1";
+  const contexte = historique ? await lireContexteEtablissement() : null;
   const fin = p.fin === "1" || p.fin === "partout" || p.fin === "locale";
+
+  if (!historique) {
+    return (
+      <CadreConnexion titre="Connecte-toi à AvecStudy." sousTitre="Un seul compte pour toutes tes classes et toutes tes matières.">
+        {fin ? <NettoyageApresDeconnexion /> : null}
+        <Messages motif={p.motif} fin={p.fin} invitation={p.invitation} confirmation={p.confirmation} sessionInutilisable={personne !== null} />
+        <FormulaireConnexion mobileDesign direct suite={suite} />
+        <div className="mt-6 grid gap-2 text-center text-[0.9375rem]">
+          <Link className="font-semibold text-[color:var(--color-accent)]" href="/inscription/professeur">Créer mon compte professeur</Link>
+          <Link className="font-semibold text-[color:var(--color-accent)]" href="/activation">Activer une invitation élève</Link>
+          <Link className="text-[color:var(--color-encre-faible)]" href="/connexion?historique=1">Connexion d’un ancien établissement</Link>
+        </div>
+      </CadreConnexion>
+    );
+  }
 
   return (
     <CadreConnexion
@@ -110,8 +126,11 @@ export default async function PageConnexion({
   );
 }
 
-function Messages({ motif, fin, invitation, sessionInutilisable }: { motif?: string; fin?: string; invitation?: string; sessionInutilisable: boolean }) {
+function Messages({ motif, fin, invitation, confirmation, sessionInutilisable }: { motif?: string; fin?: string; invitation?: string; confirmation?: string; sessionInutilisable: boolean }) {
   const boite = "mb-5 rounded-[4px] p-4 text-[0.9375rem]";
+  if (confirmation === "1") {
+    return <p role="status" className={`${boite} bg-[color:var(--color-succes-fond)] text-[color:var(--color-succes)]`}>Compte préparé. Ouvre l’e-mail de confirmation avant de te connecter.</p>;
+  }
   if (motif === "expiree" || sessionInutilisable) {
     return (
       <p role="status" className={`${boite} bg-[color:var(--color-attention-fond)] text-[color:var(--color-attention)]`}>

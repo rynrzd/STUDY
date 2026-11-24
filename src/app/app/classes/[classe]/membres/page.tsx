@@ -23,7 +23,7 @@ export default async function PageMembres({ params }: { params: Promise<{ classe
     ? await Promise.all([
         demandesATraiter(ctx.jeton, classe),
         codesDeClasse(ctx.jeton, classe),
-        admin ? invitationsDeClasse(ctx.jeton, classe) : Promise.resolve(null),
+        invitationsDeClasse(ctx.jeton, classe),
         delegues(ctx.jeton, classe),
       ])
     : [[], [], null, []];
@@ -35,5 +35,5 @@ export default async function PageMembres({ params }: { params: Promise<{ classe
   const finAnnee = `${new Date().getMonth() >= 7 ? new Date().getFullYear() + 1 : new Date().getFullYear()}-07-04`;
   const invitationPar = new Map((invitations ?? []).map((i) => [i.profile_id, i]));
 
-  return <VueMembres classe={classe} responsable={responsable} admin={admin} demandes={demandes} codeValide={codeValide} eleves={eleves} equipe={equipe} mandats={mandats} liste={liste} invitationPar={invitationPar} finAnnee={finAnnee} />;
+  return <VueMembres classe={classe} responsable={responsable} admin={admin || responsable} demandes={demandes} codeValide={codeValide} eleves={eleves} equipe={equipe} mandats={mandats} liste={liste} invitationPar={invitationPar} finAnnee={finAnnee} />;
 }

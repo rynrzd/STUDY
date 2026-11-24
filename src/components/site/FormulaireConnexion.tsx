@@ -30,9 +30,9 @@ import { ETAT_INITIAL, type EtatConnexion } from "@/app/connexion/etats";
 type Champ = "identifiant" | "motDePasse";
 const MANQUE: Record<Champ, string> = { identifiant: "Indique ton identifiant.", motDePasse: "Indique ton mot de passe." };
 
-export function FormulaireConnexion({ suite = null, code = null, mobileDesign = false }: { suite?: string | null; code?: string | null; mobileDesign?: boolean }) {
+export function FormulaireConnexion({ suite = null, code = null, mobileDesign = false, direct = false }: { suite?: string | null; code?: string | null; mobileDesign?: boolean; direct?: boolean }) {
   const [etat, action] = useActionState<EtatConnexion, FormData>(async (precedent, donnees) => {
-    const identifiant = String(donnees.get("identifiant") ?? "").slice(0, 40);
+    const identifiant = String(donnees.get("identifiant") ?? "").slice(0, direct ? 180 : 40);
     if (typeof navigator !== "undefined" && !navigator.onLine) {
       return { etat: "refus", type: "reseau", message: "Pas de connexion internet. Ta saisie est gardée : réessaie quand le réseau revient.", saisie: { identifiant } };
     }
@@ -115,6 +115,7 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
     <form ref={formulaire} action={action} onSubmit={verifier} noValidate>
       {suite ? <input type="hidden" name="suite" value={suite} /> : null}
       {code ? <input type="hidden" name="code" value={code} /> : null}
+      {direct ? <input type="hidden" name="mode" value="direct" /> : null}
 
       {general ? (
         <div
@@ -134,7 +135,7 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
       <div className="grid gap-5">
         <div>
           <label className="etiquette" htmlFor="identifiant">
-            Identifiant
+            {direct ? "E-mail professeur ou identifiant élève" : "Identifiant"}
           </label>
           <input
             className="champ champ-acces"
@@ -145,7 +146,7 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
-            maxLength={40}
+            maxLength={direct ? 180 : 40}
             defaultValue={etat.saisie?.identifiant ?? ""}
             required
             aria-invalid={manquants.identifiant || refusIdentifiants ? true : undefined}
@@ -157,7 +158,7 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
             </p>
           ) : null}
           <p id="aide-identifiant" className="aide-champ m-0">
-            Celui de ta fiche de connexion, par exemple <span className="font-mono">camille.martin</span>.
+            {direct ? <>Un professeur utilise son e-mail. Un élève utilise l’identifiant de sa fiche, pour toutes ses matières.</> : <>Celui de ta fiche de connexion, par exemple <span className="font-mono">camille.martin</span>.</>}
           </p>
         </div>
 
