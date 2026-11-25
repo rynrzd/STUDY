@@ -34,7 +34,7 @@ export async function inscrireProfesseur(_precedent: EtatInscriptionProfesseur, 
   const auth = clientAuthentification();
   const { data, error } = await auth.auth.signUp({ email: valeurs.email, password: motDePasse, options: { emailRedirectTo: `${origine}/connexion?confirmation=1` } });
   // Même réponse publique lorsqu'un compte existe déjà : aucune adresse n'est divulguée.
-  if (error || !data.user) return { etat: "envoyee", message: "Si cette adresse peut être utilisée, un e-mail de confirmation vient d’être envoyé." };
+  if (error || !data.user || data.user.identities?.length === 0) return { etat: "envoyee", message: "Si cette adresse peut être utilisée, un e-mail de confirmation vient d’être envoyé." };
 
   const admin = clientExploitation("administration_des_comptes");
   const { error: preparation } = await admin.rpc("professeur_autonome_preparer", {

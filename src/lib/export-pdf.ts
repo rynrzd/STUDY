@@ -1,12 +1,10 @@
 import "server-only";
 
-import { createRequire } from "node:module";
 import path from "node:path";
 import PDFDocument from "pdfkit";
 import { sommaire, type BlocCours, type DocumentCours, type ReglagesPresentation } from "./document-cours.ts";
 
-const require = createRequire(import.meta.url);
-const dossierPolices = path.dirname(require.resolve("dejavu-fonts-ttf/package.json"));
+const dossierPolices = path.join(process.cwd(), "node_modules", "dejavu-fonts-ttf");
 const POLICE_REGULIERE = path.join(dossierPolices, "ttf", "DejaVuSans.ttf");
 const POLICE_GRASSE = path.join(dossierPolices, "ttf", "DejaVuSans-Bold.ttf");
 
