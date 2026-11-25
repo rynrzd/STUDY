@@ -10,7 +10,9 @@ for (const attendu of ['compte-A', undefined, 'compte-B']) {
     const appels = [];
     const dependencies = {
       'next/cache': {}, 'next/navigation': {}, zod: { z },
+      '@/lib/document-cours': { extraitDuTexte: () => false },
       '@/lib/supabase-serveur': { clientUtilisateur: (token) => ({ rpc: async (nom, parametres) => { appels.push({ token, nom, parametres }); return { data: 2, error: null }; } }) },
+      '@/lib/v6/cours': {},
       '@/lib/v6/contexte': { contexteApp: async () => ({ jeton: 'session-B', personne: { profileId: 'compte-B' } }), idRequete: () => 'test' },
       '@/lib/v6/erreurs': {},
     };
