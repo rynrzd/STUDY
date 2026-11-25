@@ -26,7 +26,10 @@ function Triangle({ solution }: { solution: boolean }) {
   );
 }
 
-function ExerciceInteractif({ exercice }: { exercice: Exercice }) {
+function ExerciceInteractif({ exercice, suivant }: {
+  exercice: Exercice;
+  suivant?: () => void;
+}) {
   const [choix, setChoix] = useState("");
   const [indice, setIndice] = useState(false);
   const solution = choix === exercice.bonneReponse;
@@ -56,7 +59,8 @@ function ExerciceInteractif({ exercice }: { exercice: Exercice }) {
       {solution ? (
         <div className={s.suite}>
           <span>Tu as une invitation de ton établissement ?</span>
-          <Link href="/activer">Activer mon accès</Link>
+          <Link href="/activer">{exercice.extrait ? "Créer un compte" : "Activer mon accès"}</Link>
+          {suivant && <button className={s.exerciceSuivant} type="button" onClick={suivant}>Exercice suivant</button>}
         </div>
       ) : (
         <button className={s.indice} type="button" onClick={() => setIndice(!indice)} aria-expanded={indice}>
@@ -94,6 +98,16 @@ export function AccueilImmersif() {
       setApercu(requete ? trouverMatiere(requete) : undefined);
     });
   }
+
+  function choisirExercice(exercice: Exercice) {
+    if (apercu && exercice !== apercu.exercice) {
+      animer(() => setApercu({ matiere: apercu.matiere, exercice }));
+    }
+  }
+
+  const prochainExercice = apercu?.exercice.extrait
+    ? apercu.matiere.exercices[apercu.matiere.exercices.indexOf(apercu.exercice) + 1]
+    : undefined;
 
   function soumettre(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -146,16 +160,18 @@ export function AccueilImmersif() {
                     key={exercice.titre}
                     type="button"
                     aria-pressed={apercu.exercice === exercice}
-                    onClick={() => {
-                      if (exercice !== apercu.exercice) animer(() => setApercu({ matiere: apercu.matiere, exercice }));
-                    }}
+                    onClick={() => choisirExercice(exercice)}
                   >
                     {exercice.titre}
                   </button>
                 ))}
               </div>
             </div>
-            <ExerciceInteractif key={apercu.exercice.titre} exercice={apercu.exercice} />
+            <ExerciceInteractif
+              key={apercu.exercice.titre}
+              exercice={apercu.exercice}
+              suivant={prochainExercice && (() => choisirExercice(prochainExercice))}
+            />
           </div>
         ) : (
           <div className={s.accueil}>
@@ -170,7 +186,11 @@ export function AccueilImmersif() {
                 </div>
               </div>
             ) : (
-              <p className={s.aideRecherche}>Même si tu ne sais pas par où commencer.</p>
+              <div className={s.aideRecherche}>
+                <p>Même si tu ne sais pas par où commencer.</p>
+                <Link className={s.creerCompte} href="/activer" aria-describedby="acces-etablissement">Créer un compte</Link>
+                <small id="acces-etablissement">Avec une invitation ou une fiche de ton établissement.</small>
+              </div>
             )}
           </div>
         )}

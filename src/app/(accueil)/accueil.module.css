@@ -176,6 +176,33 @@
   overflow-wrap: anywhere;
 }
 
+.aideRecherche > p {
+  margin: 0;
+}
+
+.creerCompte {
+  display: inline-flex;
+  min-block-size: 44px;
+  align-items: center;
+  margin-block: .9rem .35rem;
+  border: 1px solid var(--prune);
+  border-radius: .65rem;
+  padding-inline: .95rem;
+  color: var(--prune);
+  font-size: .95rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.creerCompte:hover {
+  background: var(--rose-clair);
+}
+
+.aideRecherche small {
+  display: block;
+  font-size: .8rem;
+}
+
 .page[data-mode="matiere"] .recherche {
   position: absolute;
   z-index: 1;
@@ -396,6 +423,22 @@
   padding-top: .85rem;
   border-top: 1px solid var(--bordure);
   color: var(--encre-douce);
+}
+
+.exerciceSuivant {
+  min-block-size: 44px;
+  border: 1px solid var(--bordure);
+  border-radius: .5rem;
+  padding-inline: .75rem;
+  background: var(--rose-clair);
+  color: var(--prune);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.exerciceSuivant:hover {
+  border-color: var(--prune);
 }
 
 .pied {
