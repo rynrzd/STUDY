@@ -40,86 +40,67 @@ test("H01 — la page d accueil s hydrate reellement", async () => {
   await onglet.close();
 });
 
-/* ------------------- R2 — landing conforme à code/landing-reference.html ---- */
+/* ------------------------------------------- Accueil immersif ---------- */
 
 const norm = (t) => t.replace(/[’]/g, "'").replace(/\s+/g, " ").trim();
+const champ = (onglet) => onglet.getByRole("searchbox", { name: "Rechercher une matière ou une notion" });
 
-test("L01 — un seul hero, sans scène 3D, message et accès visibles au premier rendu", async () => {
+test("L01 — accueil, recherche et connexion au premier rendu", async () => {
   const onglet = await page("/");
-  assert.equal(await onglet.locator("h1").count(), 1, "un seul H1");
-  assert.equal(norm(await onglet.locator("h1").innerText()), "Ta classe, tout simplement.");
-  assert.equal(await onglet.locator("canvas").count(), 0, "aucun canvas");
-  assert.equal(await onglet.getByText("Passer l'introduction").count(), 0, "aucun lien Passer");
-  assert.equal(await onglet.getByRole("link", { name: "Découvrir Study" }).getAttribute("href"), "#decouvrir");
-  const connexion = onglet.locator("main").getByRole("link", { name: "Se connecter" }).first();
+  assert.equal(await onglet.locator("h1").count(), 1);
+  assert.equal(norm(await onglet.locator("h1").innerText()), "Tu veux travailler quoi aujourd'hui ?");
+  assert.equal(await onglet.locator("canvas").count(), 0);
+  assert.equal(await champ(onglet).isVisible(), true);
+  const connexion = onglet.getByRole("link", { name: "Se connecter" });
   assert.equal(await connexion.getAttribute("href"), "/connexion");
   assert.equal(await connexion.isVisible(), true);
-  await onglet.close();
-});
-
-test("L02 — en-tête de la référence : plateforme, établissements, connexion, démo", async () => {
-  const onglet = await page("/");
-  const nav = onglet.locator('header nav[aria-label="Navigation principale"]');
-  for (const [nom, href] of [["La plateforme", "/produit"], ["Établissements", "/etablissements"], ["Se connecter", "/connexion"], ["Demander une démo", "/contact"]]) {
-    assert.equal(await nav.getByRole("link", { name: nom }).getAttribute("href"), href, nom);
+  for (const [nom, href] of [["La plateforme", "/produit"], ["Établissements", "/etablissements"]]) {
+    assert.equal(await onglet.getByRole("link", { name: nom }).getAttribute("href"), href);
   }
   await onglet.close();
 });
 
-test("L03 — sections de la référence, dans l'ordre", async () => {
+test("L02 — un visiteur cherche maths, se trompe, prend un indice puis réussit", async () => {
   const onglet = await page("/");
-  const titres = (await onglet.locator("main h2").allInnerTexts()).map(norm);
-  const attendus = [
-    "Fonctions affines",
-    "Le bon cours. Au bon moment.",
-    "Une question ne devrait pas te bloquer.",
-    "Préparez une fois. Partagez à la bonne classe.",
-    "Votre établissement, simplement.",
-    "Questions fréquentes",
-    "Une classe qui avance ensemble.",
-  ];
-  let position = -1;
-  for (const t of attendus) {
-    const i = titres.findIndex((x) => x === t);
-    assert.ok(i > position, `« ${t} » présent et après la section précédente`);
-    position = i;
-  }
+  await champ(onglet).fill("maths");
+  await champ(onglet).press("Enter");
+  await onglet.getByRole("heading", { name: /On commence/ }).waitFor();
+  assert.equal(await onglet.getByText("Mathématiques", { exact: true }).isVisible(), true);
+  await onglet.getByRole("button", { name: "Sinus", exact: true }).click();
+  assert.equal(await onglet.getByText(/Essaie encore/).isVisible(), true);
+  await onglet.getByRole("button", { name: "Voir un indice" }).click();
+  assert.equal(await onglet.getByText(/Regarde l’angle marqué/).isVisible(), true);
+  assert.equal(await onglet.getByRole("link", { name: "Activer mon accès" }).count(), 0);
+  await onglet.getByRole("button", { name: "Cosinus", exact: true }).click();
+  assert.equal(await onglet.getByText(/Cosinus = côté adjacent/).isVisible(), true);
+  assert.equal(await onglet.getByRole("img", { name: /Le côté adjacent/ }).isVisible(), true);
+  assert.equal(await onglet.getByRole("link", { name: "Activer mon accès" }).getAttribute("href"), "/activer");
   await onglet.close();
 });
 
-test("L04 — la FAQ s'ouvre au clavier", async () => {
+test("L03 — le sujet peut changer depuis la recherche ou les notions", async () => {
   const onglet = await page("/");
-  const questions = (await onglet.locator("main details > summary").allInnerTexts()).map(norm);
-  assert.deepEqual(questions, ["Faut-il un ordinateur par élève ?", "Qui finance la plateforme ?", "Comment installer Study dans mon lycée ?"]);
-  const resume = onglet.locator("main details > summary").first();
-  await resume.focus();
-  await onglet.keyboard.press("Enter");
-  await onglet.waitForTimeout(250);
-  assert.equal(await onglet.locator("main details").first().evaluate((d) => d.open), true);
+  await champ(onglet).fill("j’aimerais comprendre les probabilités");
+  await champ(onglet).press("Enter");
+  await onglet.getByRole("heading", { name: /dé équilibré/ }).waitFor();
+  assert.equal(await onglet.getByRole("button", { name: "Probabilités" }).getAttribute("aria-pressed"), "true");
+  await onglet.getByRole("button", { name: "Fonctions" }).click();
+  assert.equal(await onglet.getByRole("heading", { name: "Si f(x) = 2x + 1, que vaut f(3) ?" }).isVisible(), true);
+  await champ(onglet).fill("anglais");
+  await champ(onglet).press("Enter");
+  await onglet.getByText("Anglais", { exact: true }).waitFor();
+  assert.equal(await onglet.getByRole("heading", { name: /joue au tennis/ }).isVisible(), true);
   await onglet.close();
 });
 
-test("L05 — menu du téléphone : ouverture, trois destinations, Échap rend le focus", async () => {
+test("L04 — à 390 px, la recherche sans exemple propose un sujet accessible", async () => {
   const onglet = await page("/", { largeur: 390, hauteur: 844 });
-  const bouton = onglet.locator("header summary", { hasText: "Menu" });
-  assert.equal(await bouton.isVisible(), true, "le bouton Menu est visible");
-  const boite = await bouton.boundingBox();
-  assert.ok(boite && boite.height >= 44, "cible d au moins 44 px");
-  await bouton.click();
-  for (const [nom, href] of [["La plateforme", "/produit"], ["Établissements", "/etablissements"], ["Demander une démo", "/contact"]]) {
-    const lien = onglet.locator("header details").getByRole("link", { name: nom });
-    assert.equal(await lien.isVisible(), true, nom);
-    assert.equal(await lien.getAttribute("href"), href);
-  }
-  await onglet.keyboard.press("Escape");
-  assert.equal(await onglet.locator("header details").evaluate((d) => d.open), false, "Échap referme");
-  assert.equal(await onglet.evaluate(() => document.activeElement?.tagName), "SUMMARY", "le focus revient au bouton");
-  await onglet.close();
-});
-
-test("L06 — sur bureau, le menu du téléphone n est pas affiché", async () => {
-  const onglet = await page("/", { largeur: 1366 });
-  assert.equal(await onglet.locator("header summary", { hasText: "Menu" }).isVisible(), false);
+  await champ(onglet).fill("chimie");
+  await champ(onglet).press("Enter");
+  await onglet.getByText(/On n’a pas d’exemple/).waitFor();
+  await onglet.getByRole("button", { name: "Histoire-géographie" }).click();
+  await onglet.getByRole("heading", { name: /prise de la Bastille/ }).waitFor();
+  assert.equal(await onglet.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   await onglet.close();
 });
 
@@ -242,22 +223,5 @@ test("N04 — aucun menu de bureau n est visible a 390 px", async () => {
   });
 
   assert.equal(surface, 0, "la navigation de bureau n occupe aucune surface");
-  await onglet.close();
-});
-
-/* ------------------------------------------------------ §7 Demonstration -- */
-
-test("D01 — la demonstration est annoncee comme fictive", async () => {
-  const onglet = await page("/");
-  const texte = await onglet.evaluate(() => document.body.innerText);
-
-  assert.match(texte, /Exemple illustratif de l.interface/, "la mention accompagne l apercu du hero");
-  assert.match(texte, /Exemple illustratif/, "les autres exemples sont nommes comme tels");
-  assert.equal(
-    /Bonjour Rayan/.test(texte),
-    false,
-    "aucun prenom lie au projet ne figure dans la vitrine",
-  );
-
   await onglet.close();
 });
