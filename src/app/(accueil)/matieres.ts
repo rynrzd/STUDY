@@ -7,6 +7,7 @@ export interface Exercice {
   indice: string;
   explication: string;
   figure?: "triangle";
+  extrait?: string;
 }
 
 interface Matiere {
@@ -57,7 +58,8 @@ export const matieres: readonly Matiere[] = [
       {
         titre: "Figures de style",
         motsCles: ["figure de style", "figures de style", "metaphore", "comparaison", "personnification"],
-        question: "Dans « Cette ville est une fourmilière », quelle figure de style reconnais-tu ?",
+        extrait: "Cette ville est une fourmilière.",
+        question: "Quelle figure de style reconnais-tu dans cette phrase ?",
         choix: ["Comparaison", "Métaphore", "Hyperbole"],
         bonneReponse: "Métaphore",
         indice: "La ville et la fourmilière sont rapprochées sans mot de comparaison comme « telle ».",
@@ -66,7 +68,8 @@ export const matieres: readonly Matiere[] = [
       {
         titre: "Argumentation",
         motsCles: ["argumentation", "argument", "arguments", "these"],
-        question: "Dans « Il faut protéger les océans, car ils abritent des milliers d’espèces », quel est l’argument ?",
+        extrait: "Il faut protéger les océans, car ils abritent des milliers d’espèces.",
+        question: "Quel est l’argument utilisé pour défendre cette idée ?",
         choix: ["Il faut protéger les océans.", "Ils abritent des milliers d’espèces.", "Il faut compter les espèces."],
         bonneReponse: "Ils abritent des milliers d’espèces.",
         indice: "Regarde ce qui vient après « car ». C’est la raison donnée pour soutenir l’idée de départ.",

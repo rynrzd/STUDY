@@ -32,8 +32,9 @@ function ExerciceInteractif({ exercice }: { exercice: Exercice }) {
   const solution = choix === exercice.bonneReponse;
 
   return (
-    <section className={s.exercice} aria-labelledby="question-exercice">
+    <section className={s.exercice} data-extrait={exercice.extrait ? "" : undefined} aria-labelledby="question-exercice">
       {exercice.figure === "triangle" && <Triangle solution={solution} />}
+      {exercice.extrait && <blockquote className={s.extrait}>{exercice.extrait}</blockquote>}
       <h2 id="question-exercice">{exercice.question}</h2>
       <div className={s.reponses} role="group" aria-labelledby="question-exercice">
         {exercice.choix.map((option) => (
@@ -120,7 +121,7 @@ export function AccueilImmersif() {
             autoComplete="off"
             maxLength={120}
             onChange={(event) => setSaisie(event.target.value)}
-            placeholder="Une matière, un chapitre…"
+            placeholder="Tu peux écrire juste « maths »."
             type="search"
             value={saisie}
           />
@@ -130,7 +131,15 @@ export function AccueilImmersif() {
         {apercu ? (
           <div className={s.matiere} key={apercu.matiere.titre}>
             <div className={s.intro}>
-              <h1 ref={titre} tabIndex={-1}>{apercu.matiere.titre}</h1>
+              {apercu.exercice.extrait ? (
+                <h1 ref={titre} tabIndex={-1}>{apercu.matiere.titre}</h1>
+              ) : (
+                <>
+                  <p className={s.nomMatiere}>{apercu.matiere.titre}</p>
+                  <h1 ref={titre} tabIndex={-1}>On commence<br className={s.coupure} /> par un exemple&nbsp;?</h1>
+                  <p>Tu peux essayer, même si tu hésites.</p>
+                </>
+              )}
               <div className={s.chapitres} role="group" aria-label="Choisir une notion">
                 {apercu.matiere.exercices.map((exercice) => (
                   <button
@@ -150,15 +159,19 @@ export function AccueilImmersif() {
           </div>
         ) : (
           <div className={s.accueil}>
-            <h1 ref={titre} tabIndex={-1}>Tu veux travailler quoi aujourd’hui&nbsp;?</h1>
-            <div className={s.aideRecherche}>
-              {recherche && <p>Aucun exercice trouvé pour «&nbsp;{recherche}&nbsp;».</p>}
-              <div className={s.chapitres} role="group" aria-label="Matières à essayer">
-                {matieres.map((matiere) => (
-                  <button type="button" key={matiere.titre} onClick={() => chercher(matiere.titre)}>{matiere.titre}</button>
-                ))}
+            <h1 ref={titre} tabIndex={-1}>Tu veux travailler quoi<br className={s.coupure} /> aujourd’hui&nbsp;?</h1>
+            {recherche ? (
+              <div className={s.aideRecherche}>
+                <p role="status">On n’a pas d’exemple pour « {recherche} ». Essaie une de ces matières.</p>
+                <div className={s.chapitres} role="group" aria-label="Matières à essayer">
+                  {matieres.map((matiere) => (
+                    <button type="button" key={matiere.titre} onClick={() => chercher(matiere.motsCles[0]!)}>{matiere.titre}</button>
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <p className={s.aideRecherche}>Même si tu ne sais pas par où commencer.</p>
+            )}
           </div>
         )}
       </main>
