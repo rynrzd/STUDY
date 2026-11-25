@@ -51,6 +51,30 @@ export const matieres: readonly Matiere[] = [
     ],
   },
   {
+    titre: "Français",
+    motsCles: ["francais", "litterature", "bac de francais"],
+    exercices: [
+      {
+        titre: "Figures de style",
+        motsCles: ["figure de style", "figures de style", "metaphore", "comparaison", "personnification"],
+        question: "Dans « Cette ville est une fourmilière », quelle figure de style reconnais-tu ?",
+        choix: ["Comparaison", "Métaphore", "Hyperbole"],
+        bonneReponse: "Métaphore",
+        indice: "La ville et la fourmilière sont rapprochées sans mot de comparaison comme « telle ».",
+        explication: "C’est une métaphore. L’image de la fourmilière évoque l’agitation de la ville.",
+      },
+      {
+        titre: "Argumentation",
+        motsCles: ["argumentation", "argument", "arguments", "these"],
+        question: "Dans « Il faut protéger les océans, car ils abritent des milliers d’espèces », quel est l’argument ?",
+        choix: ["Il faut protéger les océans.", "Ils abritent des milliers d’espèces.", "Il faut compter les espèces."],
+        bonneReponse: "Ils abritent des milliers d’espèces.",
+        indice: "Regarde ce qui vient après « car ». C’est la raison donnée pour soutenir l’idée de départ.",
+        explication: "La présence de milliers d’espèces est l’argument qui soutient l’idée de protéger les océans.",
+      },
+    ],
+  },
+  {
     titre: "Anglais",
     motsCles: ["anglais", "english"],
     exercices: [
