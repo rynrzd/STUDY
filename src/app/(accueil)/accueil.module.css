@@ -428,3 +428,32 @@
     transition-duration: 0s !important;
   }
 }
+
+/* Le navigateur interpole la position et la taille réelles de la barre. */
+@supports (view-transition-name: study-search) {
+  .recherche {
+    view-transition-name: study-search;
+  }
+
+  .page[data-mode="matiere"] .recherche,
+  .matiere,
+  .exercice {
+    animation: none;
+  }
+
+  .exercice {
+    view-transition-name: study-exercise;
+  }
+
+  :global(html):has(.page)::view-transition-group(study-search) {
+    animation-duration: 520ms;
+    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+    z-index: 2;
+  }
+
+  :global(html):has(.page)::view-transition-group(root),
+  :global(html):has(.page)::view-transition-group(study-exercise) {
+    animation-duration: 320ms;
+    animation-timing-function: ease-out;
+  }
+}

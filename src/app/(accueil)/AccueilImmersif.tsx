@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Check, Search } from "lucide-react";
+import { flushSync } from "react-dom";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { matieres, trouverMatiere, type Exercice } from "./matieres";
 import s from "./accueil.module.css";
@@ -76,17 +77,21 @@ export function AccueilImmersif() {
     if (recherche) titre.current?.focus();
   }, [recherche]);
 
-  function chercher(texte: string) {
-    const requete = texte.trim();
-    if (!requete) {
-      setRecherche("");
-      setApercu(undefined);
-      champ.current?.focus();
+  function animer(changement: () => void) {
+    if (!document.startViewTransition || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      changement();
       return;
     }
-    setSaisie(requete);
-    setRecherche(requete);
-    setApercu(trouverMatiere(requete));
+    document.startViewTransition(() => flushSync(changement));
+  }
+
+  function chercher(texte: string) {
+    const requete = texte.trim();
+    animer(() => {
+      setSaisie(requete);
+      setRecherche(requete);
+      setApercu(requete ? trouverMatiere(requete) : undefined);
+    });
   }
 
   function soumettre(event: FormEvent<HTMLFormElement>) {
@@ -97,9 +102,10 @@ export function AccueilImmersif() {
   return (
     <div className={s.page} data-mode={apercu ? "matiere" : "accueil"}>
       <header className={s.entete}>
-        <Link className={s.marque} href="/" onClick={() => {
-          setSaisie("");
+        <Link className={s.marque} href="/" onNavigate={(event) => {
+          event.preventDefault();
           chercher("");
+          champ.current?.focus({ preventScroll: true });
         }}>
           study<span>.</span>
         </Link>
@@ -133,7 +139,9 @@ export function AccueilImmersif() {
                     key={exercice.titre}
                     type="button"
                     aria-pressed={apercu.exercice === exercice}
-                    onClick={() => setApercu({ matiere: apercu.matiere, exercice })}
+                    onClick={() => {
+                      if (exercice !== apercu.exercice) animer(() => setApercu({ matiere: apercu.matiere, exercice }));
+                    }}
                   >
                     {exercice.titre}
                   </button>
