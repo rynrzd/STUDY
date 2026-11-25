@@ -64,10 +64,14 @@ export default function PageOffre() {
       <TitrePage
         surtitre="Offre"
         titre="Une offre pour le lycée. Un accès pour la classe."
-        chapeau="Une licence annuelle sur devis, financée par votre établissement. Aucun abonnement individuel pour les élèves ou les enseignants."
+        chapeau="Une licence annuelle sur devis pour les établissements. Les enseignants peuvent aussi créer leur espace professeur directement."
       />
 
       <Section>
+        <div className="mb-6 flex flex-wrap gap-3">
+          <Link href="/inscription/professeur" className="bouton bouton-primaire">Créer un compte prof</Link>
+          <Link href="/exemple-pdf" className="bouton bouton-secondaire">Voir un avant/après</Link>
+        </div>
         <Reveler>
           <div className="carte p-8 md:p-10">
             <p className="surtitre m-0">Tarif</p>

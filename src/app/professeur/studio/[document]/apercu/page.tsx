@@ -99,7 +99,7 @@ export default async function PageApercu({
 
       {mode === "a4" ? (
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3 print:hidden">
-          <a href={`/professeur/studio/${id}/pdf`} className="bouton bouton-primaire">
+          <a href={`/professeur/studio/${id}/pdf?revision=${courante.id}`} className="bouton bouton-primaire">
             Télécharger le PDF
           </a>
           <BoutonImprimer libelle="Imprimer avec le navigateur" />

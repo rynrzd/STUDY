@@ -16,7 +16,7 @@ export const metadata: Metadata = pagePublique({
 const QUESTIONS = [
   {
     q: "J'ai perdu mon identifiant ou mon mot de passe.",
-    r: "Adressez-vous à l'administrateur de votre établissement. Il réinitialise votre accès après avoir vérifié votre identité sur place. L'ancien secret devient alors inutilisable. Personne, y compris votre administrateur, ne peut lire votre mot de passe personnel : il n'est affiché nulle part.",
+    r: "Pour un compte professeur autonome, utilise l’e-mail de ton compte sur la page de récupération. Un élève peut demander une nouvelle invitation au professeur responsable de sa classe. Pour un compte historique, l’équipe de l’établissement peut réinitialiser l’accès.",
   },
   {
     q: "Mon professeur a publié un cours mais je ne le vois pas.",
@@ -52,11 +52,11 @@ export default function Aide() {
       <TitrePage
         surtitre="Aide"
         titre="Un doute ? On vous guide."
-        chapeau="Ces réponses valent pour les élèves et les enseignants. Pour une question sur votre compte, votre établissement est le bon interlocuteur : c’est lui qui gère les accès."
+        chapeau="Retrouvez votre accès et les réponses aux questions sur les cours, les exercices et les invitations."
       />
 
       <Section>
-        <div className="mb-10"><RaccourcisPublics /></div>
+        <div className="mb-10"><RaccourcisPublics /><Link className="bouton bouton-secondaire mt-4" href="/inscription/professeur/acces">Récupérer un compte professeur</Link></div>
         <div className="grid gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] lg:items-start">
           <div className="rounded-[var(--radius-grand)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] px-6 py-2">
             <h2 className="m-0 pt-4 pb-2 text-[1.125rem] font-bold">Questions fréquentes</h2>

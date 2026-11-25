@@ -1,7 +1,30 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import test from "node:test";
 import { ACTEURS, baseDeTest, doitEchouer, lirePour } from "./harness.mjs";
+
+test("AUT-03 — un nouveau professeur possède un brouillon privé avant sa première classe", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+  const profile = randomUUID();
+  const email = "martin-finition@exemple-recette.test";
+  const { rows: [{ org }] } = await db.query(
+    "select study.professeur_autonome_preparer($1,'Jeanne','Martin',$2) as org", [profile, email],
+  );
+  const { rows: [identite] } = await db.query("select * from study.auth_resoudre_direct($1)", [email]);
+  assert.equal(identite.profile_id, profile);
+  assert.equal(identite.organization_id, org);
+  assert.deepEqual(await lirePour(db, profile, "select id from study.classes where organization_id=$1", [org]), []);
+  const [document] = await lirePour(db, profile, `
+    insert into study.studio_documents(organization_id,owner_id,title,state)
+    values($1,$2,'Fonctions affines','importe') returning id
+  `, [org, profile]);
+  assert.ok(document.id);
+  assert.deepEqual(await lirePour(db, ACTEURS.profAutre, "select id from study.studio_documents where id=$1", [document.id]), []);
+  const [creation] = await lirePour(db, profile, "select * from study.classe_autonome_creer($1,'STI2D','Français')", [org]);
+  assert.ok(creation.espace);
+  assert.deepEqual(await lirePour(db, profile, "select id from study.studio_documents where id=$1", [document.id]), [document]);
+});
 
 test("AUT-01 — création autonome puis demande professeur : le code seul ne donne aucun accès", async () => {
   const db = await baseDeTest();

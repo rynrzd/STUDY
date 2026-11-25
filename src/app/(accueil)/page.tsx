@@ -7,8 +7,8 @@ import { MenuMobile } from "./MenuMobile";
 
 export const metadata: Metadata = pagePublique({
   chemin: "/",
-  titre: "Ta classe, tout simplement",
-  description: "Tes cours, le travail à faire et les échanges de ta classe, au même endroit. Une plateforme pédagogique pour les lycées, financée par l'établissement.",
+  titre: "Un ancien PDF. Un cours prêt à partager.",
+  description: "Modernisez un PDF de cours, téléchargez-le et partagez-le avec votre classe sur AvecStudy.",
 });
 
 const COURS = [
@@ -33,8 +33,8 @@ export default function Accueil() {
             Établissements
           </Link>
           <Link href="/connexion">Se connecter</Link>
-          <Link className={`${s.button} ${s.desktop}`} href="/contact">
-            Demander une démo
+          <Link className={`${s.button} ${s.desktop}`} href="/inscription/professeur">
+            Créer un compte prof
           </Link>
           <MenuMobile />
         </nav>
@@ -43,18 +43,16 @@ export default function Accueil() {
       <main id="contenu">
         <section className={`${s.section} ${s.wrap} ${s.split} ${s.hero}`}>
           <div className={s.copy}>
-            <p className={`${s.mobileOnly} ${s.eyebrow}`}>La classe continue ici</p>
             <h1>
-              <span className={s.desktopOnly}>Ta classe,<br /><span className={s.primaryText}>tout simplement.</span></span>
-              <span className={s.mobileOnly}>Le cours se termine.<br /><span className={s.primaryText}>L’apprentissage continue.</span></span>
+              Un ancien PDF. <span className={s.primaryText}>Un cours prêt à partager.</span>
             </h1>
-            <p><span className={s.desktopOnly}>Tes cours, le travail à faire et les échanges de ta classe. Enfin au même endroit.</span><span className={s.mobileOnly}>Tes cours, tes révisions et ta classe. Un même endroit pour avancer.</span></p>
+            <p>Déposez un cours, corrigez sa mise en page et téléchargez-le en A4. Créez votre classe quand vous êtes prêt à le partager.</p>
             <div className={s.actions}>
-              <a className={s.button} href="#decouvrir">
-                Découvrir Study <ArrowRight className={s.mobileOnly} size={20} aria-hidden="true" />
-              </a>
-              <Link className={`${s.button} ${s.secondary}`} href="/connexion">
-                Se connecter
+              <Link className={s.button} href="/inscription/professeur">
+                Créer un compte prof
+              </Link>
+              <Link className={`${s.button} ${s.secondary}`} href="/exemple-pdf">
+                Voir un avant/après
               </Link>
             </div>
           </div>
@@ -218,7 +216,7 @@ export default function Accueil() {
             <div className={s.lowerCopy}><p className={s.lowerEyebrow}>Quelques réponses</p><h2>Questions fréquentes</h2><p>Un autre point à éclaircir ?<br /><Link className={s.textLink} href="/contact">Parlons-en <ArrowRight size={17} aria-hidden="true" /></Link></p></div>
             <div className={s.faqList}>
               <details name="faq"><summary>Faut-il un ordinateur par élève ?<Plus size={20} aria-hidden="true" /></summary><p>Non. La projection en classe et le travail sur papier sont prévus ; le cours se consulte ensuite sur n’importe quel appareil, y compris un téléphone.</p></details>
-              <details name="faq"><summary>Qui finance la plateforme ?<Plus size={20} aria-hidden="true" /></summary><p>L’établissement, sur devis. Aucun achat par les familles, aucun abonnement élève, aucune publicité.</p></details>
+              <details name="faq"><summary>Qui finance la plateforme ?<Plus size={20} aria-hidden="true" /></summary><p>Les établissements souscrivent une licence sur devis. Un professeur peut ouvrir directement son espace. Les élèves accèdent à leur classe avec une invitation.</p></details>
               <details name="faq"><summary>Comment installer Study dans mon lycée ?<Plus size={20} aria-hidden="true" /></summary><p><Link href="/contact">Contactez l’équipe</Link> pour présenter vos besoins et préparer la mise en place.</p></details>
             </div>
           </section>

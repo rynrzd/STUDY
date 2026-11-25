@@ -19,7 +19,11 @@ export default function PageProduit() {
           <h1 id="titre-produit">Le cours est fini.<br /><em>Pas les questions.</em></h1>
           <p className={s.lead}>Le chapitre à retrouver. L’exercice pour jeudi. Le passage qu’on n’a pas compris. Study les rassemble dans l’espace de la classe.</p>
           <a className={s.primary} href="#parcours">Voir comment ça se passe <ArrowDown size={18} aria-hidden="true" /></a>
-          <p className={s.introNote}>Pour les élèves, leurs professeurs et leur établissement.</p>
+          <p className={s.introNote}>Modernisez vos PDF, puis publiez les cours et exercices pour vos élèves.</p>
+          <div className="mt-4 flex flex-wrap justify-center gap-3">
+            <Link className={s.primary} href="/inscription/professeur">Créer un compte prof</Link>
+            <Link className={s.textLink} href="/exemple-pdf">Voir un avant/après</Link>
+          </div>
         </div>
         <figure className={s.lesson}>
           <div className={s.lessonTop}><span>SECONDE 1</span><span>Mathématiques</span></div>
@@ -80,9 +84,9 @@ export default function PageProduit() {
       </section>
 
       <section className={s.practical} aria-labelledby="titre-pratique"><h2 id="titre-pratique">Avant de vous lancer.</h2><div>
-        <details><summary>Comment les élèves se connectent-ils ? <span aria-hidden="true">+</span></summary><p>L’établissement remet les accès. Study dispose de sa propre connexion ; aucune intégration ENT, EduConnect ou GAR n’est actuellement proposée. <Link href="/activer">Voir la première connexion.</Link></p></details>
+        <details><summary>Comment les élèves se connectent-ils ? <span aria-hidden="true">+</span></summary><p>Le professeur responsable remet une invitation individuelle. L’élève choisit son mot de passe sans e-mail et garde le même identifiant pour toutes les matières de sa classe. <Link href="/activer">Utiliser une invitation.</Link></p></details>
         <details><summary>Que fait Study aujourd’hui ? <span aria-hidden="true">+</span></summary><p>Cours, devoirs, corrections, révisions et échanges de classe. Study ne gère pas les absences, les bulletins ou la cantine et ne propose pas de visioconférence. Les fiches assemblent des passages du cours ; aucun fournisseur d’IA n’est raccordé. La recherche est lexicale et n’indexe pas les PDF scannés.</p></details>
-        <details><summary>Et les données et les fichiers ? <span aria-hidden="true">+</span></summary><p>Les accès sont gérés par l’établissement, avec un second facteur pour les administrateurs. Les fichiers sont contrôlés par leur type, leur taille et leur empreinte, sans analyse antivirus. Les accès sont remis par l’établissement : aucun envoi d’e-mail automatique n’est raccordé. <Link href="/securite">Lire les mesures et leurs limites.</Link></p></details>
+        <details><summary>Et les données et les fichiers ? <span aria-hidden="true">+</span></summary><p>Les brouillons du Studio restent privés. Les élèves accèdent aux séances publiées pour leur classe ou leur groupe. <Link href="/securite">Lire les mesures et leurs limites.</Link></p></details>
       </div></section>
 
       <section className={s.closing} aria-labelledby="titre-demo"><p className={s.kicker}>ET POUR VOTRE ÉTABLISSEMENT ?</p><h2 id="titre-demo">Voyons Study<br />avec votre équipe.</h2><p>Une démonstration pour parcourir les usages et voir ce qui correspond à votre organisation.</p><Link href="/contact" className={s.primary}>Demander une démonstration <ArrowRight size={18} aria-hidden="true" /></Link><Link href="/offre" className={s.offer}>Consulter l’offre</Link></section>

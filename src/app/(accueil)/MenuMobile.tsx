@@ -41,6 +41,7 @@ export function MenuMobile() {
         <Link href="/etablissements" onClick={fermer}>
           Établissements
         </Link>
+        <Link href="/exemple-pdf" onClick={fermer}>Voir un avant/après</Link>
         <Link className={s.button} href="/contact" onClick={fermer}>
           Demander une démo
         </Link>

@@ -35,11 +35,11 @@ const REPERES = [
   ["En-tête", "La plateforme"],
   ["En-tête", "Établissements"],
   ["En-tête", "Se connecter"],
-  ["En-tête", "Demander une démo"],
-  ["Hero", "Ta classe,"],
-  ["Hero", "tout simplement."],
-  ["Hero", "Tes cours, le travail à faire et les échanges de ta classe. Enfin au même endroit."],
-  ["Hero", "Découvrir Study"],
+  ["En-tête", "Créer un compte prof"],
+  ["Hero", "Un ancien PDF."],
+  ["Hero", "Un cours prêt à partager."],
+  ["Hero", "Déposez un cours, corrigez sa mise en page et téléchargez-le en A4."],
+  ["Hero", "Voir un avant/après"],
   ["Hero", "Fonctions affines"],
   ["Hero", "Exemple illustratif de l’interface"],
   ["Cours", "Le bon cours."],
@@ -148,6 +148,13 @@ async function principal() {
   verifier(!/<canvas/i.test(brut), "aucun canvas dans le HTML servi");
   verifier(!/Passer l.introduction/i.test(brut), "aucun lien « Passer l'introduction »");
   verifier((brut.match(/<h1[\s>]/g) ?? []).length === 1, "un seul H1");
+  verifier(brut.includes('href="/inscription/professeur"'), "lien d’inscription professeur");
+  verifier(brut.includes('href="/exemple-pdf"'), "lien du comparatif");
+  for (const version of ["original", "modernise"]) {
+    const pdf = await fetch(`${BASE}/exemple-pdf/fichier/${version}`, { headers: entetes });
+    const signature = Buffer.from(await pdf.arrayBuffer()).subarray(0, 5).toString();
+    verifier(pdf.ok && pdf.headers.get("content-type")?.includes("application/pdf") && signature === "%PDF-", `PDF public ${version}`);
+  }
 
   console.log("\nCe qui ne doit pas s y trouver");
   for (const [nom, motif] of PROSCRITS) {

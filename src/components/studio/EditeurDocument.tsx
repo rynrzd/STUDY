@@ -15,6 +15,7 @@ import {
   type ReglagesPresentation,
 } from "@/lib/document-cours";
 import { RenduDocument } from "./RenduDocument";
+import { LecteurPdf } from "@/components/seance/LecteurPdf";
 
 /**
  * Éditeur du Studio — S07 à S12.
@@ -58,14 +59,27 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
   const [revision, setRevision] = useState(initial.revision);
   const [sauvegarde, setSauvegarde] = useState<EtatSauvegarde>("repos");
   const [message, setMessage] = useState<string | null>(null);
+  const [sale, setSale] = useState(false);
   const [panneau, setPanneau] = useState<"resultat" | "original" | "reglages">("resultat");
+  const [pageSource, setPageSource] = useState<number | null>(null);
+  const ouvrirSource = (page: number) => {
+    setPanneau("original");
+    setPageSource(page);
+    requestAnimationFrame(() => documentSource.current?.focus());
+  };
+  const documentSource = useRef<HTMLElement>(null);
 
   // `modifie` distingue « rien n'a bougé » de « tout est enregistré » : sans
   // cela, l'alerte de sortie se déclencherait sur une page seulement consultée.
   const modifie = useRef(false);
+  const generation = useRef(0);
+  const sauvegardeEnCours = useRef(false);
   const minuteur = useRef<number | null>(null);
 
   const enregistrer = useCallback(async () => {
+    if (!modifie.current || sauvegardeEnCours.current) return;
+    sauvegardeEnCours.current = true;
+    const versionLocale = generation.current;
     setSauvegarde("enregistrement");
 
     const donnees = new FormData();
@@ -73,13 +87,23 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
     donnees.set("attendue", String(revision));
     donnees.set("brouillon", JSON.stringify({ document, reglages }));
 
-    const retour = await enregistrerRevision({ etat: "vierge" }, donnees);
+    let retour;
+    try {
+      retour = await enregistrerRevision({ etat: "vierge" }, donnees);
+    } catch {
+      setSauvegarde("echec");
+      setMessage("L’enregistrement est indisponible. Réessayez avant de quitter.");
+      return;
+    } finally {
+      sauvegardeEnCours.current = false;
+    }
 
     if (retour.etat === "enregistre") {
       setRevision(retour.revision ?? revision);
       setSauvegarde("enregistre");
       setMessage(null);
-      modifie.current = false;
+      modifie.current = versionLocale !== generation.current;
+      setSale(modifie.current);
       return;
     }
 
@@ -111,11 +135,15 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
 
   const changerDocument = (suivant: DocumentCours) => {
     modifie.current = true;
+    generation.current += 1;
+    setSale(true);
     setDocument(suivant);
   };
 
   const changerReglages = (partiel: Partial<ReglagesPresentation>) => {
     modifie.current = true;
+    generation.current += 1;
+    setSale(true);
     setReglages((precedent) => relireReglages({ ...precedent, ...partiel }));
   };
 
@@ -147,13 +175,17 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
 
         <div className="flex flex-wrap items-center gap-2">
           <Link
-            href={`/professeur/studio/${initial.id}/apercu`}
+            href={`/professeur/studio/${initial.id}/apercu?mode=a4`}
+            aria-disabled={sale}
+            onClick={(event) => { if (sale) event.preventDefault(); }}
             className="bouton bouton-secondaire bouton-compact"
           >
             Aperçu
           </Link>
           <Link
             href={`/professeur/studio/${initial.id}/publication`}
+            aria-disabled={sale}
+            onClick={(event) => { if (sale) event.preventDefault(); }}
             className="bouton bouton-primaire bouton-compact"
           >
             Continuer
@@ -206,6 +238,8 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
       <div className="mt-5 grid flex-1 gap-6 lg:grid-cols-[220px_minmax(0,1fr)_240px] lg:items-start">
         {/* Original */}
         <aside
+          ref={documentSource}
+          tabIndex={-1}
           hidden={panneau !== "original"}
           className="lg:!block lg:sticky lg:top-24 lg:max-h-[calc(100dvh-160px)] lg:overflow-y-auto"
         >
@@ -221,6 +255,11 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
                 Ouvrir le fichier d&apos;origine
               </a>
             </p>
+          ) : null}
+          {initial.document.format === "pdf" && initial.fichierSource ? (
+            pageSource === null
+              ? <button type="button" className="bouton bouton-secondaire bouton-compact mt-2" onClick={() => ouvrirSource(1)}>Voir le PDF original</button>
+              : <LecteurPdf key={pageSource} fichier={initial.fichierSource} nom="PDF original" pageInitiale={pageSource} />
           ) : null}
           <pre className="mt-3 whitespace-pre-wrap rounded-[var(--radius-champ)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-3 font-mono text-[0.6875rem] leading-relaxed text-[color:var(--color-encre-faible)]">
             {original}
@@ -296,7 +335,7 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
             surChangement={(valeur) => changerReglages({ sommaire: valeur })}
           />
 
-          <RapportConversion document={initial.document} etat={initial.etat} id={initial.id} />
+          <RapportConversion document={initial.document} etat={initial.etat} ouvrirSource={initial.fichierSource ? ouvrirSource : undefined} />
         </aside>
       </div>
     </div>
@@ -382,11 +421,11 @@ function Bascule({
 function RapportConversion({
   document,
   etat,
-  id,
+  ouvrirSource,
 }: {
   document: DocumentCours;
   etat: string;
-  id: string;
+  ouvrirSource?: (page: number) => void;
 }) {
   const alertes = document.rapport.alertes;
   const verifie = etat === "pret";
@@ -422,7 +461,11 @@ function RapportConversion({
               className="text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-attention)]"
             >
               {alerte.message}
-              {alerte.page !== undefined ? ` (page ${alerte.page})` : ""}
+              {alerte.page !== undefined ? (
+                ouvrirSource && document.format === "pdf"
+                  ? <> <button type="button" className="underline" onClick={() => ouvrirSource(alerte.page!)}>Page source {alerte.page}</button></>
+                  : ` (page ${alerte.page})`
+              ) : null}
             </li>
           ))}
         </ul>
@@ -433,14 +476,6 @@ function RapportConversion({
         </p>
       )}
 
-      {verifie ? null : (
-        <form action={`/professeur/studio/${id}/revue`} method="get" className="mt-3">
-          <Link href={`/professeur/studio/${id}/publication`} className="lien-fleche text-[length:var(--text-aide)]">
-            Vérifier puis publier
-            <span aria-hidden="true" className="fleche">→</span>
-          </Link>
-        </form>
-      )}
     </section>
   );
 }

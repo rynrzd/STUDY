@@ -5,10 +5,11 @@ import { redirect } from "next/navigation";
 import type { EtatFormulaire } from "@/components/study/formulaire";
 import { tenterConnexion } from "@/lib/authentification";
 import { chiffrer, lireCles } from "@/lib/chiffrement";
-import { DepotSupabase } from "@/lib/depot-authentification";
+import { DepotSupabase, DepotSupabaseDirect } from "@/lib/depot-authentification";
 import { FournisseurSupabase } from "@/lib/fournisseur-supabase";
 import { controlerMotDePasse, MESSAGES_MOT_DE_PASSE } from "@/lib/mot-de-passe";
 import { cookieSession, empreinteJeton, NOM_COOKIE_SESSION } from "@/lib/session";
+import { sessionCourante } from "@/lib/session-serveur";
 import { baseConfiguree, clientExploitation } from "@/lib/supabase-serveur";
 import { appliquerPolitique, poserParcours } from "@/lib/v6/connexion-serveur";
 import { empreinteInvitation, FORME_JETON } from "@/lib/v6/invitations";
@@ -44,6 +45,10 @@ export async function utiliserInvitation(jeton: string, _precedent: EtatFormulai
   const etat = ((lu.data ?? []) as { etat: string; profile_id: string | null; code_etablissement: string | null; organisation: string | null; identifiant: string | null }[])[0];
   if (lu.error !== null || !etat) return { ok: false, message: "Le service est momentanément indisponible. Réessaie dans un instant." };
   if (etat.etat !== "valide" || etat.profile_id === null) redirect(`/invitation/${encodeURIComponent(jeton)}`);
+  const personne = await sessionCourante();
+  if (personne && personne.profileId !== etat.profile_id) {
+    return { ok: false, message: "Un autre compte est ouvert. Déconnecte-toi, puis rouvre ton lien personnel." };
+  }
 
   const pose = await clientExploitation("administration_des_comptes").auth.admin.updateUserById(etat.profile_id, { password: nouveau });
   if (pose.error !== null) {
@@ -82,7 +87,8 @@ export async function utiliserInvitation(jeton: string, _precedent: EtatFormulai
   }
   if (!resultat || !resultat.reussi) {
     if (contexte) await poserParcours(contexte);
-    redirect("/connexion?invitation=ok");
+    const direct = etat.identifiant ? await new DepotSupabaseDirect().resoudreIdentifiant("", etat.identifiant) : null;
+    redirect(direct?.profileId === etat.profile_id ? "/connexion?invitation=ok" : "/connexion?historique=1&invitation=ok");
   }
   const cookie = cookieSession(resultat.jetonSession, resultat.dureeSecondes, appareil === "personnel");
   magasin.set(cookie.name, cookie.value, {

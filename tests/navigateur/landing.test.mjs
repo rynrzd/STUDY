@@ -47,20 +47,21 @@ const norm = (t) => t.replace(/[’]/g, "'").replace(/\s+/g, " ").trim();
 test("L01 — un seul hero, sans scène 3D, message et accès visibles au premier rendu", async () => {
   const onglet = await page("/");
   assert.equal(await onglet.locator("h1").count(), 1, "un seul H1");
-  assert.equal(norm(await onglet.locator("h1").innerText()), "Ta classe, tout simplement.");
+  assert.equal(norm(await onglet.locator("h1").innerText()), "Un ancien PDF. Un cours prêt à partager.");
   assert.equal(await onglet.locator("canvas").count(), 0, "aucun canvas");
   assert.equal(await onglet.getByText("Passer l'introduction").count(), 0, "aucun lien Passer");
-  assert.equal(await onglet.getByRole("link", { name: "Découvrir Study" }).getAttribute("href"), "#decouvrir");
-  const connexion = onglet.locator("main").getByRole("link", { name: "Se connecter" }).first();
+  assert.equal(await onglet.locator("main").getByRole("link", { name: "Voir un avant/après" }).getAttribute("href"), "/exemple-pdf");
+  assert.equal(await onglet.locator("main").getByRole("link", { name: "Créer un compte prof" }).getAttribute("href"), "/inscription/professeur");
+  const connexion = onglet.locator("header").getByRole("link", { name: "Se connecter" }).first();
   assert.equal(await connexion.getAttribute("href"), "/connexion");
   assert.equal(await connexion.isVisible(), true);
   await onglet.close();
 });
 
-test("L02 — en-tête de la référence : plateforme, établissements, connexion, démo", async () => {
+test("L02 — en-tête : plateforme, établissements, connexion et inscription", async () => {
   const onglet = await page("/");
   const nav = onglet.locator('header nav[aria-label="Navigation principale"]');
-  for (const [nom, href] of [["La plateforme", "/produit"], ["Établissements", "/etablissements"], ["Se connecter", "/connexion"], ["Demander une démo", "/contact"]]) {
+  for (const [nom, href] of [["La plateforme", "/produit"], ["Établissements", "/etablissements"], ["Se connecter", "/connexion"], ["Créer un compte prof", "/inscription/professeur"]]) {
     assert.equal(await nav.getByRole("link", { name: nom }).getAttribute("href"), href, nom);
   }
   await onglet.close();
@@ -99,14 +100,14 @@ test("L04 — la FAQ s'ouvre au clavier", async () => {
   await onglet.close();
 });
 
-test("L05 — menu du téléphone : ouverture, trois destinations, Échap rend le focus", async () => {
+test("L05 — menu du téléphone : ouverture, destinations et retour du focus", async () => {
   const onglet = await page("/", { largeur: 390, hauteur: 844 });
   const bouton = onglet.locator("header summary", { hasText: "Menu" });
   assert.equal(await bouton.isVisible(), true, "le bouton Menu est visible");
   const boite = await bouton.boundingBox();
   assert.ok(boite && boite.height >= 44, "cible d au moins 44 px");
   await bouton.click();
-  for (const [nom, href] of [["La plateforme", "/produit"], ["Établissements", "/etablissements"], ["Demander une démo", "/contact"]]) {
+  for (const [nom, href] of [["La plateforme", "/produit"], ["Établissements", "/etablissements"], ["Voir un avant/après", "/exemple-pdf"], ["Demander une démo", "/contact"]]) {
     const lien = onglet.locator("header details").getByRole("link", { name: nom });
     assert.equal(await lien.isVisible(), true, nom);
     assert.equal(await lien.getAttribute("href"), href);

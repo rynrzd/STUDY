@@ -167,7 +167,7 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
             <label className="etiquette" htmlFor="motDePasse">
               Mot de passe
             </label>
-            <Link href="/acces-oublie" className={`text-[0.875rem] font-semibold text-[color:var(--color-accent)] ${mobileDesign ? m.desktop : ""}`}>
+            <Link href={direct ? "/inscription/professeur/acces" : "/acces-oublie"} className={`text-[0.875rem] font-semibold text-[color:var(--color-accent)] ${mobileDesign && !direct ? m.desktop : ""}`}>
               Mot de passe oublié ?
             </Link>
           </div>

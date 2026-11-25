@@ -24,8 +24,8 @@ export const metadata: Metadata = pagePublique({
 export const dynamic = "force-dynamic";
 
 const CAS = [
-  ["Vous êtes élève", "Adressez-vous à votre établissement : seul votre lycée gère votre compte, après avoir vérifié votre identité. Un accès oublié se demande depuis la page de connexion."],
-  ["Vous êtes enseignant", "Pour un accès ou une affectation, passez par l'administrateur de votre établissement : il peut corriger sans passer par nous."],
+  ["Vous êtes élève", "Demandez une nouvelle invitation au professeur responsable de votre classe. Pour un compte remis par le lycée, votre établissement peut vous aider à retrouver l’accès."],
+  ["Vous êtes enseignant", "Vous pouvez ouvrir votre espace professeur et commencer par préparer un PDF. Le formulaire ci-dessous reste disponible pour les projets d’établissement."],
   ["Vous administrez le service", "Le canal d'assistance dédié est ouvert à la signature du contrat, avec ses délais et ses interlocuteurs."],
   ["Vous voulez équiper votre lycée", "Le formulaire ci-dessous nous donne ce qu'il faut pour vous répondre, et vous rend une référence de suivi."],
 ] as const;
@@ -49,6 +49,10 @@ export default function PageContact() {
 
       <Section>
         <div className="mb-10"><RaccourcisPublics /></div>
+        <div className="mb-6 flex flex-wrap gap-3">
+          <Link href="/inscription/professeur" className="bouton bouton-primaire">Créer un compte prof</Link>
+          <Link href="/inscription/professeur/acces" className="bouton bouton-secondaire">Récupérer un compte professeur</Link>
+        </div>
         <div className="grid gap-4 md:grid-cols-2 md:gap-6">
           {CAS.map(([titre, texte]) => (
             <article key={titre} className="carte p-6 md:p-7">

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CocheFin } from "@/components/study/CocheFin";
+import { IdentifiantACopier } from "@/components/study/IdentifiantACopier";
 import { CadreConnexion } from "@/components/study/connexion/CadreConnexion";
 import { pagePrivee } from "@/lib/metadonnees";
 import { destinationApresConnexion, estEleve, estEnseignant, jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
@@ -24,13 +25,22 @@ export default async function PageAccesActive() {
   const jeton = await jetonAccesDe(personne);
   if (jeton === null) redirect(versConnexion("/app", "expiree"));
 
-  const { data } = await clientUtilisateur(jeton).rpc("mes_contextes");
+  const client = clientUtilisateur(jeton);
+  const eleve = estEleve(personne) && !estEnseignant(personne);
+  const [{ data }, inscription] = await Promise.all([
+    client.rpc("mes_contextes"),
+    eleve && personne.organizationId
+      ? client.from("organization_memberships").select("local_login").eq("profile_id", personne.profileId).eq("organization_id", personne.organizationId).maybeSingle()
+      : null,
+  ]);
+  const identifiant = inscription?.data?.local_login;
   const classes = ((data ?? []) as { libelle: string }[]).map((c) => c.libelle);
   const enAttente = estEleve(personne) && !estEnseignant(personne) && classes.length === 0;
 
   return (
     <CadreConnexion titre="Ton accès est activé" sousTitre={personne.organisation ?? undefined}>
       <CocheFin />
+      {identifiant ? <IdentifiantACopier identifiant={identifiant} /> : null}
       <p className="m-0 mt-4 text-center text-[1.0625rem]">
         Bonjour {personne.prenom}. Retiens ton identifiant et ton mot de passe : ils te serviront à chaque connexion.
       </p>
@@ -42,8 +52,8 @@ export default async function PageAccesActive() {
       ) : classes.length > 0 ? (
         <p className="meta m-0 mt-5 text-center">Classes : {classes.join(", ")}</p>
       ) : null}
-      <Link href={enAttente ? "/acces-en-attente" : destinationApresConnexion(personne)} className="bouton bouton-primaire bouton-acces mt-6 w-full">
-        Accéder à mon espace
+      <Link href={enAttente ? "/acces-en-attente" : eleve ? "/app/classe" : destinationApresConnexion(personne)} className="bouton bouton-primaire bouton-acces mt-6 w-full">
+        {eleve && !enAttente ? "Ouvrir ma classe" : "Accéder à mon espace"}
       </Link>
     </CadreConnexion>
   );

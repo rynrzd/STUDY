@@ -45,6 +45,7 @@ const nextConfig: NextConfig = {
   images: { remotePatterns: [] },
   outputFileTracingIncludes: {
     "/professeur/studio/[document]/pdf": ["./node_modules/dejavu-fonts-ttf/ttf/*.ttf"],
+    "/exemple-pdf/fichier/[version]": ["./node_modules/dejavu-fonts-ttf/ttf/*.ttf"],
   },
   async redirects() {
     // Anciennes adresses publiques, conservees pour ne pas casser un lien

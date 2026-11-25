@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { DepotSupabaseDirect } from "@/lib/depot-authentification";
+import { sessionCourante } from "@/lib/session-serveur";
 import { CadreAccesPublic as CadreConnexion } from "@/components/site/CadreAccesPublic";
 import { pagePrivee } from "@/lib/metadonnees";
 import { baseConfiguree, clientExploitation } from "@/lib/supabase-serveur";
@@ -29,7 +32,7 @@ export default async function PageInvitation({ params }: { params: Promise<{ jet
     );
   }
 
-  let etat: Etat | undefined;
+  let etat: (Etat & { profile_id?: string }) | undefined;
   if (FORME_JETON.test(jeton)) {
     const { data, error } = await clientExploitation("invitation_et_recuperation").rpc("invitation_etat", { p_empreinte: empreinteInvitation(jeton) });
     if (error !== null) {
@@ -39,8 +42,21 @@ export default async function PageInvitation({ params }: { params: Promise<{ jet
         </CadreConnexion>
       );
     }
-    etat = ((data ?? []) as Etat[])[0];
+    etat = ((data ?? []) as (Etat & { profile_id?: string })[])[0];
   }
 
+  if (etat?.etat === "valide") {
+    const personne = await sessionCourante();
+    if (personne && personne.profileId !== etat.profile_id) {
+      return (
+        <CadreConnexion titre="Un compte est déjà ouvert">
+          <p>Déconnecte-toi, puis rouvre le lien que ton professeur t’a remis.</p>
+          <Link className="bouton bouton-secondaire mt-4" href="/connexion?changer=1">Changer de compte</Link>
+        </CadreConnexion>
+      );
+    }
+    const direct = etat.identifiant ? await new DepotSupabaseDirect().resoudreIdentifiant("", etat.identifiant) : null;
+    return <VueInvitation jeton={jeton} etat={etat} connexionDirecte={!!direct && direct.profileId === etat.profile_id} />;
+  }
   return <VueInvitation jeton={jeton} etat={etat} />;
 }

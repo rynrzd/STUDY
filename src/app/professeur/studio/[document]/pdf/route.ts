@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 
 /** Export privé de la révision courante : l'URL ne confère jamais le droit. */
 export async function GET(
-  _requete: Request,
+  requete: Request,
   { params }: { params: Promise<{ document: string }> },
 ) {
   const personne = await sessionCourante();
@@ -23,12 +23,18 @@ export async function GET(
     return NextResponse.json({ erreur: "introuvable" }, { status: 404 });
   }
 
-  // La lecture du document passe par le jeton utilisateur et sa politique RLS.
-  // La révision n'est jamais prise dans la requête : c'est exactement celle
-  // que le document autorisé désigne comme courante, donc celle de l'aperçu.
+  // La révision fournie par l’aperçu sert uniquement à vérifier sa fraîcheur.
+  // Le document autorisé par RLS désigne la révision à charger.
   const doc = await lireDocument(jeton, id);
   if (doc === null || doc.revisionId === null) {
     return NextResponse.json({ erreur: "introuvable" }, { status: 404 });
+  }
+  const attendue = new URL(requete.url).searchParams.get("revision");
+  if (attendue && attendue !== doc.revisionId) {
+    return new NextResponse("La révision a changé. Rechargez l’aperçu avant de télécharger.", {
+      status: 409,
+      headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "private, no-store" },
+    });
   }
   const courante = await revision(jeton, doc.revisionId);
   if (courante === null) return NextResponse.json({ erreur: "introuvable" }, { status: 404 });

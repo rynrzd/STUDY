@@ -43,10 +43,6 @@ const MESSAGES = {
   etablissement: "Choisis d'abord ton établissement.",
 } as const;
 
-function avecSuite(chemin: string, suite: string | null): string {
-  return suite ? `${chemin}?suite=${encodeURIComponent(suite)}` : chemin;
-}
-
 /** Étape 1 — trouver l'établissement par son code public. */
 export async function trouverEtablissement(_p: EtatEtablissement, donnees: FormData): Promise<EtatEtablissement> {
   const brut = String(donnees.get("code") ?? "").slice(0, 40);
@@ -59,7 +55,7 @@ export async function trouverEtablissement(_p: EtatEtablissement, donnees: FormD
   switch (resultat.etat) {
     case "trouve":
       await poserParcours(resultat.contexte);
-      redirect(avecSuite("/connexion", suite));
+      redirect(suite ? `/connexion?historique=1&suite=${encodeURIComponent(suite)}` : "/connexion?historique=1");
     case "format":
       return { etat: "refus", message: "Un code établissement compte 4 à 16 lettres ou chiffres, sans espace.", code: brut };
     case "inconnu":
@@ -74,7 +70,8 @@ export async function trouverEtablissement(_p: EtatEtablissement, donnees: FormD
 /** « Changer » d'établissement : le contexte mémorisé est effacé. */
 export async function changerEtablissement(donnees: FormData): Promise<void> {
   await oublierContexte();
-  redirect(avecSuite("/connexion", suiteSure(String(donnees.get("suite") ?? ""))));
+  const suite = suiteSure(String(donnees.get("suite") ?? ""));
+  redirect(suite ? `/connexion?historique=1&suite=${encodeURIComponent(suite)}` : "/connexion?historique=1");
 }
 
 const schemaConnexion = z.object({
