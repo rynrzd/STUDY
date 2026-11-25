@@ -185,7 +185,7 @@
   .hero .eyebrow::before { content: ""; width: 28px; height: 2px; background: var(--primary); }
   .hero h1 { font-size: clamp(32px, 9vw, 44px); line-height: 1.06; letter-spacing: -.05em; font-weight: 800; }
   .hero .copy > p:not(.eyebrow) { font-size: 17px; line-height: 1.55; color: var(--muted); }
-  .hero .actions .secondary { display: none; }
+  .hero .actions { flex-direction: column; }
   .hero .actions .button { justify-content: space-between; min-height: 56px; padding: 14px 20px; font-size: 16px; }
 
   /* L'application dans un téléphone, posée sur une feuille quadrillée pleine largeur. */
