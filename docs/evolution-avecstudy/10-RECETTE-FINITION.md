@@ -4,7 +4,7 @@ La livraison est sur `codex/refonte-avecstudy-studio`. La vitrine propose l’in
 
 ## Recette isolée
 
-La commande `node scripts/recette-isolee/lancer.mjs --verifier` refuse de démarrer sans `.env.recette`. `npm run recette:connectee` s’arrête sur `SITE_BASE absente`. Le connecteur Supabase expose un seul projet, dont l’historique correspond au schéma déjà exploité. Pour jouer le scénario STI2D de bout en bout, il faut une cible Supabase distincte avec Auth, stockage privé, worker et e-mail de test. Utiliser la [procédure isolée](../refonte/recette-isolee.md).
+La commande `node scripts/recette-isolee/lancer.mjs --verifier` refuse de démarrer sans `.env.recette`. `npm run recette:connectee` s’arrête sur `SITE_BASE absente`. Le connecteur Supabase expose un seul projet, sur l’offre Free, et aucune branche de recette. Pour jouer le scénario STI2D de bout en bout, il faut une cible Supabase distincte avec Auth, stockage privé, worker et e-mail de test. Utiliser la [procédure isolée](../refonte/recette-isolee.md).
 
 Restent à observer dans cet environnement la réception des messages de confirmation, de renvoi et de récupération, le premier import avant création de classe, le téléchargement privé et son refus au compte témoin, la publication au groupe, l’activation et les exercices sur téléphone, le co-enseignement et l’isolation des copies. Les vérifications SQL et navigateur sans comptes sont consignées séparément ci-dessous.
 
@@ -15,9 +15,14 @@ Restent à observer dans cet environnement la réception des messages de confirm
 | PDF de démonstration | Le test ouvre le PDF original de deux pages et le PDF modernisé en mémoire. Il confirme le format A4, le titre, la formule et la présence de texte sélectionnable. |
 | `node --test tests/db/autonome.test.mjs` | 3/3. Le brouillon reste privé avant la création de la classe. Le code de classe seul ne donne aucun accès à un autre professeur. |
 | `npm run test:rls -- --test-concurrency=4` | Suite lancée, puis interrompue localement après des durées de plusieurs minutes par test. La CI de la PR prévoit la suite intégrale. |
-| `npm run test:unite -- --test-concurrency=2` | 278/279. Le sous-processus du test de démarrage du worker a dépassé son délai pendant la suite. Ce même test et celui du PDF passent en relance ciblée, 2/2. |
+| `npm run test:unite` | 279/279 sur le code de `7fb73c3`. Le délai du test de démarrage du worker a été dépassé sous forte charge au premier passage. La relance complète a réussi. |
+| `npm run typecheck` | Réussi après la compilation des types de routes. |
+| `npm run lint` | Réussi après correction des liens de téléchargement. Deux avertissements informatifs de `jsx-ast-utils`. |
+| `npm run verifier:landing` | Réussi sur localhost, avec contrôle des liens, de l’ordre des sections et des deux téléchargements PDF. |
+| Navigateur Edge, 1280 et 390 px | La vérification interactive n’a pas été validée lors des essais locaux. Le premier passage a expiré pendant la navigation et le chargement des pages Next. |
+| Build Vercel | [Prévisualisation `READY`](https://study-8p6ji6he6-rayanben91233-1629s-projects.vercel.app/) du commit `7fb73c3`. La vitrine, le comparatif et l’inscription répondent 200. Les deux fichiers répondent 200 et commencent par `%PDF-`. |
+| Build local | Turbopack échoue sur ce poste au lancement de son sous-processus CSS. Le premier essai webpack a identifié un problème de chargement des tables Unicode. PDFKit est désormais chargé par Node et le build Vercel a réussi avec cette correction. |
 
-Les tests de recette et les commandes de build doivent porter sur la tête finale de la PR.
 
 ## Configuration Auth à valider sur la cible
 

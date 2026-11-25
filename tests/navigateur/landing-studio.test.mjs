@@ -1,15 +1,17 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test, { after } from "node:test";
-import { fermerNavigateur, page as ouvrirPage } from "./harness.mjs";
+import { BASE, fermerNavigateur, ouvrirNavigateur } from "./harness.mjs";
 
 after(fermerNavigateur);
 test("la vitrine ouvre l’inscription et livre le vrai PDF, sur ordinateur et à 390 px", async (t) => {
+  const navigateur = await ouvrirNavigateur();
   for (const largeur of [1280, 390]) {
     await t.test(`largeur ${largeur} px`, async () => {
-      const page = await ouvrirPage("/", { largeur });
+      const page = await navigateur.newPage({ viewport: { width: largeur, height: 900 }, reducedMotion: "reduce" });
+      page.setDefaultTimeout(60_000);
       try {
-        await page.emulateMedia({ reducedMotion: "reduce" });
+        await page.goto(BASE, { waitUntil: "domcontentloaded", timeout: 120_000 });
         await page.getByRole("heading", { name: "Un ancien PDF. Un cours prêt à partager." }).waitFor();
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
         if (largeur === 390) {

@@ -94,6 +94,7 @@ function normaliser(html) {
     // devient « Découvrir <!-- -->AvecStudy ». Le texte est bien là ; le
     // marqueur d'hydratation n'a pas à faire échouer la comparaison.
     .replace(/<!--.*?-->/g, "")
+    .replace(/<br\s*\/?\s*>/gi, " ")
     .replace(/&#x27;|&#39;|&apos;|’/g, "'")
     .replace(/&quot;/g, '"')
     .replace(/&amp;/g, "&")
