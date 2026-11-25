@@ -1,5 +1,5 @@
 .page {
-  --fond: #f8f7f9;
+  --fond: #fff;
   --encre: #29282e;
   --encre-douce: #64616d;
   --prune: #81445b;
@@ -9,24 +9,12 @@
   --entete: 6rem;
   --gouttiere: clamp(1.25rem, 5vw, 5rem);
   position: relative;
-  isolation: isolate;
   display: flex;
   min-block-size: 100svh;
   flex-direction: column;
   background: var(--fond);
   color: var(--encre);
   font-family: var(--font-texte);
-}
-
-.page::before {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  pointer-events: none;
-  content: "";
-  background:
-    radial-gradient(ellipse 76% 44% at 104% 103%, var(--rose), transparent 85%),
-    radial-gradient(ellipse 63% 27% at -11% 106%, var(--rose), transparent 89%);
 }
 
 .page :focus-visible {
@@ -45,15 +33,14 @@
 
 .marque {
   color: inherit;
-  font-size: clamp(1.95rem, 4vw, 2.7rem);
-  font-weight: 850;
-  letter-spacing: -.08em;
+  font-size: clamp(1.65rem, 3vw, 2.15rem);
+  font-weight: 750;
+  letter-spacing: -.055em;
   line-height: 1;
   text-decoration: none;
 }
 
-.marque span,
-.nomMatiere {
+.marque span {
   color: var(--prune);
 }
 
@@ -61,10 +48,10 @@
   display: inline-grid;
   min-block-size: 44px;
   place-items: center;
-  border-radius: 999px;
-  padding-inline: 1.2rem;
-  background: var(--rose);
-  color: var(--encre);
+  border: 1px solid var(--bordure);
+  border-radius: .5rem;
+  padding-inline: .85rem;
+  color: var(--prune);
   font-weight: 650;
   text-decoration: none;
   white-space: nowrap;
@@ -92,10 +79,10 @@
 
 .contenu h1 {
   margin: 0;
-  font-size: clamp(3rem, 7.1vw, 7rem);
-  font-weight: 790;
-  letter-spacing: -.07em;
-  line-height: .99;
+  font-size: clamp(2.35rem, 6.2vw, 5.5rem);
+  font-weight: 660;
+  letter-spacing: -.045em;
+  line-height: 1.07;
   text-wrap: balance;
 }
 
@@ -112,20 +99,19 @@
 .recherche {
   display: flex;
   grid-row: 2;
-  width: min(100%, 47rem);
+  width: min(100%, 38rem);
   min-inline-size: 0;
-  min-block-size: 4.15rem;
+  min-block-size: 3.5rem;
   align-items: center;
   border: 1px solid var(--bordure);
-  border-radius: 999px;
+  border-radius: .65rem;
   padding: .35rem .5rem .35rem clamp(.8rem, 3vw, 1.55rem);
   background: white;
-  box-shadow: 0 12px 42px #81445b15;
   transition: box-shadow 180ms ease;
 }
 
 .recherche:focus-within {
-  box-shadow: 0 0 0 2px var(--prune), 0 16px 48px #81445b1f;
+  box-shadow: 0 0 0 1px var(--prune);
 }
 
 .recherche input {
@@ -156,9 +142,9 @@
   min-block-size: 44px;
   place-items: center;
   border: 0;
-  border-radius: 50%;
+  border-radius: .4rem;
   padding: 0;
-  background: var(--rose-clair);
+  background: transparent;
   color: var(--prune);
   cursor: pointer;
 }
@@ -206,69 +192,55 @@
 }
 
 .intro h1 {
-  font-size: clamp(3rem, 5.5vw, 5.35rem);
-}
-
-.intro p {
-  margin-block: 1.1rem;
-  color: var(--encre-douce);
-  font-size: clamp(1.1rem, 2vw, 1.5rem);
-}
-
-.intro .nomMatiere {
-  margin-block: 0 1rem;
-  color: var(--prune);
-  font-weight: 730;
+  font-size: clamp(2.35rem, 5.2vw, 4.75rem);
+  overflow-wrap: anywhere;
 }
 
 .chapitres,
 .reponses {
   display: flex;
   flex-wrap: wrap;
-  gap: .55rem;
+  gap: .35rem .85rem;
 }
 
 .aideRecherche .chapitres {
   justify-content: center;
-  margin-top: .75rem;
+}
+
+.aideRecherche p {
+  margin: 0 0 .5rem;
 }
 
 .intro .chapitres {
-  margin-top: clamp(1.4rem, 3vw, 2.65rem);
+  margin-top: 1rem;
 }
 
 .chapitres button,
 .reponses button {
   min-block-size: 44px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  padding: .5rem .95rem;
-  background: var(--rose-clair);
-  color: var(--encre);
+  padding: .55rem .15rem;
+  border: 0;
+  background: transparent;
+  color: var(--prune);
   font: inherit;
+  font-size: .95rem;
   font-weight: 650;
   cursor: pointer;
 }
 
 .chapitres button:hover,
-.reponses button:hover {
-  border-color: var(--prune);
-}
-
-.chapitres button[aria-pressed="true"],
-.reponses button[aria-pressed="true"] {
-  background: var(--prune);
-  color: white;
+.chapitres button[aria-pressed="true"] {
+  text-decoration: underline;
+  text-underline-offset: .35em;
 }
 
 .exercice {
   display: grid;
   gap: 1rem;
   border: 1px solid var(--bordure);
-  border-radius: clamp(1.4rem, 3vw, 2.1rem);
+  border-radius: .75rem;
   padding: clamp(1.25rem, 3.2vw, 2.65rem);
   background: white;
-  box-shadow: 0 18px 55px #81445b12;
   animation: apparition 260ms ease both;
 }
 
@@ -315,7 +287,17 @@
 
 .reponses button {
   flex: 1 1 auto;
-  border-radius: .9rem;
+  padding-inline: .75rem;
+  border: 1px solid var(--bordure);
+  border-radius: .4rem;
+  color: var(--encre);
+}
+
+.reponses button:hover,
+.reponses button[aria-pressed="true"] {
+  border-color: var(--prune);
+  background: var(--rose-clair);
+  color: var(--prune);
 }
 
 .retour {
@@ -400,8 +382,7 @@
 
 @media (max-width: 760px) {
   .page { --entete: 4.65rem; }
-  .contenu h1 { font-size: clamp(2.7rem, 10vw, 4.6rem); }
-  .coupure { display: none; }
+  .contenu h1 { font-size: clamp(2.1rem, 9vw, 4rem); }
   .page[data-mode="matiere"] .contenu {
     align-content: start;
     padding-top: .5rem;
@@ -446,14 +427,14 @@
   }
 
   :global(html):has(.page)::view-transition-group(study-search) {
-    animation-duration: 520ms;
+    animation-duration: 360ms;
     animation-timing-function: cubic-bezier(.22, 1, .36, 1);
     z-index: 2;
   }
 
   :global(html):has(.page)::view-transition-group(root),
   :global(html):has(.page)::view-transition-group(study-exercise) {
-    animation-duration: 320ms;
+    animation-duration: 240ms;
     animation-timing-function: ease-out;
   }
 }

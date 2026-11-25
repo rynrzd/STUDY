@@ -64,7 +64,7 @@ test("L02 — un visiteur cherche maths, se trompe, prend un indice puis réussi
   const onglet = await page("/");
   await champ(onglet).fill("maths");
   await champ(onglet).press("Enter");
-  await onglet.getByRole("heading", { name: /On commence/ }).waitFor();
+  await onglet.getByRole("heading", { name: "Mathématiques" }).waitFor();
   assert.equal(await onglet.getByText("Mathématiques", { exact: true }).isVisible(), true);
   await onglet.getByRole("button", { name: "Sinus", exact: true }).click();
   assert.equal(await onglet.getByText(/Essaie encore/).isVisible(), true);
@@ -97,7 +97,7 @@ test("L04 — à 390 px, la recherche sans exemple propose un sujet accessible",
   const onglet = await page("/", { largeur: 390, hauteur: 844 });
   await champ(onglet).fill("chimie");
   await champ(onglet).press("Enter");
-  await onglet.getByText(/On n’a pas d’exemple/).waitFor();
+  await onglet.getByText(/Aucun exercice trouvé/).waitFor();
   await onglet.getByRole("button", { name: "Histoire-géographie" }).click();
   await onglet.getByRole("heading", { name: /prise de la Bastille/ }).waitFor();
   assert.equal(await onglet.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);

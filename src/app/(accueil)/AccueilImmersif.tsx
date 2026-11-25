@@ -120,7 +120,7 @@ export function AccueilImmersif() {
             autoComplete="off"
             maxLength={120}
             onChange={(event) => setSaisie(event.target.value)}
-            placeholder="Tu peux écrire juste « maths »."
+            placeholder="Une matière, un chapitre…"
             type="search"
             value={saisie}
           />
@@ -130,9 +130,7 @@ export function AccueilImmersif() {
         {apercu ? (
           <div className={s.matiere} key={apercu.matiere.titre}>
             <div className={s.intro}>
-              <p className={s.nomMatiere}>{apercu.matiere.titre}</p>
-              <h1 ref={titre} tabIndex={-1}>On commence<br className={s.coupure} /> par un exemple&nbsp;?</h1>
-              <p>Tu peux essayer, même si tu hésites.</p>
+              <h1 ref={titre} tabIndex={-1}>{apercu.matiere.titre}</h1>
               <div className={s.chapitres} role="group" aria-label="Choisir une notion">
                 {apercu.matiere.exercices.map((exercice) => (
                   <button
@@ -152,19 +150,15 @@ export function AccueilImmersif() {
           </div>
         ) : (
           <div className={s.accueil}>
-            <h1 ref={titre} tabIndex={-1}>Tu veux travailler quoi<br className={s.coupure} /> aujourd’hui&nbsp;?</h1>
-            {recherche ? (
-              <div className={s.aideRecherche}>
-                <p role="status">On n’a pas d’exemple pour « {recherche} ». Essaie une de ces matières.</p>
-                <div className={s.chapitres} role="group" aria-label="Matières à essayer">
-                  {matieres.map((matiere) => (
-                    <button type="button" key={matiere.titre} onClick={() => chercher(matiere.motsCles[0]!)}>{matiere.titre}</button>
-                  ))}
-                </div>
+            <h1 ref={titre} tabIndex={-1}>Tu veux travailler quoi aujourd’hui&nbsp;?</h1>
+            <div className={s.aideRecherche}>
+              {recherche && <p>Aucun exercice trouvé pour «&nbsp;{recherche}&nbsp;».</p>}
+              <div className={s.chapitres} role="group" aria-label="Matières à essayer">
+                {matieres.map((matiere) => (
+                  <button type="button" key={matiere.titre} onClick={() => chercher(matiere.titre)}>{matiere.titre}</button>
+                ))}
               </div>
-            ) : (
-              <p className={s.aideRecherche}>Même si tu ne sais pas par où commencer.</p>
-            )}
+            </div>
           </div>
         )}
       </main>
