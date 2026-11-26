@@ -6,6 +6,9 @@ export interface Exercice {
   bonneReponse: string;
   indice: string;
   explication: string;
+  /** Les aperçus publics montrent trois gestes pédagogiques distincts, sans enregistrement. */
+  format?: "choix" | "numerique" | "ordre";
+  mots?: readonly string[];
   figure?: "triangle";
   extrait?: string;
 }
@@ -35,7 +38,8 @@ export const matieres: readonly Matiere[] = [
         titre: "Fonctions",
         motsCles: ["fonction", "fonctions", "affine", "affines"],
         question: "Si f(x) = 2x + 1, que vaut f(3) ?",
-        choix: ["6", "7", "9"],
+        format: "numerique",
+        choix: [],
         bonneReponse: "7",
         indice: "Remplace x par 3, puis fais la multiplication avant l’addition.",
         explication: "Oui. f(3) = 2 × 3 + 1 = 7.",
@@ -84,8 +88,10 @@ export const matieres: readonly Matiere[] = [
       {
         titre: "L’ordre des mots",
         motsCles: ["ordre des mots", "phrase"],
-        question: "Comment dit-on « Elle joue au tennis tous les dimanches » en anglais ?",
-        choix: ["She tennis plays every Sunday.", "She plays tennis every Sunday.", "She every plays Sunday tennis."],
+        question: "Remets les mots dans l’ordre : « Elle joue au tennis tous les dimanches. »",
+        format: "ordre",
+        mots: ["Sunday.", "tennis", "She", "every", "plays"],
+        choix: [],
         bonneReponse: "She plays tennis every Sunday.",
         indice: "Commence par le sujet, puis le verbe et son complément.",
         explication: "Oui. She est le sujet, plays le verbe et tennis son complément.",

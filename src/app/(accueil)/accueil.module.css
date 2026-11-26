@@ -378,6 +378,118 @@
   border-radius: .9rem;
 }
 
+/* Une phrase à recomposer et un calcul à saisir : de vrais gestes différents du QCM. */
+.reconstituer {
+  display: grid;
+  gap: .9rem;
+  min-inline-size: 0;
+}
+
+.aideExercice {
+  margin: 0;
+  color: var(--encre-douce);
+  font-size: .95rem;
+  line-height: 1.5;
+}
+
+.phrase {
+  display: flex;
+  min-block-size: 5.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+  border: 1px dashed var(--prune);
+  border-radius: 1rem;
+  padding: .75rem;
+  background: var(--rose-clair);
+}
+
+.emplacementVide {
+  color: var(--encre-douce);
+  font-style: italic;
+}
+
+.phrase button {
+  min-block-size: 44px;
+  border: 1px solid var(--prune);
+  border-radius: .65rem;
+  padding: .5rem .75rem;
+  background: white;
+  color: var(--encre);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.phrase button span {
+  margin-inline-start: .35rem;
+  color: var(--prune);
+}
+
+.reconstituer .reponses button:disabled {
+  border-style: dashed;
+  border-color: var(--bordure);
+  background: var(--fond);
+  color: var(--encre-douce);
+  opacity: .55;
+  cursor: default;
+}
+
+.recommencer {
+  justify-self: start;
+  min-block-size: 44px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--prune);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: .2em;
+  cursor: pointer;
+}
+
+.reponseNombre {
+  display: grid;
+  gap: .65rem;
+}
+
+.reponseNombre label {
+  font-weight: 700;
+}
+
+.reponseNombre > div {
+  display: flex;
+  min-inline-size: 0;
+  flex-wrap: wrap;
+  gap: .65rem;
+}
+
+.reponseNombre input {
+  min-inline-size: 0;
+  min-block-size: 48px;
+  flex: 1 1 8rem;
+  border: 1px solid var(--bordure);
+  border-radius: .75rem;
+  padding: .75rem 1rem;
+  color: var(--encre);
+  background: white;
+  font: inherit;
+  font-size: 1.125rem;
+}
+
+.reponseNombre button {
+  min-block-size: 48px;
+  border: 0;
+  border-radius: .75rem;
+  padding: .75rem 1.2rem;
+  background: var(--prune);
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .retour {
   color: var(--prune);
   font-weight: 650;

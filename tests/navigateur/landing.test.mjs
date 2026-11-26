@@ -104,6 +104,28 @@ test("L04 — à 390 px, la recherche sans exemple propose un sujet accessible",
   await onglet.close();
 });
 
+test("L05 — calcul numerique et phrase a reconstituer sans QCM", async () => {
+  const onglet = await page("/", { largeur: 390, hauteur: 844 });
+  await champ(onglet).fill("fonctions");
+  await champ(onglet).press("Enter");
+  const nombre = onglet.getByRole("textbox", { name: "Ta réponse" });
+  await nombre.fill("6");
+  await onglet.getByRole("button", { name: "Vérifier" }).click();
+  assert.equal(await onglet.getByText(/Pas encore/).isVisible(), true);
+  await nombre.fill("7");
+  await onglet.getByRole("button", { name: "Vérifier" }).click();
+  assert.equal(await onglet.getByText(/f\(3\) = 2/).isVisible(), true);
+
+  await champ(onglet).fill("anglais");
+  await champ(onglet).press("Enter");
+  for (const mot of ["She", "plays", "tennis", "every", "Sunday."]) {
+    await onglet.getByRole("group", { name: "Mots à placer" }).getByRole("button", { name: mot, exact: true }).click();
+  }
+  assert.equal(await onglet.getByText(/She est le sujet/).isVisible(), true);
+  assert.equal(await onglet.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await onglet.close();
+});
+
 /* ----------------------------------------------------- §2 Navigation ------ */
 
 test("N01 — a 1366 px, seule la navigation de bureau est parcourue", async () => {
