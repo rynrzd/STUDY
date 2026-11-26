@@ -23,7 +23,7 @@ import { engendrer, lireCatalogue } from "../../scripts/engendrer-retour-arriere
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const RETOUR = (f) => path.resolve(ICI, "..", "..", "supabase", "retour-arriere", f);
-const ORDRE = ["retour-0086.sql", "retour-0084.sql", "retour-0083.sql", "retour-0082.sql", "retour-0081.sql", "retour-0080.sql", "retour-0079.sql", "retour-0078.sql", "retour-0077.sql", "retour-0076.sql", "retour-0075.sql", "retour-0074.sql", "retour-0073.sql", "retour-0072.sql", "retour-0071.sql", "retour-0070.sql", "retour-0069.sql", "retour-0068.sql", "retour-0067.sql", "retour-0066.sql", "retour-0065.sql", "retour-0064.sql", "retour-0063.sql", "retour-0062.sql", "retour-0061.sql", "retour-0060.sql", "retour-0059-0058.sql", "retour-0057-0045.sql"];
+const ORDRE = ["retour-0084.sql", "retour-0083.sql", "retour-0082.sql", "retour-0081.sql", "retour-0080.sql", "retour-0079.sql", "retour-0078.sql", "retour-0077.sql", "retour-0076.sql", "retour-0075.sql", "retour-0074.sql", "retour-0073.sql", "retour-0072.sql", "retour-0071.sql", "retour-0070.sql", "retour-0069.sql", "retour-0068.sql", "retour-0067.sql", "retour-0066.sql", "retour-0065.sql", "retour-0064.sql", "retour-0063.sql", "retour-0062.sql", "retour-0061.sql", "retour-0060.sql", "retour-0059-0058.sql", "retour-0057-0045.sql"];
 const empreinte = (s) => createHash("sha256").update(s).digest();
 
 /** Empreinte du contenu de chaque table existant en 0044, ligne par ligne. */
@@ -48,7 +48,7 @@ test("retour complet 0060 → 0044 : catalogue identique, données d'avant conse
   const contenuAvant = await contenu(db, tablesAvant);
   const signalementsAvant = (await db.query("select count(*)::int n from study.reports")).rows[0].n;
 
-  await appliquerMigrations(db, { depuis: "0044" });
+  await appliquerMigrations(db, { depuis: "0044", jusqua: "0084" });
 
   // Activité pendant la période migrée, sur des tables anciennes et nouvelles.
   const salon = (await db.query("select id from study.salons where class_id is not null and kind = 'general' limit 1")).rows[0].id;

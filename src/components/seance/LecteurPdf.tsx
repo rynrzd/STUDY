@@ -23,14 +23,14 @@ type Etat = { genre: "attente" } | { genre: "pret"; total: number } | { genre: "
  * En cas d'échec, un message honnête et, si l'accès est permis, le
  * téléchargement — jamais une zone blanche.
  */
-export function LecteurPdf({ fichier, nom, source }: { fichier: string; nom: string; source?: string }) {
+export function LecteurPdf({ fichier, nom, source, pageInitiale = 1 }: { fichier: string; nom: string; source?: string; pageInitiale?: number }) {
   const adresse = source ?? `/documents/${fichier}`;
   const cadre = useRef<HTMLDivElement>(null);
   const toile = useRef<HTMLCanvasElement>(null);
   const pdf = useRef<Document | null>(null);
   const [visible, setVisible] = useState(false);
   const [etat, setEtat] = useState<Etat>({ genre: "attente" });
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(pageInitiale);
   const [zoom, setZoom] = useState(1);
   const [largeur, setLargeur] = useState(0);
   const [pleinEcran, setPleinEcran] = useState(false);
@@ -98,6 +98,7 @@ export function LecteurPdf({ fichier, nom, source }: { fichier: string; nom: str
           return;
         }
         pdf.current = doc;
+        setPage(Math.max(1, Math.min(pageInitiale, doc.numPages)));
         setDocPret(doc);
         setEtat({ genre: "pret", total: doc.numPages });
         void (async () => {
@@ -136,7 +137,7 @@ export function LecteurPdf({ fichier, nom, source }: { fichier: string; nom: str
     return () => {
       annule = true;
     };
-  }, [visible, adresse]);
+  }, [visible, adresse, pageInitiale]);
 
   useEffect(() => () => void pdf.current?.cleanup(), []);
 

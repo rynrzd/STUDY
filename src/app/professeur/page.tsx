@@ -36,9 +36,14 @@ export default async function PageProfesseur() {
         <EnTetePage sourcil={personne.organisation} titre={`Bonjour ${personne.prenom}`} />
         <EtatVide
           icone={BookOpen}
-          titre="Aucun cours ne vous est encore affecté."
-          texte="Vos cours apparaissent ici dès que l'administration de votre établissement vous affecte à une classe et à une matière. C'est elle qui réalise cette opération, depuis son espace."
+          titre="Préparez votre premier cours."
+          texte="Importez un PDF ou un DOCX et téléchargez la version mise en page. Vous pourrez créer une classe au moment de publier."
         />
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link className="bouton bouton-primaire" href="/professeur/studio">Moderniser un PDF</Link>
+          <Link className="bouton bouton-secondaire" href="/professeur/classes">Créer ma classe</Link>
+          <Link className="bouton bouton-secondaire" href="/rejoindre">Rejoindre une classe</Link>
+        </div>
       </>
     );
   }

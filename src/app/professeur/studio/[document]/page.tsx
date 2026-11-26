@@ -60,6 +60,7 @@ export default async function PageMiseEnPage({
           <Link href="/professeur/studio" className="bouton bouton-primaire mt-5">
             Importer un autre document
           </Link>
+          {doc.fichierSourceId ? <a href={`/documents/${doc.fichierSourceId}`} className="bouton bouton-secondaire mt-5 ml-2">Télécharger l’original</a> : null}
         </div>
       </>
     );
@@ -99,7 +100,7 @@ export default async function PageMiseEnPage({
             revision: courante.numero,
             document: courante.document,
             reglages: courante.reglages,
-            fichierSource: null,
+            fichierSource: doc.fichierSourceId ?? null,
           }}
         />
       </div>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { TitreEspace, Vide } from "@/components/app/Cadre";
+import { TitreEspace } from "@/components/app/Cadre";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { coursDuProfesseur } from "@/lib/studio";
 import {
@@ -9,6 +9,7 @@ import {
   effectifsParClasse,
   elevesDeLaClasse,
 } from "@/lib/espace-professeur";
+import { FormulaireCreationClasse } from "./FormulaireCreation";
 
 export const metadata: Metadata = { title: "Mes classes" };
 
@@ -46,17 +47,7 @@ export default async function PageClasses({
     return (
       <>
         <TitreEspace titre="Mes classes" />
-        <div className="mt-8">
-          <Vide
-            titre="Aucune classe ne vous est affectée."
-            texte="Les classes viennent de l'administration de votre établissement : elle les crée, puis vous y affecte pour une matière. Tant que ce n'est pas fait, cette liste reste vide."
-            action={
-              <Link href="/professeur" className="bouton bouton-secondaire">
-                Retour à l&apos;accueil
-              </Link>
-            }
-          />
-        </div>
+        <div className="mt-8"><FormulaireCreationClasse /></div>
       </>
     );
   }
@@ -108,11 +99,14 @@ export default async function PageClasses({
               {choisie.matieres.join(" · ")}
             </p>
           </div>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link className="bouton bouton-primaire" href={`/professeur/classes/importer?classe=${choisie.id}`}>Importer des élèves</Link>
+            <Link className="bouton bouton-secondaire" href={`/app/classes/${choisie.id}/membres`}>Invitations et demandes</Link>
+          </div>
 
           {eleves.length === 0 ? (
             <p className="m-0 mt-5 max-w-[var(--spacing-lecture)] text-[color:var(--color-encre-faible)]">
-              Aucun élève n&apos;est inscrit dans cette classe. L&apos;inscription
-              se fait à l&apos;import de rentrée, du côté de l&apos;administration.
+              Aucun élève n&apos;est inscrit. Importe une liste PDF ou un tableur, vérifie les noms, puis distribue les invitations individuelles.
             </p>
           ) : (
             <>
@@ -136,9 +130,7 @@ export default async function PageClasses({
           )}
 
           <p className="m-0 mt-8 max-w-[var(--spacing-lecture)] text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-tres-faible)]">
-            La composition des classes est gérée par l&apos;administration de
-            votre établissement. Signalez-lui toute erreur : une correction faite
-            là-bas se répercute ici immédiatement.
+            Réimporter la même liste rapproche les élèves existants et ne crée pas de doublon.
           </p>
         </section>
       </div>

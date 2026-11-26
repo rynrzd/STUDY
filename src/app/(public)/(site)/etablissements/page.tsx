@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { pagePublique } from "@/lib/metadonnees";
 import { FormulaireDemande } from "@/components/site/FormulaireDemande";
 import { EnteteSection, Section, TitrePage } from "@/components/site/Ui";
@@ -46,6 +47,7 @@ export default function PageEtablissements() {
       />
 
       <Section>
+        <p>Vous enseignez et souhaitez préparer votre premier cours ? <Link className="underline" href="/inscription/professeur">Créer votre compte professeur</Link>.</p>
         <div className="grid gap-4 md:grid-cols-3 md:gap-6">
           {[
             ["Une seule adresse pour la classe", "Séances, devoirs, documents et échanges, publiés par classe, lisibles sur tout appareil."],

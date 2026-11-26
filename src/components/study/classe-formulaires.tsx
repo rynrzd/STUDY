@@ -1,7 +1,9 @@
 "use client";
 
 import { Copy, Printer } from "lucide-react";
-import { useActionState, useState } from "react";
+import Image from "next/image";
+import QRCode from "qrcode";
+import { useActionState, useEffect, useState } from "react";
 import {
   changerDecision,
   creerCode,
@@ -40,6 +42,12 @@ function Copier({ texte }: { texte: string }) {
       <Copy size={16} strokeWidth={1.75} aria-hidden="true" /> {copie ? "Copié" : "Copier"}
     </button>
   );
+}
+
+function CodeQr({ texte, nom }: { texte: string; nom: string }) {
+  const [image, setImage] = useState<string | null>(null);
+  useEffect(() => { void QRCode.toDataURL(texte, { width: 220, margin: 2, errorCorrectionLevel: "M" }).then(setImage); }, [texte]);
+  return image ? <Image src={image} width={220} height={220} unoptimized alt={`QR code personnel pour ${nom}`} className="mt-3 rounded bg-white p-2" /> : null;
 }
 
 /** Code de classe : affiché une seule fois, puis seule son empreinte existe. */
@@ -89,6 +97,7 @@ export function FormulaireInvitationEleve({ classe, profil, nom }: { classe: str
       <div className="fiche-impression rounded-[var(--rayon-m)] border border-[color:var(--color-bordure)] p-4">
         <p className="m-0 font-semibold">Invitation de {nom}</p>
         <p className="m-0 mt-2 break-all font-mono text-[0.8125rem]">{etat.message}</p>
+        <CodeQr texte={etat.message} nom={nom} />
         <p className="meta m-0 mt-2">Valable 7 jours, une seule fois. Il ne sera plus affiché : copiez-le ou imprimez-le maintenant.</p>
         <div className="mt-3 flex flex-wrap gap-2 print:hidden">
           <Copier texte={etat.message} />

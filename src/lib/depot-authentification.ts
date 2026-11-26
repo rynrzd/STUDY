@@ -21,7 +21,7 @@ import { clientExploitation } from "./supabase-serveur.ts";
  * jeton de session.
  */
 export class DepotSupabase implements DepotAuthentification {
-  private client() {
+  protected client() {
     return clientExploitation("administration_des_comptes");
   }
 
@@ -228,6 +228,34 @@ export class DepotSupabase implements DepotAuthentification {
       journaliser("activation_compte", error.code);
       throw new Error("L'activation n'a pas pu etre enregistree.");
     }
+  }
+}
+
+/** Résolution des nouveaux identifiants globaux, sans code établissement. */
+export class DepotSupabaseDirect extends DepotSupabase {
+  override async resoudreIdentifiant(
+    _codeEtablissement: string,
+    identifiant: string,
+  ): Promise<IdentiteResolue | null> {
+    const { data, error } = await this.client().rpc("auth_resoudre_direct", {
+      p_identifiant: identifiant,
+    });
+    if (error !== null) {
+      journaliser("resolution_identifiant_direct", error.code);
+      return null;
+    }
+    const ligne = Array.isArray(data) ? data[0] : null;
+    if (ligne == null || typeof ligne.alias !== "string") return null;
+    return {
+      profileId: ligne.profile_id,
+      organizationId: ligne.organization_id,
+      alias: ligne.alias,
+      mustChangePassword: ligne.must_change_password === true,
+      accountState: ligne.account_state,
+      membershipState: ligne.membership_state,
+      mfaObligatoire: ligne.mfa_obligatoire === true,
+      portee: "etablissement",
+    };
   }
 }
 

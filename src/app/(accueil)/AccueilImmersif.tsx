@@ -198,6 +198,8 @@ export function AccueilImmersif() {
 
       <footer className={s.pied}>
         <Link href="/produit">La plateforme</Link>
+        <Link href="/inscription/professeur">Créer un compte prof</Link>
+        <Link href="/exemple-pdf">Voir un avant/après</Link>
         <Link href="/etablissements">Établissements</Link>
         <Link href="/aide">Aide</Link>
         <Link href="/confidentialite">Confidentialité</Link>

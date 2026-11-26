@@ -2,12 +2,13 @@ import Link from "next/link";
 import { BandeauEtablissement } from "@/components/study/connexion/CadreConnexion";
 import { CadreAccesPublic as CadreConnexion } from "@/components/site/CadreAccesPublic";
 import { FormulaireInvitation } from "./FormulaireInvitation";
+import { IdentifiantACopier } from "@/components/study/IdentifiantACopier";
 
 /** Rendu d'une invitation selon son état — partagé par la page et les aperçus. */
 const ETATS: Record<string, { titre: string; texte: string; action: { href: string; libelle: string } }> = {
   expiree: {
     titre: "Ce lien a expiré",
-    texte: "Une invitation est valable sept jours au plus. Demande un nouveau lien à la vie scolaire ou au secrétariat.",
+    texte: "Ce lien n’est plus utilisable. Demande un nouveau lien au professeur qui t’a invité ou à ton établissement.",
     action: { href: "/acces-oublie", libelle: "Demander un nouvel accès" },
   },
   revoquee: {
@@ -41,7 +42,7 @@ export interface Etat {
   compte: string | null;
 }
 
-export function VueInvitation({ jeton, etat }: { jeton: string; etat: Etat | undefined }) {
+export function VueInvitation({ jeton, etat, connexionDirecte = false }: { jeton: string; etat: Etat | undefined; connexionDirecte?: boolean }) {
   if (!etat || etat.etat !== "valide") {
     const m = ETATS[etat?.etat ?? "inconnue"] ?? ETATS.inconnue!;
     return (
@@ -61,15 +62,13 @@ export function VueInvitation({ jeton, etat }: { jeton: string; etat: Etat | und
     <CadreConnexion
       titre={`Bienvenue ${etat.prenom ?? ""}`.trim()}
       sousTitre={actif ? "Ton compte existe déjà : ce lien te permet de choisir un nouveau mot de passe." : "Active ton accès à Study en choisissant ton mot de passe."}
-      visuel="Ton établissement a préparé ton accès : ton identifiant, tes classes et tes droits."
+      visuel="Tu gardes le même identifiant pour les matières de ta classe."
     >
       <BandeauEtablissement nom={etat.organisation ?? "Ton établissement"} changer={null} />
-      <dl className="m-0 mb-6 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[0.9375rem]">
-        <dt className="text-[color:var(--color-encre-faible)]">Identifiant</dt>
-        <dd className="m-0 font-mono font-semibold">{etat.identifiant}</dd>
-        <dt className="text-[color:var(--color-encre-faible)]">Code établissement</dt>
-        <dd className="m-0 font-mono font-semibold">{etat.code_etablissement}</dd>
-      </dl>
+      {etat.identifiant ? <IdentifiantACopier identifiant={etat.identifiant} /> : null}
+      {etat.code_etablissement && !connexionDirecte ? (
+        <p className="meta mb-5">Pour la connexion établissement, utilise le code <strong>{etat.code_etablissement}</strong>.</p>
+      ) : null}
       {actif ? (
         <p className="meta m-0 mb-5">Ton identifiant, tes classes et tes données restent inchangés. Tes autres sessions seront fermées.</p>
       ) : null}
