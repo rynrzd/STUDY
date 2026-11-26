@@ -46,9 +46,16 @@ export default async function PageExercicesStudio({ params, searchParams }: { pa
   return (
     <>
       <OngletsSeance seance={id} titre={s.title} actif="exercices" />
+      <div className="mb-5 rounded-[var(--radius-carte)] bg-[color:var(--color-rose-clair)] px-5 py-4">
+        <h2 className="m-0 text-lg font-bold">Des exercices auxquels les élèves peuvent répondre</h2>
+        <p className="m-0 mt-1 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
+          Choisis un type, écris ta question et indique la réponse attendue. Tu peux tout garder en brouillon avant de le partager.
+        </p>
+      </div>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
-        <div className="grid content-start gap-4">
-          {liste.length === 0 ? <p className="panneau m-0">Aucun exercice pour cette séance. Ceux que vous publiez alimentent l&apos;entraînement, les quiz et Débloque-moi.</p> : null}
+        <div className="order-2 grid min-w-0 content-start gap-4 lg:order-1">
+          <h2 className="m-0 text-lg font-bold">Exercices déjà créés ({liste.length})</h2>
+          {liste.length === 0 ? <p className="panneau m-0">Pas encore d&apos;exercice. Crée le premier juste au-dessus : tu pourras le tester avant publication.</p> : null}
           {liste.map((e) => {
             const versions = [...e.exercice_versions].sort((a, b) => b.version - a.version);
             const derniere = versions[0];
@@ -100,13 +107,15 @@ export default async function PageExercicesStudio({ params, searchParams }: { pa
             <p className="meta m-0 mt-3">Agrégats seulement, masqués sous cinq personnes. Le détail individuel reste privé.</p>
           </Panneau>
         </div>
-        <Panneau titre={versionBase ? `Nouvelle version (après v${versionBase.v.version})` : "Nouvel exercice"} as="aside">
-          <FormulaireExercice
-            seance={id}
-            notions={lesNotions}
-            base={versionBase ? { exercice: versionBase.e.id, kind: versionBase.v.kind, enonce: versionBase.v.enonce, choix: versionBase.v.choix ?? [], notion: versionBase.e.notion_id } : undefined}
-          />
-        </Panneau>
+        <div id="creer-exercice" className="order-1 min-w-0 scroll-mt-24 lg:order-2">
+          <Panneau titre={versionBase ? `Nouvelle version (après v${versionBase.v.version})` : "Créer un exercice interactif"} as="aside">
+            <FormulaireExercice
+              seance={id}
+              notions={lesNotions}
+              base={versionBase ? { exercice: versionBase.e.id, kind: versionBase.v.kind, enonce: versionBase.v.enonce, choix: versionBase.v.choix ?? [], notion: versionBase.e.notion_id } : undefined}
+            />
+          </Panneau>
+        </div>
       </div>
     </>
   );

@@ -51,15 +51,22 @@ export function Editeur({
       <div className="space-y-6">
         <EnteteSeance seance={seance} chapitres={chapitres} libelleCours={libelleCours} />
 
-        <section aria-label="Contenu de la séance">
+        <section aria-label="Contenu de la séance" className="space-y-3">
+          <div>
+            <h2 className="titre-bloc m-0 font-bold">2. Construis ta séance</h2>
+            <p className="m-0 mt-1 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
+              Ajoute les éléments dans l&apos;ordre où tes élèves les découvriront.
+            </p>
+          </div>
           {blocs.length === 0 ? (
-            <div className="bloc border border-dashed border-[color:var(--color-bordure-forte)] px-6 py-10 text-center">
-              <p className="m-0 font-semibold">Cette séance est vide.</p>
+            <div className="bloc border border-dashed border-[color:var(--color-bordure-forte)] px-5 py-8 text-center">
+              <p className="m-0 font-semibold">Ton cours prend forme ici.</p>
               <p className="mx-auto m-0 mt-2 max-w-[48ch] text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
-                Ajoutez le plan du cours, la fiche à distribuer, le devoir à
-                rendre. Les blocs s&apos;empilent dans l&apos;ordre où les élèves
-                les liront.
+                Commence par une explication, un document ou un exercice. Tu peux les réorganiser ensuite.
               </p>
+              <a href="#ajouter-contenu" className="bouton bouton-secondaire mt-4 inline-flex">
+                Choisir mon premier contenu
+              </a>
             </div>
           ) : (
             <ul data-testid="blocs-liste" className="m-0 list-none space-y-3 p-0">
@@ -81,13 +88,8 @@ export function Editeur({
       </div>
 
       <aside className="space-y-4 lg:sticky lg:top-24">
-        <Publication seance={seance} publiee={publiee} />
-        {publiee && differences !== null ? <Republier seance={seance.id} differences={differences} /> : null}
-
         <div className="bloc border border-[color:var(--color-bordure)] p-4">
-          <h2 className="titre-bloc m-0 font-bold">
-            Aperçu
-          </h2>
+          <h2 className="titre-bloc m-0 font-bold">3. Vérifie avant de partager</h2>
           <p className="m-0 mt-2 text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-faible)]">
             Voir la séance exactement comme un élève de la classe la verra,
             avant de la publier.
@@ -99,6 +101,8 @@ export function Editeur({
             Prévisualiser côté élève
           </Link>
         </div>
+        <Publication seance={seance} publiee={publiee} />
+        {publiee && differences !== null ? <Republier seance={seance.id} differences={differences} /> : null}
       </aside>
     </div>
   );
@@ -132,14 +136,14 @@ function EnteteSeance({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="m-0 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
-          {libelleCours}
+          1. Prépare ta séance · {libelleCours}
         </p>
         <span className="etiquette-etat" data-ton={seance.state === "publiee" ? "succes" : "attention"}>
           {seance.state === "publiee" ? "Publiée" : "Brouillon"}
         </span>
       </div>
 
-      <label className="sr-only" htmlFor="titre-seance">
+      <label className="etiquette mt-4" htmlFor="titre-seance">
         Titre de la séance
       </label>
       <input
@@ -149,46 +153,13 @@ function EnteteSeance({
         defaultValue={seance.title}
         maxLength={160}
         required
-        className="mt-3 w-full border-0 bg-transparent p-0 text-[length:var(--text-h1-app)] font-bold leading-[var(--text-h1-app--line-height)] tracking-[-0.02em] focus:outline-none focus-visible:outline-2 focus-visible:outline-[color:var(--color-accent)]"
+        placeholder="Ex. Comprendre le théorème de Pythagore"
+        className="mt-1 w-full min-w-0 border-0 bg-transparent p-0 text-[length:var(--text-h1-app)] font-bold leading-[var(--text-h1-app--line-height)] tracking-[-0.02em] focus:outline-none focus-visible:outline-2 focus-visible:outline-[color:var(--color-accent)]"
       />
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div>
-          <label className="etiquette" htmlFor="chapitre-seance">
-            Chapitre
-          </label>
-          <select
-            id="chapitre-seance"
-            name="chapitre"
-            className="champ"
-            defaultValue={seance.chapter_id ?? ""}
-          >
-            <option value="">Sans chapitre</option>
-            {chapitres.map((chapitre) => (
-              <option key={chapitre.id} value={chapitre.id}>
-                {chapitre.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="etiquette" htmlFor="date-seance">
-            Date
-          </label>
-          <input
-            id="date-seance"
-            name="date"
-            type="date"
-            className="champ"
-            defaultValue={seance.scheduled_for?.slice(0, 10) ?? ""}
-          />
-        </div>
-      </div>
-
-      <div className="mt-3">
+      <div className="mt-4">
         <label className="etiquette" htmlFor="objectif-seance">
-          Objectif de la séance
+          Que sauront faire tes élèves à la fin ?
         </label>
         <input
           id="objectif-seance"
@@ -197,9 +168,46 @@ function EnteteSeance({
           className="champ"
           maxLength={400}
           defaultValue={seance.objective ?? ""}
-          placeholder="Ce que les élèves doivent savoir faire à la fin"
+          placeholder="Ex. Calculer la longueur d'un côté d'un triangle rectangle"
         />
       </div>
+
+      <details className="mt-4 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] p-3">
+        <summary className="cursor-pointer font-semibold">Organisation : chapitre et date (facultatif)</summary>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className="etiquette" htmlFor="chapitre-seance">
+              Chapitre
+            </label>
+            <select
+              id="chapitre-seance"
+              name="chapitre"
+              className="champ"
+              defaultValue={seance.chapter_id ?? ""}
+            >
+              <option value="">Sans chapitre</option>
+              {chapitres.map((chapitre) => (
+                <option key={chapitre.id} value={chapitre.id}>
+                  {chapitre.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="etiquette" htmlFor="date-seance">
+              Date
+            </label>
+            <input
+              id="date-seance"
+              name="date"
+              type="date"
+              className="champ"
+              defaultValue={seance.scheduled_for?.slice(0, 10) ?? ""}
+            />
+          </div>
+        </div>
+      </details>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <Bouton libelle="Enregistrer la séance" variante="secondaire" marque="seance-enregistrer" />
@@ -228,7 +236,7 @@ function Publication({ seance, publiee }: { seance: Seance; publiee: boolean }) 
       <input type="hidden" name="publier" value={publiee ? "non" : "oui"} />
 
       <h2 className="titre-bloc m-0 font-bold">
-        Publication
+        4. Partage avec ta classe
       </h2>
 
       <p className="m-0 mt-2 text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-faible)]">
@@ -599,11 +607,11 @@ function Apercu({ bloc, texte }: { bloc: Bloc; texte: string }) {
 /* -------------------------------------------------------------------------- */
 
 const TYPES = [
-  { cle: "texte", libelle: "Texte", aide: "Le plan du cours, une explication, une consigne générale." },
-  { cle: "exercice", libelle: "Exercice", aide: "Une consigne d'exercice, à faire en classe ou à la maison." },
-  { cle: "lien", libelle: "Lien", aide: "Une page, une vidéo, une ressource en ligne." },
-  { cle: "devoir", libelle: "Devoir", aide: "Un travail à rendre, avec une échéance. Il apparaît dans « À faire » chez l'élève." },
-  { cle: "document", libelle: "Document", aide: `Un fichier joint, conservé tel quel : ${FORMATS_ACCEPTES}. 4 Mo au maximum. Un PDF se lit directement dans la séance, sans conversion.` },
+  { cle: "texte", libelle: "Explication", aide: "Écris ton cours, un résumé ou une consigne." },
+  { cle: "exercice", libelle: "Consigne d'exercice", aide: "Donne du travail à faire, sans correction automatique." },
+  { cle: "lien", libelle: "Lien ou vidéo", aide: "Partage une page ou une ressource en ligne." },
+  { cle: "devoir", libelle: "Devoir à rendre", aide: "Demande un travail avec une date de remise." },
+  { cle: "document", libelle: "Document", aide: `Joins un PDF ou un fichier (${FORMATS_ACCEPTES}, 4 Mo max).` },
 ] as const;
 
 function AjoutBloc({ seance }: { seance: string }) {
@@ -626,23 +634,32 @@ function AjoutBloc({ seance }: { seance: string }) {
 
   if (type === null) {
     return (
-      <div className="bloc border border-[color:var(--color-bordure)] p-4">
-        <h2 className="titre-bloc m-0 font-bold">
-          Ajouter au cours
-        </h2>
-        <div className="mt-3 flex flex-wrap gap-2">
+      <div id="ajouter-contenu" className="bloc scroll-mt-24 border border-[color:var(--color-bordure)] p-4 sm:p-5">
+        <h2 className="titre-bloc m-0 font-bold">Ajouter au cours</h2>
+        <p className="m-0 mt-1 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
+          Qu&apos;est-ce que tu veux montrer ou demander à tes élèves ?
+        </p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
           {TYPES.map((entree) => (
             <button
               key={entree.cle}
               type="button"
               data-testid={`ajouter-${entree.cle}`}
               onClick={() => setType(entree.cle)}
-              className="bouton bouton-secondaire bouton-compact"
+              className="flex min-h-20 w-full min-w-0 flex-col items-start justify-center rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-white p-3 text-left transition-colors hover:border-[color:var(--color-accent)] hover:bg-[color:var(--color-rose-clair)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-accent)]"
             >
-              + {entree.libelle}
+              <span className="font-semibold">+ {entree.libelle}</span>
+              <span className="mt-1 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">{entree.aide}</span>
             </button>
           ))}
         </div>
+        <Link href={`/studio/${seance}/exercices#creer-exercice`} className="mt-3 flex min-h-20 items-center justify-between gap-3 rounded-[var(--radius-carte)] bg-[color:var(--color-rose-clair)] p-4 text-[color:var(--color-encre)] hover:underline focus-visible:outline-2 focus-visible:outline-[color:var(--color-accent)]">
+          <span>
+            <span className="block font-semibold">+ Exercice interactif</span>
+            <span className="mt-1 block text-[length:var(--text-aide)]">QCM, vrai/faux, réponse chiffrée… Les élèves répondent en ligne.</span>
+          </span>
+          <span aria-hidden="true" className="shrink-0 text-xl">→</span>
+        </Link>
       </div>
     );
   }
@@ -655,14 +672,15 @@ function AjoutBloc({ seance }: { seance: string }) {
       encType="multipart/form-data"
       data-testid="bloc-nouveau"
       data-type-en-cours={type}
-      className="bloc border border-[color:var(--color-accent)] p-4"
+      className="bloc min-w-0 scroll-mt-24 border border-[color:var(--color-accent)] p-4"
+      id="ajouter-contenu"
     >
       <input type="hidden" name="seance" value={seance} />
       <input type="hidden" name="type" value={type} />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
-          Nouveau bloc — {choisi.libelle}
+          Ajouter : {choisi.libelle}
         </h2>
         <button
           type="button"
@@ -694,7 +712,10 @@ function AjoutBloc({ seance }: { seance: string }) {
               autoFocus
               className="champ min-h-[7rem] py-2.5"
             />
-            <p className="aide-champ">Mise en forme : <code>{"# Titre"}</code>, <code>{"- puce"}</code>, <code>{"1. étape"}</code>, <code>{"> à retenir"}</code>, <code>{"| a | b |"}</code> pour un tableau. Formules : <code>{"$x^2$"}</code> dans la phrase, <code>{"$$\\frac{a}{b}$$"}</code> sur sa ligne.</p>
+            <details className="mt-2 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
+              <summary className="cursor-pointer">Besoin de mettre en forme ton texte ?</summary>
+              <p className="aide-champ">Utilise <code>{"# Titre"}</code>, <code>{"- puce"}</code>, <code>{"1. étape"}</code>, <code>{"> à retenir"}</code>, ou <code>{"| a | b |"}</code> pour un tableau. Formules : <code>{"$x^2$"}</code> ou <code>{"$$\\frac{a}{b}$$"}</code>.</p>
+            </details>
           </div>
         )}
 
@@ -710,7 +731,7 @@ function AjoutBloc({ seance }: { seance: string }) {
               type="file"
               required
               accept={ACCEPT_SUPPORTS}
-              className="champ h-auto py-2"
+              className="champ h-auto w-full min-w-0 py-2"
             />
             <p className="aide-champ">
               Le fichier est vérifié sur son contenu, pas sur son nom, et n&apos;est
@@ -803,7 +824,7 @@ function AjoutBloc({ seance }: { seance: string }) {
       </div>
 
       <div className="mt-4">
-        <Bouton libelle="Ajouter le bloc" variante="rose" marque="bloc-ajouter" />
+        <Bouton libelle="Ajouter à la séance" variante="rose" marque="bloc-ajouter" />
       </div>
       <Retour etat={etat} />
     </form>
