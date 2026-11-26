@@ -7,7 +7,6 @@ import {
   archiverDevoir,
   creerDevoir,
   devoir as lireDevoir,
-  inscrireDestinataires,
   enregistrerCorrectionCommune,
   enregistrerRetour,
   majDevoir,
@@ -19,6 +18,7 @@ import {
 import { deposerPieceJointe } from "@/lib/documents";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { coursDuProfesseur } from "@/lib/studio";
+import { clientUtilisateur } from "@/lib/supabase-serveur";
 
 import { type EtatDevoirAction } from "./etats";
 
@@ -33,6 +33,21 @@ import { type EtatDevoirAction } from "./etats";
  */
 
 const REFUS: EtatDevoirAction = { etat: "erreur", message: "Action refusée." };
+
+export async function enregistrerNotions(_precedent: EtatDevoirAction, donnees: FormData): Promise<EtatDevoirAction> {
+  const session = await professeur();
+  if (!session) return REFUS;
+  const analyse = z.object({ devoir: z.string().uuid(), notions: z.array(z.string().uuid()).max(30) })
+    .safeParse({ devoir: donnees.get("devoir"), notions: donnees.getAll("notion") });
+  if (!analyse.success) return REFUS;
+  const { data, error } = await clientUtilisateur(session.jeton).from("assignments")
+    .update({ revision_notions: [...new Set(analyse.data.notions)] })
+    .eq("id", analyse.data.devoir).select("id").maybeSingle();
+  if (error || !data) return { etat: "erreur", message: "Les notions n'ont pas pu être enregistrées." };
+  revalidatePath(`/professeur/devoirs/${analyse.data.devoir}`);
+  revalidatePath("/app/reviser");
+  return { etat: "ok", message: "Notions enregistrées." };
+}
 
 /** La session d'un professeur, avec son jeton. */
 async function professeur() {
@@ -189,20 +204,6 @@ export async function basculerPublication(
     publier: analyse.data.publier === "oui",
   });
 
-  // Publier, cest aussi designer ceux a qui le devoir sadresse : sans cette
-  // liste, la politique de lecture ne le montre a personne.
-  if (resultat.ok && analyse.data.publier === "oui") {
-    const leDevoir = await lireDevoir(session.jeton, analyse.data.devoir);
-    const organisation = session.personne.organizationId;
-    if (leDevoir !== null && organisation !== null && organisation !== undefined) {
-      await inscrireDestinataires({
-        jeton: session.jeton,
-        organisation,
-        cours: leDevoir.cours,
-        devoir: analyse.data.devoir,
-      });
-    }
-  }
 
   revalidatePath(`/professeur/devoirs/${analyse.data.devoir}`);
   revalidatePath("/professeur/devoirs");

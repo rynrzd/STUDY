@@ -1,6 +1,6 @@
 "use server";
 
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -105,6 +105,18 @@ export async function tenter(version: string, reponse: Record<string, unknown>, 
   if (!uuid.safeParse(version).success || !uuid.safeParse(client).success) {
     return { ok: false, code: "VALIDATION_FAILED", message: "Réponse invalide.", requestId: idRequete() };
   }
+  if (session !== null) {
+    const contexte = await contexteApp();
+    const base = clientUtilisateur(contexte.jeton);
+    const seance = await base.from("sessions_entrainement").select("versions").eq("id", session).maybeSingle();
+    if (!seance.data?.versions?.includes(version)) {
+      return { ok: false, code: "VALIDATION_FAILED", message: "Cet exercice ne fait pas partie de ta séance.", requestId: idRequete() };
+    }
+    const ancienne = await base.from("tentatives").select("client_attempt_id")
+      .eq("session_id", session).eq("exercice_version_id", version).limit(1).maybeSingle();
+    const empreinte = createHash("sha256").update(`${contexte.personne.profileId}/${session}/${version}`).digest("hex");
+    client = ancienne.data?.client_attempt_id ?? `${empreinte.slice(0, 8)}-${empreinte.slice(8, 12)}-4${empreinte.slice(13, 16)}-8${empreinte.slice(17, 20)}-${empreinte.slice(20, 32)}`;
+  }
   const r = await rpc("revision_tenter", {
     p_version: version,
     p_reponse: reponse,
@@ -118,6 +130,22 @@ export async function tenter(version: string, reponse: Record<string, unknown>, 
 
 export async function demanderAide(version: string, niveau: "indice" | "exemple"): Promise<Resultat> {
   return rpc("revision_aide", { p_version: version, p_niveau: niveau });
+}
+
+export async function avancerRevision(session: string, position: number): Promise<Resultat> {
+  if (!uuid.safeParse(session).success || !Number.isInteger(position) || position < 0) {
+    return { ok: false, code: "VALIDATION_FAILED", message: "Séance invalide.", requestId: idRequete() };
+  }
+  return rpc("reviser_avancer", { p_session: session, p_position: position });
+}
+
+export async function lancerRevisionDevoir(donnees: FormData): Promise<void> {
+  const devoir = uuid.safeParse(donnees.get("devoir"));
+  const notion = uuid.safeParse(donnees.get("notion"));
+  if (!devoir.success || !notion.success) redirect("/app/reviser?erreur=aucun-exercice");
+  const resultat = await rpc("reviser_ouvrir_devoir", { p_devoir: devoir.data, p_notion: notion.data });
+  if (!resultat.ok) redirect("/app/reviser?erreur=NON_ACCESSIBLE");
+  redirect(`/app/entrainements/${String(resultat.donnees)}`);
 }
 
 export async function variante(version: string): Promise<Resultat> {

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { BookOpen, CircleHelp, ClipboardCheck, Library } from "lucide-react";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { coursDuProfesseur } from "@/lib/studio";
@@ -69,5 +70,14 @@ export default async function PageProfesseur() {
   const prenom = personne.prenom;
   const organisation = personne.organisation;
 
-  return <VueAccueilProfesseur prenom={prenom} organisation={organisation} tableau={tableau} priorites={priorites} semaine={semaine} questions={questions} aujourdhui={aujourdhui} libelles={libelles} brouillons={brouillons} devoirsOuverts={devoirsOuverts} publiees={publiees} />;
+  return <>
+    <section className="panneau mb-6" aria-label="Choisir une classe">
+      <h2 className="titre-section">Choisir une classe</h2>
+      <ul className="grid list-none gap-3 p-0">
+        {cours.map(c => <li key={c.id}><Link href={`/professeur/devoirs?cours=${c.id}#donner`} className="bouton bouton-secondaire">{c.libelle}</Link></li>)}
+      </ul>
+      <Link href="/professeur/classes">Je ne trouve pas ma classe</Link>
+    </section>
+    <VueAccueilProfesseur prenom={prenom} organisation={organisation} tableau={tableau} priorites={priorites} semaine={semaine} questions={questions} aujourdhui={aujourdhui} libelles={libelles} brouillons={brouillons} devoirsOuverts={devoirsOuverts} publiees={publiees} />
+  </>;
 }

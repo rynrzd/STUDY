@@ -10,6 +10,8 @@ import { instantLisible } from "@/lib/horodatage";
 import { pagePrivee } from "@/lib/metadonnees";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { coursDuProfesseur } from "@/lib/studio";
+import { clientUtilisateur } from "@/lib/supabase-serveur";
+import { NotionsDevoir } from "@/components/professeur/NotionsDevoir";
 
 export const metadata: Metadata = pagePrivee({
   titre: "Devoir",
@@ -58,6 +60,12 @@ export default async function PageDevoirProfesseur({
 
   const libelle = cours.find((unCours) => unCours.id === leDevoir.cours)?.libelle ?? "Cours";
   const echeance = leDevoir.echeance === null ? null : new Date(leDevoir.echeance);
+  const client = clientUtilisateur(jeton);
+  const [notions, choix] = await Promise.all([
+    client.from("notions").select("id, label").eq("teaching_space_id", leDevoir.cours).is("archived_at", null).order("label"),
+    client.from("assignments").select("revision_notions").eq("id", identifiant).single(),
+  ]);
+  const selection: string[] = choix.data?.revision_notions ?? [];
 
   return (
     <article>
@@ -88,12 +96,23 @@ export default async function PageDevoirProfesseur({
       </p>
 
       <div className="mt-5 print:hidden">
+        <h2 className="titre-section">Avant de publier</h2>
+        <p>Destinataires · {libelle}</p>
+        <p>À rendre · {leDevoir.echeance ? instantLisible(leDevoir.echeance) : "Sans échéance"}</p>
+        <p>Notions · {(notions.data ?? []).filter(n => selection.includes(n.id)).map(n => n.label).join(", ") || "Aucune notion sélectionnée"}</p>
+        <details className="mb-4">
+          <summary>Voir l’aperçu élève</summary>
+          <h3>{leDevoir.titre}</h3>
+          <p className="whitespace-pre-wrap">{leDevoir.consigne}</p>
+          <p>{libelle}</p>
+        </details>
         <BasculeDevoir
           devoir={leDevoir.id}
           publie={leDevoir.etat !== "brouillon" && leDevoir.etat !== "archive"}
           archive={leDevoir.etat === "archive"}
         />
       </div>
+      <NotionsDevoir key={selection.join(",")} devoir={identifiant} notions={notions.data ?? []} selection={selection} />
 
       <section className="mt-10 print:hidden">
         <h2 className="m-0 mb-4 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">

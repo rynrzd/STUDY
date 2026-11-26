@@ -42,11 +42,13 @@ export function FormulaireDevoir({
   cours,
   seances,
   valeurs,
+  coursInitial,
 }: {
   cours: readonly CoursDisponible[];
   seances: readonly SeanceDisponible[];
   /** Absent : on crée. Présent : on modifie. */
   valeurs?: ValeursDevoir;
+  coursInitial?: string;
 }) {
   const modification = valeurs !== undefined;
 
@@ -56,7 +58,7 @@ export function FormulaireDevoir({
   );
 
   const base = useId();
-  const [coursChoisi, setCoursChoisi] = useState(cours[0]?.id ?? "");
+  const [coursChoisi, setCoursChoisi] = useState(cours.find(c => c.id === coursInitial)?.id ?? cours[0]?.id ?? "");
   const [mode, setMode] = useState(valeurs?.mode ?? "numerique");
 
   const attendUnFichier = mode === "numerique" || mode === "mixte";

@@ -65,6 +65,10 @@ export function AccueilEleve({ d }: { d: DonneesAccueil }) {
         <h1 className="titre-page m-0">{d.prenom ? `${d.salut}, ${d.prenom}` : "Ton espace"}</h1>
         <p className="m-0 mt-1 text-[1rem] text-[color:var(--color-encre-faible)] first-letter:uppercase">{d.dateLibelle}</p>
       </header>
+      <nav aria-label="Travailler mes cours" className="mb-6 flex flex-wrap gap-3">
+        <Link href="/app/reviser" className="bouton bouton-primaire">Réviser</Link>
+        <Link href="/app/recherche" className="bouton bouton-secondaire">Rechercher dans mes cours</Link>
+      </nav>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.7fr)_minmax(300px,1fr)]">
         <div className="grid min-w-0 content-start gap-5">

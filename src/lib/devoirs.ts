@@ -722,7 +722,20 @@ export async function creerDevoir(options: {
   remplacementAutorise: boolean;
   politiqueRetard: "accepter_avec_retard" | "fermer";
 }): Promise<string | null> {
-  const { data, error } = await clientUtilisateur(options.jeton)
+  const client = clientUtilisateur(options.jeton);
+  let exercices = client.from("exercices").select("notion_id")
+    .eq("teaching_space_id", options.cours).is("archived_at", null).not("notion_id", "is", null);
+  if (options.seance !== null) exercices = exercices.eq("lesson_id", options.seance);
+  const associees = await exercices;
+  if (associees.error) return null;
+  const ids = [...new Set((associees.data ?? []).map(e => String(e.notion_id)))];
+  const actives = ids.length
+    ? await client.from("notions").select("id").in("id", ids)
+      .eq("teaching_space_id", options.cours).is("archived_at", null).limit(30)
+    : { data: [], error: null };
+  if (actives.error) return null;
+  const notions = (actives.data ?? []).map(n => n.id);
+  const { data, error } = await client
     .from("assignments")
     .insert({
       organization_id: options.organisation,
@@ -730,6 +743,7 @@ export async function creerDevoir(options: {
       lesson_id: options.seance,
       title: options.titre,
       instructions: { consigne: options.consigne },
+      revision_notions: notions,
       due_at: options.echeance,
       submission_mode: options.mode,
       allow_replacement: options.remplacementAutorise,
@@ -967,6 +981,11 @@ export async function publierDevoir(options: {
   publier: boolean;
 }): Promise<{ ok: true } | { ok: false; message: string }> {
   const client = clientUtilisateur(options.jeton);
+
+  if (options.publier) {
+    const { error } = await client.rpc("devoir_publier_revision", { p_devoir: options.devoir });
+    return error === null ? { ok: true } : { ok: false, message: "La publication a échoué. Réessayez." };
+  }
 
   if (!options.publier) {
     const { count } = await client
