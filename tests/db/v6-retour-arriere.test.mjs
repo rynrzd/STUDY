@@ -50,7 +50,7 @@ test("1 — migrer 0058 à 0060 puis exécuter le script de retour rend le sché
   const colonnesAvant = await colonnes(db, "demandes_recuperation");
   const colonnesExercices = await colonnes(db, "exercices");
 
-  await appliquerMigrations(db, { depuis: "0057" });
+  await appliquerMigrations(db, { depuis: "0057", jusqua: "0084" });
   await db.query("select study.recuperation_demander('TESTA1', 'rayan.dupont', $1, 'K7M2-P9QX')", [empreinte("ip")]);
   await lirePourAdmin(db, ACTEURS.adminA, "select study.annee_preparer('2027-2028', '2027-09-01', '2028-07-05')");
   assert.notDeepEqual(await definitions(db), avant, "la migration a bien changé le schéma");

@@ -65,6 +65,10 @@ export function AccueilEleve({ d }: { d: DonneesAccueil }) {
         <h1 className="titre-page m-0">{d.prenom ? `${d.salut}, ${d.prenom}` : "Ton espace"}</h1>
         <p className="m-0 mt-1 text-[1rem] text-[color:var(--color-encre-faible)] first-letter:uppercase">{d.dateLibelle}</p>
       </header>
+      <nav aria-label="Travailler mes cours" className="mb-6 flex flex-wrap gap-3">
+        <Link href="/app/reviser" className="bouton bouton-primaire">Réviser</Link>
+        <Link href="/app/recherche" className="bouton bouton-secondaire">Rechercher dans mes cours</Link>
+      </nav>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.7fr)_minmax(300px,1fr)]">
         <div className="grid min-w-0 content-start gap-5">
@@ -233,7 +237,16 @@ export function AccueilEleve({ d }: { d: DonneesAccueil }) {
 }
 
 function BlocReprise({ d }: { d: DonneesAccueil }) {
-  const contenu = d.premiereVisite
+  const tache = d.taches[0];
+  const contenu = tache
+    ? {
+        titre: tache.titre,
+        texte: null,
+        lien: `/app/devoirs/${tache.id}`,
+        action: "Ouvrir le devoir",
+        meta: `${tache.matiere} · ${tache.echeance}`,
+      }
+    : d.premiereVisite
     ? {
         titre: "Bienvenue dans ton espace",
         texte: "Tes cours, ta classe et tes échéances : trois repères pour bien démarrer." as string | null,
@@ -259,7 +272,7 @@ function BlocReprise({ d }: { d: DonneesAccueil }) {
   return (
     <section className="panneau panneau-rose" aria-labelledby="reprendre">
       <p className="m-0 text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-[color:var(--color-accent)]">
-        {d.premiereVisite ? "Premiers pas" : "Reprendre un cours"}
+        {tache ? "Prochaine tâche" : d.premiereVisite ? "Premiers pas" : "Reprendre un cours"}
       </p>
       <h2 id="reprendre" className="m-0 mt-2 text-[1.375rem] font-extrabold tracking-[-0.02em]">
         {contenu.titre}

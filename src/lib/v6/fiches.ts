@@ -139,6 +139,7 @@ export async function disponibilites(jeton: string, lecons: readonly string[]) {
 }
 
 export interface QuestionSession {
+  readonly explication?: string | null;
   readonly versionId: string;
   readonly ordre: number;
   readonly kind: "qcm" | "numerique" | "texte";
@@ -150,16 +151,31 @@ export interface QuestionSession {
   readonly reponse: Record<string, unknown> | null;
 }
 
-export async function etatEntrainement(jeton: string, session: string): Promise<{ titre: string; questions: QuestionSession[] } | null> {
+export async function etatEntrainement(jeton: string, session: string): Promise<{ titre: string; position: number; questions: QuestionSession[] } | null> {
   if (!/^[0-9a-f-]{36}$/iu.test(session)) return null;
   const client = clientUtilisateur(jeton);
   const [s, q] = await Promise.all([
-    client.from("sessions_entrainement").select("titre").eq("id", session).maybeSingle(),
+    client.from("sessions_entrainement").select("titre, position_courante, versions").eq("id", session).maybeSingle(),
     client.rpc("entrainement_etat", { p_session: session }),
   ]);
   if (s.data === null || q.error !== null) return null;
+  // Un retrait d'accès ne doit pas décaler le curseur sur une autre question.
+  if ((q.data ?? []).length !== s.data.versions.length) return null;
+  const explications = new Map<string, string>();
+  const tentatives = await client.from("tentatives").select("exercice_version_id, client_attempt_id, reponse")
+    .eq("session_id", session);
+  for (const tentative of tentatives.data ?? []) {
+    const correction = await client.rpc("revision_tenter", {
+      p_version: tentative.exercice_version_id, p_reponse: tentative.reponse,
+      p_client_id: tentative.client_attempt_id, p_session: session,
+    });
+    if (correction.error === null && correction.data?.[0]?.explication) {
+      explications.set(tentative.exercice_version_id, correction.data[0].explication);
+    }
+  }
   return {
     titre: (s.data as { titre: string }).titre,
+    position: s.data.position_courante ?? 0,
     questions: ((q.data ?? []) as {
       version_id: string;
       ordre: number;
@@ -172,6 +188,7 @@ export async function etatEntrainement(jeton: string, session: string): Promise<
       reponse: Record<string, unknown> | null;
     }[]).map((x) => ({
       versionId: x.version_id,
+      explication: explications.get(x.version_id) ?? null,
       ordre: x.ordre,
       kind: x.kind,
       enonce: x.enonce,

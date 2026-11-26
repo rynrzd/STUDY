@@ -43,6 +43,12 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Les images distantes ne sont pas autorisees : tout support vient du stockage prive via le BFF.
   images: { remotePatterns: [] },
+  // Fontkit lit ses tables Unicode à partir de fichiers propres au paquet.
+  serverExternalPackages: ["pdfkit"],
+  outputFileTracingIncludes: {
+    "/professeur/studio/[document]/pdf": ["./node_modules/dejavu-fonts-ttf/ttf/*.ttf"],
+    "/exemple-pdf/fichier/[version]": ["./node_modules/dejavu-fonts-ttf/ttf/*.ttf"],
+  },
   async redirects() {
     // Anciennes adresses publiques, conservees pour ne pas casser un lien
     // deja envoye a un etablissement. /demo et /etablissements sont desormais

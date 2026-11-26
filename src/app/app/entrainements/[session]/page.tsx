@@ -23,7 +23,7 @@ export default async function PageEntrainement({ params }: { params: Promise<{ s
       {etat.questions.length === 0 ? (
         <EtatVide titre="Ces exercices ne sont plus disponibles" texte="Ils ont été retirés ou ne font plus partie de tes cours." />
       ) : (
-        <Entrainement session={session} questions={etat.questions} semaine={semaine} dejaConsolidees={consolidees} />
+        <Entrainement key={`${session}-${etat.position}`} position={etat.position} session={session} questions={etat.questions} semaine={semaine} dejaConsolidees={consolidees} />
       )}
     </div>
   );

@@ -6,6 +6,8 @@ import { RenduDocument } from "@/components/studio/RenduDocument";
 import { ciblesPublication } from "@/lib/publication";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { document as lireDocument, revision } from "@/lib/studio-documents";
+import { FormulaireCreationClasse } from "@/app/professeur/classes/FormulaireCreation";
+import { clientUtilisateur } from "@/lib/supabase-serveur";
 
 export const metadata: Metadata = { title: "Publication" };
 
@@ -20,8 +22,10 @@ export const dynamic = "force-dynamic";
 
 export default async function PagePublication({
   params,
+  searchParams,
 }: {
   params: Promise<{ document: string }>;
+  searchParams: Promise<{ revision?: string }>;
 }) {
   const personne = await sessionCourante();
   if (personne === null) redirect("/connexion");
@@ -32,10 +36,25 @@ export default async function PagePublication({
   const { document: id } = await params;
   const doc = await lireDocument(jeton, id);
   if (doc === null || doc.revisionId === null) notFound();
+  const attendue = (await searchParams).revision;
+  if (attendue && attendue !== doc.revisionId) {
+    return (
+      <div className="panneau" role="status">
+        <p>Le brouillon a changé dans un autre onglet. Relisez la nouvelle version avant de publier.</p>
+        <Link href={`/professeur/studio/${id}/publication`} className="bouton bouton-primaire">Relire la révision courante</Link>
+      </div>
+    );
+  }
 
   // Les cours et leurs effectifs viennent de la base : seulement ceux où la
   // personne enseigne aujourd'hui, classes et groupes, élèves réellement inscrits.
-  const [courante, cibles] = await Promise.all([revision(jeton, doc.revisionId), ciblesPublication(personne.profileId, id)]);
+  const [courante, cibles, organisation] = await Promise.all([
+    revision(jeton, doc.revisionId),
+    ciblesPublication(personne.profileId, id),
+    personne.organizationId
+      ? clientUtilisateur(jeton).from("organizations").select("autonome").eq("id", personne.organizationId).maybeSingle()
+      : null,
+  ]);
 
   if (courante === null) notFound();
 
@@ -72,7 +91,15 @@ export default async function PagePublication({
         </div>
 
         <aside className="lg:sticky lg:top-24">
-          <Publication document={id} titre={doc.titre} cours={publiables} lectureEchouee={cibles === null} />
+          {publiables.length > 0 || !organisation?.data?.autonome || cibles === null ? (
+            <Publication document={id} titre={courante.document.titre} cours={publiables} lectureEchouee={cibles === null} />
+          ) : null}
+          {organisation?.data?.autonome && cibles !== null ? (
+            <details className="mt-5" open={publiables.length === 0}>
+              <summary className="cursor-pointer font-semibold">Créer une classe et une matière</summary>
+              <div className="mt-3"><FormulaireCreationClasse retour={{ document: id, revision: courante.id }} /></div>
+            </details>
+          ) : null}
 
           <div className="mt-8 border-t border-[color:var(--color-bordure)] pt-5">
             <h2 className="m-0 text-[length:var(--text-aide)] font-semibold uppercase tracking-[0.08em] text-[color:var(--color-encre-faible)]">
@@ -95,9 +122,7 @@ export default async function PagePublication({
               ))}
             </ul>
             <p className="m-0 mt-3 text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-tres-faible)]">
-              La vue A4 s&apos;imprime depuis votre navigateur, ou s&apos;y
-              enregistre en PDF. AvecStudy ne produit pas encore de fichier PDF
-              de son côté.
+              La vue A4 permet de télécharger le fichier PDF ou d’imprimer depuis le navigateur.
             </p>
           </div>
         </aside>

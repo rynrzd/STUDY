@@ -39,14 +39,19 @@ export async function rejoindre(_precedent: EtatFormulaire, donnees: FormData): 
   }
   const empreinte = createHash("sha256").update(code).digest();
   const requestId = idRequete();
-  const { data, error } = await clientUtilisateur(jeton).rpc("classe_rejoindre", { p_empreinte: `\\x${empreinte.toString("hex")}` });
+  const professeur = personne.roles.includes("professeur");
+  const matiere = String(donnees.get("matiere") ?? "").trim().slice(0, 80);
+  if (professeur && matiere.length < 2) return { ok: false, message: "Indique la matière que tu enseigneras.", champs: { matiere: ["Indique une matière."] }, valeurs: { code, matiere } };
+  const { data, error } = professeur
+    ? await clientUtilisateur(jeton).rpc("professeur_classe_rejoindre", { p_empreinte: `\\x${empreinte.toString("hex")}`, p_matiere: matiere })
+    : await clientUtilisateur(jeton).rpc("classe_rejoindre", { p_empreinte: `\\x${empreinte.toString("hex")}` });
   if (error !== null) {
     console.error(JSON.stringify({ niveau: "erreur", contexte: "rejoindre", code: error.code, requestId }));
-    return { ok: false, message: "La demande n'a pas pu être envoyée. Réessayez dans un instant.", requestId, valeurs: { code } };
+    return { ok: false, message: "La demande n'a pas pu être envoyée. Réessayez dans un instant.", requestId, valeurs: { code, matiere } };
   }
   const ligne = ((data ?? []) as { etat: string; classe: string | null }[])[0];
   if (!ligne) return { ok: false, message: "La demande n'a pas pu être envoyée.", requestId, valeurs: { code } };
-  if (ligne.etat === "en_attente") redirect("/acces-en-attente?envoyee=1");
+  if (ligne.etat === "en_attente") redirect(professeur ? "/rejoindre?envoyee=1" : "/acces-en-attente?envoyee=1");
   if (ligne.etat === "deja_membre") {
     return { ok: true, message: `Vous faites déjà partie de la classe ${ligne.classe ?? ""}. Ouvrez votre espace pour la retrouver.` };
   }

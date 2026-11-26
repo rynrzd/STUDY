@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { BoutonImprimer } from "@/components/study/Actualisation";
 import { RenduDocument, type ModeRendu } from "@/components/studio/RenduDocument";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { document as lireDocument, revision } from "@/lib/studio-documents";
@@ -97,9 +98,15 @@ export default async function PageApercu({
       </div>
 
       {mode === "a4" ? (
-        <p className="m-0 mt-6 text-center text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)] print:hidden">
-          Utilisez l&apos;impression de votre navigateur pour obtenir un PDF.
-        </p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3 print:hidden">
+          <a href={`/professeur/studio/${id}/pdf?revision=${courante.id}`} className="bouton bouton-primaire">
+            Télécharger le PDF
+          </a>
+          <BoutonImprimer libelle="Imprimer avec le navigateur" />
+          <p className="m-0 w-full text-center text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)]">
+            Le téléchargement reprend cette révision enregistrée.
+          </p>
+        </div>
       ) : null}
     </div>
   );

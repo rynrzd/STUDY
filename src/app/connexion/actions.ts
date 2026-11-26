@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { tenterConnexion } from "@/lib/authentification";
 import { chiffrer, lireCles } from "@/lib/chiffrement";
-import { DepotSupabase } from "@/lib/depot-authentification";
+import { DepotSupabase, DepotSupabaseDirect } from "@/lib/depot-authentification";
 import { FournisseurSupabase } from "@/lib/fournisseur-supabase";
 import { COOKIE_INTRO } from "@/lib/mouvement";
 import { cookieSession, empreinteJeton, NOM_COOKIE_SESSION } from "@/lib/session";
@@ -43,10 +43,6 @@ const MESSAGES = {
   etablissement: "Choisis d'abord ton établissement.",
 } as const;
 
-function avecSuite(chemin: string, suite: string | null): string {
-  return suite ? `${chemin}?suite=${encodeURIComponent(suite)}` : chemin;
-}
-
 /** Étape 1 — trouver l'établissement par son code public. */
 export async function trouverEtablissement(_p: EtatEtablissement, donnees: FormData): Promise<EtatEtablissement> {
   const brut = String(donnees.get("code") ?? "").slice(0, 40);
@@ -59,7 +55,7 @@ export async function trouverEtablissement(_p: EtatEtablissement, donnees: FormD
   switch (resultat.etat) {
     case "trouve":
       await poserParcours(resultat.contexte);
-      redirect(avecSuite("/connexion", suite));
+      redirect(suite ? `/connexion?historique=1&suite=${encodeURIComponent(suite)}` : "/connexion?historique=1");
     case "format":
       return { etat: "refus", message: "Un code établissement compte 4 à 16 lettres ou chiffres, sans espace.", code: brut };
     case "inconnu":
@@ -74,17 +70,18 @@ export async function trouverEtablissement(_p: EtatEtablissement, donnees: FormD
 /** « Changer » d'établissement : le contexte mémorisé est effacé. */
 export async function changerEtablissement(donnees: FormData): Promise<void> {
   await oublierContexte();
-  redirect(avecSuite("/connexion", suiteSure(String(donnees.get("suite") ?? ""))));
+  const suite = suiteSure(String(donnees.get("suite") ?? ""));
+  redirect(suite ? `/connexion?historique=1&suite=${encodeURIComponent(suite)}` : "/connexion?historique=1");
 }
 
 const schemaConnexion = z.object({
-  identifiant: z.string().trim().min(1).max(40),
+  identifiant: z.string().trim().min(1).max(180),
   // Le mot de passe est transmis tel quel : ni rognage, ni changement de casse.
   motDePasse: z.string().min(1).max(200),
 });
 
 export async function seConnecter(_precedent: EtatConnexion, donnees: FormData): Promise<EtatConnexion> {
-  const identifiant = String(donnees.get("identifiant") ?? "").slice(0, 40);
+  const identifiant = String(donnees.get("identifiant") ?? "").slice(0, 180);
   const saisie = { identifiant };
 
   // Les champs vides sont signalés champ par champ : une faute de saisie
@@ -95,10 +92,11 @@ export async function seConnecter(_precedent: EtatConnexion, donnees: FormData):
   };
   if (Object.keys(champs).length > 0) return { etat: "refus", type: "saisie", message: "Un champ est à compléter.", champs, saisie };
 
-  const contexte = await lireContexteEtablissement();
+  const directe = donnees.get("mode") === "direct";
+  const contexte = directe ? null : await lireContexteEtablissement();
   // Repli sans cookie (navigateur qui les refuse, ancien formulaire) : le code
   // peut venir du formulaire, et il est revalidé.
-  const code = contexte?.code ?? normaliserCode(String(donnees.get("code") ?? ""));
+  const code = directe ? "DIRECT" : (contexte?.code ?? normaliserCode(String(donnees.get("code") ?? "")));
   if (code === null) return { etat: "refus", type: "etablissement", message: MESSAGES.etablissement, saisie };
 
   if (!baseConfiguree()) return { etat: "refus", type: "service", message: MESSAGES.service, saisie };
@@ -121,10 +119,11 @@ export async function seConnecter(_precedent: EtatConnexion, donnees: FormData):
   }
 
   let resultat;
+  const depot = directe ? new DepotSupabaseDirect() : new DepotSupabase();
   try {
     resultat = await tenterConnexion(
       { codeEtablissement: code, identifiant: analyse.data.identifiant, secret: analyse.data.motDePasse, appareil },
-      { depot: new DepotSupabase(), fournisseur: new FournisseurSupabase(), chiffrer: (clair) => chiffrer(clair, lireCles()) },
+      { depot, fournisseur: new FournisseurSupabase(), chiffrer: (clair) => chiffrer(clair, lireCles()) },
     );
   } catch (e) {
     console.error(JSON.stringify({ niveau: "erreur", contexte: "connexion", message: e instanceof Error ? e.message.slice(0, 120) : "inconnu" }));

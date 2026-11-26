@@ -15,19 +15,16 @@ export const dynamic = "force-dynamic";
  * transforme une invitation en **demande** que la classe valide. Vérifier un
  * code ne donne accès à rien, et ne montre aucun membre.
  */
-export default async function PageRejoindre({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
+export default async function PageRejoindre({ searchParams }: { searchParams: Promise<{ code?: string; envoyee?: string }> }) {
   const personne = await sessionCourante();
-  const { code } = await searchParams;
+  const { code, envoyee } = await searchParams;
   const codePropre = typeof code === "string" ? code.toUpperCase().replace(/[^A-Z0-9]/gu, "").slice(0, 10) : undefined;
 
   if (personne === null) {
     const suite = `/rejoindre${codePropre ? `?code=${codePropre}` : ""}`;
     return (
       <CadreAccesPublic titre="Rejoindre une classe" sousTitre="Connectez-vous d'abord : un code de classe ne remplace pas votre compte.">
-        <p className="m-0">
-          Votre établissement vous a remis un code établissement, un identifiant et un mot de passe, ou un lien d&apos;invitation.
-          Une fois connecté, saisissez le code de classe : votre demande partira vers la classe.
-        </p>
+        <p className="m-0">Connecte-toi avec ton compte. Le code de classe enverra une demande au responsable sans donner accès aux membres ni aux cours.</p>
         <Link href={`/connexion?suite=${encodeURIComponent(suite)}`} className="bouton bouton-primaire mt-6 w-full">
           Se connecter pour continuer
         </Link>
@@ -42,12 +39,13 @@ export default async function PageRejoindre({ searchParams }: { searchParams: Pr
       retour={{ href: "/app", libelle: "Retour à mon espace" }}
     >
       <div className="mb-5">
+        {envoyee === "1" ? <p role="status" className="mb-4 rounded-[4px] bg-[color:var(--color-succes-fond)] p-4 text-[color:var(--color-succes)]">Demande envoyée. Le responsable de la classe doit maintenant l’approuver.</p> : null}
         <AvisVisibilite>
-          Le code ne donne pas accès à la classe : il envoie une demande à votre professeur principal ou à la vie scolaire.
+          Le code ne donne pas accès à la classe : il envoie une demande au responsable de la classe.
           Tant qu&apos;elle n&apos;est pas acceptée, vous ne voyez ni cours ni membres, et la classe ne voit que votre nom.
         </AvisVisibilite>
       </div>
-      <FormulaireRejoindre codeInitial={codePropre} />
+      <FormulaireRejoindre codeInitial={codePropre} professeur={personne.roles.includes("professeur")} />
     </CarteAcces>
   );
 }

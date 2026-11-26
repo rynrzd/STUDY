@@ -33,6 +33,7 @@ interface LigneEspace {
   subjects: { label: string } | null;
   classes: { label: string } | null;
   teaching_groups: { label: string } | null;
+  academic_years: { label: string } | null;
 }
 
 const LIMITE_COURS = 500;
@@ -43,7 +44,7 @@ export async function coursDuProfesseur(jeton: string): Promise<Cours[]> {
 
   const { data, error } = await client
     .from("teaching_spaces")
-    .select("id, subjects(label), classes(label), teaching_groups(label)")
+    .select("id, subjects(label), classes(label), teaching_groups(label), academic_years(label)")
     .is("archived_at", null)
     // 500 : bien au-delà d'un service réel. Si la borne est atteinte, on le
     // journalise au lieu de tronquer en silence (DATA-09).
@@ -65,7 +66,7 @@ export async function coursDuProfesseur(jeton: string): Promise<Cours[]> {
       matiere,
       classe: ligne.classes?.label ?? null,
       groupe: ligne.teaching_groups?.label ?? null,
-      libelle: cible === null ? matiere : `${matiere} — ${cible}`,
+      libelle: [matiere, cible, ligne.academic_years?.label].filter(Boolean).join(" — "),
     };
   });
 }

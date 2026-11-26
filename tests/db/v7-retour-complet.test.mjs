@@ -48,7 +48,7 @@ test("retour complet 0060 → 0044 : catalogue identique, données d'avant conse
   const contenuAvant = await contenu(db, tablesAvant);
   const signalementsAvant = (await db.query("select count(*)::int n from study.reports")).rows[0].n;
 
-  await appliquerMigrations(db, { depuis: "0044" });
+  await appliquerMigrations(db, { depuis: "0044", jusqua: "0084" });
 
   // Activité pendant la période migrée, sur des tables anciennes et nouvelles.
   const salon = (await db.query("select id from study.salons where class_id is not null and kind = 'general' limit 1")).rows[0].id;

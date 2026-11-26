@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, HandHelping, Lightbulb, XCircle } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { demanderAide, tenter } from "@/app/app/reviser/actions";
+import { avancerRevision, demanderAide, tenter } from "@/app/app/reviser/actions";
 import { BarreProgression, BilanEntrainement, EnteteRetour, IndiceDevoile, NotionConsolidee, RetourReponse } from "@/components/study/Celebrations";
 import type { Semaine } from "@/lib/semaine";
 import type { QuestionSession } from "@/lib/v6/fiches";
+import { reprendreRevision } from "@/lib/revision/reprise";
 
 interface Correction {
   readonly correct: boolean | null;
@@ -36,22 +38,25 @@ interface Aide {
  */
 export function Entrainement({
   session,
+  position,
   questions,
   semaine = null,
   dejaConsolidees = null,
 }: {
   session: string;
+  position?: number;
   questions: readonly QuestionSession[];
   semaine?: Semaine | null;
   /** Notions déjà consolidées à l'ouverture ; `null` = inconnues, rien n'est fêté. */
   dejaConsolidees?: readonly string[] | null;
 }) {
-  const premiere = Math.max(0, questions.findIndex((q) => q.tentativeId === null));
-  const [index, setIndex] = useState(questions.every((q) => q.tentativeId !== null) ? questions.length : premiere);
-  const [reponses, setReponses] = useState<Record<string, string>>({});
+  const reprise = reprendreRevision(questions, position);
+  const router = useRouter();
+  const [index] = useState(reprise.index);
+  const [reponses, setReponses] = useState<Record<string, string>>(reprise.reponses);
   const [corrections, setCorrections] = useState<Record<string, Correction>>(() =>
     Object.fromEntries(
-      questions.filter((q) => q.tentativeId !== null).map((q) => [q.versionId, { correct: q.correct, explication: null, source_lesson_id: null, source_block_id: null, statut: null }]),
+      questions.filter((q) => q.tentativeId !== null).map((q) => [q.versionId, { correct: q.correct, explication: q.explication ?? null, source_lesson_id: null, source_block_id: null, statut: null }]),
     ),
   );
   const [aides, setAides] = useState<Record<string, Aide[]>>({});
@@ -77,6 +82,9 @@ export function Entrainement({
         : semaine;
     return (
       <BilanEntrainement reussies={reussies} corrigees={corrigees} semaine={semaineVue}>
+        {questions.some(q => corrections[q.versionId]?.correct === false && q.notion) ? (
+          <p>À retravailler : {[...new Set(questions.filter(q => corrections[q.versionId]?.correct === false).map(q => q.notion).filter(Boolean))].join(", ")}. Retrouve les explications dans ton carnet d&apos;erreurs.</p>
+        ) : null}
         <Link href="/app/erreurs" className="bouton bouton-primaire">
           Mon carnet d&apos;erreurs
         </Link>
@@ -211,10 +219,10 @@ export function Entrainement({
           {!correction ? (
             <div className="mt-5 flex flex-wrap gap-2">
               <button type="submit" className="bouton bouton-primaire" disabled={valeur === "" || envoi}>
-                {envoi ? "Vérification…" : "Valider"}
+                {envoi ? "Vérification…" : "Valider ma réponse"}
               </button>
               <button type="button" className="bouton bouton-discret" onClick={() => void aide("indice")}>
-                <Lightbulb size={16} strokeWidth={1.75} aria-hidden="true" /> Un indice
+                <Lightbulb size={16} strokeWidth={1.75} aria-hidden="true" /> Voir un indice
               </button>
             </div>
           ) : null}
@@ -242,8 +250,16 @@ export function Entrainement({
               </Link>
             ) : null}
             <div className="mt-4 flex flex-wrap gap-2">
-              <button type="button" className="bouton bouton-primaire" onClick={() => setIndex((i) => i + 1)}>
-                {index + 1 < questions.length ? "Question suivante" : "Voir le bilan"}
+              <button type="button" className="bouton bouton-primaire" disabled={envoi} onClick={async () => {
+                setEnvoi(true);
+                try {
+                  const resultat = await avancerRevision(session, index);
+                  if (resultat.ok) router.refresh();
+                  else setErreur(resultat.message);
+                } catch { setErreur("Connexion interrompue. Réessaie pour continuer."); }
+                finally { setEnvoi(false); }
+              }}>
+                {index + 1 < questions.length ? "Exercice suivant" : "Voir le bilan"}
               </button>
               {correction.correct === false ? (
                 <Link href={`/app/aide?version=${q.versionId}`} className="bouton bouton-secondaire">

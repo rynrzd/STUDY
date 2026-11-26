@@ -31,7 +31,8 @@ const ETATS: Record<string, string> = {
   archive: "Archivé",
 };
 
-export default async function PageDevoirsProfesseur() {
+export default async function PageDevoirsProfesseur({ searchParams }: { searchParams: Promise<{ cours?: string }> }) {
+  const parametres = await searchParams;
   const personne = await sessionCourante();
   if (personne === null) redirect("/connexion");
 
@@ -98,6 +99,7 @@ export default async function PageDevoirsProfesseur() {
               Donner un devoir
             </h2>
             <FormulaireDevoir
+              coursInitial={parametres.cours}
               cours={cours.map((unCours) => ({ id: unCours.id, libelle: unCours.libelle }))}
               seances={seances}
             />

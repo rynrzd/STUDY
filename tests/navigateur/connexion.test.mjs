@@ -20,12 +20,14 @@ after(fermerNavigateur);
 
 const CONTEXTE = Buffer.from(JSON.stringify({ c: "TESTA1", n: "Lycée de démonstration" }), "utf8").toString("base64url");
 
-async function ouvrir(chemin, { largeur = 1280, hauteur = 900, etablissement = false } = {}) {
+async function ouvrir(chemin, { largeur = 1280, hauteur = 900, etablissement = false, historique = etablissement } = {}) {
   const nav = await ouvrirNavigateur();
   const contexte = await nav.newContext({ viewport: { width: largeur, height: hauteur } });
   if (etablissement) await contexte.addCookies([{ name: "study_etab_parcours", value: CONTEXTE, url: BASE }]);
   const onglet = await contexte.newPage();
-  await onglet.goto(`${BASE}${chemin}`, { waitUntil: "networkidle" });
+  const adresse = new URL(chemin, BASE);
+  if (historique && adresse.pathname === "/connexion") adresse.searchParams.set("historique", "1");
+  await onglet.goto(adresse.href, { waitUntil: "networkidle" });
   return onglet;
 }
 
@@ -38,7 +40,7 @@ function espionnerEnvois(onglet) {
 }
 
 test("C01 — sans établissement : étape 1, titre et liens des parcours", async () => {
-  const onglet = await ouvrir("/connexion");
+  const onglet = await ouvrir("/connexion", { historique: true });
   assert.equal(await onglet.locator("h1").innerText(), "Quel est ton établissement ?");
   assert.match(await onglet.locator("main").innerText(), /Étape 1 sur 2/);
   assert.equal(await onglet.locator("#code-etablissement").count(), 1);
@@ -53,11 +55,20 @@ test("C01 — sans établissement : étape 1, titre et liens des parcours", asyn
 });
 
 test("C02 — un lien d'invitation collé à l'étape 1 ouvre l'invitation", async () => {
-  const onglet = await ouvrir("/connexion");
+  const onglet = await ouvrir("/connexion", { historique: true });
   const jeton = "A".repeat(43);
   await onglet.fill("#code-etablissement", `https://exemple.test/invitation/${jeton}`);
   await onglet.locator('[data-testid="etablissement-continuer"]').click();
   await onglet.waitForURL(`**/invitation/${jeton}`, { timeout: 30_000 });
+  await onglet.context().close();
+});
+
+test("connexion directe — accès professeur et invitation élève sans code établissement", async () => {
+  const onglet = await ouvrir("/connexion", { largeur: 390 });
+  assert.ok(await onglet.getByLabel("E-mail professeur ou identifiant élève").isVisible());
+  assert.equal(await onglet.locator("#code-etablissement").count(), 0);
+  assert.equal(await onglet.getByRole("link", { name: "Activer une invitation élève" }).getAttribute("href"), "/activer");
+  assert.equal(await onglet.getByRole("link", { name: "Mot de passe oublié ?" }).getAttribute("href"), "/inscription/professeur/acces");
   await onglet.context().close();
 });
 
