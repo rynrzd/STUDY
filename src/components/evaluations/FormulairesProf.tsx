@@ -33,7 +33,7 @@ function Retour({ etat }: { etat: EtatAction | null }) {
 function Envoyer({ libelle, enCours, ton = "primaire" }: { libelle: string; enCours: string; ton?: "primaire" | "secondaire" }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" className={`bouton bouton-${ton}`} disabled={pending}>
+    <button type="submit" className={`bouton bouton-${ton} w-full min-w-0 whitespace-normal py-3 text-center leading-5 sm:w-auto`} disabled={pending}>
       {pending ? enCours : libelle}
     </button>
   );
@@ -43,59 +43,63 @@ function Envoyer({ libelle, enCours, ton = "primaire" }: { libelle: string; enCo
 
 export function FormulaireNouvelle({ cours }: { cours: readonly { id: string; libelle: string }[] }) {
   const [etat, action] = useActionState(creerEvaluation, null);
+  const [mode, setMode] = useState("classe");
   return (
-    <form action={action} className="grid gap-4 sm:grid-cols-2">
-      <div className="sm:col-span-2">
-        <label htmlFor="ev-titre" className={etiquette}>
-          Titre
-        </label>
-        <input id="ev-titre" name="titre" className="champ" required minLength={3} maxLength={140} placeholder="Contrôle — fonctions affines" />
-      </div>
+    <form action={action} className="grid w-full min-w-0 max-w-3xl gap-5">
       <div>
-        <label htmlFor="ev-cours" className={etiquette}>
-          Classe et matière
-        </label>
-        <select id="ev-cours" name="cours" className="champ" required>
-          {cours.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.libelle}
-            </option>
+        <p className="m-0 text-sm leading-6 text-[color:var(--color-encre-faible)]">Commence par le sujet et la classe. Les questions seront ajoutées ensuite, avant toute publication.</p>
+      </div>
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+        <div className="min-w-0 sm:col-span-2">
+          <label htmlFor="ev-titre" className={etiquette}>Quel est le sujet ?</label>
+          <input id="ev-titre" name="titre" className="champ min-w-0" required minLength={3} maxLength={140} placeholder="Ex. Contrôle sur les fonctions affines" />
+        </div>
+        <div className="min-w-0 sm:col-span-2">
+          <label htmlFor="ev-cours" className={etiquette}>Pour quelle classe et matière ?</label>
+          <select id="ev-cours" name="cours" className="champ min-w-0" required>
+            {cours.map((c) => <option key={c.id} value={c.id}>{c.libelle}</option>)}
+          </select>
+        </div>
+      </div>
+      <fieldset className="m-0 min-w-0 border-0 p-0">
+        <legend className="mb-3 text-base font-bold">Quel type d&apos;évaluation ?</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {[
+            ["classe", "Contrôle en classe", "55 minutes"],
+            ["flash", "Évaluation flash", "5 minutes"],
+            ["diagnostique", "Faire le point", "20 minutes"],
+            ["maison", "À faire à la maison", "Sans minuteur"],
+          ].map(([valeur, libelle, detail]) => (
+            <label key={valeur} className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition-colors ${mode === valeur ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)] hover:border-[color:var(--color-accent)]"}`}>
+              <input type="radio" name="mode" value={valeur} checked={mode === valeur} onChange={() => setMode(valeur ?? "classe")} className="mt-1 size-4 shrink-0 accent-[color:var(--color-accent)]" />
+              <span className="min-w-0"><span className="block font-bold">{libelle}</span><span className="block text-[color:var(--color-encre-faible)]">{detail}</span></span>
+            </label>
           ))}
-        </select>
-      </div>
-      <div>
-        <label htmlFor="ev-mode" className={etiquette}>
-          Type
-        </label>
-        <select id="ev-mode" name="mode" className="champ" defaultValue="classe">
-          <option value="classe">Contrôle en classe (55 min)</option>
-          <option value="flash">Éval flash (5 min)</option>
-          <option value="diagnostique">Diagnostique (20 min)</option>
-          <option value="maison">À la maison (sans minuteur)</option>
-        </select>
-      </div>
-      <fieldset className="m-0 border-0 p-0">
-        <legend className={etiquette}>Support</legend>
-        <label className="mr-4 inline-flex items-center gap-2">
-          <input type="radio" name="support" value="en_ligne" defaultChecked /> En ligne
-        </label>
-        <label className="inline-flex items-center gap-2">
-          <input type="radio" name="support" value="papier" /> Sur papier
-        </label>
+        </div>
       </fieldset>
+
+      <details className="rounded-xl border border-[color:var(--color-bordure)] p-4">
+        <summary className="cursor-pointer text-sm font-bold text-[color:var(--color-accent)]">Support et notation (facultatif)</summary>
+        <div className="mt-4 grid min-w-0 gap-4 sm:grid-cols-2">
+          <fieldset className="m-0 border-0 p-0">
+            <legend className={etiquette}>Comment les élèves répondront-ils ?</legend>
+            <label className="mb-2 flex items-center gap-2 text-sm"><input type="radio" name="support" value="en_ligne" defaultChecked /> En ligne</label>
+            <label className="flex items-center gap-2 text-sm"><input type="radio" name="support" value="papier" /> Sur papier</label>
+          </fieldset>
+          <div className="min-w-0">
+            <label htmlFor="ev-notation" className={etiquette}>Comment présenter les résultats ?</label>
+            <select id="ev-notation" name="notation" className="champ min-w-0" defaultValue="les_deux">
+              <option value="les_deux">Note sur 20 et niveaux de maîtrise</option>
+              <option value="sur20">Note sur 20</option>
+              <option value="maitrise">Niveaux de maîtrise seulement</option>
+            </select>
+          </div>
+        </div>
+      </details>
       <div>
-        <label htmlFor="ev-notation" className={etiquette}>
-          Résultats exprimés
-        </label>
-        <select id="ev-notation" name="notation" className="champ" defaultValue="les_deux">
-          <option value="les_deux">Note sur 20 et niveaux de maîtrise</option>
-          <option value="sur20">Note sur 20</option>
-          <option value="maitrise">Niveaux de maîtrise seulement</option>
-        </select>
-      </div>
-      <div className="sm:col-span-2">
-        <Envoyer libelle="Créer l'évaluation" enCours="Création…" />
+        <Envoyer libelle="Créer mon brouillon d'évaluation" enCours="Création…" />
         <Retour etat={etat} />
+        <p className="m-0 mt-3 text-sm leading-6 text-[color:var(--color-encre-faible)]">Tu pourras ajouter les questions, relire et choisir la date de publication après.</p>
       </div>
     </form>
   );

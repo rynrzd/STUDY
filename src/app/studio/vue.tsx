@@ -35,10 +35,18 @@ export function VueStudio({ cours, choisi, chapitres, seances, sansChapitre, bro
         sourcil="Mes cours"
         titre={choisi.libelle}
         sousTitre={`${seances.length} séance${seances.length > 1 ? "s" : ""}, dont ${brouillons} brouillon${brouillons > 1 ? "s" : ""}. Un brouillon reste invisible des élèves.`}
-        actions={<NouvelleSeance cours={choisi.id} chapitres={chapitres} menu />}
+        actions={<a href="#creer-une-seance" className="bouton bouton-rose">Créer une séance</a>}
       />
 
       {cours.length > 1 ? <ChoixCours cours={cours} choisi={choisi.id} favoris={favoris} /> : null}
+      <section id="creer-une-seance" aria-labelledby="creation-seance-titre" className="mb-7 scroll-mt-24 rounded-2xl border border-[color:var(--color-bordure)] bg-[color:var(--color-rose-clair)] p-4 sm:p-6">
+        <div className="mb-5 max-w-2xl">
+          <p className="m-0 mb-1 text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--color-accent)]">Préparer un cours</p>
+          <h2 id="creation-seance-titre" className="m-0 text-xl font-bold">Tu veux créer quoi ?</h2>
+          <p className="m-0 mt-2 text-sm leading-6 text-[color:var(--color-encre-faible)]">Choisis comment commencer. On préparera un brouillon que tu pourras compléter avant de le partager avec tes élèves.</p>
+        </div>
+        <NouvelleSeance cours={choisi.id} chapitres={chapitres} menu />
+      </section>
       <div className="mb-6">
         <CopierStructure cible={choisi.id} sources={sourcesCopie} />
       </div>
@@ -49,7 +57,7 @@ export function VueStudio({ cours, choisi, chapitres, seances, sansChapitre, bro
             <EtatVide
               icone={FilePen}
               titre="Ce cours est encore vide."
-              texte="Créez un premier chapitre — « Chapitre 1 — Suites », par exemple — puis ajoutez-y vos séances. Une séance reste un brouillon tant que vous ne l'avez pas publiée."
+              texte="Tu peux créer ta première séance juste au-dessus. Ajouter un chapitre pour la ranger est facultatif : commence par ton cours, on s'occupera du classement après."
             />
           ) : null}
 

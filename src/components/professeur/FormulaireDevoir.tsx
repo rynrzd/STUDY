@@ -65,10 +65,20 @@ export function FormulaireDevoir({
   const seancesDuCours = seances.filter((seance) => seance.cours === coursChoisi);
 
   return (
-    <form action={action} data-testid="devoir-formulaire" className="carte p-5 md:p-6">
+    <form action={action} data-testid="devoir-formulaire" className="carte w-full min-w-0 max-w-3xl p-4 sm:p-6">
       {modification ? <input type="hidden" name="devoir" value={valeurs.id} /> : null}
 
       {!modification ? (
+        <div className="mb-6 border-b border-[color:var(--color-bordure)] pb-5">
+          <p className="m-0 mb-1 text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--color-accent)]">Nouveau devoir</p>
+          <h3 className="m-0 text-xl font-bold">Qu’est-ce que tes élèves doivent faire ?</h3>
+          <p className="m-0 mt-2 text-sm leading-6 text-[color:var(--color-encre-faible)]">Choisis une classe, explique le travail et précise comment le rendre. On gardera un brouillon jusqu’à sa publication.</p>
+        </div>
+      ) : null}
+
+      {!modification ? (
+        <>
+        <h4 className="m-0 mb-3 text-base font-bold">À quelle classe ?</h4>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="etiquette" htmlFor={`${base}-cours`}>
@@ -114,8 +124,10 @@ export function FormulaireDevoir({
             </p>
           </div>
         </div>
+        </>
       ) : null}
 
+      {!modification ? <h4 className="m-0 mt-6 text-base font-bold">Quel travail ?</h4> : null}
       <div className={modification ? "" : "mt-4"}>
         <label className="etiquette" htmlFor={`${base}-titre`}>
           Titre du devoir
@@ -149,16 +161,16 @@ export function FormulaireDevoir({
       </div>
 
       <fieldset className="m-0 mt-5 border-0 p-0">
-        <legend className="etiquette p-0">Ce que l&apos;élève doit rendre</legend>
+        <legend className="mb-2 text-base font-bold">Comment les élèves rendent-ils le travail ?</legend>
 
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           {[
-            ["numerique", "Un fichier, déposé ici"],
-            ["papier", "Un travail sur papier"],
-            ["mixte", "L'un ou l'autre"],
-            ["aucune", "Rien à rendre"],
-          ].map(([valeur, libelle]) => (
-            <label key={valeur} className="flex items-center gap-2 text-[length:var(--text-tableau)]">
+            ["numerique", "Un fichier sur AvecStudy", "Les élèves déposent leur copie en ligne."],
+            ["papier", "Sur papier", "La copie est remise en classe."],
+            ["mixte", "Au choix", "Papier ou fichier, selon l’élève."],
+            ["aucune", "Rien à rendre", "Un travail à faire, sans dépôt de copie."],
+          ].map(([valeur, libelle, detail]) => (
+            <label key={valeur} className={`flex min-w-0 cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition-colors ${mode === valeur ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)] hover:border-[color:var(--color-accent)]"}`}>
               <input
                 type="radio"
                 name="mode"
@@ -166,14 +178,15 @@ export function FormulaireDevoir({
                 data-testid={`mode-${valeur}`}
                 checked={mode === valeur}
                 onChange={() => setMode(valeur!)}
-                className="size-4 accent-[color:var(--color-accent)]"
+                className="mt-1 size-4 shrink-0 accent-[color:var(--color-accent)]"
               />
-              {libelle}
+              <span className="min-w-0"><span className="block font-bold">{libelle}</span><span className="mt-1 block leading-5 text-[color:var(--color-encre-faible)]">{detail}</span></span>
             </label>
           ))}
         </div>
       </fieldset>
 
+      <h4 className="m-0 mt-6 text-base font-bold">Pour quand ? <span className="text-sm font-normal text-[color:var(--color-encre-faible)]">(facultatif)</span></h4>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <div>
           <label className="etiquette" htmlFor={`${base}-date`}>
@@ -207,7 +220,9 @@ export function FormulaireDevoir({
       </div>
 
       {attendUnFichier ? (
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <details className="mt-6 rounded-xl border border-[color:var(--color-bordure)] p-4">
+          <summary className="cursor-pointer text-sm font-bold text-[color:var(--color-accent)]">Options de remise (facultatif)</summary>
+          <div className="mt-4 grid min-w-0 gap-4 sm:grid-cols-2">
           <div>
             <label className="etiquette" htmlFor={`${base}-remplacement`}>
               Remplacer sa copie
@@ -239,7 +254,8 @@ export function FormulaireDevoir({
               <option value="fermer">Fermer la remise</option>
             </select>
           </div>
-        </div>
+          </div>
+        </details>
       ) : (
         <>
           <input type="hidden" name="remplacement" value="oui" />
@@ -261,12 +277,11 @@ export function FormulaireDevoir({
         </p>
       ) : null}
 
-      <Bouton libelle={modification ? "Enregistrer le devoir" : "Créer le devoir"} />
+      <Bouton libelle={modification ? "Enregistrer le devoir" : "Créer mon brouillon"} />
 
       {!modification ? (
         <p className="m-0 mt-3 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
-          Le devoir est créé en brouillon. Vos élèves ne le verront qu&apos;après
-          publication.
+          Rien n&apos;est envoyé aux élèves pour le moment. Tu pourras relire ton devoir et le publier quand il sera prêt.
         </p>
       ) : null}
     </form>
@@ -280,7 +295,7 @@ function Bouton({ libelle }: { libelle: string }) {
       type="submit"
       data-testid="devoir-valider"
       disabled={pending}
-      className="bouton bouton-primaire mt-5"
+      className="bouton bouton-primaire mt-5 w-full min-w-0 whitespace-normal py-3 text-center leading-5 sm:w-auto"
     >
       {pending ? "Enregistrement…" : libelle}
     </button>
