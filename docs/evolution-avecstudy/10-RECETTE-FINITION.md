@@ -36,7 +36,11 @@ La commande `node scripts/recette-isolee/lancer.mjs --verifier` refuse de démar
 
 ## Configuration Auth à valider sur la cible
 
-Activer la confirmation d’e-mail dans Supabase Auth. Autoriser les URL de retour de l’origine exacte de chaque environnement. Le parcours attend un `token_hash` sur la route `/inscription/professeur/acces`. Configurer les liens des modèles **Confirm signup** et **Reset password** comme suit. `.RedirectTo` contient déjà le paramètre `mode` transmis par l’application.
+Activer la confirmation d’e-mail dans Supabase Auth. Autoriser les URL de retour de l’origine exacte de chaque environnement. Le parcours professeur accepte désormais un **code à 6 chiffres** par `verifyOtp({ email, token, type: "signup" })`. Le modèle **Confirm signup** doit utiliser `{{ .Token }}` à la place d’un bouton de confirmation : copier le corps HTML de [`docs/email/confirmation-professeur-code.html`](../email/confirmation-professeur-code.html) et mettre le sujet `Ton code de confirmation · AvecStudy`.
+
+**Ordre de mise en ligne obligatoire :** déployer d’abord l’interface et l’action de validation par code sur Vercel, puis modifier le modèle **Confirm signup** dans Supabase Auth → Emails → Modèles. Vérifier avec une **nouvelle adresse de test** que le mail affiche six chiffres, que leur saisie active le compte professeur et qu’une connexion fonctionne. Ne pas changer le modèle sur la production avant le déploiement du code.
+
+L’ancien parcours à `token_hash` reste reconnu pour les mails envoyés avant le changement. Sa forme historique était :
 
 ```html
 <a href="{{ .RedirectTo }}&amp;token_hash={{ .TokenHash }}">Confirmer mon adresse</a>
@@ -46,7 +50,7 @@ Activer la confirmation d’e-mail dans Supabase Auth. Autoriser les URL de reto
 <a href="{{ .RedirectTo }}&amp;token_hash={{ .TokenHash }}">Choisir un nouveau mot de passe</a>
 ```
 
-Le formulaire de confirmation vérifie le lien auprès d’Auth avant de créer l’espace professeur. Les réponses publiques de demande d’e-mail restent génériques et Supabase applique ses limites d’envoi. Vérifier le transport SMTP et la livraison à deux boîtes de test avant la mise en ligne. Les élèves conservent le parcours par invitation sans e-mail.
+Le modèle **Reset password** continue à utiliser le deuxième lien (récupération du mot de passe). La confirmation vérifie le code ou l’ancien lien auprès d’Auth avant de créer l’espace professeur. Les réponses publiques de demande d’e-mail restent génériques et Supabase applique ses limites d’envoi. Vérifier le transport SMTP et la livraison à deux boîtes de test avant la mise en ligne. Les élèves conservent le parcours par invitation sans e-mail.
 
 Le tarif et les conditions applicables à l’espace professeur autonome restent à confirmer. Les textes existants documentent l’offre historique des établissements. Il reste à faire valider le cadre de confidentialité et les mentions applicables au parcours autonome.
 

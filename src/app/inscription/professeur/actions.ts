@@ -2,9 +2,11 @@
 
 import { z } from "zod";
 import { redirect } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 import { lireGroupe } from "@/lib/config";
 import { DepotSupabase } from "@/lib/depot-authentification";
 import { controlerMotDePasse, MESSAGES_MOT_DE_PASSE } from "@/lib/mot-de-passe";
+import { schemaConfirmationProfesseur } from "@/lib/confirmation-professeur";
 import { baseConfiguree, clientAuthentification, clientExploitation } from "@/lib/supabase-serveur";
 import type { EtatInscriptionProfesseur } from "./etats";
 
@@ -45,7 +47,7 @@ export async function inscrireProfesseur(_precedent: EtatInscriptionProfesseur, 
   const attente: EtatInscriptionProfesseur = {
     etat: "envoyee",
     valeurs,
-    message: "Si cette adresse peut recevoir une confirmation, vérifie ta boîte et les indésirables. Tu peux demander un nouveau lien ou corriger l’adresse.",
+    message: "Vérifie ta boîte mail et les indésirables, puis saisis ton code à 6 chiffres ci-dessous. Tu peux demander un nouveau code ou corriger l’adresse.",
   };
   if (error) console.warn(JSON.stringify({ niveau: "avertissement", contexte: "inscription_professeur", code: error.code ?? error.status }));
   if (data.session) {
@@ -78,8 +80,30 @@ export async function envoyerLienProfesseur(
   }
   return {
     etat: "envoyee",
-    message: "Si un lien peut être envoyé à cette adresse, vérifie ta boîte et les indésirables. Attends quelques minutes avant de réessayer. Si aucun message n’arrive, vérifie l’adresse ou contacte l’assistance.",
+    message: mode === "confirmation"
+      ? "Si un code peut être envoyé à cette adresse, vérifie ta boîte et les indésirables. Attends quelques minutes avant de réessayer."
+      : "Si un lien peut être envoyé à cette adresse, vérifie ta boîte et les indésirables. Attends quelques minutes avant de réessayer.",
   };
+}
+
+export async function confirmerCodeProfesseur(
+  _etat: EtatInscriptionProfesseur, donnees: FormData,
+): Promise<EtatInscriptionProfesseur> {
+  const verification = schemaConfirmationProfesseur.safeParse({ email: donnees.get("email"), code: donnees.get("code") });
+  if (!verification.success) {
+    return { etat: "refus", message: "Vérifie l’adresse e-mail et le code à 6 chiffres." };
+  }
+  if (!baseConfiguree()) {
+    return { etat: "refus", message: "La validation est momentanément indisponible. Réessaie plus tard." };
+  }
+  const auth = clientAuthentification().auth;
+  const { data, error } = await auth.verifyOtp({
+    email: verification.data.email, token: verification.data.code, type: "signup",
+  });
+  if (error || !data.user?.email_confirmed_at) {
+    return { etat: "refus", message: "Ce code est incorrect, expiré ou a déjà servi. Vérifie-le ou demande un nouveau code." };
+  }
+  return preparerCompteProfesseur(auth, data.user);
 }
 
 export async function confirmerAdresse(jeton: string, _etat: EtatInscriptionProfesseur): Promise<EtatInscriptionProfesseur> {
@@ -91,19 +115,25 @@ export async function confirmerAdresse(jeton: string, _etat: EtatInscriptionProf
   if (error || !data.user?.email_confirmed_at) {
     return { etat: "refus", message: "Ce lien a expiré ou a déjà servi. Demande un nouveau lien ou connecte-toi." };
   }
+  return preparerCompteProfesseur(auth, data.user);
+}
+
+async function preparerCompteProfesseur(
+  auth: ReturnType<typeof clientAuthentification>["auth"], utilisateur: User,
+): Promise<EtatInscriptionProfesseur> {
   // Le jeton de confirmation atteste l’adresse, et le type « signup » limite
   // cette création au parcours d’inscription. Les métadonnées portent les noms.
   const valeurs = schema.safeParse({
-    prenom: data.user.user_metadata.prenom_avecstudy,
-    nom: data.user.user_metadata.nom_avecstudy,
-    email: data.user.email,
+    prenom: utilisateur.user_metadata.prenom_avecstudy,
+    nom: utilisateur.user_metadata.nom_avecstudy,
+    email: utilisateur.email,
   });
   if (!valeurs.success) {
     await auth.signOut({ scope: "local" });
     return { etat: "refus", message: "L’espace professeur n’a pas pu être préparé. Contacte l’assistance." };
   }
   const { error: preparation } = await clientExploitation("administration_des_comptes").rpc("professeur_autonome_preparer", {
-    p_profile: data.user.id,
+    p_profile: utilisateur.id,
     p_prenom: valeurs.data.prenom,
     p_nom: valeurs.data.nom,
     p_email: valeurs.data.email,

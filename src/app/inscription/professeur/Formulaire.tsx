@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import { DemandeLien } from "./AccesCourriel";
+import { DemandeLien, UtiliserCode } from "./AccesCourriel";
 import { inscrireProfesseur } from "./actions";
 import { ETAT_INSCRIPTION_PROFESSEUR, type EtatInscriptionProfesseur } from "./etats";
 
@@ -18,6 +18,7 @@ export function FormulaireInscriptionProfesseur() {
     return (
       <>
         <p role="status" className="rounded bg-[color:var(--color-succes-fond)] p-4">{etat.message}</p>
+        <UtiliserCode adresse={etat.valeurs?.email} />
         <DemandeLien mode="confirmation" adresse={etat.valeurs?.email} />
         <button type="button" className="bouton bouton-discret mt-3" onClick={() => setACorriger(etat)}>Corriger mon adresse</button>
       </>
@@ -35,7 +36,7 @@ export function FormulaireInscriptionProfesseur() {
       <p className="aide-champ -mt-3">Au moins 12 caractères. Une phrase courte convient.</p>
       <ChampInscription nom="confirmation" label="Confirmer le mot de passe" type="password" autoComplete="new-password" erreurs={etat.champs} />
       <button className="bouton bouton-primaire bouton-acces w-full" disabled={attente}>{attente ? "Création…" : "Créer mon compte"}</button>
-      <Link href="/inscription/professeur/acces?mode=confirmation" className="text-center underline">Renvoyer un lien de confirmation</Link>
+      <Link href="/inscription/professeur/acces?mode=confirmation" className="text-center underline">J’ai déjà reçu un code de confirmation</Link>
     </form>
   );
 }

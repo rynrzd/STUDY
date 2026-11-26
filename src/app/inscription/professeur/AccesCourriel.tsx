@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { confirmerAdresse, envoyerLienProfesseur, reinitialiserProfesseur } from "./actions";
+import { confirmerAdresse, confirmerCodeProfesseur, envoyerLienProfesseur, reinitialiserProfesseur } from "./actions";
 import { ETAT_INSCRIPTION_PROFESSEUR } from "./etats";
 
 export function DemandeLien({ mode, adresse }: { mode: "confirmation" | "recuperation"; adresse?: string }) {
@@ -12,10 +12,43 @@ export function DemandeLien({ mode, adresse }: { mode: "confirmation" | "recuper
         <input className="champ champ-acces mt-1" name="email" type="email" autoComplete="email" defaultValue={adresse} required maxLength={180} />
       </label>
       <button className="bouton bouton-secondaire" disabled={attente}>
-        {attente ? "Envoi demandé…" : mode === "confirmation" ? "Renvoyer le lien de confirmation" : "Demander un lien de récupération"}
+        {attente ? "Envoi demandé…" : mode === "confirmation" ? "Renvoyer un code" : "Demander un lien de récupération"}
       </button>
       {etat.message ? <p role={etat.etat === "refus" ? "alert" : "status"} className="m-0">{etat.message}</p> : null}
     </form>
+  );
+}
+
+export function UtiliserCode({ adresse }: { adresse?: string }) {
+  const [etat, action, attente] = useActionState(confirmerCodeProfesseur, ETAT_INSCRIPTION_PROFESSEUR);
+  return (
+    <section aria-labelledby="confirmation-code-titre" className="rounded-xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-4 sm:p-5">
+      <h2 id="confirmation-code-titre" className="m-0 text-lg font-bold text-[color:var(--color-encre)]">Ton code de confirmation</h2>
+      <p className="mt-2 text-sm text-[color:var(--color-encre-faible)]">Recopie les 6 chiffres du mail AvecStudy pour activer ton espace professeur. Aucun lien à ouvrir.</p>
+      <form action={action} className="mt-4 grid gap-4">
+        <label className="etiquette" htmlFor="confirmation-code-email">Adresse e-mail du compte</label>
+        <input id="confirmation-code-email" className="champ champ-acces -mt-3" name="email" type="email" autoComplete="email" defaultValue={adresse} maxLength={180} required />
+        <label className="etiquette" htmlFor="confirmation-code-valeur">Code à 6 chiffres</label>
+        <input
+          id="confirmation-code-valeur"
+          className="champ champ-acces -mt-3 text-center text-2xl font-bold tracking-[0.3em]"
+          name="code"
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          pattern="[0-9]{6}"
+          minLength={6}
+          maxLength={6}
+          placeholder="000000"
+          required
+          aria-invalid={etat.etat === "refus" ? true : undefined}
+        />
+        {etat.message ? <p role="alert" className="m-0 text-sm text-[color:var(--color-erreur)]">{etat.message}</p> : null}
+        <button className="bouton bouton-primaire w-full" disabled={attente}>
+          {attente ? "Vérification en cours…" : "Valider mon adresse e-mail"}
+        </button>
+      </form>
+    </section>
   );
 }
 
