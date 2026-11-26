@@ -571,6 +571,150 @@
   text-decoration: underline;
 }
 
+/* Résultats français : des méthodes lisibles, pas une grille de cartes génériques. */
+.francais {
+  width: min(100%, 44rem);
+  margin-block: 2.25rem 1rem;
+  animation: apparition 320ms ease both;
+}
+
+.enteteFrancais > span {
+  color: var(--prune);
+  font-size: .9rem;
+  font-weight: 750;
+}
+
+.francais h1 {
+  margin-block: .65rem 0;
+  font-size: clamp(2.65rem, 4.3vw, 4.6rem);
+  line-height: 1.04;
+  text-align: left;
+}
+
+.enteteFrancais p {
+  margin-block: 1rem 1.6rem;
+  color: var(--encre-douce);
+  font-size: 1.1rem;
+  line-height: 1.55;
+}
+
+.methodes {
+  border-block-start: 1px solid var(--bordure);
+}
+
+.methodes > details {
+  border-block-end: 1px solid var(--bordure);
+}
+
+.methodes > details > summary {
+  display: flex;
+  min-block-size: 80px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 1.1rem .3rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.methodes > details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.nomMethode strong,
+.nomMethode span {
+  display: block;
+}
+
+.nomMethode strong {
+  font-size: 1.16rem;
+}
+
+.nomMethode span {
+  margin-block-start: .25rem;
+  color: var(--encre-douce);
+  font-size: .95rem;
+  line-height: 1.45;
+}
+
+.methodes > details > summary svg {
+  flex: none;
+  color: var(--prune);
+  transition: transform 150ms ease;
+}
+
+.methodes > details[open] > summary svg {
+  transform: rotate(180deg);
+}
+
+.methode {
+  margin-block: 0 1.1rem;
+  border-radius: .85rem;
+  padding: 1.15rem;
+  background: white;
+}
+
+.methode > p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.methode blockquote {
+  margin: .9rem 0;
+  border-inline-start: 3px solid var(--prune);
+  padding-inline-start: .9rem;
+  font-family: Georgia, serif;
+  font-size: 1.12rem;
+  line-height: 1.45;
+}
+
+.correction > summary {
+  display: flex;
+  min-block-size: 44px;
+  align-items: center;
+  color: var(--prune);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.correction p {
+  margin-block: .5rem 0;
+  color: var(--encre-douce);
+  line-height: 1.6;
+}
+
+.entrainement {
+  margin-block-start: 1.7rem;
+}
+
+.entrainement h2 {
+  margin-block: 0 .7rem;
+  font-size: 1.05rem;
+}
+
+.entrainement > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+}
+
+.entrainement button {
+  min-block-size: 44px;
+  border: 1px solid var(--bordure);
+  border-radius: .6rem;
+  padding-inline: 1rem;
+  background: white;
+  color: var(--prune);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.entrainement button:hover {
+  border-color: var(--prune);
+  background: var(--rose-clair);
+}
+
 @keyframes recherche-haute {
   from { translate: 0 min(24vh, 11rem); opacity: .5; }
   to { translate: 0 0; opacity: 1; }
@@ -605,6 +749,7 @@
     grid-template-columns: 1fr;
     gap: 1.35rem;
   }
+  .francais { margin-block: .5rem 1.5rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

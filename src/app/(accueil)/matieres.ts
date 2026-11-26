@@ -115,7 +115,7 @@ export const matieres: readonly Matiere[] = [
   },
 ];
 
-function motsDe(texte: string) {
+export function motsDe(texte: string) {
   return texte
     .toLowerCase()
     .normalize("NFD")
@@ -124,7 +124,7 @@ function motsDe(texte: string) {
     ?.join(" ") ?? "";
 }
 
-export function trouverMatiere(recherche: string): { matiere: Matiere; exercice: Exercice } | undefined {
+export function trouverMatiere(recherche: string): { matiere: Matiere; exercice: Exercice; rechercheMatiere?: true } | undefined {
   const mots = ` ${motsDe(recherche)} `;
   const correspond = (mot: string) => mots.includes(` ${mot} `);
   for (const matiere of matieres) {
@@ -132,5 +132,5 @@ export function trouverMatiere(recherche: string): { matiere: Matiere; exercice:
     if (exercice) return { matiere, exercice };
   }
   const matiere = matieres.find((item) => item.motsCles.some(correspond));
-  return matiere ? { matiere, exercice: matiere.exercices[0]! } : undefined;
+  return matiere ? { matiere, exercice: matiere.exercices[0]!, rechercheMatiere: true } : undefined;
 }
