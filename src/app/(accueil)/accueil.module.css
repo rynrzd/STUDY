@@ -533,3 +533,121 @@
     animation-timing-function: ease-out;
   }
 }
+
+.francais {
+  width: min(100%, 42rem);
+}
+
+.francais h1 {
+  font-size: clamp(2.7rem, 7vw, 4.6rem);
+}
+
+.francais header p {
+  margin: .65rem 0 1.5rem;
+  color: var(--encre-douce);
+}
+
+.methodes {
+  border-block-start: 1px solid var(--bordure);
+}
+
+.methodes > details {
+  border-block-end: 1px solid var(--bordure);
+}
+
+.methodes > details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .95rem .15rem;
+  cursor: pointer;
+}
+
+.methodes > details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.methodes > details > summary strong,
+.methodes > details > summary span span {
+  display: block;
+}
+
+.methodes > details > summary strong {
+  font-size: 1.15rem;
+}
+
+.methodes > details > summary span span {
+  margin-top: .14rem;
+  color: var(--encre-douce);
+  font-size: .95rem;
+}
+
+.methodes > details > summary svg {
+  flex: none;
+  color: var(--prune);
+}
+
+.methodes > details[open] > summary svg {
+  transform: rotate(180deg);
+}
+
+.methode {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border-radius: .65rem;
+  background: white;
+}
+
+.methode p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.methode .consigne {
+  margin-block: .8rem .35rem;
+  padding-inline-start: .85rem;
+  border-inline-start: 2px solid var(--prune);
+}
+
+.correction summary {
+  align-content: center;
+  min-block-size: 44px;
+  color: var(--prune);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.entrainement {
+  margin-block-start: 1.35rem;
+}
+
+.entrainement h2 {
+  margin-block: 0 .4rem;
+  font-size: 1rem;
+}
+
+.entrainement > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+}
+
+.entrainement button {
+  display: inline-flex;
+  min-block-size: 44px;
+  align-items: center;
+  gap: .45rem;
+  border: 1px solid var(--bordure);
+  border-radius: .5rem;
+  padding-inline: .75rem;
+  background: transparent;
+  color: var(--prune);
+  font: inherit;
+  font-size: .95rem;
+  cursor: pointer;
+}
+
+.entrainement button:hover {
+  border-color: var(--prune);
+}

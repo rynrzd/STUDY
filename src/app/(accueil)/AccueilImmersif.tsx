@@ -5,6 +5,7 @@ import { Check, Search } from "lucide-react";
 import { flushSync } from "react-dom";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { matieres, trouverMatiere, type Exercice } from "./matieres";
+import { ResultatsFrancais, trouverMethodeFrancais } from "./ResultatsFrancais";
 import s from "./accueil.module.css";
 
 function Triangle({ solution }: { solution: boolean }) {
@@ -105,6 +106,12 @@ export function AccueilImmersif() {
     }
   }
 
+  const methodeFrancais = trouverMethodeFrancais(recherche);
+  const estFrancais = apercu?.matiere.titre === "Français";
+  const afficherFrancais = Boolean(
+    (estFrancais && apercu?.rechercheMatiere) || (methodeFrancais && (!apercu || estFrancais)),
+  );
+
   const prochainExercice = apercu?.exercice.extrait
     ? apercu.matiere.exercices[apercu.matiere.exercices.indexOf(apercu.exercice) + 1]
     : undefined;
@@ -115,7 +122,7 @@ export function AccueilImmersif() {
   }
 
   return (
-    <div className={s.page} data-mode={apercu ? "matiere" : "accueil"}>
+    <div className={s.page} data-mode={apercu || afficherFrancais ? "matiere" : "accueil"}>
       <header className={s.entete}>
         <Link className={s.marque} href="/" onNavigate={(event) => {
           event.preventDefault();
@@ -142,7 +149,9 @@ export function AccueilImmersif() {
           <button type="submit" aria-label="Rechercher"><Search size={22} aria-hidden="true" /></button>
         </form>
 
-        {apercu ? (
+        {afficherFrancais ? (
+          <ResultatsFrancais key={recherche} titre={titre} methode={methodeFrancais} chercher={chercher} />
+        ) : apercu ? (
           <div className={s.matiere} key={apercu.matiere.titre}>
             <div className={s.intro}>
               {apercu.exercice.extrait ? (
@@ -153,6 +162,11 @@ export function AccueilImmersif() {
                   <h1 ref={titre} tabIndex={-1}>On commence<br className={s.coupure} /> par un exemple&nbsp;?</h1>
                   <p>Tu peux essayer, même si tu hésites.</p>
                 </>
+              )}
+              {estFrancais && (
+                <button className={s.indice} type="button" onClick={() => chercher("français")}>
+                  Revenir aux résultats de français
+                </button>
               )}
               <div className={s.chapitres} role="group" aria-label="Choisir une notion">
                 {apercu.matiere.exercices.map((exercice) => (
