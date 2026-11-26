@@ -126,6 +126,22 @@ test("L05 — calcul numerique et phrase a reconstituer sans QCM", async () => {
   await onglet.close();
 });
 
+test("L06 — la recherche français propose des méthodes avec un exemple", async () => {
+  const onglet = await page("/", { largeur: 390, hauteur: 844 });
+  await champ(onglet).fill("français");
+  await champ(onglet).press("Enter");
+  assert.equal(await onglet.getByRole("heading", { name: "Qu'est-ce que tu veux travailler ?" }).isVisible(), true);
+  await onglet.getByText("Commentaire de texte", { exact: true }).click();
+  await onglet.getByText("Voir un exemple de réponse").click();
+  assert.equal(await onglet.getByText(/personnifie la nuit/).isVisible(), true);
+  await onglet.getByRole("button", { name: "Figures de style" }).click();
+  assert.equal(await onglet.getByRole("heading", { name: /figure de style reconnais-tu/ }).isVisible(), true);
+  await onglet.getByRole("button", { name: "Revenir aux méthodes de français" }).click();
+  assert.equal(await onglet.getByText("Dissertation", { exact: true }).isVisible(), true);
+  assert.equal(await onglet.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await onglet.close();
+});
+
 /* ----------------------------------------------------- §2 Navigation ------ */
 
 test("N01 — a 1366 px, seule la navigation de bureau est parcourue", async () => {
