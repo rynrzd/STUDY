@@ -67,7 +67,7 @@ export function VueReviser({
           </div>
         ) : (
           <ListeLignes>
-            {priorites.suggestions.map((s) => (
+            {priorites.suggestions.slice(0, 5).map((s) => (
               <li key={s.notionId}>
                 <div className="ligne-r2 flex-wrap">
                   <TuileIcone icone={Target} />

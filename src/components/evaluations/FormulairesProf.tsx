@@ -21,6 +21,15 @@ import { GENRES_QUESTION, LIBELLES_GENRE, type GenreQuestion } from "@/lib/evalu
 
 const etiquette = "mb-1.5 block text-[0.8125rem] font-semibold";
 
+const PRESENTATIONS_QUESTION: Readonly<Record<GenreQuestion, { description: string; exemple: string }>> = {
+  qcm: { description: "Une seule réponse juste parmi plusieurs", exemple: "Quelle est la fonction de ce mot ?" },
+  qcm_multiple: { description: "Plusieurs réponses peuvent être justes", exemple: "Quels nombres sont des multiples de 3 ?" },
+  vrai_faux: { description: "Une affirmation à vérifier", exemple: "Une métaphore utilise toujours « comme »." },
+  numerique: { description: "Un calcul avec correction automatique", exemple: "Calcule la valeur de f(3)." },
+  courte: { description: "Un mot ou une expression à retrouver", exemple: "Quel procédé est utilisé dans cette phrase ?" },
+  redigee: { description: "Une explication à corriger par le professeur", exemple: "Justifie ta réponse en citant le texte." },
+};
+
 function Retour({ etat }: { etat: EtatAction | null }) {
   if (!etat) return null;
   return (
@@ -191,63 +200,44 @@ export function AjouterQuestion({ evaluation, notions }: { evaluation: string; n
   const [etat, action] = useActionState(ajouterQuestion, null);
   const [kind, setKind] = useState<GenreQuestion>("qcm");
   const [choix, setChoix] = useState("");
+  const [enonce, setEnonce] = useState("");
   const lesChoix = choix.split("\n").map((c) => c.trim()).filter(Boolean);
 
   return (
-    <form action={action} className="grid gap-4" key={etat?.ok ? etat.message : "formulaire"}>
+    <form action={action} className="grid min-w-0 gap-5" key={etat?.ok ? etat.message : "formulaire"}>
       <input type="hidden" name="evaluation" value={evaluation} />
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div>
-          <label htmlFor="q-kind" className={etiquette}>
-            Type de question
-          </label>
-          <select id="q-kind" name="kind" className="champ" value={kind} onChange={(e) => setKind(e.target.value as GenreQuestion)}>
-            {GENRES_QUESTION.map((g) => (
-              <option key={g} value={g}>
-                {LIBELLES_GENRE[g]}
-              </option>
-            ))}
-          </select>
+      <fieldset className="m-0 min-w-0 border-0 p-0">
+        <legend className="mb-1 text-lg font-bold">1. Comment les élèves vont-ils répondre ?</legend>
+        <p className="mb-3 mt-0 text-sm leading-6 text-[color:var(--color-encre-faible)]">Choisis un format. Tu pourras ensuite écrire ta question.</p>
+        <div className="grid min-w-0 gap-2 sm:grid-cols-2">
+          {GENRES_QUESTION.map((g) => (
+            <label key={g} className={`flex min-h-[76px] min-w-0 cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-colors ${kind === g ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] hover:border-[color:var(--color-accent)]"}`}>
+              <input type="radio" name="kind" value={g} checked={kind === g} onChange={() => setKind(g)} className="mt-1 size-4 shrink-0 accent-[color:var(--color-accent)]" />
+              <span className="min-w-0">
+                <span className="block font-bold">{LIBELLES_GENRE[g]}</span>
+                <span className="mt-0.5 block text-sm leading-5 text-[color:var(--color-encre-faible)]">{PRESENTATIONS_QUESTION[g].description}</span>
+              </span>
+            </label>
+          ))}
         </div>
-        <div>
-          <label htmlFor="q-points" className={etiquette}>
-            Points
-          </label>
-          <input id="q-points" name="points" className="champ" inputMode="decimal" defaultValue="1" />
-        </div>
-        <div>
-          <label htmlFor="q-notion" className={etiquette}>
-            Notion évaluée
-          </label>
-          <select id="q-notion" name="notion" className="champ" defaultValue="">
-            <option value="">Aucune</option>
-            {notions.map((n) => (
-              <option key={n.id} value={n.id}>
-                {n.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      </fieldset>
       <div>
-        <label htmlFor="q-enonce" className={etiquette}>
-          Énoncé
-        </label>
-        <textarea id="q-enonce" name="enonce" className="champ" rows={3} required minLength={3} placeholder="Calcule f({c}) pour f(x) = {a}x + {b}." />
+        <label htmlFor="q-enonce" className="mb-2 block text-lg font-bold">2. Quelle question veux-tu poser ?</label>
+        <textarea id="q-enonce" name="enonce" className="champ min-w-0" rows={3} required minLength={3} maxLength={4000} value={enonce} onChange={(e) => setEnonce(e.target.value)} placeholder={PRESENTATIONS_QUESTION[kind].exemple} />
+        <p className="aide-champ m-0 mt-2">Écris comme si tu parlais à tes élèves. Une consigne précise suffit.</p>
       </div>
 
       {kind === "qcm" || kind === "qcm_multiple" ? (
         <div>
-          <label htmlFor="q-choix" className={etiquette}>
-            Choix, un par ligne
-          </label>
+          <label htmlFor="q-choix" className={etiquette}>3. Quelles réponses veux-tu proposer ?</label>
           <textarea id="q-choix" name="choix" className="champ" rows={4} value={choix} onChange={(e) => setChoix(e.target.value)} placeholder={"{a*c+b}\n{a+c+b}\n{a*c-b}"} />
+          <p className="aide-champ m-0 mt-2">Une proposition par ligne. Deux minimum, huit maximum.</p>
           {lesChoix.length > 1 ? (
-            <fieldset className="m-0 mt-2 grid gap-1 border-0 p-0">
-              <legend className={etiquette}>{kind === "qcm" ? "La bonne réponse" : "Les bonnes réponses"}</legend>
+            <fieldset className="m-0 mt-4 grid gap-2 rounded-xl border border-[color:var(--color-bordure)] p-4">
+              <legend className="px-1 text-sm font-bold">{kind === "qcm" ? "Coche la bonne réponse" : "Coche toutes les bonnes réponses"}</legend>
               {lesChoix.map((c, i) => (
-                <label key={`${i}-${c}`} className="inline-flex items-center gap-2">
-                  <input type={kind === "qcm" ? "radio" : "checkbox"} name="bonne" value={i} defaultChecked={i === 0} /> {String.fromCharCode(65 + i)}. {c}
+                <label key={`${i}-${c}`} className="flex min-w-0 items-start gap-3 rounded-lg px-2 py-1.5 text-sm">
+                  <input type={kind === "qcm" ? "radio" : "checkbox"} name="bonne" value={i} defaultChecked={i === 0} className="mt-1 size-4 shrink-0 accent-[color:var(--color-accent)]" /> <span className="min-w-0 break-words">{String.fromCharCode(65 + i)}. {c}</span>
                 </label>
               ))}
             </fieldset>
@@ -257,11 +247,11 @@ export function AjouterQuestion({ evaluation, notions }: { evaluation: string; n
 
       {kind === "vrai_faux" ? (
         <fieldset className="m-0 border-0 p-0">
-          <legend className={etiquette}>L&apos;affirmation est</legend>
-          <label className="mr-4 inline-flex items-center gap-2">
+          <legend className="mb-3 text-base font-bold">3. Ton affirmation est-elle vraie ou fausse ?</legend>
+          <label className="mr-4 inline-flex min-h-11 items-center gap-2">
             <input type="radio" name="vrai" value="vrai" defaultChecked /> Vraie
           </label>
-          <label className="inline-flex items-center gap-2">
+          <label className="inline-flex min-h-11 items-center gap-2">
             <input type="radio" name="vrai" value="faux" /> Fausse
           </label>
         </fieldset>
@@ -271,7 +261,7 @@ export function AjouterQuestion({ evaluation, notions }: { evaluation: string; n
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="q-valeur" className={etiquette}>
-              Valeur attendue <span className="font-normal text-[color:var(--color-encre-faible)]">(ou formule : a*c+b)</span>
+              3. Résultat attendu <span className="font-normal text-[color:var(--color-encre-faible)]">(ou formule : a*c+b)</span>
             </label>
             <input id="q-valeur" name="valeur" className="champ" required placeholder="7 ou a*c+b" />
           </div>
@@ -287,20 +277,55 @@ export function AjouterQuestion({ evaluation, notions }: { evaluation: string; n
       {kind === "courte" ? (
         <div>
           <label htmlFor="q-acceptees" className={etiquette}>
-            Réponses acceptées, une par ligne <span className="font-normal text-[color:var(--color-encre-faible)]">(casse, accents et espaces ignorés)</span>
+            3. Quelles réponses sont acceptées ? <span className="font-normal text-[color:var(--color-encre-faible)]">(casse, accents et espaces ignorés)</span>
           </label>
-          <textarea id="q-acceptees" name="acceptees" className="champ" rows={2} required />
+          <textarea id="q-acceptees" name="acceptees" className="champ" rows={2} placeholder={"Métaphore\nUne métaphore"} required />
+          <p className="aide-champ m-0 mt-2">Une forme acceptée par ligne. La correction se fera automatiquement.</p>
         </div>
       ) : null}
 
       {kind === "redigee" ? (
         <div>
           <label htmlFor="q-criteres" className={etiquette}>
-            Critères de réussite <span className="font-normal text-[color:var(--color-encre-faible)]">(pour vous, à la correction)</span>
+            3. Comment reconnaître une bonne réponse ? <span className="font-normal text-[color:var(--color-encre-faible)]">(critères pour corriger)</span>
           </label>
-          <textarea id="q-criteres" name="criteres" className="champ" rows={2} />
+          <textarea id="q-criteres" name="criteres" className="champ" rows={2} placeholder="Ex. Une idée claire et un exemple du cours." />
         </div>
       ) : null}
+
+      <aside aria-label="Aperçu de la question" className="min-w-0 rounded-2xl border border-[color:var(--color-bordure)] bg-[color:var(--color-rose-clair)] p-4 sm:p-5">
+        <p className="m-0 mb-2 text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--color-accent)]">Aperçu élève</p>
+        <p className="m-0 break-words text-base font-bold leading-6">{enonce.trim() || PRESENTATIONS_QUESTION[kind].exemple}</p>
+        {kind === "qcm" || kind === "qcm_multiple" ? (
+          <ul className="m-0 mt-3 grid list-none gap-2 p-0">
+            {(lesChoix.length ? lesChoix : ["Première proposition", "Deuxième proposition"]).slice(0, 8).map((option, i) => (
+              <li key={`${i}-${option}`} className="flex min-w-0 items-start gap-2 rounded-lg border border-[color:var(--color-bordure)] bg-white px-3 py-2.5 text-sm">
+                <span aria-hidden="true" className="mt-1 size-3 shrink-0 rounded-full border border-[color:var(--color-accent)]" />
+                <span className="min-w-0 break-words">{option}</span>
+              </li>
+            ))}
+          </ul>
+        ) : kind === "vrai_faux" ? <p className="mb-0 mt-3 text-sm">◯ Vrai &nbsp;&nbsp; ◯ Faux</p>
+          : <p className="mb-0 mt-3 rounded-lg border border-[color:var(--color-bordure)] bg-white px-3 py-3 text-sm text-[color:var(--color-encre-faible)]">{kind === "numerique" ? "L'élève saisira un nombre" : kind === "courte" ? "L'élève écrira une réponse courte" : "L'élève rédigera sa réponse"}</p>}
+        <p className="m-0 mt-3 text-xs leading-5 text-[color:var(--color-encre-faible)]">Aperçu de présentation uniquement. Rien n&apos;est envoyé aux élèves avant distribution.</p>
+      </aside>
+
+      <details className="rounded-xl border border-[color:var(--color-bordure)] p-4">
+        <summary className="cursor-pointer text-sm font-bold text-[color:var(--color-accent)]">Points et notion (facultatif)</summary>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="q-points" className={etiquette}>Points attribués</label>
+            <input id="q-points" name="points" className="champ" inputMode="decimal" defaultValue="1" />
+          </div>
+          <div>
+            <label htmlFor="q-notion" className={etiquette}>Notion évaluée</label>
+            <select id="q-notion" name="notion" className="champ" defaultValue="">
+              <option value="">Aucune</option>
+              {notions.map((n) => <option key={n.id} value={n.id}>{n.label}</option>)}
+            </select>
+          </div>
+        </div>
+      </details>
 
       <details className="rounded-[var(--rayon-m)] border border-[color:var(--color-bordure)] p-3">
         <summary className="cursor-pointer font-semibold">Sujets différents par élève (valeurs aléatoires)</summary>
