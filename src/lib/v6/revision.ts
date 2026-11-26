@@ -16,6 +16,7 @@ export interface Suggestion {
   readonly notionId: string;
   readonly notion: string;
   readonly cours: string | null;
+  readonly espaceId: string;
   readonly statut: string;
   readonly score: number;
   readonly explication: string;
@@ -122,6 +123,7 @@ export async function suggestionsDeRevision(
       notionId: n.id,
       notion: n.label,
       cours: n.teaching_spaces?.subjects?.label ?? null,
+      espaceId: n.teaching_space_id,
       statut: etat?.statut ?? "a_decouvrir",
       score: p.score,
       prochaine: etat?.prochaine_revision ?? null,

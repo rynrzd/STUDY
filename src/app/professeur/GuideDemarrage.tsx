@@ -1,25 +1,33 @@
 import Link from "next/link";
 import { ArrowRight, BookOpenText, Check, CircleHelp, FileUp, GraduationCap, Users } from "lucide-react";
+import { etatParcoursProfesseur } from "@/lib/parcours-professeur";
 
 /** Parcours court : on montre l'utilité avant de montrer les fonctionnalités. */
-export function GuideDemarrage({ prenom, premiereVisite = false }: { prenom?: string; premiereVisite?: boolean }) {
+export function GuideDemarrage({ prenom, premiereVisite = false, coursCrees = 0, seancesCreees = 0, seancesPubliees = 0 }: {
+  prenom?: string;
+  premiereVisite?: boolean;
+  coursCrees?: number;
+  seancesCreees?: number;
+  seancesPubliees?: number;
+}) {
+  const { classePrete, seancePrete, publicationPrete, progression, action } = etatParcoursProfesseur(coursCrees, seancesCreees, seancesPubliees);
   return (
     <div className="grid gap-7">
-      <section className="relative overflow-hidden rounded-[28px] bg-[#503d4a] px-6 py-9 text-white sm:px-10 sm:py-12">
-        <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full border-[56px] border-[#ffffff0e]" />
+      <section className="relative overflow-hidden rounded-[24px] bg-[#503d4a] px-5 py-8 text-white sm:px-10 sm:py-11">
         <div className="relative max-w-2xl">
           <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f7c5d5]">
-            {premiereVisite ? "Ton compte est prêt" : "Bien démarrer · Espace professeur"}
+            {premiereVisite ? "Ton compte est prêt" : `Tes premiers pas · ${progression}/3 étapes`}
           </span>
           <h1 className="mb-3 mt-5 text-3xl font-bold leading-tight tracking-tight text-white sm:text-[2.6rem]">
-            {prenom ? `Bienvenue ${prenom},` : "Bienvenue,"}<br />on commence ensemble.
+            {prenom ? `Bienvenue ${prenom},` : "Bienvenue,"}<br />{publicationPrete ? "ton cours est lancé." : "on avance ensemble."}
           </h1>
           <p className="m-0 max-w-xl text-base leading-7 text-[#f0e7ec]">
-            Tu n&apos;as rien à paramétrer pour commencer. Crée simplement une classe,
-            prépare ton premier cours, puis invite tes élèves quand tu es prêt.
+            {publicationPrete
+              ? "Ta séance est publiée. Tu peux maintenant inviter ta classe et suivre les questions de tes élèves."
+              : "Une seule étape à la fois : une classe, une séance en brouillon, puis une publication quand tu es prêt. Rien n'est envoyé sans ton accord."}
           </p>
-          <Link href="/professeur/classes" className="mt-7 inline-flex min-h-12 items-center gap-3 rounded-xl bg-[#f5c5d4] px-5 font-bold text-[#442b39] no-underline transition hover:bg-white">
-            Créer ma première classe <ArrowRight size={19} aria-hidden="true" />
+          <Link href={action.href} className="mt-7 inline-flex min-h-12 max-w-full items-center gap-3 rounded-xl bg-[#f5c5d4] px-5 py-3 font-bold leading-5 text-[#442b39] no-underline transition hover:bg-white">
+            {action.libelle} <ArrowRight size={19} className="shrink-0" aria-hidden="true" />
           </Link>
         </div>
       </section>
@@ -30,26 +38,29 @@ export function GuideDemarrage({ prenom, premiereVisite = false }: { prenom?: st
             <span className="text-xs font-bold uppercase tracking-[0.13em] text-[color:var(--color-accent)]">Ton chemin, en 3 étapes</span>
             <h2 id="etapes-demarrage" className="mb-0 mt-1 text-2xl font-bold">De l&apos;idée au cours partagé</h2>
           </div>
-          <span className="text-sm text-[color:var(--color-encre-faible)]">À ton rythme, sans obligation</span>
+          <span className="text-sm text-[color:var(--color-encre-faible)]">{progression} sur 3 étapes accomplies</span>
+        </div>
+        <div className="mb-5 h-2 overflow-hidden rounded-full bg-[color:var(--color-survol)]" role="progressbar" aria-label="Progression des premiers pas" aria-valuemin={0} aria-valuemax={3} aria-valuenow={progression}>
+          <div className="h-full rounded-full bg-[color:var(--color-accent)] transition-[width]" style={{ width: `${progression / 3 * 100}%` }} />
         </div>
         <ol className="grid list-none gap-4 p-0 lg:grid-cols-3">
-          <li className="flex flex-col rounded-2xl border border-[#e2c7d2] bg-[color:var(--color-surface)] p-6 shadow-sm">
-            <div className="mb-5 flex items-center justify-between"><span className="text-sm font-bold text-[color:var(--color-accent)]">01 · Commencer</span><GraduationCap className="text-[color:var(--color-accent)]" size={25} aria-hidden="true" /></div>
+          <li className={`flex flex-col rounded-2xl border bg-[color:var(--color-surface)] p-5 sm:p-6 ${!classePrete ? "border-[#b87d92]" : "border-[color:var(--color-bordure)]"}`}>
+            <div className="mb-5 flex items-center justify-between"><span className="text-sm font-bold text-[color:var(--color-accent)]">{classePrete ? "Terminé" : "Étape 1 · Maintenant"}</span>{classePrete ? <Check size={24} className="text-[color:var(--color-succes)]" aria-hidden="true" /> : <GraduationCap className="text-[color:var(--color-accent)]" size={25} aria-hidden="true" />}</div>
             <h3 className="m-0 text-lg font-bold">Crée ta classe</h3>
             <p className="mt-2 flex-1 text-sm leading-6 text-[color:var(--color-encre-faible)]">Donne-lui un nom (ex. 3e B) et choisis une matière. C&apos;est tout : aucun code de lycée n&apos;est demandé.</p>
-            <Link className="mt-5 inline-flex items-center gap-2 font-bold text-[color:var(--color-accent)]" href="/professeur/classes">Créer une classe <ArrowRight size={17} /></Link>
+            <Link className="mt-5 inline-flex items-center gap-2 font-bold text-[color:var(--color-accent)]" href="/professeur/classes">{classePrete ? "Voir mes classes" : "Créer une classe"} <ArrowRight size={17} /></Link>
           </li>
-          <li className="flex flex-col rounded-2xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-6">
-            <div className="mb-5 flex items-center justify-between"><span className="text-sm font-bold text-[color:var(--color-encre-faible)]">02 · Préparer</span><BookOpenText size={25} className="text-[color:var(--color-accent)]" aria-hidden="true" /></div>
+          <li className={`flex flex-col rounded-2xl border bg-[color:var(--color-surface)] p-5 sm:p-6 ${classePrete && !seancePrete ? "border-[#b87d92]" : "border-[color:var(--color-bordure)]"}`}>
+            <div className="mb-5 flex items-center justify-between"><span className="text-sm font-bold text-[color:var(--color-accent)]">{seancePrete ? "Terminé" : classePrete ? "Étape 2 · Maintenant" : "Étape 2 · Ensuite"}</span>{seancePrete ? <Check size={24} className="text-[color:var(--color-succes)]" aria-hidden="true" /> : <BookOpenText size={25} className="text-[color:var(--color-accent)]" aria-hidden="true" />}</div>
             <h3 className="m-0 text-lg font-bold">Prépare un cours</h3>
             <p className="mt-2 flex-1 text-sm leading-6 text-[color:var(--color-encre-faible)]">Rédige une séance ou importe un PDF ou un Word. Tu peux enregistrer un brouillon sans que les élèves le voient.</p>
-            <Link className="mt-5 inline-flex items-center gap-2 font-bold text-[color:var(--color-accent)]" href="/professeur/studio">Importer un document <ArrowRight size={17} /></Link>
+            <Link className="mt-5 inline-flex items-center gap-2 font-bold text-[color:var(--color-accent)]" href="/studio">{seancePrete ? "Retrouver mes séances" : "Préparer une séance"} <ArrowRight size={17} /></Link>
           </li>
-          <li className="flex flex-col rounded-2xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-6">
-            <div className="mb-5 flex items-center justify-between"><span className="text-sm font-bold text-[color:var(--color-encre-faible)]">03 · Partager</span><Users size={25} className="text-[color:var(--color-accent)]" aria-hidden="true" /></div>
-            <h3 className="m-0 text-lg font-bold">Fais venir tes élèves</h3>
-            <p className="mt-2 flex-1 text-sm leading-6 text-[color:var(--color-encre-faible)]">Depuis ta classe, importe une liste d&apos;élèves et prépare leurs invitations. Publie ton cours quand il est prêt.</p>
-            <Link className="mt-5 inline-flex items-center gap-2 font-bold text-[color:var(--color-accent)]" href="/professeur/classes">Gérer mes élèves <ArrowRight size={17} /></Link>
+          <li className={`flex flex-col rounded-2xl border bg-[color:var(--color-surface)] p-5 sm:p-6 ${seancePrete && !publicationPrete ? "border-[#b87d92]" : "border-[color:var(--color-bordure)]"}`}>
+            <div className="mb-5 flex items-center justify-between"><span className="text-sm font-bold text-[color:var(--color-accent)]">{publicationPrete ? "Terminé" : seancePrete ? "Étape 3 · Maintenant" : "Étape 3 · Ensuite"}</span>{publicationPrete ? <Check size={24} className="text-[color:var(--color-succes)]" aria-hidden="true" /> : <Users size={25} className="text-[color:var(--color-accent)]" aria-hidden="true" />}</div>
+            <h3 className="m-0 text-lg font-bold">Partage quand tu es prêt</h3>
+            <p className="mt-2 flex-1 text-sm leading-6 text-[color:var(--color-encre-faible)]">Relis ta séance avant de la publier. Les élèves ne voient jamais tes brouillons. Tu pourras ensuite les inviter depuis ta classe.</p>
+            <Link className="mt-5 inline-flex items-center gap-2 font-bold text-[color:var(--color-accent)]" href="/studio">{publicationPrete ? "Voir les séances publiées" : "Terminer mon cours"} <ArrowRight size={17} /></Link>
           </li>
         </ol>
       </section>

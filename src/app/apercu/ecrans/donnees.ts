@@ -18,8 +18,8 @@ export const F = {
     { id: u(103), titre: "Préparer le contrôle de SVT", format: "controle", etat: "needs_review", majLe: "2026-10-05T18:10:00Z" },
   ],
   suggestions: [
-    { notionId: u(111), notion: "Images et antécédents", cours: "Mathématiques", statut: "a_revoir", score: 0.8, explication: "contrôle annoncé jeudi", prochaine: null, versions: [u(112), u(113)] },
-    { notionId: u(114), notion: "Présent perfect", cours: "Anglais", statut: "en_cours", score: 0.5, explication: "deux réponses récentes à revoir", prochaine: null, versions: [u(115)] },
+    { notionId: u(111), notion: "Images et antécédents", cours: "Mathématiques", espaceId: u(173), statut: "a_revoir", score: 0.8, explication: "contrôle annoncé jeudi", prochaine: null, versions: [u(112), u(113)] },
+    { notionId: u(114), notion: "Présent perfect", cours: "Anglais", espaceId: u(179), statut: "en_cours", score: 0.5, explication: "deux réponses récentes à revoir", prochaine: null, versions: [u(115)] },
   ],
   erreurs: [
     {

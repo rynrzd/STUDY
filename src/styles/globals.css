@@ -958,6 +958,23 @@
       display: none !important;
     }
 
+    /* Les appels à l'action longs ne doivent jamais dépasser une carte sur
+       téléphone : le texte passe à la ligne et la cible reste confortable. */
+    .app-coque .bouton {
+      min-width: 0;
+      max-width: 100%;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      line-height: 1.35;
+      text-align: center;
+      padding-block: 10px;
+    }
+
+    .app-coque .app-principal :is(input, select, textarea) {
+      max-width: 100%;
+      min-width: 0;
+    }
+
     .app-coque .champ,
     .app-coque input,
     .app-coque select,
