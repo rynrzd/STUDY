@@ -14,7 +14,8 @@ Branche : `codex/reviser-lycee`. PR brouillon : https://github.com/rynrzd/STUDY/
 | Suite SQL complète locale | Lancée puis interrompue pour charge excessive, y compris après limitation à deux fichiers en parallèle ; pas de réussite globale revendiquée |
 | Build local webpack | Lancé puis interrompu pendant la compilation après ralentissement local ; build validé en CI |
 | CI Code et compilation sur `06588d8` | Réussi : TypeScript, lint, tests unitaires et `npm run build` ([exécution](https://github.com/rynrzd/STUDY/actions/runs/45782783308)) |
-| Première CI Migrations et isolation SQL sur `06588d8` | 396 réussites, 2 échecs : chaîne de retour arrière sans 0086. Script de retour ajouté et contrôles relancés ; résultat final à compléter |
+| Première CI Migrations et isolation SQL sur `06588d8` | 396 réussites, 2 échecs : chaîne de retour arrière sans 0086. Corrigé par le script de retour et son intégration aux tests |
+| CI finale sur `d6e47ee` | **Réussie** : TypeScript, lint, tests unitaires, build et **398 tests SQL réussis, aucun échec ni test ignoré** ([exécution](https://github.com/rynrzd/STUDY/actions/runs/45784102967)) |
 | `node scripts/recette-isolee/lancer.mjs --verifier` | Refus attendu : `.env.recette` absent |
 | Recette connectée, HTTP réel, huit captures | Non exécutés ; instance Supabase de test et terrain connecté nécessaires |
 | Migration sur Supabase / production | Non exécutée ; aucun déploiement |
