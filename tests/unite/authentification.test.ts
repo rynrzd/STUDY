@@ -14,6 +14,7 @@ import { randomBytes } from "node:crypto";
 
 import {
   tenterConnexion,
+  ouvrirSessionVerifiee,
   delaiApresEchecs,
   messageDeRefus,
   SEUIL_ECHECS,
@@ -140,6 +141,37 @@ class FournisseurDoublure implements FournisseurIdentite {
     throw new Error("non utilise dans ces tests");
   }
 }
+
+test("une adresse confirmée ouvre une session opaque sans redemander le mot de passe", async () => {
+  const depot = new DepotDoublure();
+  const resultat = await ouvrirSessionVerifiee(
+    IDENTITE_ACTIVE,
+    { accessToken: "acces", refreshToken: "renouvellement", expireLe: new Date("2026-12-01T12:00:00Z"), niveauAssurance: "aal1" },
+    "personnel",
+    { depot, chiffrer: chiffrerPourTest, maintenant: () => new Date("2026-11-26T12:00:00Z") },
+  );
+  assert.equal(resultat?.reussi, true);
+  assert.equal(depot.sessionsCreees.length, 1);
+  assert.equal(depot.sessionsCreees[0]?.profileId, IDENTITE_ACTIVE.profileId);
+  assert.equal(depot.sessionsCreees[0]?.scope, "etablissement");
+  assert.deepEqual(JSON.parse(dechiffrer(depot.sessionsCreees[0]!.jetonsChiffres, CLES)), {
+    access: "acces", refresh: "renouvellement", expire: "2026-12-01T12:00:00.000Z",
+  });
+  assert.ok(resultat!.jetonSession.length > 30);
+});
+
+test("une confirmation ne crée jamais de session pour un compte inactif", async () => {
+  for (const etat of ["suspendu", "sorti"] as const) {
+    const depot = new DepotDoublure();
+    const resultat = await ouvrirSessionVerifiee(
+      { ...IDENTITE_ACTIVE, accountState: etat },
+      { accessToken: "a", refreshToken: "r", expireLe: new Date(), niveauAssurance: "aal1" },
+      "personnel", { depot, chiffrer: chiffrerPourTest },
+    );
+    assert.equal(resultat, null);
+    assert.equal(depot.sessionsCreees.length, 0);
+  }
+});
 
 function options(surcharge: Partial<Parameters<typeof tenterConnexion>[0]> = {}) {
   return {

@@ -34,11 +34,11 @@ export default async function PageStudio({
         <EnTetePage sourcil="Mes cours" titre="Préparer mes séances" />
         <EtatVide
           icone={BookOpen}
-          titre="Aucun cours ne vous est affecté."
-          texte="« Mes cours » s'ouvre sur les classes et matières que l'administration de votre établissement vous a attribuées. Si cette liste est vide, c'est que l'affectation n'a pas encore été faite."
+          titre="Commencez par créer une classe."
+          texte="Un cours est lié à une classe et à une matière. Si tu viens d'ouvrir ton espace personnel, tu peux créer cette classe toi-même en quelques secondes. Si tu dépends d'un lycée, ton établissement peut aussi te l'attribuer."
           action={
-            <Link href="/professeur" className="bouton bouton-secondaire">
-              Retour à l&apos;accueil
+            <Link href="/professeur/classes" className="bouton bouton-primaire">
+              Créer ma classe
             </Link>
           }
         />

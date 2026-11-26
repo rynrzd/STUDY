@@ -46,8 +46,19 @@ export default async function PageClasses({
   if (classes.length === 0) {
     return (
       <>
-        <TitreEspace titre="Mes classes" />
-        <div className="mt-8"><FormulaireCreationClasse /></div>
+        <TitreEspace titre="On crée ta première classe ?" sousTitre="Deux informations suffisent pour commencer. Les élèves pourront être ajoutés plus tard." />
+        <div className="mt-7 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_290px]">
+          <FormulaireCreationClasse />
+          <aside className="rounded-2xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-5">
+            <h2 className="mt-0 text-base font-bold">Et après ?</h2>
+            <ol className="mb-0 grid gap-3 pl-5 text-sm leading-6 text-[color:var(--color-encre-faible)]">
+              <li>Tu retrouves ta classe dans « Mes classes ».</li>
+              <li>Tu peux préparer un cours, même sans élèves.</li>
+              <li>Quand tu es prêt, tu invites tes élèves et tu publies.</li>
+            </ol>
+          </aside>
+        </div>
+        <p className="mt-6 text-sm"><Link href="/professeur/demarrage">← Revoir le guide de démarrage</Link></p>
       </>
     );
   }
@@ -99,8 +110,16 @@ export default async function PageClasses({
               {choisie.matieres.join(" · ")}
             </p>
           </div>
+          {eleves.length === 0 ? (
+            <div className="mt-5 rounded-2xl border border-[#e7cad6] bg-[#fff3f7] p-5">
+              <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-[#874b62]">Ta prochaine étape</p>
+              <h3 className="mb-1 mt-2 text-lg font-bold text-[#44333d]">Prépare ton premier cours pour {choisie.label}.</h3>
+              <p className="mt-0 text-sm leading-6 text-[#65545e]">Tu peux rédiger une séance et la garder en brouillon. Pas besoin d&apos;avoir déjà invité les élèves.</p>
+              <Link className="bouton bouton-primaire" href="/studio">Préparer un cours</Link>
+            </div>
+          ) : null}
           <div className="mt-4 flex flex-wrap gap-3">
-            <Link className="bouton bouton-primaire" href={`/professeur/classes/importer?classe=${choisie.id}`}>Importer des élèves</Link>
+            <Link className="bouton bouton-secondaire" href={`/professeur/classes/importer?classe=${choisie.id}`}>Importer des élèves</Link>
             <Link className="bouton bouton-secondaire" href={`/app/classes/${choisie.id}/membres`}>Invitations et demandes</Link>
           </div>
 
