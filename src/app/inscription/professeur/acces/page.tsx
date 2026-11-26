@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CadreConnexion } from "@/components/study/connexion/CadreConnexion";
 import { pagePrivee } from "@/lib/metadonnees";
-import { DemandeLien, UtiliserLien } from "../AccesCourriel";
+import { DemandeLien, UtiliserCode, UtiliserLien } from "../AccesCourriel";
 
 export const metadata = {
   ...pagePrivee({ titre: "Accès professeur", description: "Confirmer ou récupérer son compte professeur AvecStudy." }),
@@ -13,10 +13,12 @@ export default async function PageAccesProfesseur({ searchParams }: {
 }) {
   const { mode: demande, token_hash: jeton } = await searchParams;
   const mode = demande === "confirmation" ? "confirmation" : "recuperation";
+  const ancienLien = typeof jeton === "string" && /^[a-zA-Z0-9_-]{20,200}$/u.test(jeton);
   return (
     <CadreConnexion titre={mode === "confirmation" ? "Confirme ton adresse e-mail." : "Récupère ton compte professeur."}>
-      {typeof jeton === "string" && /^[a-zA-Z0-9_-]{20,200}$/u.test(jeton) ? <UtiliserLien mode={mode} jeton={jeton} /> : null}
-      {jeton ? <p className="mt-6">Besoin d’un nouveau lien ?</p> : null}
+      {ancienLien ? <UtiliserLien mode={mode} jeton={jeton} /> : null}
+      {mode === "confirmation" && !ancienLien ? <UtiliserCode /> : null}
+      {jeton ? <p className="mt-6">Besoin d’un nouveau {mode === "confirmation" ? "code" : "lien"} ?</p> : null}
       <DemandeLien mode={mode} />
       <div className="mt-5 grid gap-3">
         <Link href="/connexion">Revenir à la connexion</Link>
