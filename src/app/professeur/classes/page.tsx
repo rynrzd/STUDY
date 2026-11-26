@@ -57,7 +57,7 @@ export default async function PageClasses({
         <div className="mt-7"><EnseignementsSouhaites projet={projet} classes={classes} creationAutonome={creationAutonome} /></div>
         {creationAutonome ? (
         <div className="mt-7 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_290px]">
-          <FormulaireCreationClasse />
+          <FormulaireCreationClasse classesExistantes={classes} />
           <aside className="rounded-2xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-5">
             <h2 className="mt-0 text-base font-bold">Et après ?</h2>
             <ol className="mb-0 grid gap-3 pl-5 text-sm leading-6 text-[color:var(--color-encre-faible)]">
@@ -92,7 +92,7 @@ export default async function PageClasses({
         <details className="mt-3 rounded-xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-5">
           <summary className="cursor-pointer font-bold text-[color:var(--color-accent)]">Ajouter une classe ou une nouvelle matière</summary>
           <p className="mt-4 text-sm text-[color:var(--color-encre-faible)]">Tu peux ajouter une matière à une classe existante en indiquant exactement le même nom de classe.</p>
-          <FormulaireCreationClasse />
+          <FormulaireCreationClasse classesExistantes={classes} />
         </details>
       ) : null}
 
