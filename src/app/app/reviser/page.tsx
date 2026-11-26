@@ -9,6 +9,8 @@ import { revisionsDesDevoirs } from "@/lib/revision/devoirs";
 import { entrainementsParMatiere } from "@/lib/revision/entrainements-matieres";
 import { lancerEntrainement, lancerRevisionDevoir } from "./actions";
 import { coursDeLEleve } from "@/lib/espace-eleve";
+import { EnTetePage, ICONE } from "@/components/study/ui";
+import { LifeBuoy, NotebookText } from "lucide-react";
 
 export const metadata = { title: "Réviser" };
 export const dynamic = "force-dynamic";
@@ -32,7 +34,17 @@ export default async function PageReviser({ searchParams }: { searchParams: Prom
 
   const recommandation = recommandations?.find(r => r.versions.length > 0);
   const entrainements = entrainementsParMatiere(matieres, priorites.suggestions, recommandations ?? []);
-  return <>
+  return <div className="mx-auto max-w-[1100px]">
+    <EnTetePage
+      sourcil="Réviser"
+      titre="Qu'est-ce que tu veux travailler ?"
+      sousTitre="Choisis ta matière, puis avance avec les exercices de tes professeurs."
+      actions={<>
+        <Link href="/app/erreurs" className="bouton bouton-secondaire"><NotebookText {...ICONE} /> Carnet d&apos;erreurs</Link>
+        <Link href="/app/aide" className="bouton bouton-secondaire"><LifeBuoy {...ICONE} /> Besoin d&apos;aide</Link>
+      </>}
+    />
+    {erreur ? <p role="alert" className="mb-4 rounded-xl bg-[color:var(--color-erreur-fond)] p-4 text-[color:var(--color-erreur)]">{erreur === "aucun-exercice" ? "Aucun exercice disponible pour cet entraînement." : "L'entraînement n'a pas pu être ouvert."}</p> : null}
     {recommandations === null ? <p role="status">Les révisions liées aux devoirs sont momentanément indisponibles. Tes cours restent accessibles.</p> : null}
     {recommandation ? <section className="panneau mb-6" aria-label="Préparer mon devoir">
       <h2 className="titre-section">Préparer {recommandation.titre}</h2>
@@ -76,6 +88,6 @@ export default async function PageReviser({ searchParams }: { searchParams: Prom
         </li>)}
       </ul>
     </section>
-    <VueReviser erreur={erreur} fiches={fiches} priorites={priorites} progression={progression} semaine={semaine} />
-  </>;
+    <VueReviser afficherEntete={false} fiches={fiches} priorites={priorites} progression={progression} semaine={semaine} />
+  </div>;
 }

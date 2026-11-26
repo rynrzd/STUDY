@@ -23,16 +23,18 @@ export function VueReviser({
   priorites,
   progression,
   semaine = null,
+  afficherEntete = true,
 }: {
   erreur?: string;
   fiches: Awaited<ReturnType<typeof mesFiches>>;
   priorites: Awaited<ReturnType<typeof suggestionsDeRevision>>;
   progression: readonly MatiereSuivie[] | null;
   semaine?: Semaine | null;
+  afficherEntete?: boolean;
 }) {
   return (
     <div className="mx-auto max-w-[1100px]">
-      <EnTetePage
+      {afficherEntete ? <EnTetePage
         sourcil="Réviser"
         titre="Un peu chaque jour."
         sousTitre="Des fiches tirées de tes cours, les exercices de tes professeurs et ton carnet d'erreurs."
@@ -46,7 +48,7 @@ export function VueReviser({
             </Link>
           </>
         }
-      />
+      /> : null}
       {erreur ? (
         <p role="alert" className="mb-4 rounded-[var(--rayon-m)] bg-[color:var(--color-erreur-fond)] p-3 text-[color:var(--color-erreur)]">
           {erreur === "aucun-exercice" ? "Aucun exercice disponible pour cet entraînement." : "L'entraînement n'a pas pu être ouvert."}
