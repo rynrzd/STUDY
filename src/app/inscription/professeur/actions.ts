@@ -9,6 +9,7 @@ import { chiffrer, lireCles } from "@/lib/chiffrement";
 import { lireGroupe } from "@/lib/config";
 import { DepotSupabase, DepotSupabaseDirect } from "@/lib/depot-authentification";
 import { controlerMotDePasse, MESSAGES_MOT_DE_PASSE } from "@/lib/mot-de-passe";
+import { dedoublonnerEnseignements, MAX_ENSEIGNEMENTS_SOUHAITES, schemaProjetProfesseur } from "@/lib/projet-professeur";
 import { schemaConfirmationProfesseur } from "@/lib/confirmation-professeur";
 import { cookieSession, empreinteJeton, NOM_COOKIE_SESSION } from "@/lib/session";
 import { baseConfiguree, clientAuthentification, clientExploitation } from "@/lib/supabase-serveur";
@@ -25,6 +26,7 @@ export async function inscrireProfesseur(_precedent: EtatInscriptionProfesseur, 
     prenom: String(donnees.get("prenom") ?? "").slice(0, 80),
     nom: String(donnees.get("nom") ?? "").slice(0, 80),
     email: String(donnees.get("email") ?? "").slice(0, 180).toLowerCase(),
+    etablissement: String(donnees.get("etablissement") ?? "").slice(0, 121),
   };
   const motDePasse = String(donnees.get("motDePasse") ?? "").slice(0, 200);
   const confirmation = String(donnees.get("confirmation") ?? "").slice(0, 200);
@@ -35,7 +37,19 @@ export async function inscrireProfesseur(_precedent: EtatInscriptionProfesseur, 
   }
   const controle = controlerMotDePasse({ nouveau: motDePasse, confirmation });
   if (!controle.accepte && controle.motif) champs[controle.motif === "confirmation_differente" ? "confirmation" : "motDePasse"] = MESSAGES_MOT_DE_PASSE[controle.motif];
-  if (Object.keys(champs).length > 0) return { etat: "refus", message: "Vérifie les champs indiqués.", champs, valeurs };
+  const classes = donnees.getAll("classeSouhaitee");
+  const matieres = donnees.getAll("matiereSouhaitee");
+  const incomplet = classes.some((classe, i) =>
+    (String(classe).trim() === "") !== (String(matieres[i] ?? "").trim() === ""));
+  const projet = schemaProjetProfesseur.safeParse({
+    etablissement: valeurs.etablissement,
+    enseignements: classes.map((classe, i) => ({ classe: String(classe), matiere: String(matieres[i] ?? "") }))
+      .filter(({ classe, matiere }) => classe.trim() !== "" || matiere.trim() !== ""),
+  });
+  if (classes.length !== matieres.length || classes.length > MAX_ENSEIGNEMENTS_SOUHAITES || incomplet || !projet.success) {
+    champs.projet = "Complète la classe ET la matière de chaque ligne, ou laisse les deux vides pour choisir plus tard.";
+  }
+  if (!projet.success || Object.keys(champs).length > 0) return { etat: "refus", message: "Vérifie les champs indiqués.", champs, valeurs };
   if (!baseConfiguree()) return { etat: "refus", message: "Le service de création de compte est momentanément indisponible.", valeurs };
 
   const email = valeurs.email.trim();
@@ -45,7 +59,13 @@ export async function inscrireProfesseur(_precedent: EtatInscriptionProfesseur, 
     password: motDePasse,
     options: {
       emailRedirectTo: adresseAcces("confirmation"),
-      data: { prenom_avecstudy: valeurs.prenom.trim(), nom_avecstudy: valeurs.nom.trim() },
+      data: {
+        prenom_avecstudy: valeurs.prenom.trim(),
+        nom_avecstudy: valeurs.nom.trim(),
+        etablissement_enseigne_avecstudy: projet.data.etablissement,
+        // Souhaits uniquement : jamais utilisés comme preuve d'appartenance au lycée.
+        enseignements_souhaites_avecstudy: dedoublonnerEnseignements(projet.data.enseignements),
+      },
     },
   });
   const attente: EtatInscriptionProfesseur = {

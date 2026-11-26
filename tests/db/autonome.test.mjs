@@ -23,6 +23,15 @@ test("AUT-03 — un nouveau professeur possède un brouillon privé avant sa pre
   assert.deepEqual(await lirePour(db, ACTEURS.profAutre, "select id from study.studio_documents where id=$1", [document.id]), []);
   const [creation] = await lirePour(db, profile, "select * from study.classe_autonome_creer($1,'STI2D','Français')", [org]);
   assert.ok(creation.espace);
+  const [autreMatiere] = await lirePour(db, profile, "select * from study.classe_autonome_creer($1,'STI2D','Mathématiques')", [org]);
+  const [autreClasse] = await lirePour(db, profile, "select * from study.classe_autonome_creer($1,'Première générale','Français')", [org]);
+  const [memeCours] = await lirePour(db, profile, "select * from study.classe_autonome_creer($1,'STI2D','Français')", [org]);
+  assert.equal(autreMatiere.classe, creation.classe, "une nouvelle matière réutilise la classe existante");
+  assert.notEqual(autreMatiere.espace, creation.espace, "chaque matière garde son espace");
+  assert.notEqual(autreClasse.classe, creation.classe, "deux classes restent distinctes");
+  assert.equal(memeCours.espace, creation.espace, "recréer une même paire ne la duplique pas");
+  const { rows: [{ n }] } = await db.query("select count(*)::int n from study.classes where organization_id=$1", [org]);
+  assert.equal(n, 2, "les deux classes sont conservées");
   assert.deepEqual(await lirePour(db, profile, "select id from study.studio_documents where id=$1", [document.id]), [document]);
 });
 

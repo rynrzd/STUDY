@@ -4,12 +4,15 @@ import { redirect } from "next/navigation";
 import { TitreEspace } from "@/components/app/Cadre";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { coursDuProfesseur } from "@/lib/studio";
+import { clientUtilisateur } from "@/lib/supabase-serveur";
+import { projetDuProfesseur } from "@/lib/projet-professeur-serveur";
 import {
   classesDuProfesseur,
   effectifsParClasse,
   elevesDeLaClasse,
 } from "@/lib/espace-professeur";
 import { FormulaireCreationClasse } from "./FormulaireCreation";
+import { EnseignementsSouhaites } from "./EnseignementsSouhaites";
 
 export const metadata: Metadata = { title: "Mes classes" };
 
@@ -38,15 +41,21 @@ export default async function PageClasses({
   if (jeton === null) redirect("/connexion");
 
   const cours = await coursDuProfesseur(jeton);
-  const [classes, effectifs] = await Promise.all([
+  const [classes, effectifs, projet, organisation] = await Promise.all([
     classesDuProfesseur(jeton, cours),
     effectifsParClasse(jeton),
+    projetDuProfesseur(jeton),
+    personne.organizationId ? clientUtilisateur(jeton).from("organizations")
+      .select("autonome").eq("id", personne.organizationId).maybeSingle() : Promise.resolve({ data: null }),
   ]);
+  const creationAutonome = organisation.data?.autonome === true;
 
   if (classes.length === 0) {
     return (
       <>
-        <TitreEspace titre="On crée ta première classe ?" sousTitre="Deux informations suffisent pour commencer. Les élèves pourront être ajoutés plus tard." />
+        <TitreEspace titre={creationAutonome ? "On crée ta première classe ?" : "Tes classes et tes matières"} sousTitre={creationAutonome ? "Choisis parmi les classes indiquées à l'inscription, ou ajoutes-en une nouvelle." : "Les classes de ton établissement doivent être ouvertes par un responsable habilité."} />
+        <div className="mt-7"><EnseignementsSouhaites projet={projet} classes={classes} creationAutonome={creationAutonome} /></div>
+        {creationAutonome ? (
         <div className="mt-7 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_290px]">
           <FormulaireCreationClasse />
           <aside className="rounded-2xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-5">
@@ -58,6 +67,9 @@ export default async function PageClasses({
             </ol>
           </aside>
         </div>
+        ) : (
+          <p className="mt-7 text-sm text-[color:var(--color-encre-faible)]">Tu as reçu un code pour rejoindre une classe existante ? <Link href="/rejoindre">Demander l&apos;accès à cette classe</Link>.</p>
+        )}
         <p className="mt-6 text-sm"><Link href="/professeur/demarrage">← Revoir le guide de démarrage</Link></p>
       </>
     );
@@ -73,6 +85,16 @@ export default async function PageClasses({
         titre="Mes classes"
         sousTitre={`${classes.length} classe${classes.length > 1 ? "s" : ""}`}
       />
+
+      <div className="mt-6"><EnseignementsSouhaites projet={projet} classes={classes} creationAutonome={creationAutonome} /></div>
+
+      {creationAutonome ? (
+        <details className="mt-3 rounded-xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-5">
+          <summary className="cursor-pointer font-bold text-[color:var(--color-accent)]">Ajouter une classe ou une nouvelle matière</summary>
+          <p className="mt-4 text-sm text-[color:var(--color-encre-faible)]">Tu peux ajouter une matière à une classe existante en indiquant exactement le même nom de classe.</p>
+          <FormulaireCreationClasse />
+        </details>
+      ) : null}
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start">
         <nav aria-label="Mes classes">
