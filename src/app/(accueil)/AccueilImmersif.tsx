@@ -31,27 +31,63 @@ function ExerciceInteractif({ exercice, suivant }: {
   suivant?: () => void;
 }) {
   const [choix, setChoix] = useState("");
+  const [saisie, setSaisie] = useState("");
+  const [ordre, setOrdre] = useState<number[]>([]);
   const [indice, setIndice] = useState(false);
-  const solution = choix === exercice.bonneReponse;
+  const mots = exercice.mots ?? [];
+  const phrase = ordre.map((index) => mots[index]).join(" ");
+  const reponse = exercice.format === "ordre" ? phrase : choix;
+  const tentativeComplete = exercice.format === "ordre" ? ordre.length === mots.length : choix !== "";
+  const solution = tentativeComplete && reponse === exercice.bonneReponse;
+  const incorrecte = tentativeComplete && !solution;
 
   return (
     <section className={s.exercice} data-extrait={exercice.extrait ? "" : undefined} aria-labelledby="question-exercice">
       {exercice.figure === "triangle" && <Triangle solution={solution} />}
       {exercice.extrait && <blockquote className={s.extrait}>{exercice.extrait}</blockquote>}
       <h2 id="question-exercice">{exercice.question}</h2>
-      <div className={s.reponses} role="group" aria-labelledby="question-exercice">
-        {exercice.choix.map((option) => (
-          <button key={option} type="button" aria-pressed={choix === option} onClick={() => setChoix(option)}>
-            {option}
-          </button>
-        ))}
-      </div>
+      {exercice.format === "ordre" ? (
+        <div className={s.reconstituer}>
+          <p className={s.aideExercice}>Touche les mots dans le bon ordre. Tu peux en retirer un pour corriger ta phrase.</p>
+          <div className={s.phrase} role="group" aria-label="Ta phrase en anglais">
+            {ordre.length === 0 ? <span className={s.emplacementVide}>Ta phrase apparaîtra ici…</span> : ordre.map((index, position) => (
+              <button key={index} type="button" onClick={() => setOrdre((actuel) => actuel.filter((_, i) => i !== position))} aria-label={`Retirer ${mots[index]} de ta phrase`} title="Retirer ce mot">
+                {mots[index]} <span aria-hidden="true">×</span>
+              </button>
+            ))}
+          </div>
+          <div className={s.reponses} role="group" aria-label="Mots à placer">
+            {mots.map((mot, index) => (
+              <button key={index} type="button" disabled={ordre.includes(index)} onClick={() => setOrdre((actuel) => [...actuel, index])}>
+                {mot}
+              </button>
+            ))}
+          </div>
+          {ordre.length > 0 && !solution ? <button className={s.recommencer} type="button" onClick={() => setOrdre([])}>Recommencer</button> : null}
+        </div>
+      ) : exercice.format === "numerique" ? (
+        <form className={s.reponseNombre} onSubmit={(event) => { event.preventDefault(); setChoix(saisie.trim().replace(",", ".")); }}>
+          <label htmlFor="nombre-exercice">Ta réponse</label>
+          <div>
+            <input id="nombre-exercice" type="text" inputMode="decimal" required autoComplete="off" value={saisie} onChange={(event) => { setSaisie(event.target.value); setChoix(""); }} placeholder="Ex. 7" />
+            <button type="submit">Vérifier</button>
+          </div>
+        </form>
+      ) : (
+        <div className={s.reponses} role="group" aria-labelledby="question-exercice">
+          {exercice.choix.map((option) => (
+            <button key={option} type="button" aria-pressed={choix === option} onClick={() => setChoix(option)}>
+              {option}
+            </button>
+          ))}
+        </div>
+      )}
       <div className={s.retour} aria-live="polite">
         {solution ? (
           <p><Check size={19} aria-hidden="true" />{exercice.explication}</p>
         ) : (
           <>
-            {choix && <p>Essaie encore, tu peux prendre un indice.</p>}
+            {incorrecte && <p>Pas encore. Essaie à nouveau, ou prends un indice.</p>}
             {indice && <p>{exercice.indice}</p>}
           </>
         )}

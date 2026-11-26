@@ -11,6 +11,7 @@ import type { LienEspace } from "./Cadre";
 
 export const LIENS_PROFESSEUR: readonly LienEspace[] = [
   { href: "/professeur", libelle: "Accueil" },
+  { href: "/professeur/demarrage", libelle: "Bien démarrer" },
   { href: "/professeur/classes", libelle: "Mes classes" },
   // « Mes cours » ouvre les chapitres et séances ; « Studio » ouvre l'import
   // d'un document existant. Deux gestes distincts, deux entrées distinctes.

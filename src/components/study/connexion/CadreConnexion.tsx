@@ -19,14 +19,26 @@ export function CadreConnexion({
   sousTitre,
   children,
   etapeMobile,
+  publicCible = "eleve",
 }: {
   etapeMobile?: 1 | 2;
+  publicCible?: "eleve" | "professeur";
   titre: string;
   sousTitre?: React.ReactNode;
   children: React.ReactNode;
   /** Accepté pour compatibilité ; le panneau R2 a un texte fixe. */
   visuel?: string;
 }) {
+  const professeur = publicCible === "professeur";
+  const points = professeur ? [
+    { icone: Users, titre: "Mes classes", texte: "Crée une classe en indiquant simplement son nom et ta matière." },
+    { icone: BookOpen, titre: "Mes cours", texte: "Prépare une séance ou importe tes documents, à ton rythme." },
+    { icone: MessagesSquare, titre: "Mes élèves", texte: "Invite-les quand tu es prêt et partage tes cours." },
+  ] : [
+    { icone: BookOpen, titre: "Cours", texte: "Les séances et documents de tes professeurs." },
+    { icone: CalendarCheck, titre: "Travail", texte: "Ce qui est à faire, et pour quand." },
+    { icone: MessagesSquare, titre: "Échanges", texte: "Le salon de ta classe, avec ton professeur." },
+  ];
   return (
     <ConteneurEffets>
       <div className={`sans-debordement min-h-dvh bg-[color:var(--color-fond)] ${etapeMobile ? m.root : ""}`} data-etape={etapeMobile}>
@@ -38,13 +50,9 @@ export function CadreConnexion({
         </header>
         <div className="mx-auto grid w-full max-w-[1200px] gap-10 px-5 pb-[max(40px,env(safe-area-inset-bottom))] sm:px-8 lg:grid-cols-[2fr_3fr] lg:items-center lg:gap-16 lg:py-10">
           <aside className="hidden rounded-[var(--radius-grand)] bg-[color:var(--color-rose-clair)] p-12 lg:block" aria-label="Study en bref">
-            <p className="m-0 text-[2.75rem] font-extrabold leading-[1.08] tracking-[-0.045em]">Ta classe commence ici.</p>
+            <p className="m-0 text-[2.75rem] font-extrabold leading-[1.08] tracking-[-0.045em]">{professeur ? "Tes idées méritent une belle classe." : "Ta classe commence ici."}</p>
             <ul className="m-0 mt-10 grid list-none gap-6 p-0">
-              {[
-                { icone: BookOpen, titre: "Cours", texte: "Les séances et documents de tes professeurs." },
-                { icone: CalendarCheck, titre: "Travail", texte: "Ce qui est à faire, et pour quand." },
-                { icone: MessagesSquare, titre: "Échanges", texte: "Le salon de ta classe, avec ton professeur." },
-              ].map((l) => (
+              {points.map((l) => (
                 <li key={l.titre} className="flex items-start gap-4">
                   <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[var(--rayon-m)] bg-[color:var(--color-surface)] text-[color:var(--color-accent)]">
                     <l.icone size={22} strokeWidth={1.75} aria-hidden="true" />

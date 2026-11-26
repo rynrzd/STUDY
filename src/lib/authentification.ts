@@ -1,4 +1,4 @@
-import type { FournisseurIdentite, NiveauAssurance } from "./identite.ts";
+import type { FournisseurIdentite, JetonsFournisseur, NiveauAssurance } from "./identite.ts";
 import {
   calculerEcheances,
   dureesPour,
@@ -177,6 +177,57 @@ export interface DependancesConnexion {
 }
 
 /**
+ * Ouvre notre session HttpOnly depuis une authentification déjà effectuée par
+ * le fournisseur (p. ex. vérification d'un code e-mail). Le profil et son
+ * établissement doivent avoir été résolus depuis la base, jamais depuis le
+ * navigateur ou les métadonnées du jeton.
+ */
+export async function ouvrirSessionVerifiee(
+  identite: IdentiteResolue,
+  jetons: JetonsFournisseur,
+  appareil: TypeAppareil,
+  dependances: Pick<DependancesConnexion, "depot" | "chiffrer" | "maintenant">,
+): Promise<Succes | null> {
+  if (identite.membershipState !== "active" ||
+      (identite.accountState !== "actif" && identite.accountState !== "a_activer")) {
+    return null;
+  }
+
+  const maintenant = dependances.maintenant?.() ?? new Date();
+  const portee: PorteeSession = identite.mustChangePassword
+    ? "activation"
+    : (identite.portee ?? "etablissement");
+  const durees = dureesPour({ portee, appareil, administratif: identite.mfaObligatoire });
+  const echeances = calculerEcheances(durees, maintenant);
+  const jetonSession = genererJetonSession();
+
+  await dependances.depot.creerSession({
+    profileId: identite.profileId,
+    organizationId: identite.organizationId,
+    tokenSha256: empreinteJeton(jetonSession),
+    scope: portee,
+    deviceKind: appareil,
+    niveauAssurance: jetons.niveauAssurance,
+    idleExpiresAt: echeances.idleExpiresAt,
+    absoluteExpiresAt: echeances.absoluteExpiresAt,
+    jetonsChiffres: dependances.chiffrer(JSON.stringify({
+      access: jetons.accessToken,
+      refresh: jetons.refreshToken,
+      expire: jetons.expireLe.toISOString(),
+    })),
+  });
+
+  return {
+    reussi: true,
+    profileId: identite.profileId,
+    jetonSession,
+    portee,
+    activationRequise: identite.mustChangePassword,
+    dureeSecondes: Math.floor((echeances.absoluteExpiresAt.getTime() - maintenant.getTime()) / 1000),
+  };
+}
+
+/**
  * Tente une connexion.
  *
  * L'ordre des opérations est choisi pour ne rien révéler :
@@ -250,50 +301,11 @@ export async function tenterConnexion(
     return REFUS_GENERIQUE;
   }
 
-  // Activation : tant que le mot de passe doit être changé, la session n'ouvre
-  // que l'activation. Aucune donnée pédagogique n'est atteignable — c'est
-  // garanti une seconde fois par les politiques RLS (test T07).
-  const portee: PorteeSession = identite.mustChangePassword
-    ? "activation"
-    : (identite.portee ?? "etablissement");
-
-  const durees = dureesPour({
-    portee,
-    appareil: options.appareil,
-    administratif: identite.mfaObligatoire,
-  });
-  const echeances = calculerEcheances(durees, maintenant);
-
-  const jetonSession = genererJetonSession();
-
-  await depot.creerSession({
-    profileId: identite.profileId,
-    organizationId: identite.organizationId,
-    tokenSha256: empreinteJeton(jetonSession),
-    scope: portee,
-    deviceKind: options.appareil,
-    // Le niveau d'assurance vient du fournisseur, pour CETTE session. Un compte
-    // « MFA activée » qui n'a pas passé son second facteur reste en aal1.
-    niveauAssurance: verification.jetons.niveauAssurance,
-    idleExpiresAt: echeances.idleExpiresAt,
-    absoluteExpiresAt: echeances.absoluteExpiresAt,
-    jetonsChiffres: chiffrer(
-      JSON.stringify({
-        access: verification.jetons.accessToken,
-        refresh: verification.jetons.refreshToken,
-        expire: verification.jetons.expireLe.toISOString(),
-      }),
-    ),
-  });
-
-  return {
-    reussi: true,
-    profileId: identite.profileId,
-    jetonSession,
-    portee,
-    activationRequise: identite.mustChangePassword,
-    dureeSecondes: Math.floor((echeances.absoluteExpiresAt.getTime() - maintenant.getTime()) / 1000),
-  };
+  // Le mot de passe a été vérifié. Même chemin de création de session que
+  // lorsqu'une preuve d'identité vient d'un code e-mail Supabase.
+  return (await ouvrirSessionVerifiee(identite, verification.jetons, options.appareil, {
+    depot, chiffrer, maintenant: () => maintenant,
+  })) ?? REFUS_GENERIQUE;
 }
 
 /**

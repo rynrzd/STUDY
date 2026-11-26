@@ -26,6 +26,12 @@ export interface DonneesAtelier {
 }
 
 const ETAPES = ["Objectif", "Sources datées", "Consignes", "Corrigé et publication"] as const;
+const AIDES_ETAPES = [
+  "Choisis une classe et la question que tes élèves vont explorer.",
+  "Ajoute les documents qui serviront de preuves. Tu pourras les relire avant de publier.",
+  "Explique ce que les élèves devront faire à partir des documents.",
+  "Vérifie ton atelier, puis enregistre-le ou publie-le quand il sera prêt.",
+] as const;
 
 /**
  * T05 — Assistant d'atelier en quatre étapes. Le brouillon est enregistré à
@@ -42,7 +48,14 @@ export function AssistantAtelier({ etape, donnees, espaces }: { etape: number; d
 
   return (
     <div className="grid gap-6">
-      <ol className="m-0 grid list-none gap-2 p-0 sm:grid-cols-4" aria-label="Étapes de l'assistant">
+      <div className="rounded-xl border border-[color:var(--color-bordure)] bg-white p-4 sm:hidden" role="status">
+        <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--color-accent)]">Étape {etape} sur 4</p>
+        <p className="m-0 mt-1 font-bold">{ETAPES[etape - 1]}</p>
+        <div className="mt-3 grid grid-cols-4 gap-1.5" aria-hidden="true">
+          {ETAPES.map((libelle, i) => <span key={libelle} className={`h-1.5 rounded-full ${i < etape ? "bg-[color:var(--color-accent)]" : "bg-[color:var(--color-bordure)]"}`} />)}
+        </div>
+      </div>
+      <ol className="m-0 hidden list-none gap-2 p-0 sm:grid sm:grid-cols-4" aria-label="Étapes de l'assistant">
         {ETAPES.map((libelle, i) => {
           const n = i + 1;
           const courant = n === etape;
@@ -69,7 +82,8 @@ export function AssistantAtelier({ etape, donnees, espaces }: { etape: number; d
         })}
       </ol>
 
-      <form action={action} noValidate className="panneau">
+      <form action={action} noValidate className="panneau min-w-0 p-4 sm:p-6">
+        <p className="m-0 mb-5 text-sm leading-6 text-[color:var(--color-encre-faible)]">{AIDES_ETAPES[etape - 1]}</p>
         <RetourFormulaire etat={etat} />
         {etape === 1 ? (
           <>
@@ -165,20 +179,20 @@ export function AssistantAtelier({ etape, donnees, espaces }: { etape: number; d
           </>
         ) : null}
 
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           {etape > 1 && lienEtape(etape - 1) ? (
-            <Link href={lienEtape(etape - 1)!} className="bouton bouton-discret">
+            <Link href={lienEtape(etape - 1)!} className="bouton bouton-discret w-full sm:w-auto">
               Étape précédente
             </Link>
           ) : null}
           {etape < 4 ? (
-            <BoutonEnvoi enCours="Enregistrement…">Enregistrer et continuer</BoutonEnvoi>
+            <BoutonEnvoi enCours="Enregistrement…" className="w-full sm:w-auto">Enregistrer et continuer</BoutonEnvoi>
           ) : (
             <>
-              <BoutonEnvoi variante="secondaire" enCours="Enregistrement…" name="intention" value="brouillon">
+              <BoutonEnvoi variante="secondaire" enCours="Enregistrement…" name="intention" value="brouillon" className="w-full sm:w-auto">
                 Enregistrer le brouillon
               </BoutonEnvoi>
-              <BoutonEnvoi enCours="Publication…" name="intention" value="publier">
+              <BoutonEnvoi enCours="Publication…" name="intention" value="publier" className="w-full sm:w-auto">
                 Publier l&apos;atelier
               </BoutonEnvoi>
             </>

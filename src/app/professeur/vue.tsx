@@ -5,11 +5,13 @@ import type { devoirsDuProfesseur, seancesDuProfesseur } from "@/lib/espace-prof
 import { echeanceLisible } from "@/lib/echeances";
 import type { agenda } from "@/lib/v6/eleve";
 import type { tableauProfesseur } from "@/lib/v6/professeur";
+import { BandeauPremiersPas } from "./GuideDemarrage";
 
 /** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
-export function VueAccueilProfesseur({ prenom, organisation, tableau, priorites, semaine, questions, aujourdhui, libelles, brouillons, devoirsOuverts, publiees }: {
+export function VueAccueilProfesseur({ prenom, organisation, cours = [], tableau, priorites, semaine, questions, aujourdhui, libelles, brouillons, devoirsOuverts, publiees }: {
   prenom: string;
   organisation: string | null;
+  cours?: readonly { id: string; libelle: string }[];
   tableau: Awaited<ReturnType<typeof tableauProfesseur>>;
   priorites: readonly { libelle: string; detail: string; n: number; href: string; icone: LucideIcon }[];
   semaine: Awaited<ReturnType<typeof agenda>>;
@@ -21,6 +23,9 @@ export function VueAccueilProfesseur({ prenom, organisation, tableau, priorites,
   publiees: Awaited<ReturnType<typeof seancesDuProfesseur>>;
 }) {
   const etat = (publiee: boolean) => <Etiquette ton={publiee ? "succes" : "attention"}>{publiee ? "Publiée" : "Brouillon"}</Etiquette>;
+  const aUneSeance = brouillons.length > 0 || publiees.length > 0;
+  const activite = aUneSeance || devoirsOuverts.length > 0 || aujourdhui.length > 0 ||
+    priorites.some((priorite) => priorite.n > 0) || (semaine?.length ?? 0) > 0;
   return (
     <>
       <EnTetePage
@@ -29,10 +34,24 @@ export function VueAccueilProfesseur({ prenom, organisation, tableau, priorites,
         sousTitre="Ce qui attend une réponse, ce qui reste à préparer."
         actions={
           <Link href="/studio" className="bouton bouton-primaire">
-            <Plus {...ICONE} /> Préparer une séance
+            <Plus {...ICONE} /> Préparer un cours
           </Link>
         }
       />
+
+      {!publiees.length ? <BandeauPremiersPas aUneSeance={aUneSeance} /> : null}
+
+      {cours.length > 0 ? (
+        <section aria-label="Accès à mes classes" className="mb-6 flex flex-wrap items-center gap-2.5">
+          <span className="mr-1 text-sm font-semibold text-[color:var(--color-encre-faible)]">Mes classes</span>
+          {cours.map((cours) => (
+            <Link key={cours.id} href={`/professeur/classes`} className="inline-flex min-h-10 items-center rounded-full border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] px-4 text-sm font-semibold text-[color:var(--color-encre)] no-underline hover:border-[color:var(--color-accent)]">
+              {cours.libelle}
+            </Link>
+          ))}
+          <Link href="/professeur/classes" className="ml-1 text-sm font-bold text-[color:var(--color-accent)]">Gérer mes classes</Link>
+        </section>
+      ) : null}
 
       {tableau.erreur ? (
         <p role="alert" className="m-0 mb-6 text-[color:var(--color-erreur)]">
@@ -67,8 +86,9 @@ export function VueAccueilProfesseur({ prenom, organisation, tableau, priorites,
         </ul>
       </section>
 
-      {/* Bento : la priorité en grande carte, le reste autour, chaque classe en tuile. */}
-      <div className="bento">
+      {/* Les statistiques n'arrivent qu'après la première activité : à ce
+          stade, des colonnes de zéros n'aident pas le professeur à démarrer. */}
+      {activite ? <div className="bento">
         <section aria-labelledby="priorites" className="bento-carte lg-7 md-6">
           <h2 id="priorites" className="bento-titre">
             À traiter en priorité
@@ -196,7 +216,16 @@ export function VueAccueilProfesseur({ prenom, organisation, tableau, priorites,
             </ListeLignes>
           )}
         </section>
-      </div>
+      </div> : (
+        <div className="rounded-2xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-6 sm:p-8">
+          <h2 className="m-0 text-lg font-bold">Tout est prêt pour ton premier cours.</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[color:var(--color-encre-faible)]">
+            Dès que tu auras préparé une séance ou donné un devoir, tu retrouveras ici tes brouillons,
+            les prochaines dates et les réponses de tes élèves. Pour l&apos;instant, pas besoin de surveiller des chiffres.
+          </p>
+          <Link href="/professeur/demarrage" className="font-bold text-[color:var(--color-accent)]">Revoir les étapes pour bien commencer</Link>
+        </div>
+      )}
     </>
   );
 }

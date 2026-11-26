@@ -1,12 +1,17 @@
 "use server";
 
 import { z } from "zod";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import type { User } from "@supabase/supabase-js";
+import type { Session, User } from "@supabase/supabase-js";
+import { ouvrirSessionVerifiee } from "@/lib/authentification";
+import { chiffrer, lireCles } from "@/lib/chiffrement";
 import { lireGroupe } from "@/lib/config";
-import { DepotSupabase } from "@/lib/depot-authentification";
+import { DepotSupabase, DepotSupabaseDirect } from "@/lib/depot-authentification";
 import { controlerMotDePasse, MESSAGES_MOT_DE_PASSE } from "@/lib/mot-de-passe";
+import { dedoublonnerEnseignements, MAX_ENSEIGNEMENTS_SOUHAITES, schemaProjetProfesseur } from "@/lib/projet-professeur";
 import { schemaConfirmationProfesseur } from "@/lib/confirmation-professeur";
+import { cookieSession, empreinteJeton, NOM_COOKIE_SESSION } from "@/lib/session";
 import { baseConfiguree, clientAuthentification, clientExploitation } from "@/lib/supabase-serveur";
 import type { EtatInscriptionProfesseur } from "./etats";
 
@@ -21,6 +26,7 @@ export async function inscrireProfesseur(_precedent: EtatInscriptionProfesseur, 
     prenom: String(donnees.get("prenom") ?? "").slice(0, 80),
     nom: String(donnees.get("nom") ?? "").slice(0, 80),
     email: String(donnees.get("email") ?? "").slice(0, 180).toLowerCase(),
+    etablissement: String(donnees.get("etablissement") ?? "").slice(0, 121),
   };
   const motDePasse = String(donnees.get("motDePasse") ?? "").slice(0, 200);
   const confirmation = String(donnees.get("confirmation") ?? "").slice(0, 200);
@@ -31,7 +37,19 @@ export async function inscrireProfesseur(_precedent: EtatInscriptionProfesseur, 
   }
   const controle = controlerMotDePasse({ nouveau: motDePasse, confirmation });
   if (!controle.accepte && controle.motif) champs[controle.motif === "confirmation_differente" ? "confirmation" : "motDePasse"] = MESSAGES_MOT_DE_PASSE[controle.motif];
-  if (Object.keys(champs).length > 0) return { etat: "refus", message: "Vérifie les champs indiqués.", champs, valeurs };
+  const classes = donnees.getAll("classeSouhaitee");
+  const matieres = donnees.getAll("matiereSouhaitee");
+  const incomplet = classes.some((classe, i) =>
+    (String(classe).trim() === "") !== (String(matieres[i] ?? "").trim() === ""));
+  const projet = schemaProjetProfesseur.safeParse({
+    etablissement: valeurs.etablissement,
+    enseignements: classes.map((classe, i) => ({ classe: String(classe), matiere: String(matieres[i] ?? "") }))
+      .filter(({ classe, matiere }) => classe.trim() !== "" || matiere.trim() !== ""),
+  });
+  if (classes.length !== matieres.length || classes.length > MAX_ENSEIGNEMENTS_SOUHAITES || incomplet || !projet.success) {
+    champs.projet = "Complète la classe ET la matière de chaque ligne, ou laisse les deux vides pour choisir plus tard.";
+  }
+  if (!projet.success || Object.keys(champs).length > 0) return { etat: "refus", message: "Vérifie les champs indiqués.", champs, valeurs };
   if (!baseConfiguree()) return { etat: "refus", message: "Le service de création de compte est momentanément indisponible.", valeurs };
 
   const email = valeurs.email.trim();
@@ -41,7 +59,13 @@ export async function inscrireProfesseur(_precedent: EtatInscriptionProfesseur, 
     password: motDePasse,
     options: {
       emailRedirectTo: adresseAcces("confirmation"),
-      data: { prenom_avecstudy: valeurs.prenom.trim(), nom_avecstudy: valeurs.nom.trim() },
+      data: {
+        prenom_avecstudy: valeurs.prenom.trim(),
+        nom_avecstudy: valeurs.nom.trim(),
+        etablissement_enseigne_avecstudy: projet.data.etablissement,
+        // Souhaits uniquement : jamais utilisés comme preuve d'appartenance au lycée.
+        enseignements_souhaites_avecstudy: dedoublonnerEnseignements(projet.data.enseignements),
+      },
     },
   });
   const attente: EtatInscriptionProfesseur = {
@@ -100,10 +124,10 @@ export async function confirmerCodeProfesseur(
   const { data, error } = await auth.verifyOtp({
     email: verification.data.email, token: verification.data.code, type: "signup",
   });
-  if (error || !data.user?.email_confirmed_at) {
+  if (error || !data.user?.email_confirmed_at || !data.session) {
     return { etat: "refus", message: "Ce code est incorrect, expiré ou a déjà servi. Vérifie-le ou demande un nouveau code." };
   }
-  return preparerCompteProfesseur(auth, data.user);
+  return preparerCompteProfesseur(auth, data.user, data.session);
 }
 
 export async function confirmerAdresse(jeton: string, _etat: EtatInscriptionProfesseur): Promise<EtatInscriptionProfesseur> {
@@ -112,14 +136,14 @@ export async function confirmerAdresse(jeton: string, _etat: EtatInscriptionProf
   }
   const auth = clientAuthentification().auth;
   const { data, error } = await auth.verifyOtp({ token_hash: jeton, type: "signup" });
-  if (error || !data.user?.email_confirmed_at) {
+  if (error || !data.user?.email_confirmed_at || !data.session) {
     return { etat: "refus", message: "Ce lien a expiré ou a déjà servi. Demande un nouveau lien ou connecte-toi." };
   }
-  return preparerCompteProfesseur(auth, data.user);
+  return preparerCompteProfesseur(auth, data.user, data.session);
 }
 
 async function preparerCompteProfesseur(
-  auth: ReturnType<typeof clientAuthentification>["auth"], utilisateur: User,
+  auth: ReturnType<typeof clientAuthentification>["auth"], utilisateur: User, session: Session,
 ): Promise<EtatInscriptionProfesseur> {
   // Le jeton de confirmation atteste l’adresse, et le type « signup » limite
   // cette création au parcours d’inscription. Les métadonnées portent les noms.
@@ -138,12 +162,59 @@ async function preparerCompteProfesseur(
     p_nom: valeurs.data.nom,
     p_email: valeurs.data.email,
   });
-  await auth.signOut({ scope: "local" });
   if (preparation) {
+    await auth.signOut({ scope: "local" });
     console.error(JSON.stringify({ niveau: "erreur", contexte: "preparation_professeur", code: preparation.code }));
     return { etat: "refus", message: "L’espace professeur n’a pas pu être préparé. Contacte l’assistance." };
   }
-  redirect("/connexion?confirmation=1");
+
+  // Un code valide ne suffit pas à créer notre cookie : les droits sont relus
+  // en base. Seul un professeur actif dans un espace autonome y a accès.
+  try {
+    const depot = new DepotSupabaseDirect();
+    const identite = await depot.resoudreIdentifiant("DIRECT", valeurs.data.email);
+    if (!identite || identite.profileId !== utilisateur.id || !identite.organizationId ||
+        identite.accountState !== "actif" || identite.mustChangePassword) {
+      throw new Error("identite_non_active");
+    }
+    const { data: appartenances, error: lecture } = await clientExploitation("administration_des_comptes")
+      .from("organization_memberships")
+      .select("organization_id, organizations!inner(autonome)")
+      .eq("profile_id", utilisateur.id)
+      .eq("organization_id", identite.organizationId)
+      .eq("state", "active")
+      .eq("account_state", "actif")
+      .eq("organizations.autonome", true)
+      .contains("roles", ["professeur"])
+      .limit(1);
+    if (lecture || !appartenances?.length) throw new Error("droits_professeur_absents");
+
+    const resultat = await ouvrirSessionVerifiee(identite, {
+      accessToken: session.access_token,
+      refreshToken: session.refresh_token,
+      expireLe: new Date((session.expires_at ?? Math.floor(Date.now() / 1000) + session.expires_in) * 1000),
+      niveauAssurance: "aal1",
+    }, "personnel", { depot, chiffrer: (texte) => chiffrer(texte, lireCles()) });
+    if (!resultat) throw new Error("session_non_autorisee");
+
+    const magasin = await cookies();
+    const ancienne = magasin.get(NOM_COOKIE_SESSION)?.value;
+    if (ancienne) {
+      try { await new DepotSupabase().revoquerSession(empreinteJeton(ancienne), "rotation_confirmation"); }
+      catch { /* Une session précédente expirée ne bloque pas l'arrivée. */ }
+    }
+    const cookie = cookieSession(resultat.jetonSession, resultat.dureeSecondes);
+    magasin.set(cookie.name, cookie.value, {
+      httpOnly: cookie.httpOnly, secure: cookie.secure, sameSite: cookie.sameSite,
+      path: cookie.path, maxAge: cookie.maxAge,
+    });
+  } catch (e) {
+    console.error(JSON.stringify({ niveau: "erreur", contexte: "connexion_apres_code_professeur", code: e instanceof Error ? e.message : "inconnu" }));
+    // En cas de panne de la session applicative, le compte confirmé existe
+    // toujours : la connexion classique avec son mot de passe reste possible.
+    redirect("/connexion?confirmation=1");
+  }
+  redirect("/professeur?bienvenue=1");
 }
 
 export async function reinitialiserProfesseur(

@@ -4,12 +4,15 @@ import { redirect } from "next/navigation";
 import { TitreEspace } from "@/components/app/Cadre";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { coursDuProfesseur } from "@/lib/studio";
+import { clientUtilisateur } from "@/lib/supabase-serveur";
+import { projetDuProfesseur } from "@/lib/projet-professeur-serveur";
 import {
   classesDuProfesseur,
   effectifsParClasse,
   elevesDeLaClasse,
 } from "@/lib/espace-professeur";
 import { FormulaireCreationClasse } from "./FormulaireCreation";
+import { EnseignementsSouhaites } from "./EnseignementsSouhaites";
 
 export const metadata: Metadata = { title: "Mes classes" };
 
@@ -38,16 +41,36 @@ export default async function PageClasses({
   if (jeton === null) redirect("/connexion");
 
   const cours = await coursDuProfesseur(jeton);
-  const [classes, effectifs] = await Promise.all([
+  const [classes, effectifs, projet, organisation] = await Promise.all([
     classesDuProfesseur(jeton, cours),
     effectifsParClasse(jeton),
+    projetDuProfesseur(jeton),
+    personne.organizationId ? clientUtilisateur(jeton).from("organizations")
+      .select("autonome").eq("id", personne.organizationId).maybeSingle() : Promise.resolve({ data: null }),
   ]);
+  const creationAutonome = organisation.data?.autonome === true;
 
   if (classes.length === 0) {
     return (
       <>
-        <TitreEspace titre="Mes classes" />
-        <div className="mt-8"><FormulaireCreationClasse /></div>
+        <TitreEspace titre={creationAutonome ? "On crée ta première classe ?" : "Tes classes et tes matières"} sousTitre={creationAutonome ? "Choisis parmi les classes indiquées à l'inscription, ou ajoutes-en une nouvelle." : "Les classes de ton établissement doivent être ouvertes par un responsable habilité."} />
+        <div className="mt-7"><EnseignementsSouhaites projet={projet} classes={classes} creationAutonome={creationAutonome} /></div>
+        {creationAutonome ? (
+        <div className="mt-7 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_290px]">
+          <FormulaireCreationClasse classesExistantes={classes} />
+          <aside className="rounded-2xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-5">
+            <h2 className="mt-0 text-base font-bold">Et après ?</h2>
+            <ol className="mb-0 grid gap-3 pl-5 text-sm leading-6 text-[color:var(--color-encre-faible)]">
+              <li>Tu retrouves ta classe dans « Mes classes ».</li>
+              <li>Tu peux préparer un cours, même sans élèves.</li>
+              <li>Quand tu es prêt, tu invites tes élèves et tu publies.</li>
+            </ol>
+          </aside>
+        </div>
+        ) : (
+          <p className="mt-7 text-sm text-[color:var(--color-encre-faible)]">Tu as reçu un code pour rejoindre une classe existante ? <Link href="/rejoindre">Demander l&apos;accès à cette classe</Link>.</p>
+        )}
+        <p className="mt-6 text-sm"><Link href="/professeur/demarrage">← Revoir le guide de démarrage</Link></p>
       </>
     );
   }
@@ -62,6 +85,16 @@ export default async function PageClasses({
         titre="Mes classes"
         sousTitre={`${classes.length} classe${classes.length > 1 ? "s" : ""}`}
       />
+
+      <div className="mt-6"><EnseignementsSouhaites projet={projet} classes={classes} creationAutonome={creationAutonome} /></div>
+
+      {creationAutonome ? (
+        <details className="mt-3 rounded-xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-5">
+          <summary className="cursor-pointer font-bold text-[color:var(--color-accent)]">Ajouter une classe ou une nouvelle matière</summary>
+          <p className="mt-4 text-sm text-[color:var(--color-encre-faible)]">Tu peux ajouter une matière à une classe existante en indiquant exactement le même nom de classe.</p>
+          <FormulaireCreationClasse classesExistantes={classes} />
+        </details>
+      ) : null}
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start">
         <nav aria-label="Mes classes">
@@ -99,8 +132,16 @@ export default async function PageClasses({
               {choisie.matieres.join(" · ")}
             </p>
           </div>
+          {eleves.length === 0 ? (
+            <div className="mt-5 rounded-2xl border border-[#e7cad6] bg-[#fff3f7] p-5">
+              <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-[#874b62]">Ta prochaine étape</p>
+              <h3 className="mb-1 mt-2 text-lg font-bold text-[#44333d]">Prépare ton premier cours pour {choisie.label}.</h3>
+              <p className="mt-0 text-sm leading-6 text-[#65545e]">Tu peux rédiger une séance et la garder en brouillon. Pas besoin d&apos;avoir déjà invité les élèves.</p>
+              <Link className="bouton bouton-primaire" href="/studio">Préparer un cours</Link>
+            </div>
+          ) : null}
           <div className="mt-4 flex flex-wrap gap-3">
-            <Link className="bouton bouton-primaire" href={`/professeur/classes/importer?classe=${choisie.id}`}>Importer des élèves</Link>
+            <Link className="bouton bouton-secondaire" href={`/professeur/classes/importer?classe=${choisie.id}`}>Importer des élèves</Link>
             <Link className="bouton bouton-secondaire" href={`/app/classes/${choisie.id}/membres`}>Invitations et demandes</Link>
           </div>
 

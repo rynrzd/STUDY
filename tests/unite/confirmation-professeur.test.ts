@@ -24,3 +24,20 @@ test("le modèle Supabase contient un code, sans dépendance à un lien de confi
   assert.doesNotMatch(contenu, /\{\{\s*\.(?:TokenHash|ConfirmationURL)\s*\}\}/u);
   assert.doesNotMatch(contenu, /<a\s/u);
 });
+
+test("chaque e-mail d'authentification possède une action adaptée à son usage", () => {
+  const dossier = path.resolve(import.meta.dirname, "../../docs/email");
+  const modeles = {
+    "recuperation-mot-de-passe.html": /\{\{\s*\.RedirectTo\s*\}\}&amp;token_hash=\{\{\s*\.TokenHash\s*\}\}/u,
+    "invitation.html": /\{\{\s*\.ConfirmationURL\s*\}\}/u,
+    "connexion-par-email.html": /\{\{\s*\.Token\s*\}\}/u,
+    "changement-adresse.html": /\{\{\s*\.NewEmail\s*\}\}/u,
+    "verification-securite.html": /\{\{\s*\.Token\s*\}\}/u,
+  };
+  for (const [nom, obligation] of Object.entries(modeles)) {
+    const contenu = readFileSync(path.join(dossier, nom), "utf8");
+    assert.match(contenu, obligation, `${nom}: variable Supabase manquante`);
+    assert.match(contenu, /lang="fr"/u, `${nom}: traduction française`);
+    assert.match(contenu, /AvecStudy/u, `${nom}: marque`);
+  }
+});
