@@ -204,10 +204,13 @@
     .app-coque {
       --barre-largeur-pc: 264px;
       --barre-retrait-pc: 18px;
-      grid-template-columns: calc(var(--barre-largeur-pc) + 2 * var(--barre-retrait-pc)) minmax(0, 1fr);
       transition: grid-template-columns 360ms cubic-bezier(0.22, 1, 0.36, 1);
     }
     .app-coque[data-barre="repliee"] { --barre-largeur-pc: 68px; }
+
+    /* Le rail fixe sort du flux. Réserver sa piste même quand la grille
+       ne contient plus que l’espace de travail. */
+    .app-coque > .app-espace { grid-column: 2; }
 
     .app-coque .app-barre {
       position: fixed;
