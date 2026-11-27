@@ -37,8 +37,15 @@ export function MenuPlus({
         d.querySelector("summary")?.focus();
       }
     };
+    const pointerHorsMenu = (e: PointerEvent) => {
+      if (d.open && e.target instanceof Node && !d.contains(e.target)) d.open = false;
+    };
     document.addEventListener("keydown", clavier);
-    return () => document.removeEventListener("keydown", clavier);
+    document.addEventListener("pointerdown", pointerHorsMenu);
+    return () => {
+      document.removeEventListener("keydown", clavier);
+      document.removeEventListener("pointerdown", pointerHorsMenu);
+    };
   }, []);
 
   return (

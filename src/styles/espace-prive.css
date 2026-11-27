@@ -427,8 +427,8 @@
     .app-coque .app-barre .barre-rail { transition-duration: 0.01ms !important; }
   }
 
-  /* V17 : navigation « verre liquide », inspirée de la V10 de référence.
-     Une encoche en U suit la petite icône flottante, sans tige ni libellés. */
+  /* V18 : verre liquide fin, animation réactive au toucher.
+     Une seule propriété enregistrée anime le bouton ET l'encoche en U. */
   @media (max-width: 767px) {
     .app-coque .app-principal {
       padding-bottom: calc(118px + env(safe-area-inset-bottom));
@@ -449,7 +449,7 @@
       box-shadow: none;
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
-      transition: --onglet-position 520ms cubic-bezier(0.22, 1.1, 0.36, 1);
+      transition: --onglet-position 590ms cubic-bezier(0.2, 1.3, 0.33, 1);
     }
 
     /* Le dégradé radial retire un demi-cercle du bord supérieur. Ce creux
@@ -461,13 +461,16 @@
       border: 1px solid rgba(255, 244, 249, 0.8);
       border-radius: 999px;
       background:
-        linear-gradient(180deg, rgba(117, 84, 103, 0.87), rgba(87, 57, 75, 0.94)),
-        rgba(105, 67, 83, 0.92);
+        radial-gradient(ellipse at 22% 0%, rgba(255, 236, 247, 0.23), transparent 52%),
+        linear-gradient(175deg, rgba(92, 65, 82, 0.85), rgba(60, 39, 54, 0.92));
       -webkit-backdrop-filter: blur(22px) saturate(1.3);
       backdrop-filter: blur(22px) saturate(1.3);
       -webkit-mask-image: radial-gradient(circle 28px at var(--onglet-position) 0, transparent 27px, #000 28px);
       mask-image: radial-gradient(circle 28px at var(--onglet-position) 0, transparent 27px, #000 28px);
-      box-shadow: 0 10px 24px -11px rgba(69, 37, 52, 0.32), inset 0 1px rgba(255, 255, 255, 0.19);
+      box-shadow:
+        0 12px 28px -12px rgba(61, 35, 51, 0.36),
+        0 2px 6px rgba(61, 35, 51, 0.1),
+        inset 0 1px rgba(255, 255, 255, 0.32);
       pointer-events: none;
       content: "";
     }
@@ -480,7 +483,7 @@
       z-index: 1;
       width: 56px;
       height: 56px;
-      border: 1px solid rgba(255, 239, 247, 0.77);
+      border: 1px solid rgba(255, 239, 247, 0.82);
       border-radius: 50%;
       clip-path: inset(50% -2px -2px -2px);
       transform: translateX(-50%);
@@ -500,7 +503,15 @@
       border-radius: 999px;
       color: #f9edf3;
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
       transition: color 220ms ease;
+    }
+
+    /* Les règles historiques de l'onglet actif ne doivent pas remettre une
+       icône bordeaux, illisible sur le verre sombre. */
+    .app-coque .app-nav-mobile-animee > a[aria-current="page"],
+    .app-coque .app-nav-mobile-animee > details[data-actif="oui"] > summary {
+      color: #f9edf3;
     }
 
     .app-coque .app-nav-mobile-animee > details { min-width: 0; }
@@ -512,7 +523,7 @@
       flex-shrink: 0;
       place-items: center;
       opacity: 0.95;
-      transition: opacity 180ms ease, scale 240ms ease;
+      transition: opacity 180ms ease, scale 240ms cubic-bezier(0.18, 0.9, 0.32, 1.3), color 180ms ease;
     }
 
     .app-coque .app-nav-mobile-animee .app-nav-libelle {
@@ -535,18 +546,20 @@
       place-items: center;
       border: 2px solid rgba(255, 238, 247, 0.9);
       border-radius: 50%;
-      background: linear-gradient(145deg, #a8708b, #79455f 77%);
+      background:
+        radial-gradient(circle at 26% 18%, rgba(255, 231, 243, 0.25), transparent 45%),
+        linear-gradient(145deg, #a7758d, #79465f 77%);
       color: #fff8fb;
-      box-shadow: 0 5px 12px rgba(46, 27, 38, 0.23), inset 0 1px rgba(255, 255, 255, 0.3);
+      box-shadow: 0 6px 14px rgba(46, 27, 38, 0.23), inset 0 1px rgba(255, 255, 255, 0.38);
       transform: translateX(-50%);
       pointer-events: none;
-      transition: opacity 160ms ease;
+      transition: opacity 160ms ease, scale 180ms ease, box-shadow 180ms ease;
     }
 
     .app-coque .app-nav-mobile-animee .app-nav-mobile-bulle-icone {
       display: grid;
       place-items: center;
-      animation: nav-icone-arrive 270ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation: nav-icone-arrive 340ms cubic-bezier(0.2, 1, 0.28, 1) both;
     }
 
     .app-coque .app-nav-mobile-animee .app-nav-mobile-bulle-plus {
@@ -568,8 +581,13 @@
       opacity: 0;
     }
 
-    .app-coque .app-nav-mobile-animee > a[aria-current="page"] .app-nav-icone,
-    .app-coque .app-nav-mobile-animee > details[data-actif="oui"] > summary .app-nav-icone {
+    /* C'est le choix visuel (optimiste au toucher) qui masque l'icône restée
+       dans la barre : il n'y a jamais deux copies superposées. */
+    .app-coque .app-nav-mobile-animee[data-onglet-visuel="0"] > a[data-onglet-index="0"] .app-nav-icone,
+    .app-coque .app-nav-mobile-animee[data-onglet-visuel="1"] > a[data-onglet-index="1"] .app-nav-icone,
+    .app-coque .app-nav-mobile-animee[data-onglet-visuel="2"] > a[data-onglet-index="2"] .app-nav-icone,
+    .app-coque .app-nav-mobile-animee[data-onglet-visuel="3"] > a[data-onglet-index="3"] .app-nav-icone,
+    .app-coque .app-nav-mobile-animee[data-onglet-visuel="4"] > details > summary .app-nav-icone {
       opacity: 0;
     }
 
@@ -578,10 +596,16 @@
       scale: 0.9;
     }
 
+    .app-coque .app-nav-mobile-animee:has(> a:active) .app-nav-mobile-bulle {
+      scale: 0.94;
+      box-shadow: 0 3px 9px rgba(46, 27, 38, 0.2), inset 0 1px rgba(255, 255, 255, 0.36);
+    }
+
     .app-coque .app-nav-mobile-animee > a:focus-visible,
     .app-coque .app-nav-mobile-animee > details > summary:focus-visible {
-      outline: 3px solid var(--color-accent);
-      outline-offset: 3px;
+      outline: 2px solid #fff;
+      outline-offset: -4px;
+      box-shadow: 0 0 0 2px var(--color-accent);
     }
 
     /* « Plus » devient actif pendant l'ouverture, puis reprend l'onglet
@@ -592,9 +616,10 @@
     .app-coque .app-nav-mobile-animee:has(> details[open]) .app-nav-mobile-bulle {
       opacity: 1;
     }
-    .app-coque .app-nav-mobile-animee:has(> details[open]) > a[aria-current="page"] .app-nav-icone {
+    .app-coque .app-nav-mobile-animee:has(> details[open]) > a .app-nav-icone {
       opacity: 0.95;
     }
+    .app-coque .app-nav-mobile-animee:has(> details[open]) > details > summary .app-nav-icone { opacity: 0; }
     .app-coque .app-nav-mobile-animee:has(> details[open]) .app-nav-mobile-bulle-icone {
       opacity: 0;
     }
@@ -617,8 +642,26 @@
   }
 
   @keyframes nav-icone-arrive {
-    from { opacity: 0; transform: translateY(3px) scale(0.85); }
+    from { opacity: 0; transform: translateY(5px) scale(0.82); }
     to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @media (max-width: 767px) and (prefers-contrast: more) {
+    .app-coque .app-nav-mobile-animee::before {
+      background: #45303d;
+      border-color: #fff;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    .app-coque .app-nav-mobile-animee .app-nav-mobile-bulle { background: #69374a; }
+  }
+
+  @media (max-width: 767px) and (prefers-reduced-transparency: reduce) {
+    .app-coque .app-nav-mobile-animee::before {
+      background: #583c4c;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
   }
 
   @media (max-width: 767px) and (prefers-reduced-motion: reduce) {

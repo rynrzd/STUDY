@@ -2,29 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import { MoreHorizontal } from "lucide-react";
-import { type CSSProperties, type ReactNode } from "react";
-
-export interface CibleNavigationMobile {
-  readonly href: string;
-  readonly exact?: boolean;
-  readonly aussi?: readonly string[];
-}
-
-/** Les chemins secondaires restent associés à leur onglet principal. */
-export function destinationActive(chemin: string, cible: CibleNavigationMobile): boolean {
-  if (cible.exact) return chemin === cible.href;
-  return [cible.href, ...(cible.aussi ?? [])].some((p) => chemin === p || chemin.startsWith(`${p}/`));
-}
-
-export function indexNavigationMobile(
-  chemin: string,
-  principales: readonly CibleNavigationMobile[],
-  autres: readonly CibleNavigationMobile[],
-): number {
-  const principale = principales.findIndex((cible) => destinationActive(chemin, cible));
-  if (principale >= 0) return principale;
-  return autres.some((cible) => destinationActive(chemin, cible)) ? 4 : -1;
-}
+import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
+import { indexNavigationMobile, type CibleNavigationMobile } from "@/lib/navigation-mobile";
 
 /** Capsule liquide : la courbe en U et l'icône flottante partagent la même position animée. */
 export function NavigationMobile({
@@ -39,7 +18,33 @@ export function NavigationMobile({
   children: ReactNode;
 }) {
   const chemin = usePathname() ?? "";
-  const position = indexNavigationMobile(chemin, principales, autres);
+  const actif = indexNavigationMobile(chemin, principales, autres);
+  const [intention, definirIntention] = useState<{ chemin: string; index: number } | null>(null);
+  const minuteur = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Le clic commence l'animation immédiatement, même sur une liaison lente.
+  // Le chemin réellement chargé reprend toujours la main ; une navigation
+  // interrompue restaure l'onglet courant au bout de deux secondes.
+  const position = intention?.chemin === chemin ? intention.index : actif;
+
+  useEffect(() => () => {
+    if (minuteur.current) clearTimeout(minuteur.current);
+  }, []);
+
+  const toucherDestination = (evenement: MouseEvent<HTMLElement>) => {
+    const origine = evenement.target;
+    if (!(origine instanceof Element)) return;
+    const lien = origine.closest("a[data-onglet-index]");
+    if (!(lien instanceof HTMLAnchorElement) || !evenement.currentTarget.contains(lien)) return;
+    if (evenement.metaKey || evenement.ctrlKey || evenement.shiftKey || evenement.altKey) return;
+    const index = Number(lien.dataset.ongletIndex);
+    if (!Number.isInteger(index) || index < 0 || index > 3) return;
+    if (minuteur.current) clearTimeout(minuteur.current);
+    definirIntention({ chemin, index });
+    minuteur.current = setTimeout(() => {
+      definirIntention(null);
+      minuteur.current = null;
+    }, 2000);
+  };
 
   return (
     <nav
@@ -47,6 +52,8 @@ export function NavigationMobile({
       aria-label="Destinations"
       style={{ "--onglet-position": `${(position >= 0 ? position : 0) * 20 + 10}%` } as CSSProperties}
       data-selection={position >= 0 ? "oui" : "non"}
+      data-onglet-visuel={position}
+      onClickCapture={toucherDestination}
     >
       <span className="app-nav-mobile-bulle" aria-hidden="true">
         <span className="app-nav-mobile-bulle-icone" key={position}>
