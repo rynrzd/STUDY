@@ -2,6 +2,7 @@ import { Check, KeyRound, Lock, UserMinus, X } from "lucide-react";
 import { Confirmer } from "@/components/study/Dialogue";
 import { FormulaireCode, FormulaireDelegue, FormulaireInvitationEleve, FormulaireRetrait } from "@/components/study/classe-formulaires";
 import { Encadre, Etiquette, Panneau, dateHeure, dateLisible } from "@/components/study/ui";
+import { peutPreparerInvitationEleve } from "@/lib/eligibilite-invitation";
 import type { Membre, codesDeClasse, delegues, demandesATraiter, invitationsDeClasse } from "@/lib/v6/classe";
 import { deciderDemande, revoquerCodes, revoquerInvitation, revoquerMandat } from "../../actions";
 
@@ -115,9 +116,11 @@ export function VueMembres({ classe, responsable, admin, demandes, codeValide, e
                               Révoquer
                             </button>
                           </form>
-                        ) : (
+                        ) : peutPreparerInvitationEleve(m.etatCompte) ? (
                           <FormulaireInvitationEleve classe={classe} profil={m.profileId} nom={m.affichage} />
-                        )
+                        ) : m.etatCompte === "actif" ? (
+                          <span className="meta">Compte déjà activé · récupération d&apos;accès par l&apos;administration</span>
+                        ) : null
                       ) : null}
                       <Confirmer
                         variante="discret"

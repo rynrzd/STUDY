@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { TitreEspace } from "@/components/app/Cadre";
 import { FormulaireInvitationEleve } from "@/components/study/classe-formulaires";
+import { peutPreparerInvitationEleve } from "@/lib/eligibilite-invitation";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { coursDuProfesseur } from "@/lib/studio";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
@@ -138,7 +139,7 @@ export default async function PageClasses({
             </div>
           ) : null}
           <div className="mt-4 flex flex-wrap gap-3">
-            {eleves.length ? <Link className="bouton bouton-primaire" href="#inviter-eleves">Inviter mes élèves</Link> : null}
+            {creationAutonome && eleves.some((eleve) => peutPreparerInvitationEleve(eleve.etatCompte)) ? <Link className="bouton bouton-primaire" href="#inviter-eleves">Inviter mes élèves</Link> : null}
             <Link className="bouton bouton-secondaire" href={`/professeur/classes/importer?classe=${choisie.id}`}>Ajouter des élèves</Link>
             <Link className="bouton bouton-secondaire" href={`/app/classes/${choisie.id}/membres`}>Gérer les invitations</Link>
           </div>
@@ -163,7 +164,7 @@ export default async function PageClasses({
             <>
               <p id="inviter-eleves" className="m-0 mt-5 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
                 {eleves.length} élève{eleves.length > 1 ? "s" : ""}
-                {creationAutonome ? " · Choisis « Inviter » à côté du nom pour préparer un lien personnel." : ""}
+                {creationAutonome && eleves.some((eleve) => peutPreparerInvitationEleve(eleve.etatCompte)) ? " · Choisis « Inviter » à côté d'un compte à activer pour préparer un lien personnel." : ""}
               </p>
               <ul className="m-0 mt-3 grid list-none gap-3 p-0 sm:grid-cols-2">
                 {eleves.map((eleve) => (
@@ -175,12 +176,14 @@ export default async function PageClasses({
                       <span className="font-medium">{eleve.nom.toUpperCase()}</span>{" "}
                       {eleve.prenom}
                     </p>
-                    {creationAutonome ? (
+                    {creationAutonome && peutPreparerInvitationEleve(eleve.etatCompte) ? (
                       <details className="mt-2 min-w-0 border-t border-[color:var(--color-bordure)] pt-2">
                         <summary className="min-h-10 cursor-pointer py-2 text-sm font-semibold text-[color:var(--color-accent)]">Inviter cet élève</summary>
                         <p className="mb-2 mt-1 text-xs leading-5 text-[color:var(--color-encre-faible)]">Le lien sera à remettre à {eleve.prenom} uniquement.</p>
                         <FormulaireInvitationEleve classe={choisie.id} profil={eleve.id} nom={`${eleve.prenom} ${eleve.nom}`} />
                       </details>
+                    ) : creationAutonome && eleve.etatCompte === "actif" ? (
+                      <p className="meta mt-2">Compte déjà activé : aucune invitation nécessaire.</p>
                     ) : null}
                   </li>
                 ))}

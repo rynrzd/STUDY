@@ -68,6 +68,7 @@ export interface EleveDeClasse {
   readonly id: string;
   readonly prenom: string;
   readonly nom: string;
+  readonly etatCompte: string | null;
 }
 
 /**
@@ -88,7 +89,7 @@ export async function elevesDeLaClasse(jeton: string, classe: string): Promise<E
   // vide — et un professeur ne voyait **jamais** les élèves de sa classe.
   const { data, error } = await client
     .from("class_enrollments")
-    .select("profile_id")
+    .select("profile_id, organization_id")
     .eq("class_id", classe)
     .limit(400);
 
@@ -97,8 +98,24 @@ export async function elevesDeLaClasse(jeton: string, classe: string): Promise<E
     return [];
   }
 
-  const identifiants = ((data ?? []) as { profile_id: string }[]).map((ligne) => ligne.profile_id);
+  const inscriptions = (data ?? []) as { profile_id: string; organization_id: string }[];
+  const identifiants = inscriptions.map((ligne) => ligne.profile_id);
   if (identifiants.length === 0) return [];
+
+  // L'état du compte appartient à une adhésion d'établissement, pas au profil
+  // global : un même élève peut posséder des adhésions dans plusieurs lycées.
+  const organisationParProfil = new Map(inscriptions.map((ligne) => [ligne.profile_id, ligne.organization_id]));
+  const { data: adhesions, error: erreurAdhesions } = await client
+    .from("organization_memberships")
+    .select("profile_id, organization_id, account_state")
+    .in("profile_id", identifiants)
+    .eq("state", "active");
+  if (erreurAdhesions !== null) journaliser("professeur.eleves.adhesions", erreurAdhesions.code);
+  const etatParProfil = new Map(
+    ((adhesions ?? []) as { profile_id: string; organization_id: string; account_state: string }[])
+      .filter((ligne) => ligne.organization_id === organisationParProfil.get(ligne.profile_id))
+      .map((ligne) => [ligne.profile_id, ligne.account_state]),
+  );
 
   const { data: profils, error: erreurProfils } = await client
     .from("profiles")
@@ -111,7 +128,7 @@ export async function elevesDeLaClasse(jeton: string, classe: string): Promise<E
   }
 
   return ((profils ?? []) as { id: string; first_name: string; last_name: string }[])
-    .map((profil) => ({ id: profil.id, prenom: profil.first_name, nom: profil.last_name }))
+    .map((profil) => ({ id: profil.id, prenom: profil.first_name, nom: profil.last_name, etatCompte: etatParProfil.get(profil.id) ?? null }))
     .sort((a, b) => a.nom.localeCompare(b.nom, "fr") || a.prenom.localeCompare(b.prenom, "fr"));
 }
 
