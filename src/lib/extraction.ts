@@ -2,7 +2,8 @@ import { TAILLE_MAX_DEPOT } from "./limites-depot.ts";
 import "server-only";
 
 import mammoth from "mammoth";
-import { extractText, getDocumentProxy } from "unpdf";
+import sharp from "sharp";
+import { extractImages, extractText, getDocumentProxy, getResolvedPDFJS } from "unpdf";
 import { analyserImageStudio, imageDocxValide, MAX_IMAGES_DOCX, MAX_OCTETS_IMAGES } from "./images-studio.ts";
 import {
   VERSION_DOCUMENT,
@@ -114,12 +115,18 @@ export function formatDuFichier(octets: Buffer): FormatImport | null {
  * en cas de doute, on produit un paragraphe. Un faux titre se corrige en deux
  * clics ; un paragraphe promu à tort en titre déforme le sommaire.
  */
-async function extrairePdf(octets: Buffer): Promise<DocumentCours> {
+async function extrairePdf(octets: Buffer, options: OptionsExtraction): Promise<DocumentCours> {
   const donnees = new Uint8Array(octets);
   let pages: string[];
+  let pdf: Awaited<ReturnType<typeof getDocumentProxy>> | undefined;
+  const figures = new Map<number, BlocCours[]>();
+  const alertesFigures: AlerteConversion[] = [];
+  let imagesConservees = 0;
+  let octetsImages = 0;
+  let imagesVues = 0;
 
   try {
-    const pdf = await getDocumentProxy(donnees);
+    pdf = await getDocumentProxy(donnees, { maxImageSize: 4_000_000 });
     if (pdf.numPages > PAGES_MAXIMALES) {
       throw new ImportRefuse(
         `Ce document fait ${pdf.numPages} pages ; la limite est de ${PAGES_MAXIMALES}.`,
@@ -127,11 +134,45 @@ async function extrairePdf(octets: Buffer): Promise<DocumentCours> {
     }
     const resultat = await extractText(pdf, { mergePages: false });
     pages = Array.isArray(resultat.text) ? resultat.text : [String(resultat.text)];
+    const { OPS } = await getResolvedPDFJS();
+    for (let numero = 1; numero <= pages.length; numero++) {
+      const pagePdf = await pdf.getPage(numero);
+      try {
+        const ops = await pagePdf.getOperatorList();
+        const peintures = ops.fnArray.filter((op: number) => op === OPS.paintImageXObject).length;
+        const autres = ops.fnArray.some((op: number) => [OPS.paintInlineImageXObject, OPS.paintImageMaskXObject,
+          OPS.paintImageXObjectRepeat, OPS.paintInlineImageXObjectGroup].includes(op));
+        if (!peintures && !autres || !pages[numero - 1]?.trim()) continue;
+        imagesVues += peintures;
+        let reprises = 0;
+        if (peintures && options.conserverImage && imagesVues <= MAX_IMAGES_DOCX && octetsImages < MAX_OCTETS_IMAGES) {
+          for (const image of await extractImages(pdf, numero)) {
+            if (image.width * image.height > 4_000_000 || image.width > 6000 || image.height > 6000) continue;
+            const png = await sharp(image.data, { raw: image }).png().toBuffer();
+            if (!imageDocxValide(png, "image/png") || octetsImages + png.length > MAX_OCTETS_IMAGES) continue;
+            octetsImages += png.length;
+            const ref = await options.conserverImage(png, "png");
+            if (!ref || !analyserImageStudio(ref)) continue;
+            const blocsPage = figures.get(numero) ?? [];
+            blocsPage.push({ type: "image", fileId: ref, alt: `Illustration ${++reprises} de la page ${numero}`, origine: { page: numero } });
+            figures.set(numero, blocsPage);
+            imagesConservees++;
+          }
+        }
+        if (reprises < peintures || autres) throw new Error("figure absente");
+      } catch {
+        alertesFigures.push({ gravite: "verifier", page: numero, message: `Vérifiez les illustrations de la page ${numero} dans le PDF original : la reprise est incomplète.` });
+      } finally {
+        pagePdf.cleanup();
+      }
+    }
   } catch (erreur) {
     if (erreur instanceof ImportRefuse) throw erreur;
     throw new ImportRefuse(
       "Ce PDF n'a pas pu être lu. Il est peut-être protégé par un mot de passe ou endommagé.",
     );
+  } finally {
+    await pdf?.loadingTask.destroy();
   }
 
   const alertes: AlerteConversion[] = [];
@@ -153,7 +194,7 @@ async function extrairePdf(octets: Buffer): Promise<DocumentCours> {
       return;
     }
 
-    blocs.push(...structurer(lignes, page));
+    blocs.push(...structurer(lignes, page), ...(figures.get(page) ?? []));
   });
 
   if (blocs.length === 0) {
@@ -181,8 +222,8 @@ async function extrairePdf(octets: Buffer): Promise<DocumentCours> {
     rapport: {
       pagesLues: pages.length,
       blocsExtraits: blocs.length,
-      imagesConservees: 0,
-      alertes,
+      imagesConservees,
+      alertes: [...alertes, ...alertesFigures],
     },
   };
 }
@@ -593,5 +634,5 @@ export async function extraire(octets: Buffer, options: OptionsExtraction = {}):
     );
   }
 
-  return format === "pdf" ? extrairePdf(octets) : extraireDocx(octets, options);
+  return format === "pdf" ? extrairePdf(octets, options) : extraireDocx(octets, options);
 }
