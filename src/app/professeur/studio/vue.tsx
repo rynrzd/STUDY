@@ -61,10 +61,14 @@ export function VueStudioDocuments({ documents }: { documents: Awaited<ReturnTyp
 
       <section className="mt-10" aria-labelledby="derniers">
         <h2 id="derniers" className="titre-section mb-3 flex items-center gap-2">
-          Mes derniers cours <span className="nombre">{documents.length}</span>
+          Mes derniers cours {documents !== null ? <span className="nombre">{documents.length}</span> : null}
         </h2>
 
-        {documents.length === 0 ? (
+        {documents === null ? (
+          <p role="alert" className="rounded-[var(--rayon-m)] bg-[color:var(--color-erreur-fond)] p-4 text-sm text-[color:var(--color-erreur)]">
+            Tes cours n&apos;ont pas pu être chargés. Réessaie dans un instant : aucun document n&apos;a été supprimé.
+          </p>
+        ) : documents.length === 0 ? (
           <p className="meta">Tes documents importés apparaîtront ici.</p>
         ) : (
           <ListeLignes>
