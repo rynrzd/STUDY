@@ -164,7 +164,7 @@ function Liens({ liens }: { liens: readonly Destination[] }) {
     <ul className="m-0 grid list-none gap-0.5 p-0">
       {liens.map((d) => (
         <li key={d.href}>
-          <LienNavigation href={d.href} exact={d.exact} aussi={d.aussi} className="lien-barre">
+          <LienNavigation href={d.href} exact={d.exact} aussi={d.aussi} className="lien-barre" aria-label={d.libelle} title={d.libelle}>
             <d.icone size={20} strokeWidth={1.75} aria-hidden="true" className="shrink-0" />
             <span className="barre-detail truncate">{d.libelle}</span>
             <span className="barre-rail" aria-hidden="true">{d.court ?? d.libelle}</span>
@@ -181,8 +181,9 @@ function Liens({ liens }: { liens: readonly Destination[] }) {
 }
 
 export async function Coque({ ctx, children }: { ctx: ContexteApp; children: React.ReactNode }) {
-  // Barre latérale repliée ou non : préférence d'affichage, lue ici pour éviter tout saut au chargement.
-  const repliee = (await cookies()).get(COOKIE_BARRE)?.value === "repliee";
+  // Le rail compact est le nouvel état initial sur ordinateur. Le cookie évite
+  // que la navigation saute de largeur pendant l'hydratation.
+  const repliee = (await cookies()).get(COOKIE_BARRE)?.value !== "depliee";
   const espace = espaceDe(ctx);
   const { principales, secondaires } = navigation(espace);
   const espaces = espacesDisponibles(ctx);
@@ -198,19 +199,21 @@ export async function Coque({ ctx, children }: { ctx: ContexteApp; children: Rea
       <ActiviteSession key={personne.profileId} />
       <aside className="app-barre" aria-label="Navigation principale">
         <div className="entete-barre mb-1 flex items-center justify-between gap-1">
-          <Link href={espaces[0]?.href ?? "/app"} className="inline-flex min-h-[44px] items-center px-3 text-[color:var(--color-encre)]">
-            <MotSymbole titre="Study, accueil" className="block h-auto w-[72px] min-[1100px]:w-[88px]" />
+          <Link href={espaces[0]?.href ?? "/app"} className="marque-barre inline-flex min-h-[44px] items-center px-3 text-[color:var(--color-encre)]" aria-label="Study, accueil">
+            <span className="marque-barre-compact" aria-hidden="true">s<span>.</span></span>
+            <span className="marque-barre-etendue" aria-hidden="true">
+              <MotSymbole titre="Study, accueil" className="block h-auto w-[88px]" />
+            </span>
           </Link>
-          <ReplierBarre repliee={repliee} />
         </div>
-        <div className="barre-detail mt-4 px-3">
+        <div className="barre-detail barre-identite mt-4 px-3">
           <p className="m-0 truncate text-[0.8125rem] font-bold text-[color:var(--color-encre)]">{personne.organisation ?? "Study"}</p>
           {contexte ? <p className="meta m-0 mt-0.5 truncate">{contexte}</p> : null}
           {espace !== "admin" ? <SelecteurClasse ctx={ctx} /> : null}
         </div>
 
         {espaces.length > 1 ? (
-          <nav aria-label="Changer d'espace" className="barre-detail mt-4 px-1">
+          <nav aria-label="Changer d'espace" className="barre-detail barre-espaces mt-4 px-1">
             <ul className="m-0 grid list-none gap-1 rounded-[var(--rayon-m)] bg-[color:var(--color-fond)] p-1">
               {espaces.map((e) => (
                 <li key={e.espace}>
@@ -261,6 +264,7 @@ export async function Coque({ ctx, children }: { ctx: ContexteApp; children: Rea
           </details>
         </div>
       </aside>
+      <ReplierBarre repliee={repliee} />
 
       <div className="app-espace">
         <header className="app-entete">
