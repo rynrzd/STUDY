@@ -9,6 +9,7 @@ import {
 } from "@/app/professeur/devoirs/actions";
 import { ETAT_DEVOIR_INITIAL, type EtatDevoirAction } from "@/app/professeur/devoirs/etats";
 import { instantLisible } from "@/lib/horodatage";
+import { etatPourRemisePapier, remiseEffectuee, remiseEnRetard } from "@/lib/suivi-remises";
 
 /**
  * Le suivi d'un devoir, élève par élève — cahier V5, §4 et §5.
@@ -67,7 +68,7 @@ export function SuiviRemises({
   mode: string;
   lignes: readonly LigneEleve[];
 }) {
-  const [filtre, setFiltre] = useState<"tous" | "remis" | "non_remis" | "corriges">("tous");
+  const [filtre, setFiltre] = useState<"tous" | "remis" | "non_remis" | "a_corriger" | "corriges">("tous");
   const [recherche, setRecherche] = useState("");
   // Trois tris, et ils répondent à trois questions réelles : « où en est la
   // classe » (nom), « qui n'a rien rendu » (état), « qui a rendu au dernier
@@ -80,16 +81,18 @@ export function SuiviRemises({
 
   const compte = {
     total: lignes.length,
-    remis: lignes.filter((l) => l.etat === "remis").length,
-    retard: lignes.filter((l) => l.etat === "remis_en_retard").length,
+    remis: lignes.filter((l) => remiseEffectuee(l) && !remiseEnRetard(l)).length,
+    retard: lignes.filter(remiseEnRetard).length,
     corriges: lignes.filter((l) => l.retour?.publieLe != null).length,
+    aCorriger: lignes.filter((l) => l.derniere !== null && l.retour?.publieLe == null).length,
   };
   const nonRemis = compte.total - compte.remis - compte.retard;
 
   const visibles = lignes.filter((ligne) => {
-    const remis = ligne.etat === "remis" || ligne.etat === "remis_en_retard";
+    const remis = remiseEffectuee(ligne);
     if (filtre === "remis" && !remis) return false;
     if (filtre === "non_remis" && remis) return false;
+    if (filtre === "a_corriger" && (ligne.derniere === null || ligne.retour?.publieLe != null)) return false;
     if (filtre === "corriges" && ligne.retour?.publieLe == null) return false;
 
     if (recherche.trim() === "") return true;
@@ -129,9 +132,14 @@ export function SuiviRemises({
 
   return (
     <section className="mt-10" data-testid="suivi-remises">
-      <h2 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
-        Remises
-      </h2>
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <h2 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
+          Copies et corrections
+        </h2>
+        <p className="m-0 text-sm text-[color:var(--color-encre-faible)]">
+          {compte.aCorriger === 0 ? "Aucune copie numérique en attente" : `${compte.aCorriger} copie${compte.aCorriger > 1 ? "s" : ""} numérique${compte.aCorriger > 1 ? "s" : ""} à corriger`}
+        </p>
+      </div>
 
       <dl
         data-testid="suivi-compteurs"
@@ -142,6 +150,7 @@ export function SuiviRemises({
           ["Non remis", nonRemis, "non-remis"],
           ["Remis", compte.remis, "remis"],
           ["En retard", compte.retard, "retard"],
+          ["À corriger", compte.aCorriger, "a-corriger"],
           ["Corrigés", compte.corriges, "corriges"],
         ].map(([libelle, valeur, cle]) => (
           <div key={String(cle)}>
@@ -193,6 +202,7 @@ export function SuiviRemises({
             ["tous", "Tous"],
             ["non_remis", "Non remis"],
             ["remis", "Remis"],
+            ["a_corriger", `À corriger (${compte.aCorriger})`],
             ["corriges", "Corrigés"],
           ].map(([valeur, libelle]) => (
             <button
@@ -304,16 +314,17 @@ function LigneSuivi({
             <button
               type="button"
               data-testid="ouvrir-correction"
+              aria-expanded={ouvert}
               onClick={() => setOuvert(!ouvert)}
               className="bouton bouton-secondaire bouton-compact"
             >
-              {ouvert ? "Fermer" : ligne.retour === null ? "Corriger" : "Modifier la correction"}
+              {ouvert ? "Fermer" : ligne.retour === null ? "Corriger" : ligne.retour.publieLe == null ? "Reprendre le brouillon" : "Modifier la correction"}
             </button>
           ) : null}
         </div>
       </div>
 
-      {papier ? <MarquagePapier devoir={devoir} eleve={ligne.eleve} etat={ligne.etat} /> : null}
+      {papier ? <MarquagePapier devoir={devoir} eleve={ligne.eleve} ligne={ligne} /> : null}
 
       {ouvert && ligne.derniere !== null ? (
         <Correction
@@ -332,11 +343,11 @@ function LigneSuivi({
 function MarquagePapier({
   devoir,
   eleve,
-  etat,
+  ligne,
 }: {
   devoir: string;
   eleve: string;
-  etat: string;
+  ligne: LigneEleve;
 }) {
   const [retour, action] = useActionState<EtatDevoirAction, FormData>(
     constaterRemisePapier,
@@ -355,7 +366,7 @@ function MarquagePapier({
         id={`papier-${eleve}`}
         data-testid="papier-etat"
         name="etatRemise"
-        defaultValue={etat === "brouillon" ? "non_commence" : etat}
+        defaultValue={etatPourRemisePapier(ligne)}
         className="champ max-w-[14rem]"
       >
         <option value="non_commence">Non remis</option>
