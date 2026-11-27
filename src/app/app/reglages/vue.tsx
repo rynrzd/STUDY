@@ -26,6 +26,7 @@ export function VueReglages({ onglet, ctx, p, initiales, role }: {
       <EnTetePage sourcil="Réglages" titre="Paramètres" sousTitre="Personnalise ton expérience de Study." />
       <OngletsLiens etiquette="Sections des réglages" onglets={ONGLETS.map((o) => ({ href: o.cle === "compte" ? "/app/reglages" : `/app/reglages?onglet=${o.cle}`, libelle: o.libelle, actif: o.cle === onglet }))} />
 
+      <div className="onglet-entree" key={onglet}>
       {onglet === "compte" ? (
         <div className="grid gap-4 md:grid-cols-2">
           <section className="panneau flex items-center gap-4" aria-label="Profil">
@@ -148,6 +149,7 @@ export function VueReglages({ onglet, ctx, p, initiales, role }: {
           </Link>
         </Panneau>
       ) : null}
+      </div>
     </div>
   );
 }

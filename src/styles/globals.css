@@ -1297,7 +1297,9 @@
     display: block;
     height: 12px;
     border-radius: 6px;
-    background: #f1edf0;
+    background: linear-gradient(110deg, #f1e8ee 20%, #fff9fc 43%, #f1e8ee 66%);
+    background-size: 240% 100%;
+    animation: miroiter 1600ms linear infinite;
   }
 
   @keyframes miroiter {
