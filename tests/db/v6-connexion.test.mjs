@@ -99,10 +99,12 @@ test("Invitation : compte à activer, compte déjà actif, et rien n'est recré�
   const comptes = async () => (await db.query("select count(*)::int as n from study.organization_memberships")).rows[0].n;
   const avant = await comptes();
 
+  await doitEchouer(() => lirePourAdmin(db, ACTEURS.adminA, "select study.invitation_creer($1, $2)", [ACTEURS.eleveA1Rayan, empreinte("sans-recuperation")]));
+  await db.query("insert into study.demandes_recuperation (organization_id, profile_id) values ($1, $2)", [ACTEURS.lyceeA, ACTEURS.eleveA1Rayan]);
   await lirePourAdmin(db, ACTEURS.adminA, "select study.invitation_creer($1, $2)", [ACTEURS.eleveA1Rayan, empreinte("actif")]);
   const [actif] = (await db.query("select * from study.invitation_etat($1)", [empreinte("actif")])).rows;
   assert.equal(actif.etat, "valide");
-  assert.equal(actif.compte, "actif", "le lien sert alors à choisir un nouveau mot de passe");
+  assert.equal(actif.compte, "actif", "la récupération vérifiée permet de choisir un nouveau mot de passe");
   assert.equal(actif.organisation, "Lycee de recette A");
 
   await db.query("update study.organization_memberships set account_state = 'a_activer' where profile_id = $1", [ACTEURS.eleveA1Lina]);

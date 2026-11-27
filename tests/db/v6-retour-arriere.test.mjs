@@ -80,7 +80,7 @@ test("2 — l'ancien code (avant 5d183b3) fonctionne sur le nouveau schéma", as
   const [ligne] = await lirePourAdmin(db, ACTEURS.adminA, "select * from study.recuperation_a_traiter()");
   for (const c of ["id", "prenom", "nom", "identifiant", "classe", "demandee_le"]) assert.ok(c in ligne, `colonne ${c} présente`);
   // Ancienne page d'invitation : colonnes lues ; un état inconnu d'elle (« indisponible ») tombe sur son repli « lien non reconnu ».
-  await lirePourAdmin(db, ACTEURS.adminA, "select study.invitation_creer($1, $2)", [ACTEURS.eleveA1Lina, empreinte("lien")]);
+  await lirePourAdmin(db, ACTEURS.adminA, "select study.invitation_creer($1, $2)", [ACTEURS.eleveA1Rayan, empreinte("lien")]);
   const [etat] = (await db.query("select * from study.invitation_etat($1)", [empreinte("lien")])).rows;
   for (const c of ["etat", "prenom", "organisation", "code_etablissement", "identifiant", "profile_id"]) assert.ok(c in etat, `colonne ${c} présente`);
   assert.equal(etat.etat, "valide");
