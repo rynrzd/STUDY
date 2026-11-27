@@ -4,9 +4,11 @@ import { notFound, redirect } from "next/navigation";
 import { FileWarning, History } from "lucide-react";
 import { FilAriane } from "@/components/study/ui";
 import { EditeurDocument } from "@/components/studio/EditeurDocument";
+import { LecteurPdf } from "@/components/seance/LecteurPdf";
 import { SuiviTraitement } from "@/components/studio/SuiviTraitement";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { document as lireDocument, revision } from "@/lib/studio-documents";
+import { clientUtilisateur } from "@/lib/supabase-serveur";
 
 export const metadata: Metadata = { title: "Mise en page" };
 
@@ -29,7 +31,7 @@ export default async function PageMiseEnPage({
   searchParams,
 }: {
   params: Promise<{ document: string }>;
-  searchParams: Promise<{ deja?: string }>;
+  searchParams: Promise<{ deja?: string; vue?: string }>;
 }) {
   const personne = await sessionCourante();
   if (personne === null) redirect("/connexion");
@@ -40,6 +42,51 @@ export default async function PageMiseEnPage({
   const { document: id } = await params;
   const doc = await lireDocument(jeton, id);
   if (doc === null) notFound();
+  const { deja: dejaParam, vue } = await searchParams;
+
+  // L'original est deja disponible apres le transfert. Pas besoin d'attendre
+  // l'extraction, qui peut echouer sur un PDF scanne sans couche de texte.
+  if (vue === "original" && doc.fichierSourceId) {
+    const { data: fichier, error } = await clientUtilisateur(jeton)
+      .from("files")
+      .select("display_name, mime_detected, state")
+      .eq("id", doc.fichierSourceId)
+      .maybeSingle();
+    if (error || !fichier || fichier.state !== "disponible") notFound();
+    const estPdf = fichier.mime_detected === "application/pdf";
+
+    return (
+      <div className="mx-auto max-w-[940px]" data-testid="studio-vue-originale">
+        <Retour />
+        <div className="mt-5 rounded-2xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-4 sm:p-7">
+          <p className="m-0 text-sm font-semibold text-[color:var(--color-accent)]">Document original conservé</p>
+          <h1 className="titre-page m-0 mt-2 break-words">{fichier.display_name}</h1>
+          <p className="m-0 mt-3 text-[color:var(--color-encre-faible)]">
+            Voici le fichier que tu as déposé, sans modification. Même un PDF scanné reste consultable ici : la reconnaissance de son texte n&apos;est pas nécessaire pour garder l&apos;original.
+          </p>
+          {doc.etat === "echec" ? (
+            <p role="status" className="mt-4 rounded-xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-3 text-sm">
+              La préparation d&apos;une version modifiable n&apos;a pas abouti : {doc.erreur ?? "document illisible pour l'extraction"}. Cela n&apos;affecte pas ton fichier d&apos;origine.
+            </p>
+          ) : doc.etat === "traitement" || doc.etat === "importe" ? (
+            <p role="status" className="mt-4 text-sm text-[color:var(--color-encre-faible)]">
+              Une version modifiable se prépare en arrière-plan. Ton original est déjà disponible.
+            </p>
+          ) : null}
+          <div className="mt-5 flex flex-wrap gap-3">
+            <a href={`/documents/${doc.fichierSourceId}`} className="bouton bouton-secondaire">Télécharger mon original</a>
+            <Link href={`/professeur/studio/${id}`} className="bouton bouton-primaire">{doc.etat === "echec" ? "Voir les limites de conversion" : "Créer un beau support"}</Link>
+          </div>
+          {!estPdf ? (
+            <p className="m-0 mt-5 rounded-xl bg-[color:var(--color-surface-douce)] p-4 text-sm text-[color:var(--color-encre-faible)]">
+              Ce document Word reste intact. Pour voir ses images et sa mise en page d&apos;origine, ouvre-le dans Word ou LibreOffice après téléchargement.
+            </p>
+          ) : null}
+        </div>
+        {estPdf ? <div className="mt-6"><LecteurPdf fichier={doc.fichierSourceId} nom={fichier.display_name} /></div> : null}
+      </div>
+    );
+  }
 
   if (doc.etat === "echec") {
     return (
@@ -77,7 +124,7 @@ export default async function PageMiseEnPage({
 
   const courante = await revision(jeton, doc.revisionId);
   if (courante === null) notFound();
-  const deja = (await searchParams).deja === "1";
+  const deja = dejaParam === "1";
 
   return (
     <>
