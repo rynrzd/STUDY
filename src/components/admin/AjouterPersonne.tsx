@@ -6,6 +6,7 @@ import { useFormStatus } from "react-dom";
 import { ArrowRight, Check, CircleAlert, GraduationCap, Presentation, Printer, School, Upload, UserPlus, X } from "lucide-react";
 import { creerUnCompte } from "@/app/admin/actions";
 import { ETAT_ADMIN_INITIAL, type EtatAdmin } from "@/app/admin/etats";
+import { FormulaireInvitationEleve } from "@/components/study/classe-formulaires";
 import { proposerLogin } from "@/lib/import-rentree";
 import { FicheImprimable } from "./FicheImprimable";
 
@@ -118,29 +119,41 @@ function Contenu({
           {acces.prenom} {acces.nom} a son compte
         </h2>
         <p className="m-0 mt-1.5 text-[color:var(--color-encre-faible)]">
-          Imprimez la fiche et remettez-la en main propre. Le mot de passe temporaire ne sera plus affiché après fermeture ; il sera changé à la première connexion.
+          {acces.role === "eleve"
+            ? "Le compte est créé. Il reste à donner à l’élève son invitation personnelle pour qu’il active son accès."
+            : "Le compte est prêt. Imprimez sa fiche d’accès et remettez-la en main propre. Le mot de passe temporaire disparaîtra à la fermeture."}
         </p>
 
-        <dl className="ajout-fiche">
-          <div>
-            <dt>Rôle</dt>
-            <dd>{acces.classe === null ? libelleRole : `${libelleRole} · ${acces.classe}`}</dd>
-          </div>
-          <div>
-            <dt>Nom</dt>
-            <dd>
-              {acces.prenom} {acces.nom}
-            </dd>
-          </div>
-          <div>
-            <dt>Identifiant</dt>
-            <dd className="font-mono">{acces.login}</dd>
-          </div>
-          <div>
-            <dt>Mot de passe temporaire</dt>
-            <dd className="font-mono">{acces.motDePasseTemporaire}</dd>
-          </div>
-        </dl>
+        {acces.role === "eleve" && acces.classeId && acces.profileId ? (
+          <section className="mt-5 grid min-w-0 gap-3 rounded-2xl border border-[color:var(--color-bordure)] bg-[color:var(--color-rose-clair)] p-4 sm:p-5">
+            <div>
+              <p className="m-0 text-xs font-bold uppercase tracking-wider text-[color:var(--color-accent)]">Prochaine étape</p>
+              <h3 className="mb-1 mt-1 text-lg font-bold">Inviter {acces.prenom}</h3>
+              <p className="m-0 text-sm leading-6 text-[color:var(--color-encre-faible)]">
+                Prépare un lien ou un QR code personnel, puis transmets-le directement à l’élève. Il choisira son propre mot de passe.
+              </p>
+            </div>
+            <FormulaireInvitationEleve classe={acces.classeId} profil={acces.profileId} nom={`${acces.prenom} ${acces.nom}`} impression={false} />
+          </section>
+        ) : null}
+
+        <details className="mt-4 min-w-0 rounded-xl border border-[color:var(--color-bordure)] p-4" open={acces.role === "professeur"}>
+          <summary className="cursor-pointer font-semibold">
+            {acces.role === "eleve" ? "Autre possibilité : remettre une fiche d’accès" : "Identifiants et fiche d’accès"}
+          </summary>
+          <p className="mt-3 text-sm leading-6 text-[color:var(--color-encre-faible)]">
+            Le mot de passe temporaire ci-dessous ne sera plus visible après fermeture. Ne le communique qu’à la personne concernée.
+          </p>
+          <dl className="ajout-fiche">
+            <div><dt>Rôle</dt><dd>{acces.classe === null ? libelleRole : `${libelleRole} · ${acces.classe}`}</dd></div>
+            <div><dt>Nom</dt><dd>{acces.prenom} {acces.nom}</dd></div>
+            <div><dt>Identifiant</dt><dd className="font-mono">{acces.login}</dd></div>
+            <div><dt>Mot de passe temporaire</dt><dd className="font-mono">{acces.motDePasseTemporaire}</dd></div>
+          </dl>
+          <button type="button" className="bouton bouton-secondaire mt-3" onClick={() => window.print()}>
+            <Printer size={20} strokeWidth={1.75} aria-hidden="true" /> Imprimer la fiche d’accès
+          </button>
+        </details>
 
         <div className="ajout-actions">
           <button type="button" className="bouton bouton-secondaire" onClick={recommencer}>
@@ -152,9 +165,6 @@ function Contenu({
                 Affecter à une classe <ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" />
               </Link>
             ) : null}
-            <button type="button" className="bouton bouton-primaire" onClick={() => window.print()}>
-              <Printer size={20} strokeWidth={1.75} aria-hidden="true" /> Imprimer la fiche
-            </button>
           </div>
         </div>
       </div>

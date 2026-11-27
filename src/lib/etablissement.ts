@@ -303,6 +303,9 @@ export async function creerMatiere(acteur: string, label: string): Promise<strin
 }
 
 export interface AccesCree {
+  /** Disponibles à la création, pas forcément lors d'une réinitialisation d'accès. */
+  readonly profileId?: string;
+  readonly classeId?: string | null;
   readonly prenom: string;
   readonly nom: string;
   readonly role: "eleve" | "professeur";
@@ -382,6 +385,8 @@ export async function creerCompte(options: {
   return {
     etat: "cree",
     acces: {
+      profileId,
+      classeId: options.classe,
       prenom: options.prenom,
       nom: options.nom,
       role: options.role,

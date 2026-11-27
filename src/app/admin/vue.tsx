@@ -148,7 +148,7 @@ export function VueAdmin({ situation, nbSignalements, nbRecuperations, nbEleves,
         </h2>
         <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2 xl:grid-cols-4">
           {[
-            { href: "/admin/utilisateurs?ajouter=eleve", titre: "Ajouter un élève", detail: "Un compte, une fiche d'accès à imprimer", Icone: UserPlus },
+            { href: "/admin/utilisateurs?ajouter=eleve", titre: "Ajouter un élève", detail: "Créer son compte et lui donner son invitation", Icone: UserPlus },
             { href: "/admin/utilisateurs?ajouter=professeur", titre: "Ajouter un professeur", detail: "Puis l'affecter à une classe", Icone: Presentation },
             { href: "/admin/classes", titre: "Classes et cours", detail: "Classes, matières, affectations", Icone: Link2 },
             { href: "/admin/import", titre: "Import de rentrée", detail: "Toute une classe depuis un fichier CSV ou XLSX", Icone: Upload },

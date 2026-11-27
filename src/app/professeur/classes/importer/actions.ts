@@ -9,7 +9,7 @@ import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { clientExploitation, clientUtilisateur } from "@/lib/supabase-serveur";
 import { FichierIllisible } from "@/lib/tableur";
 
-export interface EtatImportClasse { readonly etat?: "erreur" | "apercu" | "termine"; readonly message?: string; readonly eleves?: readonly EleveImporte[]; readonly resultats?: readonly { prenom: string; nom: string; login: string; deja: boolean }[] }
+export interface EtatImportClasse { readonly etat?: "erreur" | "apercu" | "termine"; readonly message?: string; readonly eleves?: readonly EleveImporte[]; readonly resultats?: readonly { profileId: string; prenom: string; nom: string; login: string; deja: boolean }[] }
 
 async function contexte() {
   const personne = await sessionCourante();
@@ -61,7 +61,7 @@ export async function appliquerListe(_precedent: EtatImportClasse, donnees: Form
   catch { return { etat: "erreur", message: "L’import est indisponible : le domaine technique des comptes élèves n’est pas configuré." }; }
   const utilisateur = clientUtilisateur(jeton);
   const admin = clientExploitation("administration_des_comptes");
-  const resultats: { prenom: string; nom: string; login: string; deja: boolean }[] = [];
+  const resultats: { profileId: string; prenom: string; nom: string; login: string; deja: boolean }[] = [];
   for (const candidat of candidats) {
     const { data: trouve, error: erreurRecherche } = await utilisateur.rpc("classe_autonome_retrouver_eleve", { p_classe: classe, p_externe: candidat.externe });
     if (erreurRecherche) return { etat: "erreur", message: "La classe n’est pas accessible ou l’import a été interrompu." };
@@ -69,7 +69,7 @@ export async function appliquerListe(_precedent: EtatImportClasse, donnees: Form
     if (existant) {
       const { error } = await utilisateur.rpc("classe_autonome_ajouter_eleve", { p_classe: classe, p_profile: existant.profile_id, p_prenom: candidat.prenom, p_nom: candidat.nom, p_login: existant.login, p_alias: "inutilise", p_externe: candidat.externe });
       if (error) return { etat: "erreur", message: "Un élève existant n’a pas pu être rattaché à la classe." };
-      resultats.push({ prenom: candidat.prenom, nom: candidat.nom, login: existant.login, deja: true });
+      resultats.push({ profileId: existant.profile_id, prenom: candidat.prenom, nom: candidat.nom, login: existant.login, deja: true });
       continue;
     }
     const login = proposerLogin(candidat.prenom, candidat.nom, candidat.externe);
@@ -81,7 +81,7 @@ export async function appliquerListe(_precedent: EtatImportClasse, donnees: Form
       await admin.auth.admin.deleteUser(compte.user.id);
       return { etat: "erreur", message: `L’ajout de ${candidat.prenom} ${candidat.nom} a échoué. Aucun compte incomplet n’a été conservé.` };
     }
-    resultats.push({ prenom: candidat.prenom, nom: candidat.nom, login, deja: false });
+    resultats.push({ profileId: compte.user.id, prenom: candidat.prenom, nom: candidat.nom, login, deja: false });
   }
   return { etat: "termine", message: `${resultats.length} élève${resultats.length > 1 ? "s" : ""} prêt${resultats.length > 1 ? "s" : ""}.`, resultats };
 }
