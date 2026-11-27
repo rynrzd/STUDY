@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { MoreHorizontal } from "lucide-react";
 import { type CSSProperties, type ReactNode } from "react";
 
 export interface CibleNavigationMobile {
@@ -25,14 +26,16 @@ export function indexNavigationMobile(
   return autres.some((cible) => destinationActive(chemin, cible)) ? 4 : -1;
 }
 
-/** La bulle suit la route active, même lors d'un retour arrière du navigateur. */
+/** Capsule liquide : la courbe en U et l'icône flottante partagent la même position animée. */
 export function NavigationMobile({
   principales,
   autres,
+  icones,
   children,
 }: {
   principales: readonly CibleNavigationMobile[];
   autres: readonly CibleNavigationMobile[];
+  icones: readonly ReactNode[];
   children: ReactNode;
 }) {
   const chemin = usePathname() ?? "";
@@ -45,7 +48,12 @@ export function NavigationMobile({
       style={{ "--onglet-position": `${(position >= 0 ? position : 0) * 20 + 10}%` } as CSSProperties}
       data-selection={position >= 0 ? "oui" : "non"}
     >
-      <span className="app-nav-mobile-bulle" aria-hidden="true" />
+      <span className="app-nav-mobile-bulle" aria-hidden="true">
+        <span className="app-nav-mobile-bulle-icone" key={position}>
+          {position === 4 ? <MoreHorizontal size={23} strokeWidth={1.85} /> : icones[position] ?? null}
+        </span>
+        <span className="app-nav-mobile-bulle-plus"><MoreHorizontal size={23} strokeWidth={1.85} /></span>
+      </span>
       {children}
     </nav>
   );

@@ -324,10 +324,11 @@ export async function Coque({ ctx, children }: { ctx: ContexteApp; children: Rea
       <NavigationMobile
         principales={mobile.map((d) => ({ href: d.href, exact: d.exact, aussi: d.aussi }))}
         autres={plus.map((d) => ({ href: d.href, exact: d.exact, aussi: d.aussi }))}
+        icones={mobile.map((d) => <d.icone key={d.href} size={23} strokeWidth={1.85} />)}
       >
         {mobile.map((d) => (
-          <LienNavigation key={d.href} href={d.href} exact={d.exact} aussi={d.aussi}>
-            <span className="app-nav-icone"><d.icone size={22} strokeWidth={1.85} aria-hidden="true" /></span>
+          <LienNavigation key={d.href} href={d.href} exact={d.exact} aussi={d.aussi} aria-label={d.libelle}>
+            <span className="app-nav-icone"><d.icone size={21} strokeWidth={1.85} aria-hidden="true" /></span>
             <span className="app-nav-libelle">{d.court ?? d.libelle}</span>
           </LienNavigation>
         ))}
