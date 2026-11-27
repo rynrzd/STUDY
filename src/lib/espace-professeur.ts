@@ -138,19 +138,20 @@ export async function effectifsParClasse(jeton: string): Promise<Map<string, num
 export async function classesDuProfesseur(
   jeton: string,
   cours: readonly Cours[],
-): Promise<{ id: string; label: string; matieres: string[] }[]> {
+): Promise<{ id: string; label: string; matieres: string[]; enseignements: { id: string; matiere: string }[] }[]> {
   const { data, error } = await clientUtilisateur(jeton)
     .from("teaching_spaces")
-    .select("class_id, subjects(label), classes(id, label)")
+    .select("id, class_id, subjects(label), classes(id, label)")
     .is("archived_at", null)
     .not("class_id", "is", null)
     .limit(200);
 
   if (error !== null) return [];
 
-  const parClasse = new Map<string, { id: string; label: string; matieres: string[] }>();
+  const parClasse = new Map<string, { id: string; label: string; matieres: string[]; enseignements: { id: string; matiere: string }[] }>();
 
   for (const ligne of (data ?? []) as unknown as {
+    id: string;
     class_id: string | null;
     subjects: { label: string } | null;
     classes: { id: string; label: string } | null;
@@ -163,9 +164,11 @@ export async function classesDuProfesseur(
         id: ligne.classes.id,
         label: ligne.classes.label,
         matieres: [matiere],
+        enseignements: [{ id: ligne.id, matiere }],
       });
-    } else if (!existante.matieres.includes(matiere)) {
-      existante.matieres.push(matiere);
+    } else {
+      existante.enseignements.push({ id: ligne.id, matiere });
+      if (!existante.matieres.includes(matiere)) existante.matieres.push(matiere);
     }
   }
 

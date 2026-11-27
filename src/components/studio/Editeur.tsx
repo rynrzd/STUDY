@@ -53,22 +53,12 @@ export function Editeur({
 
         <section aria-label="Contenu de la séance" className="space-y-3">
           <div>
-            <h2 className="titre-bloc m-0 font-bold">2. Construis ta séance</h2>
+            <h2 className="titre-bloc m-0 font-bold">Contenu de la séance</h2>
             <p className="m-0 mt-1 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
               Ajoute les éléments dans l&apos;ordre où tes élèves les découvriront.
             </p>
           </div>
-          {blocs.length === 0 ? (
-            <div className="bloc border border-dashed border-[color:var(--color-bordure-forte)] px-5 py-8 text-center">
-              <p className="m-0 font-semibold">Ton cours prend forme ici.</p>
-              <p className="mx-auto m-0 mt-2 max-w-[48ch] text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
-                Commence par une explication, un document ou un exercice. Tu peux les réorganiser ensuite.
-              </p>
-              <a href="#ajouter-contenu" className="bouton bouton-secondaire mt-4 inline-flex">
-                Choisir mon premier contenu
-              </a>
-            </div>
-          ) : (
+          {blocs.length > 0 && (
             <ul data-testid="blocs-liste" className="m-0 list-none space-y-3 p-0">
               {blocs.map((bloc, index) => (
                 <li key={bloc.id}>
@@ -84,16 +74,11 @@ export function Editeur({
           )}
         </section>
 
-        <AjoutBloc seance={seance.id} />
+        <AjoutBloc key={seance.id} seance={seance.id} vide={blocs.length === 0} />
       </div>
 
       <aside className="space-y-4 lg:sticky lg:top-24">
         <div className="bloc border border-[color:var(--color-bordure)] p-4">
-          <h2 className="titre-bloc m-0 font-bold">3. Vérifie avant de partager</h2>
-          <p className="m-0 mt-2 text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-faible)]">
-            Voir la séance exactement comme un élève de la classe la verra,
-            avant de la publier.
-          </p>
           <Link
             href={`/studio/${seance.id}/apercu`}
             className="bouton bouton-secondaire mt-3 w-full"
@@ -136,7 +121,7 @@ function EnteteSeance({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="m-0 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
-          1. Prépare ta séance · {libelleCours}
+          {libelleCours}
         </p>
         <span className="etiquette-etat" data-ton={seance.state === "publiee" ? "succes" : "attention"}>
           {seance.state === "publiee" ? "Publiée" : "Brouillon"}
@@ -236,7 +221,7 @@ function Publication({ seance, publiee }: { seance: Seance; publiee: boolean }) 
       <input type="hidden" name="publier" value={publiee ? "non" : "oui"} />
 
       <h2 className="titre-bloc m-0 font-bold">
-        4. Partage avec ta classe
+        Publication
       </h2>
 
       <p className="m-0 mt-2 text-[length:var(--text-aide)] leading-[var(--text-aide--line-height)] text-[color:var(--color-encre-faible)]">
@@ -614,8 +599,8 @@ const TYPES = [
   { cle: "document", libelle: "Document", aide: `Joins un PDF ou un fichier (${FORMATS_ACCEPTES}, 4 Mo max).` },
 ] as const;
 
-function AjoutBloc({ seance }: { seance: string }) {
-  const [type, setType] = useState<string | null>(null);
+function AjoutBloc({ seance, vide }: { seance: string; vide: boolean }) {
+  const [type, setType] = useState<string | null>(vide ? "texte" : null);
   const [etat, action] = useActionState<EtatStudio, FormData>(ajouterBloc, ETAT_STUDIO_INITIAL);
 
   // Le bloc ajouté, le formulaire se referme et rend la main à la barre de
@@ -680,7 +665,7 @@ function AjoutBloc({ seance }: { seance: string }) {
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
-          Ajouter : {choisi.libelle}
+          {type === "texte" ? "Écrire le cours" : choisi.libelle}
         </h2>
         <button
           type="button"
@@ -688,7 +673,7 @@ function AjoutBloc({ seance }: { seance: string }) {
           onClick={() => setType(null)}
           className="bouton bouton-discret bouton-compact"
         >
-          Annuler
+          Changer de contenu
         </button>
       </div>
 
@@ -709,13 +694,23 @@ function AjoutBloc({ seance }: { seance: string }) {
               rows={4}
               maxLength={5000}
               required
-              autoFocus
+              autoFocus={!vide}
               className="champ min-h-[7rem] py-2.5"
             />
-            <details className="mt-2 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
-              <summary className="cursor-pointer">Besoin de mettre en forme ton texte ?</summary>
-              <p className="aide-champ">Utilise <code>{"# Titre"}</code>, <code>{"- puce"}</code>, <code>{"1. étape"}</code>, <code>{"> à retenir"}</code>, ou <code>{"| a | b |"}</code> pour un tableau. Formules : <code>{"$x^2$"}</code> ou <code>{"$$\\frac{a}{b}$$"}</code>.</p>
-            </details>
+            <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Mise en forme">
+              {Object.entries({ Titre: "# ", Liste: "- ", Étape: "1. ", Citation: "> " }).map(([label, prefix]) => (
+                <button key={label} type="button" className="bouton bouton-discret bouton-compact motion-safe:transition-transform motion-safe:active:scale-95"
+                  onClick={(event) => {
+                    const field = event.currentTarget.form?.elements.namedItem("texte");
+                    if (!(field instanceof HTMLTextAreaElement)) return;
+                    const start = field.value.slice(0, field.selectionStart).lastIndexOf("\n") + 1;
+                    if (field.value.length + prefix.length > field.maxLength) return;
+                    field.setRangeText(prefix, start, start, "preserve");
+                    field.focus();
+                    if (field.selectionStart === start) field.setSelectionRange(start + prefix.length, start + prefix.length);
+                  }}>{label}</button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -753,7 +748,7 @@ function AjoutBloc({ seance }: { seance: string }) {
                 name="url"
                 type="url"
                 required
-                autoFocus
+                autoFocus={!vide}
                 placeholder="https://"
                 className="champ"
               />
@@ -787,7 +782,7 @@ function AjoutBloc({ seance }: { seance: string }) {
                   name="titre"
                   type="text"
                   required
-                  autoFocus
+                  autoFocus={!vide}
                   maxLength={160}
                   placeholder="Devoir maison n° 2"
                   className="champ"

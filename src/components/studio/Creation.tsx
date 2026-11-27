@@ -53,32 +53,29 @@ export function NouvelleSeance({
         <button
           type="button"
           data-testid="ouvrir-nouvelle-seance"
-          className="group flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-[color:var(--color-accent)] bg-white p-4 text-left transition-colors hover:bg-[color:var(--color-rose-clair)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-accent)] sm:p-5"
+          className="group flex min-w-0 flex-row flex-wrap items-center gap-2 rounded-2xl motion-safe:transition-transform motion-safe:active:scale-[0.98] border border-[color:var(--color-accent)] bg-white p-4 text-left transition-colors hover:bg-[color:var(--color-rose-clair)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-accent)] sm:p-5"
           onClick={() => { setMode("ecrire"); setOuvert(true); }}
         >
           <span className="grid size-10 place-items-center rounded-xl bg-[color:var(--color-rose-clair)] text-[color:var(--color-accent)]"><PenLine size={21} aria-hidden="true" /></span>
           <span className="text-base font-bold">Écrire ma séance</span>
-          <span className="text-sm leading-6 text-[color:var(--color-encre-faible)]">Partir d’une page vide ou d’un modèle, puis ajouter cours et exercices.</span>
-          <span className="mt-auto pt-2 text-sm font-bold text-[color:var(--color-accent)]">Commencer</span>
+          <span className="text-sm leading-6 text-[color:var(--color-encre-faible)]">Page libre ou modèle de séance.</span>
         </button>
         <button
           type="button"
-          className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-[color:var(--color-bordure)] bg-white p-4 text-left transition-colors hover:border-[color:var(--color-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-accent)] sm:p-5"
+          className="flex min-w-0 flex-row flex-wrap items-center gap-2 rounded-2xl motion-safe:transition-transform motion-safe:active:scale-[0.98] border border-[color:var(--color-bordure)] bg-white p-4 text-left transition-colors hover:border-[color:var(--color-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-accent)] sm:p-5"
           onClick={() => { setMode("pdf"); setOuvert(true); }}
         >
           <span className="grid size-10 place-items-center rounded-xl bg-[color:var(--color-rose-clair)] text-[color:var(--color-accent)]"><FileText size={21} aria-hidden="true" /></span>
           <span className="text-base font-bold">Utiliser mon PDF</span>
-          <span className="text-sm leading-6 text-[color:var(--color-encre-faible)]">Garder le document intact. Tu l’ajouteras après avoir ouvert la séance.</span>
-          <span className="mt-auto pt-2 text-sm font-bold text-[color:var(--color-accent)]">Commencer</span>
+          <span className="text-sm leading-6 text-[color:var(--color-encre-faible)]">À lire dans sa mise en page originale.</span>
         </button>
         <Link
           href="/professeur/studio#depot"
-          className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-[color:var(--color-bordure)] bg-white p-4 text-left no-underline transition-colors hover:border-[color:var(--color-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-accent)] sm:p-5"
+          className="flex min-w-0 flex-row flex-wrap items-center gap-2 rounded-2xl motion-safe:transition-transform motion-safe:active:scale-[0.98] border border-[color:var(--color-bordure)] bg-white p-4 text-left no-underline transition-colors hover:border-[color:var(--color-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-accent)] sm:p-5"
         >
           <span className="grid size-10 place-items-center rounded-xl bg-[color:var(--color-rose-clair)] text-[color:var(--color-accent)]"><FileUp size={21} aria-hidden="true" /></span>
           <span className="text-base font-bold">Transformer un document</span>
-          <span className="text-sm leading-6 text-[color:var(--color-encre-faible)]">Importer un Word ou PDF pour en récupérer le texte modifiable.</span>
-          <span className="mt-auto pt-2 text-sm font-bold text-[color:var(--color-accent)]">Importer</span>
+          <span className="text-sm leading-6 text-[color:var(--color-encre-faible)]">Récupérer le texte d’un Word ou PDF.</span>
         </Link>
       </div>
     );

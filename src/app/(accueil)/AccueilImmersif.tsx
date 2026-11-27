@@ -1,5 +1,6 @@
 "use client";
 
+import tissu from "@/components/site/bouton-tissu.module.css";
 import Link from "next/link";
 import { Check, Search } from "lucide-react";
 import { flushSync } from "react-dom";
@@ -166,7 +167,7 @@ export function AccueilImmersif() {
         }}>
           study<span>.</span>
         </Link>
-        <Link className={s.connexion} href="/connexion">Se connecter</Link>
+        <Link className={tissu.tissu} href="/connexion">Se connecter</Link>
       </header>
 
       <main id="contenu" className={s.contenu}>

@@ -52,7 +52,7 @@
     border-color: var(--bordure-douce);
     box-shadow: var(--ombre-douce);
   }
-  .app-coque .panneau { padding: 22px; }
+  .app-coque .panneau { padding: clamp(16px, 3vw, 22px); }
   @media (min-width: 768px) {
     .app-coque .panneau { padding: 26px; }
   }
@@ -170,7 +170,7 @@
   /* --- Coque : barre latérale façon ChatGPT --------------------------------------- */
   @media (min-width: 768px) {
     .app-coque .app-barre {
-      background: #fbf9fa;
+      background: linear-gradient(160deg, var(--color-surface-douce), var(--color-surface) 68%);
       border-right-color: var(--bordure-douce);
     }
   }
@@ -180,9 +180,9 @@
   }
   .app-coque .lien-barre:hover { background: #f1ecf0; }
   .app-coque .lien-barre[aria-current="page"] {
-    background: #fff;
-    color: var(--color-encre);
-    box-shadow: 0 1px 2px rgba(41, 40, 46, 0.06), 0 0 0 1px var(--bordure-douce);
+    background: var(--color-rose-clair);
+    color: var(--color-accent-fonce);
+    box-shadow: inset 3px 0 var(--color-accent);
   }
 
   /* En-tête : blanc légèrement transparent, filet discret. */
@@ -225,7 +225,7 @@
   /* Navigation du téléphone : l'élément actif a sa pilule derrière l'icône. */
   .app-coque .app-nav-mobile {
     border-top-color: var(--bordure-douce);
-    background: rgba(255, 255, 255, 0.94);
+    background: color-mix(in srgb, var(--color-surface-douce) 94%, transparent);
     backdrop-filter: saturate(1.4) blur(10px);
   }
   .app-coque .app-nav-mobile > a > svg,
