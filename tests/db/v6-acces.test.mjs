@@ -139,3 +139,19 @@ test("la révocation garde la réservation si Auth est incertain, même sur un n
   const privileges = await db.query("select has_function_privilege('authenticated','study.invitation_reserver(bytea,uuid)','execute') as utilisateur, has_function_privilege('service_role','study.invitation_consommer(bytea)','execute') as ancienne");
   assert.deepEqual(privileges.rows[0], { utilisateur: false, ancienne: false });
 });
+
+test("le retour 0089 refuse de perdre une réservation puis restaure les droits historiques", async (t) => {
+  const { readFile } = await import("node:fs/promises");
+  const retour = await readFile(new URL("../../supabase/retour-arriere/retour-0089.sql", import.meta.url), "utf8");
+  const db = await baseDeTest();
+  t.after(() => db.close());
+  const profil = ACTEURS.eleveA1Lina, hash = empreinte("retour"), id = "11111111-1111-4111-8111-111111111111";
+  await db.query("update study.organization_memberships set account_state='a_activer' where profile_id=$1", [profil]);
+  await lirePourAdmin(db, ACTEURS.adminA, "select study.invitation_creer($1,$2)", [profil, hash]);
+  await db.query("select study.invitation_reserver($1,$2)", [hash,id]);
+  await assert.rejects(db.exec(retour), /RESERVATIONS_A_RECONCILIER/);
+  await db.exec("rollback");
+  await db.query("select study.invitation_liberer($1,$2)", [hash,id]);
+  await db.exec(retour);
+  assert.equal((await db.query("select has_function_privilege('service_role','study.invitation_consommer(bytea)','execute') as droit")).rows[0].droit, true);
+});
