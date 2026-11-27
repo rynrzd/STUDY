@@ -2,6 +2,7 @@ import "server-only";
 
 import path from "node:path";
 import PDFDocument from "pdfkit";
+import { MAX_IMAGES_DOCX, MAX_OCTETS_IMAGE, MAX_OCTETS_IMAGES } from "./images-studio.ts";
 import { sommaire, type BlocCours, type DocumentCours, type ReglagesPresentation } from "./document-cours.ts";
 
 const dossierPolices = path.join(process.cwd(), "node_modules", "dejavu-fonts-ttf");
@@ -34,7 +35,29 @@ export function nomPdf(titre: string): string {
 export async function fabriquerPdfCours(
   document: DocumentCours,
   reglages: ReglagesPresentation,
+  resoudreImage?: (reference: string) => Promise<Buffer | null>,
 ): Promise<Buffer> {
+  const images = new Map<string, Buffer>();
+  if (resoudreImage) {
+    // No remote URLs, no binary in the JSON body; each reference is resolved
+    // server-side with the same per-version authorization as the HTML image.
+    const refs = [...new Set(document.blocs
+      .filter((bloc): bloc is Extract<BlocCours, { type: "image" }> => bloc.type === "image")
+      .map((bloc) => bloc.fileId)
+      .filter((id): id is string => id !== null))].slice(0, MAX_IMAGES_DOCX);
+    let total = 0;
+    for (const reference of refs) {
+      try {
+        const octets = await resoudreImage(reference);
+        if (octets && octets.length <= MAX_OCTETS_IMAGE && total + octets.length <= MAX_OCTETS_IMAGES) {
+          images.set(reference, octets);
+          total += octets.length;
+        }
+      } catch {
+        // Missing/unsupported source remains visible as a labelled placeholder.
+      }
+    }
+  }
   const pdf = new PDFDocument({
     size: "A4",
     layout: reglages.modele === "projection" ? "landscape" : "portrait",
@@ -77,7 +100,7 @@ export async function fabriquerPdfCours(
     if (index === 0 && bloc.type === "titre" && bloc.texte.trim() === document.titre.trim()) continue;
     if (reglages.modele === "projection" && index > 0 && bloc.type === "titre" && bloc.niveau === 1) pdf.addPage();
     pdf.x = MARGE;
-    dessinerBloc(pdf, bloc, reglages);
+    dessinerBloc(pdf, bloc, reglages, images);
   }
 
   const pages = pdf.bufferedPageRange();
@@ -127,7 +150,7 @@ function dessinerSommaire(pdf: PDFKit.PDFDocument, document: DocumentCours, regl
   pdf.y = haut + hauteur + 16;
 }
 
-function dessinerBloc(pdf: PDFKit.PDFDocument, bloc: BlocCours, reglages: ReglagesPresentation) {
+function dessinerBloc(pdf: PDFKit.PDFDocument, bloc: BlocCours, reglages: ReglagesPresentation, images: ReadonlyMap<string, Buffer>) {
   const corps = (reglages.modele === "projection" ? 18 : reglages.modele === "aere" ? 13 : 11) * reglages.taille;
   const interligne = Math.max(1, (reglages.interligne - 1) * corps);
   const options = { width: pdf.page.width - MARGE * 2, lineGap: interligne };
@@ -204,6 +227,25 @@ function dessinerBloc(pdf: PDFKit.PDFDocument, bloc: BlocCours, reglages: Reglag
       pdf.moveDown(0.7);
       return;
     case "image": {
+      const octets = bloc.fileId ? images.get(bloc.fileId) : undefined;
+      if (octets) {
+        try {
+          const largeurMax = pdf.page.width - MARGE * 2;
+          const hauteurMax = Math.min(250, pdf.page.height - MARGE * 2 - 32);
+          assurerPlace(pdf, hauteurMax + 26);
+          const haut = pdf.y;
+          pdf.image(octets, MARGE, haut, { fit: [largeurMax, hauteurMax], align: "center", valign: "center" });
+          pdf.y = haut + hauteurMax + 10;
+          if (bloc.legende) {
+            pdf.font("AvecStudy").fontSize(9).fillColor("#6e6872")
+              .text(bloc.legende, { width: largeurMax, align: "center" });
+            pdf.moveDown(0.5);
+          }
+          return;
+        } catch {
+          // Invalid image stream: never abort the whole course export.
+        }
+      }
       assurerPlace(pdf, 92);
       const haut = pdf.y;
       pdf.save().dash(4, { space: 3 }).strokeColor("#aaa3ad").roundedRect(MARGE, haut, pdf.page.width - MARGE * 2, 76, 5).stroke().restore();

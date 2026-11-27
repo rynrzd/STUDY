@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { fabriquerPdfCours, nomPdf } from "@/lib/export-pdf";
+import { lireImageVersion } from "@/lib/lecture-images-studio";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { document as lireDocument, revision } from "@/lib/studio-documents";
 
@@ -39,7 +40,9 @@ export async function GET(
   const courante = await revision(jeton, doc.revisionId);
   if (courante === null) return NextResponse.json({ erreur: "introuvable" }, { status: 404 });
 
-  const octets = await fabriquerPdfCours(courante.document, courante.reglages);
+  const octets = await fabriquerPdfCours(courante.document, courante.reglages, async (reference) =>
+    (await lireImageVersion(jeton, courante.id, reference))?.octets ?? null,
+  );
   const nom = nomPdf(courante.document.titre);
   return new NextResponse(new Uint8Array(octets), {
     headers: {

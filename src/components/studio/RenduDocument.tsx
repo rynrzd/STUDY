@@ -4,6 +4,7 @@ import type {
   ReglagesPresentation,
 } from "@/lib/document-cours";
 import { sommaire } from "@/lib/document-cours";
+import { urlImageStudio } from "@/lib/images-studio-reference";
 
 /**
  * Rendu d'un document de cours — cahier « Refonte fidèle », S08 et S16.
@@ -68,10 +69,12 @@ export function RenduDocument({
   document,
   reglages,
   mode = "ecran",
+  revisionId,
 }: {
   document: DocumentCours;
   reglages: ReglagesPresentation;
   mode?: ModeRendu;
+  revisionId?: string;
 }) {
   const style = MODELES[reglages.modele];
   const entrees = reglages.sommaire ? sommaire(document) : [];
@@ -120,7 +123,7 @@ export function RenduDocument({
 
       <div className={`mt-6 ${style.espace}`}>
         {document.blocs.map((bloc, index) => (
-          <Bloc key={index} bloc={bloc} style={style} />
+          <Bloc key={index} bloc={bloc} style={style} revisionId={revisionId} />
         ))}
       </div>
     </article>
@@ -131,7 +134,7 @@ export function RenduDocument({
 
 type Style = (typeof MODELES)[keyof typeof MODELES];
 
-function Bloc({ bloc, style }: { bloc: BlocCours; style: Style }) {
+function Bloc({ bloc, style, revisionId }: { bloc: BlocCours; style: Style; revisionId?: string }) {
   switch (bloc.type) {
     case "titre":
       return bloc.niveau === 1 ? (
@@ -199,18 +202,7 @@ function Bloc({ bloc, style }: { bloc: BlocCours; style: Style }) {
       );
 
     case "image":
-      // L'image du document d'origine n'a pas été transférée. On garde sa place
-      // et on le dit : une case vide et silencieuse laisserait croire à un
-      // défaut d'affichage.
-      return (
-        <figure className="m-0">
-          <div className="flex min-h-[7rem] items-center justify-center rounded-[var(--radius-champ)] border border-dashed border-[color:var(--color-bordure-forte)] p-5 text-center">
-            <span className="text-[0.8125em] text-[color:var(--color-encre-tres-faible)]">
-              {bloc.legende ?? "Emplacement d'une image du document d'origine"}
-            </span>
-          </div>
-        </figure>
-      );
+      return <ImageBloc bloc={bloc} revisionId={revisionId} />;
 
     case "brut":
       // Fragment non reconnu, conservé mot pour mot. Mieux vaut un bloc mal
@@ -221,4 +213,25 @@ function Bloc({ bloc, style }: { bloc: BlocCours; style: Style }) {
         </p>
       );
   }
+}
+
+function ImageBloc({ bloc, revisionId }: { bloc: Extract<BlocCours, { type: "image" }>; revisionId?: string }) {
+  const src = urlImageStudio(revisionId, bloc.fileId);
+  return (
+    <figure className="m-0">
+      {src ? (
+        // The image endpoint validates version RLS and the source owner. It
+        // returns signature-verified PNG/JPEG; never a third-party URL or SVG.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={bloc.alt} loading="lazy" className="h-auto max-h-[65vh] w-auto max-w-full rounded-[var(--radius-champ)] object-contain" />
+      ) : (
+        <div className="flex min-h-[7rem] items-center justify-center rounded-[var(--radius-champ)] border border-dashed border-[color:var(--color-bordure-forte)] p-5 text-center">
+          <span className="text-[0.8125em] text-[color:var(--color-encre-tres-faible)]">
+            {bloc.legende ?? "Emplacement d'une image du document d'origine"}
+          </span>
+        </div>
+      )}
+      {src && bloc.legende ? <figcaption className="mt-2 text-center text-[0.8125em] text-[color:var(--color-encre-faible)]">{bloc.legende}</figcaption> : null}
+    </figure>
+  );
 }

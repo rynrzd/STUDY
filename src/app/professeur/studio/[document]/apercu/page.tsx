@@ -101,7 +101,7 @@ export default async function PageApercu({
               : "mx-auto mt-8 w-full max-w-[860px] rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-6 sm:p-10"
         }
       >
-        <RenduDocument document={courante.document} reglages={courante.reglages} mode={mode} />
+        <RenduDocument document={courante.document} reglages={courante.reglages} mode={mode} revisionId={courante.id} />
       </div>
 
       {mode === "a4" ? (

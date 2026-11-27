@@ -32,6 +32,7 @@ function importerFictif({ erreurFinalisation = null, erreurProgrammation = null,
     "node:crypto": require("node:crypto"),
     "./document-cours.ts": { REGLAGES_PAR_DEFAUT: {}, relireDocument() {}, relireReglages() {} },
     "./extraction.ts": { extraire() {}, TAILLE_MAXIMALE_IMPORT: 4_000_000 },
+    "./images-studio.ts": { analyserImageStudio() {}, referenceImageStudio() {} },
     "./supabase-serveur.ts": { clientUtilisateur: () => utilisateur, clientExploitation: () => exploitation },
     "./formats-documents.ts": {
       FORMATS_SUPPORTS: [{ extension: "pdf", mime: "application/pdf" }],

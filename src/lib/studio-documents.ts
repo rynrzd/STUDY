@@ -10,6 +10,7 @@ import {
   type ReglagesPresentation,
 } from "./document-cours.ts";
 import { extraire, ImportRefuse, TAILLE_MAXIMALE_IMPORT } from "./extraction.ts";
+import { analyserImageStudio, referenceImageStudio } from "./images-studio.ts";
 import { clientExploitation, clientUtilisateur } from "./supabase-serveur.ts";
 import { FORMATS_SUPPORTS, reconnaitre } from "./formats-documents.ts";
 import { reveiller } from "./travaux.ts";
@@ -335,7 +336,22 @@ export async function convertir(options: {
 
   let contenu: DocumentCours;
   try {
-    contenu = await extraire(Buffer.from(await objet.arrayBuffer()));
+    contenu = await extraire(Buffer.from(await objet.arrayBuffer()), {
+      conserverImage: async (octets, extension) => {
+        const reference = referenceImageStudio(options.organisation, options.document, octets, extension);
+        const image = analyserImageStudio(reference);
+        if (!image) return null;
+        // Sidecar in the SAME private bucket as the original. Never expose a
+        // signed or public URL; the RLS-protected image route is the sole reader.
+        // Reprocessing the identical source is idempotent (content hash key).
+        const { error } = await service.storage.from(BUCKET_IMPORTS).upload(image.cle, octets, {
+          contentType: image.mime,
+          cacheControl: "0",
+          upsert: true,
+        });
+        return error ? null : reference;
+      },
+    });
   } catch (erreur) {
     const message =
       erreur instanceof ImportRefuse

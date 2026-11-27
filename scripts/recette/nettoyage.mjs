@@ -24,6 +24,8 @@
 // Aucun réglage global de session, aucune suspension en bloc.
 // =============================================================================
 
+import { clesImagesStudio } from "./images-studio.mjs";
+
 /** Le journal : on le lit, on ne le réécrit jamais. */
 const INTOUCHABLES = new Set(["audit_events"]);
 
@@ -258,8 +260,8 @@ export async function balayer(sql, fournisseur, { trace = () => {} } = {}) {
   );
 
   // Les chemins de stockage sont releves **avant** le demontage : une fois les
-  // lignes de `files` supprimees, plus rien ne dit ou sont les octets, et ils
-  // restent dans le seau sans que rien ne les designe.
+  // lignes de `files` et les versions supprimees, plus rien ne dit ou sont
+  // les octets, et ils restent dans le seau sans qu'on puisse les retrouver.
   const aRetirerDuStockage = [];
   for (const etablissement of etablissements) {
     const { rows } = await sql.query(
@@ -267,6 +269,7 @@ export async function balayer(sql, fournisseur, { trace = () => {} } = {}) {
       [etablissement.id],
     );
     for (const ligne of rows) aRetirerDuStockage.push(ligne.storage_key);
+    for (const image of await clesImagesStudio(sql, etablissement.id)) aRetirerDuStockage.push(image);
   }
 
   const profils = new Set();

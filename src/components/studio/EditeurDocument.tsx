@@ -41,6 +41,7 @@ export interface DocumentInitial {
   readonly id: string;
   readonly etat: string;
   readonly revision: number;
+  readonly revisionId: string;
   readonly document: DocumentCours;
   readonly reglages: ReglagesPresentation;
   readonly fichierSource: string | null;
@@ -60,6 +61,7 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
   const [document, setDocument] = useState(initial.document);
   const [reglages, setReglages] = useState(initial.reglages);
   const [revision, setRevision] = useState(initial.revision);
+  const [revisionId, setRevisionId] = useState(initial.revisionId);
   const [sauvegarde, setSauvegarde] = useState<EtatSauvegarde>("repos");
   const [message, setMessage] = useState<string | null>(null);
   const [sale, setSale] = useState(false);
@@ -104,6 +106,7 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
 
     if (retour.etat === "enregistre") {
       setRevision(retour.revision ?? revision);
+      if (retour.revisionId) setRevisionId(retour.revisionId);
       setSauvegarde("enregistre");
       setMessage(null);
       modifie.current = versionLocale !== generation.current;
@@ -296,7 +299,7 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
           {comparaison ? <h2 className="titre-bloc m-0 mb-3 font-bold">Version AvecStudy · après</h2> : null}
           <div className="rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-6 shadow-[var(--shadow-flottant)] sm:p-10">
             <div key={reglages.modele} className="studio-apercu-entree">
-              <RenduDocument document={document} reglages={reglages} />
+              <RenduDocument document={document} reglages={reglages} revisionId={revisionId} />
             </div>
           </div>
 

@@ -87,7 +87,7 @@ export default async function PagePublication({
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         <div className="rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-6 shadow-[var(--shadow-flottant)] sm:p-10">
-          <RenduDocument document={courante.document} reglages={courante.reglages} />
+          <RenduDocument document={courante.document} reglages={courante.reglages} revisionId={courante.id} />
         </div>
 
         <aside className="lg:sticky lg:top-24">

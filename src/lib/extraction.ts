@@ -3,6 +3,7 @@ import "server-only";
 
 import mammoth from "mammoth";
 import { extractText, getDocumentProxy } from "unpdf";
+import { analyserImageStudio, imageDocxValide, MAX_IMAGES_DOCX, MAX_OCTETS_IMAGES } from "./images-studio.ts";
 import {
   VERSION_DOCUMENT,
   type AlerteConversion,
@@ -26,8 +27,8 @@ import {
  *    est refusé avec un message qui le dit. Le cahier prévoit l'OCR (S06) ;
  *    tant qu'aucun moteur n'est raccordé, refuser est la seule réponse honnête.
  *    Prétendre convertir un scan produirait un cours vide.
- *  - **Les images des DOCX ne sont pas transférées.** Leur emplacement est
- *    conservé, avec une alerte, et le professeur remet l'image lui-même.
+ *  - **Les images hors PNG/JPEG ou au-delà des budgets restent à reprendre.**
+ *    Leur emplacement et une alerte explicite sont conservés.
  */
 
 /** Ce que le cahier fixe comme budget initial (S03), ajustable. */
@@ -36,6 +37,43 @@ export const PAGES_MAXIMALES = 50;
 
 /** Le DOCX est une archive : on borne ce qu'on accepte d'en décompresser. */
 const DECOMPRESSION_MAXIMALE = 120 * 1024 * 1024;
+
+/**
+ * ZIP preflight: the compressed upload limit alone does not stop a ZIP bomb.
+ * Read ONLY the central-directory metadata (no decompression or allocation).
+ * Unsupported ZIP64/invalid directories fail closed with a useful message.
+ */
+function verifierTailleDocx(octets: Buffer): void {
+  let fin = -1;
+  for (let i = octets.length - 22; i >= Math.max(0, octets.length - 65_557); i--) {
+    if (octets.readUInt32LE(i) === 0x06054b50 && i + 22 + octets.readUInt16LE(i + 20) === octets.length) {
+      fin = i;
+      break;
+    }
+  }
+  const refus = () => new ImportRefuse("L'archive Word est endommagée ou son format ZIP n'est pas pris en charge.");
+  if (fin < 0) throw refus();
+  const entrees = octets.readUInt16LE(fin + 10);
+  const tailleAnnuaire = octets.readUInt32LE(fin + 12);
+  const debutAnnuaire = octets.readUInt32LE(fin + 16);
+  if (entrees === 0xffff || debutAnnuaire === 0xffffffff ||
+      debutAnnuaire + tailleAnnuaire > fin) throw refus();
+
+  let position = debutAnnuaire;
+  let total = 0;
+  for (let i = 0; i < entrees; i++) {
+    if (position + 46 > fin || octets.readUInt32LE(position) !== 0x02014b50) throw refus();
+    const taille = octets.readUInt32LE(position + 24);
+    if (taille === 0xffffffff) throw refus();
+    total += taille;
+    if (total > DECOMPRESSION_MAXIMALE) {
+      throw new ImportRefuse("Ce document Word se décompresse en plus de 120 Mo : il est trop volumineux.");
+    }
+    position += 46 + octets.readUInt16LE(position + 28) +
+      octets.readUInt16LE(position + 30) + octets.readUInt16LE(position + 32);
+  }
+  if (position !== debutAnnuaire + tailleAnnuaire) throw refus();
+}
 
 export type FormatImport = "pdf" | "docx";
 
@@ -288,18 +326,44 @@ function titreProbable(blocs: readonly BlocCours[]): string {
  * attribut `onclick` ou une URL distante ne peuvent pas traverser, parce que
  * rien ne les transporte.
  */
-async function extraireDocx(octets: Buffer): Promise<DocumentCours> {
+export interface OptionsExtraction {
+  /** Facultatif : le worker conserve l'image dans le stockage privé. */
+  readonly conserverImage?: (octets: Buffer, extension: "png" | "jpg") => Promise<string | null>;
+}
+
+async function extraireDocx(octets: Buffer, options: OptionsExtraction): Promise<DocumentCours> {
   if (octets.length > DECOMPRESSION_MAXIMALE) {
     throw new ImportRefuse("Ce document est trop volumineux pour être traité.");
   }
+  verifierTailleDocx(octets);
 
   let html: string;
+  let imagesRencontrees = 0;
+  let octetsImages = 0;
+  const references = new Map<number, string>();
   try {
     const resultat = await mammoth.convertToHtml(
       { buffer: octets },
       {
-        // Les images ne sont pas transférées : on garde la place et on le dit.
-        convertImage: mammoth.images.imgElement(async () => ({ src: "" })),
+        convertImage: mammoth.images.imgElement(async (image) => {
+          const numero = ++imagesRencontrees;
+          const src = `study-image-${numero}`;
+          if (!options.conserverImage || numero > MAX_IMAGES_DOCX) return { src };
+          try {
+            const donnees = await image.readAsBuffer();
+            octetsImages += donnees.length;
+            if (octetsImages > MAX_OCTETS_IMAGES) return { src };
+            const extension = imageDocxValide(donnees, image.contentType);
+            if (!extension) return { src };
+            // Un échec isolé de stockage ne doit jamais déguiser une image
+            // manquante en image conservée : son bloc reste un emplacement.
+            const reference = await options.conserverImage(donnees, extension);
+            if (reference && analyserImageStudio(reference)) references.set(numero, reference);
+          } catch {
+            // Le rapport marque l'image comme non conservée.
+          }
+          return { src };
+        }),
       },
     );
     html = resultat.value;
@@ -310,20 +374,21 @@ async function extraireDocx(octets: Buffer): Promise<DocumentCours> {
     );
   }
 
-  const { blocs, images } = lireHtmlSimple(html);
+  const { blocs, images } = lireHtmlSimple(html, references);
 
   if (blocs.length === 0) {
     throw new ImportRefuse("Ce document ne contient aucun texte.");
   }
 
   const alertes: AlerteConversion[] = [];
-  if (images > 0) {
+  const absentes = blocs.filter((bloc) => bloc.type === "image" && bloc.fileId === null).length;
+  if (absentes > 0) {
     alertes.push({
       gravite: "verifier",
       message:
-        images === 1
+        absentes === 1
           ? "Une image du document n'a pas été reprise : sa place est marquée, à vous de la remettre."
-          : `${images} images du document n'ont pas été reprises : leur place est marquée, à vous de les remettre.`,
+          : `${absentes} images du document n'ont pas été reprises : leur place est marquée, à vous de les remettre.`,
     });
     // CONV-10 : chaque image absente est signalée, avec ce qui la précède,
     // pour la retrouver dans l'original et la remettre à sa place.
@@ -331,6 +396,7 @@ async function extraireDocx(octets: Buffer): Promise<DocumentCours> {
     blocs.forEach((bloc, i) => {
       if (bloc.type !== "image") return;
       rang += 1;
+      if (bloc.fileId !== null) return;
       const avant = blocs.slice(0, i).reverse().find((b) => b.type === "titre" || b.type === "paragraphe");
       const repere = avant && "texte" in avant ? ` (après « ${avant.texte.slice(0, 60)}${avant.texte.length > 60 ? "…" : ""} »)` : " (en tête du document)";
       alertes.push({ gravite: "verifier", message: `Image ${rang} sur ${images}${repere} : à remettre depuis votre fichier d'origine.` });
@@ -342,7 +408,7 @@ async function extraireDocx(octets: Buffer): Promise<DocumentCours> {
     titre: titreProbable(blocs),
     blocs,
     format: "docx",
-    rapport: { pagesLues: 0, blocsExtraits: blocs.length, imagesConservees: 0, alertes },
+    rapport: { pagesLues: 0, blocsExtraits: blocs.length, imagesConservees: images - absentes, alertes },
   };
 }
 
@@ -354,7 +420,7 @@ async function extraireDocx(octets: Buffer): Promise<DocumentCours> {
  * et jette tout le reste. Ce qu'il ne sait pas lire n'existe pas pour lui —
  * c'est précisément la propriété recherchée face à une sortie non assainie.
  */
-function lireHtmlSimple(html: string): { blocs: BlocCours[]; images: number } {
+function lireHtmlSimple(html: string, references: ReadonlyMap<number, string>): { blocs: BlocCours[]; images: number } {
   const blocs: BlocCours[] = [];
   let images = 0;
 
@@ -369,36 +435,40 @@ function lireHtmlSimple(html: string): { blocs: BlocCours[]; images: number } {
     listeEnCours = null;
   };
 
+  const placerImages = (fragment: string) => {
+    for (const balise of fragment.match(/<img\b[^>]*>/gi) ?? []) {
+      images += 1;
+      // Seule une référence issue du callback interne de Mammoth est reprise.
+      // Aucun attribut HTML, chemin ou URL du document n'est rendu tel quel.
+      const identifiant = /\bsrc="study-image-(\d+)"/i.exec(balise);
+      const reference = identifiant ? references.get(Number(identifiant[1])) ?? null : null;
+      blocs.push({ type: "image", fileId: reference, alt: `Image ${images} du document d'origine` });
+    }
+  };
+
   for (const trouve of html.matchAll(motif)) {
     const balise = (trouve[1] ?? trouve[3] ?? "").toLowerCase();
 
     if (balise === "img") {
       viderListe();
-      images += 1;
-      blocs.push({ type: "image", fileId: null, alt: `Image ${images} du document d'origine` });
+      placerImages(trouve[0]);
       continue;
     }
 
     // Mammoth place une image dans son paragraphe (« <p><img/></p> ») : elle
     // disparaissait avec le balisage. Chaque image garde maintenant sa place,
     // juste après le texte qui l'accompagne.
-    const imagesIncluses = balise === "table" ? 0 : (trouve[2] ?? "").match(/<img\b/gi)?.length ?? 0;
-    const placerImages = () => {
-      for (let k = 0; k < imagesIncluses; k++) {
-        images += 1;
-        blocs.push({ type: "image", fileId: null, alt: `Image ${images} du document d'origine` });
-      }
-    };
+    const imagesIncluses = (trouve[2] ?? "").match(/<img\b/gi)?.length ?? 0;
 
     const texte = nettoyer(trouve[2] ?? "");
     if (texte === "") {
       if (imagesIncluses > 0) {
         viderListe();
-        placerImages();
+        placerImages(trouve[2] ?? "");
       }
       continue;
     }
-    if (imagesIncluses > 0 && balise !== "li") {
+    if (imagesIncluses > 0 && balise !== "li" && balise !== "table") {
       viderListe();
       const avant = blocs.length;
       blocs.push({ type: "paragraphe", texte });
@@ -406,7 +476,7 @@ function lireHtmlSimple(html: string): { blocs: BlocCours[]; images: number } {
         const niveau = Number(balise.slice(1));
         blocs[avant] = { type: "titre", niveau: (niveau <= 1 ? 1 : niveau === 2 ? 2 : 3) as NiveauTitre, texte };
       }
-      placerImages();
+      placerImages(trouve[2] ?? "");
       continue;
     }
 
@@ -415,7 +485,7 @@ function lireHtmlSimple(html: string): { blocs: BlocCours[]; images: number } {
       listeEnCours.push(texte);
       if (imagesIncluses > 0) {
         viderListe();
-        placerImages();
+        placerImages(trouve[2] ?? "");
       }
       continue;
     }
@@ -431,6 +501,9 @@ function lireHtmlSimple(html: string): { blocs: BlocCours[]; images: number } {
       if (lignes.length > 0) {
         blocs.push({ type: "tableau", entetes: lignes[0]!, lignes: lignes.slice(1) });
       }
+      // Une image insérée dans une cellule est rendue sous le tableau ; elle
+      // n'est jamais perdue silencieusement, même sans éditeur de cellules.
+      if (imagesIncluses > 0) placerImages(trouve[2] ?? "");
       continue;
     }
 
@@ -505,7 +578,7 @@ function nettoyer(fragment: string): string {
  * ne va pas, et sur ce qu'il peut faire. « Échec de la conversion » n'aide
  * personne.
  */
-export async function extraire(octets: Buffer): Promise<DocumentCours> {
+export async function extraire(octets: Buffer, options: OptionsExtraction = {}): Promise<DocumentCours> {
   if (octets.length === 0) throw new ImportRefuse("Ce fichier est vide.");
   if (octets.length > TAILLE_MAXIMALE_IMPORT) {
     throw new ImportRefuse(
@@ -520,5 +593,5 @@ export async function extraire(octets: Buffer): Promise<DocumentCours> {
     );
   }
 
-  return format === "pdf" ? extrairePdf(octets) : extraireDocx(octets);
+  return format === "pdf" ? extrairePdf(octets) : extraireDocx(octets, options);
 }
