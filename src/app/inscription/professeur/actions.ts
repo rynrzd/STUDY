@@ -12,6 +12,7 @@ import { controlerMotDePasse, MESSAGES_MOT_DE_PASSE } from "@/lib/mot-de-passe";
 import { COOKIE_INTRO } from "@/lib/mouvement";
 import { dedoublonnerEnseignements, MAX_ENSEIGNEMENTS_SOUHAITES, schemaProjetProfesseur } from "@/lib/projet-professeur";
 import { schemaConfirmationProfesseur } from "@/lib/confirmation-professeur";
+import { demanderCourrielAuth } from "@/lib/demande-courriel-auth";
 import { cookieSession, empreinteJeton, NOM_COOKIE_SESSION } from "@/lib/session";
 import { baseConfiguree, clientAuthentification, clientExploitation } from "@/lib/supabase-serveur";
 import type { EtatInscriptionProfesseur } from "./etats";
@@ -55,7 +56,7 @@ export async function inscrireProfesseur(_precedent: EtatInscriptionProfesseur, 
 
   const email = valeurs.email.trim();
   const auth = clientAuthentification();
-  const { data, error } = await auth.auth.signUp({
+  const demande = await demanderCourrielAuth("inscription", () => auth.auth.signUp({
     email,
     password: motDePasse,
     options: {
@@ -68,18 +69,14 @@ export async function inscrireProfesseur(_precedent: EtatInscriptionProfesseur, 
         enseignements_souhaites_avecstudy: dedoublonnerEnseignements(projet.data.enseignements),
       },
     },
-  });
-  const attente: EtatInscriptionProfesseur = {
+  }), () => auth.auth.signOut({ scope: "local" }));
+  if (demande === "limite") return { etat: "refus", valeurs, message: "Trop de demandes ont été faites. Patiente quelques minutes avant de réessayer." };
+  if (demande === "indisponible") return { etat: "refus", valeurs, message: "La demande de confirmation n’a pas pu être finalisée. Réessaie dans quelques minutes." };
+  return {
     etat: "envoyee",
     valeurs,
-    message: "Vérifie ta boîte mail et les indésirables, puis saisis ton code à 6 chiffres ci-dessous. Tu peux demander un nouveau code ou corriger l’adresse.",
+    message: "Si ton adresse doit être confirmée, saisis le code à 6 chiffres reçu par e-mail. Pense à vérifier les indésirables. Si ton compte est déjà activé, tu peux te connecter.",
   };
-  if (error) console.warn(JSON.stringify({ niveau: "avertissement", contexte: "inscription_professeur", code: error.code ?? error.status }));
-  if (data.session) {
-    await auth.auth.signOut({ scope: "local" });
-    console.error(JSON.stringify({ niveau: "erreur", contexte: "inscription_professeur", code: "confirmation_auth_requise" }));
-  }
-  return attente;
 }
 
 function adresseAcces(mode: "confirmation" | "recuperation") {
@@ -97,12 +94,12 @@ export async function envoyerLienProfesseur(
   if (!baseConfiguree()) return { etat: "refus", message: "L’envoi d’e-mails est momentanément indisponible. Réessaie plus tard." };
   const auth = clientAuthentification().auth;
   const retour = adresseAcces(mode);
-  const { error } = mode === "confirmation"
-    ? await auth.resend({ type: "signup", email: email.data, options: { emailRedirectTo: retour } })
-    : await auth.resetPasswordForEmail(email.data, { redirectTo: retour });
-  if (error) {
-    console.warn(JSON.stringify({ niveau: "avertissement", contexte: "courrier_professeur", mode, code: error.code ?? error.status }));
-  }
+  await demanderCourrielAuth(mode, async () => {
+    const { error } = mode === "confirmation"
+      ? await auth.resend({ type: "signup", email: email.data, options: { emailRedirectTo: retour } })
+      : await auth.resetPasswordForEmail(email.data, { redirectTo: retour });
+    return { error };
+  });
   return {
     etat: "envoyee",
     message: mode === "confirmation"
