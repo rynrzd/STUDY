@@ -65,7 +65,7 @@ function enDocument(ligne: LigneDocument): DocumentStudio {
 }
 
 /** Les derniers cours du professeur, le plus récemment touché en tête (S02). */
-export async function mesDocuments(jeton: string, limite = 40): Promise<DocumentStudio[]> {
+export async function mesDocuments(jeton: string, limite = 40): Promise<DocumentStudio[] | null> {
   const { data, error } = await clientUtilisateur(jeton)
     .from("studio_documents")
     .select("id, title, state, erreur, current_revision_id, source_file_id, updated_at")
@@ -73,7 +73,8 @@ export async function mesDocuments(jeton: string, limite = 40): Promise<Document
     .order("updated_at", { ascending: false })
     .limit(limite);
 
-  if (error !== null) return [];
+  // Une panne de lecture ne doit pas passer pour une bibliothèque vide.
+  if (error !== null) return null;
   return ((data ?? []) as unknown as LigneDocument[]).map(enDocument);
 }
 

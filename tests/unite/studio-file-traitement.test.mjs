@@ -7,13 +7,14 @@ import ts from "typescript";
 
 const require = createRequire(import.meta.url);
 
-function importerFictif({ erreurFinalisation = null, erreurProgrammation = null } = {}) {
+function importerFictif({ erreurFinalisation = null, erreurProgrammation = null, resultatListe = { data: [], error: null } } = {}) {
   const modifications = [];
   const appels = [];
   let reveils = 0;
   const utilisateur = {
     rpc: async () => ({ data: null, error: null }),
     from: (table) => ({
+      select: () => ({ is: () => ({ order: () => ({ limit: async () => resultatListe }) }) }),
       insert: () => ({ select: () => ({ single: async () => ({ data: { id: table === "files" ? "fichier" : "document" }, error: null }) }) }),
       update: (champs) => ({ eq: async () => { modifications.push({ table, champs }); return { error: null }; } }),
       delete: () => ({ eq: async () => ({ error: null }) }),
@@ -50,6 +51,7 @@ function importerFictif({ erreurFinalisation = null, erreurProgrammation = null 
   });
   return {
     importer: exports.importer,
+    mesDocuments: exports.mesDocuments,
     appels,
     modifications,
     reveils: () => reveils,
@@ -66,6 +68,13 @@ test("le Studio réveille le traitement uniquement après finalisation et progra
   assert.equal(resultat.etat, "ok");
   assert.deepEqual(jeu.appels, ["finaliser_support_de_seance", "programmer_import_cours"]);
   assert.equal(jeu.reveils(), 1);
+});
+
+test("une erreur de lecture Studio est distincte d'une liste réellement vide", async () => {
+  const panne = importerFictif({ resultatListe: { data: null, error: { code: "42501" } } });
+  assert.equal(await panne.mesDocuments("test"), null);
+  const listeVide = importerFictif();
+  assert.deepEqual(await listeVide.mesDocuments("test"), []);
 });
 
 test("une finalisation refusée n'envoie pas un document bloqué en attente", async () => {
