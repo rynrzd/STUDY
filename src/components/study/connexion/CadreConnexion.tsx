@@ -43,13 +43,16 @@ export function CadreConnexion({
     <ConteneurEffets>
       <div className={`sans-debordement min-h-dvh bg-[color:var(--color-fond)] ${etapeMobile ? m.root : ""}`} data-etape={etapeMobile}>
         <header className="mx-auto flex h-16 w-full max-w-[1200px] items-center px-5 sm:px-8 lg:h-[72px]">
-          <Link href="/" className="inline-flex min-h-[44px] items-center text-[color:var(--color-encre)]">
-            <MotSymbole titre="Study, retour au site" className="block h-auto w-[80px] lg:w-[92px]" />
+          <Link href="/" aria-label="AvecStudy, retour au site" className="inline-flex min-h-[44px] items-center text-[color:var(--color-encre)]">
+            <MotSymbole titre="Study" className="block h-auto w-[80px] lg:w-[92px]" />
+            {professeur ? <span aria-hidden="true" className="ml-3 border-l border-[color:var(--color-bordure-forte)] pl-3 text-xs font-semibold tracking-wide text-[color:var(--color-encre-faible)]">
+              AvecStudy
+            </span> : null}
           </Link>
           {etapeMobile ? <Link href="/" className={m.back}><ArrowLeft size={16} aria-hidden="true" /> Retour au site</Link> : null}
         </header>
         <div className="mx-auto grid w-full max-w-[1200px] gap-10 px-5 pb-[max(40px,env(safe-area-inset-bottom))] sm:px-8 lg:grid-cols-[2fr_3fr] lg:items-center lg:gap-16 lg:py-10">
-          <aside className="hidden rounded-[var(--radius-grand)] bg-[color:var(--color-rose-clair)] p-12 lg:block" aria-label="Study en bref">
+          <aside className="hidden rounded-[var(--radius-grand)] bg-[color:var(--color-rose-clair)] p-12 lg:block" aria-label="AvecStudy en bref">
             <p className="m-0 text-[2.75rem] font-extrabold leading-[1.08] tracking-[-0.045em]">{professeur ? "Tes idées méritent une belle classe." : "Ta classe commence ici."}</p>
             <ul className="m-0 mt-10 grid list-none gap-6 p-0">
               {points.map((l) => (
