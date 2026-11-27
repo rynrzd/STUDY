@@ -25,12 +25,14 @@ const ETAPES = [
 export function SuiviTraitement({ document: id, titre }: { document: string; titre: string }) {
   const [etat, setEtat] = useState<string>("traitement");
   const [erreur, setErreur] = useState<string | null>(null);
+  const [longueAttente, setLongueAttente] = useState(false);
   const routeur = useRouter();
 
   useEffect(() => {
     let vivant = true;
     let delai = 2000;
     let minuteur: number | undefined;
+    const debut = Date.now();
 
     const interroger = async () => {
       if (!vivant) return;
@@ -60,6 +62,8 @@ export function SuiviTraitement({ document: id, titre }: { document: string; tit
       } catch {
         // Une requête perdue n'est pas un échec du traitement : on réessaiera.
       }
+
+      if (Date.now() - debut >= 60_000) setLongueAttente(true);
 
       delai = Math.min(10_000, Math.round(delai * 1.5));
       minuteur = window.setTimeout(interroger, delai);
@@ -116,7 +120,9 @@ export function SuiviTraitement({ document: id, titre }: { document: string; tit
 
       <p role="status" className="m-0 mt-8 text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)] text-[color:var(--color-encre-faible)]">
         {erreur ??
-          "La lecture se poursuit même si vous fermez cet onglet : vous retrouverez le cours dans la liste."}
+          (longueAttente
+            ? "La conversion prend plus longtemps que prévu. Tu peux fermer cet onglet et revenir dans Mes documents ; si elle échoue, le motif sera affiché."
+            : "La lecture se poursuit même si vous fermez cet onglet : vous retrouverez le cours dans la liste.")}
       </p>
     </div>
   );
