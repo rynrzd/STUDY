@@ -68,15 +68,11 @@ export async function fabriquerPdfCours(
     const pages = pdf.bufferedPageRange();
     for (let index = pages.start; index < pages.start + pages.count; index += 1) {
       pdf.switchToPage(index);
-      pdf
-        .font("AvecStudy")
-        .fontSize(8)
-        .fillColor("#6e6872")
-        .text(String(index - pages.start + 1), MARGE, HAUTEUR_A4 - 38, {
-          width: LARGEUR_A4 - MARGE * 2,
-          align: "center",
-          lineBreak: false,
-        });
+      const numero = String(index - pages.start + 1);
+      pdf.font("AvecStudy").fontSize(8).fillColor("#6e6872");
+      // Une largeur active la pagination de PDFKit, même dans le pied de page.
+      const gauche = (pdf.page.width - pdf.widthOfString(numero)) / 2;
+      pdf.text(numero, gauche, pdf.page.height - 38, { lineBreak: false });
     }
   }
 
