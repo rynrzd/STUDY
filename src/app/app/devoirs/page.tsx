@@ -5,6 +5,7 @@ import { TitreEspace, Vide } from "@/components/app/Cadre";
 import { devoirsDeLEleve, type Devoir, type EtatRemise } from "@/lib/devoirs";
 import { coursDeLEleve } from "@/lib/espace-eleve";
 import { instantLisible } from "@/lib/horodatage";
+import { classerDevoirsEleve } from "@/lib/priorites-eleve";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
 import { RubriqueCoursEleve } from "@/components/study/Rubriques";
@@ -14,8 +15,8 @@ export const metadata: Metadata = { title: "À faire" };
 /**
  * À faire — cahier V5, §3.1.
  *
- * Quatre groupes, dans l'ordre où ils intéressent l'élève : ce qui reste à
- * faire, ce qui est remis, ce qui est corrigé, ce qui est fermé. Pas de
+ * Trois groupes, dans l'ordre où ils intéressent l'élève : urgent,
+ * plus tard, puis terminé ou fermé. Pas de
  * pourcentage d'avancement ni de série quotidienne — AvecStudy ne prétend pas
  * savoir ce qu'un élève a réellement compris.
  *
@@ -91,26 +92,25 @@ export default async function PageDevoirsEleve() {
     corrige: devoirsCorriges.has(devoir.id),
   }));
 
-  const remis = (etat: EtatRemise) => etat === "remis" || etat === "remis_en_retard";
-
+  const priorites = classerDevoirsEleve(lignes);
   const groupes = [
     {
-      cle: "a-faire",
-      titre: "À faire",
-      lignes: lignes.filter(
-        (l) => !l.corrige && !remis(l.etat) && l.devoir.etat !== "ferme",
-      ),
+      cle: "bientot",
+      titre: "À rendre bientôt",
+      explication: "Échéance dans les sept prochains jours, ou déjà passée si le dépôt reste ouvert.",
+      lignes: priorites.bientot,
     },
     {
-      cle: "remis",
-      titre: "Remis, en attente de correction",
-      lignes: lignes.filter((l) => !l.corrige && remis(l.etat)),
+      cle: "plus-tard",
+      titre: "À faire plus tard",
+      explication: "Tu as encore du temps, ou aucune date limite n'est fixée.",
+      lignes: priorites.plusTard,
     },
-    { cle: "corriges", titre: "Corrigés", lignes: lignes.filter((l) => l.corrige) },
     {
-      cle: "fermes",
-      titre: "Fermés",
-      lignes: lignes.filter((l) => !l.corrige && !remis(l.etat) && l.devoir.etat === "ferme"),
+      cle: "termines",
+      titre: "Terminés ou fermés",
+      explication: "Copies remises, corrections reçues et devoirs dont la remise est fermée.",
+      lignes: priorites.termines,
     },
   ];
 
@@ -134,7 +134,7 @@ export default async function PageDevoirsEleve() {
     );
   }
 
-  const aFaire = groupes[0]!.lignes.length;
+  const aFaire = priorites.nombreAFaire;
 
   return (
     <>
@@ -148,8 +148,9 @@ export default async function PageDevoirsEleve() {
         groupe.lignes.length === 0 ? null : (
           <section key={groupe.cle} className="mt-10" data-testid={`groupe-${groupe.cle}`}>
             <h2 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
-              {groupe.titre}
+              {groupe.titre} <span className="text-base font-normal text-[color:var(--color-encre-faible)]">({groupe.lignes.length})</span>
             </h2>
+            <p className="m-0 mt-1 text-sm text-[color:var(--color-encre-faible)]">{groupe.explication}</p>
 
             <ul className="m-0 mt-4 list-none space-y-2 p-0">
               {groupe.lignes.map((ligne) => (
@@ -158,10 +159,10 @@ export default async function PageDevoirsEleve() {
                     href={`/app/devoirs/${ligne.devoir.id}`}
                     data-testid="devoir-lien"
                     data-devoir={ligne.devoir.id}
-                    className="flex min-h-[44px] flex-wrap items-center justify-between gap-3 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] p-4 no-underline hover:border-[color:var(--color-bordure-forte)]"
+                    className="flex min-h-[72px] min-w-0 flex-wrap items-center justify-between gap-3 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-4 no-underline transition-colors hover:border-[color:var(--color-accent)]"
                   >
                     <span className="min-w-0">
-                      <span className="block font-semibold">{ligne.devoir.titre}</span>
+                      <span className="block break-words font-semibold">{ligne.devoir.titre}</span>
                       <span className="block text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
                         {ligne.cours}
                         {ligne.devoir.echeance === null
@@ -170,12 +171,17 @@ export default async function PageDevoirsEleve() {
                       </span>
                     </span>
 
-                    <span className="text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
-                      {ligne.devoir.mode === "papier"
-                        ? "papier"
-                        : ligne.devoir.mode === "aucune"
-                          ? "rien à rendre"
-                          : "fichier"}
+                    <span className="flex flex-wrap items-center gap-2 text-sm">
+                      <span className="rounded-full bg-[color:var(--color-rose-clair)] px-2.5 py-1 font-semibold text-[color:var(--color-accent)]">
+                        {libelleEtat(ligne)}
+                      </span>
+                      <span className="text-[color:var(--color-encre-faible)]">
+                        {ligne.devoir.mode === "papier"
+                          ? "Sur papier"
+                          : ligne.devoir.mode === "aucune"
+                            ? "Sans dépôt"
+                            : "Fichier"}
+                      </span>
                     </span>
                   </Link>
                 </li>
@@ -186,4 +192,13 @@ export default async function PageDevoirsEleve() {
       )}
     </>
   );
+}
+
+function libelleEtat(ligne: Ligne): string {
+  if (ligne.corrige || ligne.etat === "retour_disponible") return "Corrigé";
+  if (ligne.etat === "remis" || ligne.etat === "remis_en_retard") return "Copie remise";
+  if (ligne.devoir.etat === "ferme") return "Remise fermée";
+  if (ligne.etat === "a_reprendre") return "À reprendre";
+  if (ligne.devoir.etat === "publie_en_retard") return "En retard";
+  return "À faire";
 }
