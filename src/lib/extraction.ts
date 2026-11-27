@@ -162,6 +162,10 @@ const INTITULES = [
   "methode",
   "exemple",
   "rappel",
+  "à retenir",
+  "a retenir",
+  "formule",
+  "objectif",
 ];
 
 /**
@@ -200,6 +204,20 @@ function structurer(lignes: readonly string[], page: number): BlocCours[] {
     }
 
     viderListe();
+
+    const etiquette = /^([^:]{2,24})\s*:\s*(.+)$/u.exec(ligne);
+    if (etiquette && INTITULES.includes(etiquette[1]!.trim().toLowerCase())) {
+      blocs.push({ type: "encadre", intitule: etiquette[1]!.trim(), texte: etiquette[2]!, origine: { page } });
+      continue;
+    }
+
+    // Une ligne qui reprend au milieu d’une phrase appartient au bloc précédent.
+    const precedent = blocs.at(-1);
+    if ((precedent?.type === "encadre" || precedent?.type === "paragraphe") &&
+        /[\p{L},]$/u.test(precedent.texte) && /^\p{Ll}/u.test(ligne)) {
+      blocs[blocs.length - 1] = { ...precedent, texte: precedent.texte + " " + ligne };
+      continue;
+    }
 
     const sansAccent = ligne.toLowerCase().replace(/[:.]$/, "").trim();
     if (INTITULES.includes(sansAccent) && i + 1 < lignes.length) {

@@ -181,3 +181,9 @@ test("un fichier vide et un fichier démesuré sont refusés tôt", async () => 
     return true;
   });
 });
+
+test("une définition sur deux lignes reste un seul encadré du cours", async () => {
+  const document = await extraire(pdf(["Les fonctions", "Definition : Une fonction affine", "associe x a ax + b.", "1. Calculer f(2)."]));
+  assert.deepEqual(document.blocs.map(b => b.type), ["titre", "encadre", "liste"]);
+  assert.equal(document.blocs[1]?.type === "encadre" && document.blocs[1].texte, "Une fonction affine associe x a ax + b.");
+});
