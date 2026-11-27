@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { EtatFormulaire } from "@/components/study/formulaire";
@@ -50,14 +51,26 @@ export async function utiliserInvitation(jeton: string, _precedent: EtatFormulai
     return { ok: false, message: "Un autre compte est ouvert. Déconnecte-toi, puis rouvre ton lien personnel." };
   }
 
-  const pose = await clientExploitation("administration_des_comptes").auth.admin.updateUserById(etat.profile_id, { password: nouveau });
-  if (pose.error !== null) {
-    console.error(JSON.stringify({ niveau: "erreur", contexte: "invitation.mot_de_passe", code: pose.error.status }));
-    return { ok: false, message: "Ce mot de passe a été refusé par le service d'identité. Choisis-en un autre, d'au moins douze caractères.", champs: { nouveau: ["Mot de passe refusé."] } };
+  const tentative = randomUUID();
+  const parametres = { p_empreinte: empreinte, p_tentative: tentative };
+  const reserve = await client.rpc("invitation_reserver", parametres);
+  if (reserve.error || reserve.data !== etat.profile_id) {
+    return { ok: false, message: "Cette activation est indisponible ou déjà en cours. Si cela persiste, contacte ton établissement." };
   }
-
-  const consomme = await client.rpc("invitation_consommer", { p_empreinte: empreinte });
-  if (consomme.error !== null) redirect(`/invitation/${encodeURIComponent(jeton)}`);
+  const incertain = { ok: false, message: "Ton activation doit être vérifiée. Contacte ton établissement avant de réessayer." };
+  try {
+    const pose = await clientExploitation("administration_des_comptes").auth.admin.updateUserById(etat.profile_id, { password: nouveau });
+    if (pose.error?.code === "weak_password" && pose.error.status === 422) {
+      const libere = await client.rpc("invitation_liberer", parametres);
+      if (libere.error) return incertain;
+      return { ok: false, message: "Le service a refusé ce mot de passe. Choisis-en un autre." };
+    }
+    if (pose.error) return incertain;
+    const fin = await client.rpc("invitation_finaliser", parametres);
+    if (fin.error) return incertain;
+  } catch {
+    return incertain;
+  }
 
   const contexte = etat.code_etablissement && etat.organisation ? { code: etat.code_etablissement, nom: etat.organisation } : null;
   const appareil = donnees.get("postePartage") === "oui" ? "partage" : "personnel";

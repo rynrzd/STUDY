@@ -100,3 +100,42 @@ test("AUTH-02 — recuperation : meme reponse pour un compte connu ou inconnu", 
   await db.query("select study.recuperation_demander('TESTA1', 'lina.bernard', $1)", [autreIp]);
   assert.equal((await lirePourAdmin(db, ACTEURS.adminA, "select * from study.recuperation_a_traiter()")).length, 1, "sixieme essai ignore");
 });
+
+test("une activation réserve le profil avant Auth et seule sa tentative peut finaliser", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+  const profil = ACTEURS.eleveA1Lina;
+  await db.query("update study.organization_memberships set account_state='a_activer' where profile_id=$1", [profil]);
+  const hash = empreinte("reservation");
+  await lirePourAdmin(db, ACTEURS.adminA, "select study.invitation_creer($1,$2)", [profil, hash]);
+  const a = "11111111-1111-4111-8111-111111111111", b = "22222222-2222-4222-8222-222222222222";
+  const reserver = async (id) => (await db.query("select study.invitation_reserver($1,$2) as profil", [hash,id])).rows[0].profil;
+  assert.equal(await reserver(a), profil);
+  assert.equal(await reserver(b), null);
+  await assert.rejects(db.query("select study.invitation_finaliser($1,$2)", [hash,b]), /TENTATIVE_INVALIDE/);
+  await db.query("select study.invitation_finaliser($1,$2)", [hash,a]);
+  assert.equal(await reserver(b), null);
+  assert.equal((await db.query("select etat from study.invitation_etat($1)", [hash])).rows[0].etat, "utilisee");
+});
+
+test("la révocation garde la réservation si Auth est incertain, même sur un nouveau lien", async (t) => {
+  const db = await baseDeTest();
+  t.after(() => db.close());
+  const profil = ACTEURS.eleveA1Lina;
+  await db.query("update study.organization_memberships set account_state='a_activer' where profile_id=$1", [profil]);
+  const ancien = empreinte("ancien"), neuf = empreinte("neuf");
+  const id = "11111111-1111-4111-8111-111111111111", autre = "22222222-2222-4222-8222-222222222222";
+  const creer = (hash) => lirePourAdmin(db, ACTEURS.adminA, "select study.invitation_creer($1,$2)", [profil, hash]);
+  const reserve = async (hash, tentative) => (await db.query("select study.invitation_reserver($1,$2) as p", [hash,tentative])).rows[0].p;
+  await creer(ancien);
+  assert.equal(await reserve(ancien,id), profil);
+  await creer(neuf);
+  await assert.rejects(db.query("select study.invitation_finaliser($1,$2)", [ancien,id]), /INVITATION_INVALIDE/);
+  assert.equal(await reserve(neuf,autre), null);
+  await db.query("select study.invitation_liberer($1,$2)", [ancien,autre]);
+  assert.equal(await reserve(neuf,autre), null);
+  await db.query("select study.invitation_liberer($1,$2)", [ancien,id]);
+  assert.equal(await reserve(neuf,autre), profil);
+  const privileges = await db.query("select has_function_privilege('authenticated','study.invitation_reserver(bytea,uuid)','execute') as utilisateur, has_function_privilege('service_role','study.invitation_consommer(bytea)','execute') as ancienne");
+  assert.deepEqual(privileges.rows[0], { utilisateur: false, ancienne: false });
+});
