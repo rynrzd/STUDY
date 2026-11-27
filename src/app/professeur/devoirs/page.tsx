@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import { TitreEspace, Vide } from "@/components/app/Cadre";
 import { FormulaireDevoir } from "@/components/professeur/FormulaireDevoir";
@@ -148,6 +149,7 @@ export default async function PageDevoirsProfesseur({ searchParams }: { searchPa
               Préparer un devoir
             </h2>
             <FormulaireDevoir
+              idempotenceCreation={randomUUID()}
               coursInitial={parametres.cours}
               cours={cours.map((unCours) => ({ id: unCours.id, libelle: unCours.libelle }))}
               seances={seances}

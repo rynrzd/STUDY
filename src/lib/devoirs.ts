@@ -743,6 +743,7 @@ export async function creerDevoir(options: {
   mode: ModeRemise;
   remplacementAutorise: boolean;
   politiqueRetard: "accepter_avec_retard" | "fermer";
+  idempotence?: string;
 }): Promise<string | null> {
   const client = clientUtilisateur(options.jeton);
   let exercices = client.from("exercices").select("notion_id")
@@ -773,9 +774,23 @@ export async function creerDevoir(options: {
       state: "brouillon",
       published_at: null,
       created_by: options.auteur,
+      client_creation_id: options.idempotence ?? null,
     })
     .select("id")
     .single();
+
+  // La contrainte unique arbitre aussi deux requetes qui arrivent exactement
+  // au meme instant. Retrouver le devoir deja cree evite un nouveau brouillon
+  // si le reseau a perdu la premiere redirection.
+  if (error?.code === "23505" && options.idempotence) {
+    const { data: dejaCree, error: erreurRelecture } = await client
+      .from("assignments")
+      .select("id")
+      .eq("created_by", options.auteur)
+      .eq("client_creation_id", options.idempotence)
+      .maybeSingle();
+    if (erreurRelecture === null && dejaCree !== null) return dejaCree.id;
+  }
 
   if (error !== null || data === null) {
     journaliser("devoirs.creer", error?.code);

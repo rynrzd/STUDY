@@ -45,12 +45,15 @@ export function FormulaireDevoir({
   seances,
   valeurs,
   coursInitial,
+  idempotenceCreation,
 }: {
   cours: readonly CoursDisponible[];
   seances: readonly SeanceDisponible[];
   /** Absent : on crée. Présent : on modifie. */
   valeurs?: ValeursDevoir;
   coursInitial?: string;
+  /** Cle creee par la page serveur, stable pour toute tentative de creation. */
+  idempotenceCreation?: string;
 }) {
   const modification = valeurs !== undefined;
 
@@ -102,6 +105,7 @@ export function FormulaireDevoir({
       className="carte w-full min-w-0 max-w-3xl p-4 sm:p-6"
     >
       {modification ? <input type="hidden" name="devoir" value={valeurs.id} /> : null}
+      {!modification ? <input type="hidden" name="idempotence" value={idempotenceCreation ?? ""} /> : null}
 
       {!modification ? (
         <div className="mb-6 border-b border-[color:var(--color-bordure)] pb-5">
@@ -329,7 +333,7 @@ export function FormulaireDevoir({
             simulation
           />
           <p className="m-0 mt-3 text-sm font-semibold text-[color:var(--color-accent)]">
-            Les élèves ne verront rien tant que tu n&apos;auras pas publié ce devoir.
+            Les élèves ne verront le devoir que si tu choisis « Publier le devoir ».
           </p>
         </aside>
       ) : null}
@@ -359,27 +363,36 @@ export function FormulaireDevoir({
           Continuer
         </button>
       ) : null}
-      {modification || etape === 3 ? <Bouton libelle={modification ? "Enregistrer le devoir" : "Créer mon brouillon"} /> : null}
+      {modification ? <Bouton libelle="Enregistrer le devoir" /> : null}
+      {!modification && etape === 3 ? (
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+          <Bouton libelle="Garder en brouillon" publication="brouillon" />
+          <Bouton libelle="Publier le devoir" publication="publier" accentue />
+        </div>
+      ) : null}
 
       {!modification && etape === 3 ? (
         <p className="m-0 mt-3 text-[length:var(--text-aide)] text-[color:var(--color-encre-faible)]">
-          Rien n&apos;est envoyé aux élèves pour le moment. Tu pourras relire ton devoir et le publier quand il sera prêt.
+          « Garder en brouillon » reste privé. « Publier » rend le devoir visible par la classe choisie. Tu peux encore le modifier ensuite.
         </p>
       ) : null}
     </form>
   );
 }
 
-function Bouton({ libelle }: { libelle: string }) {
-  const { pending } = useFormStatus();
+function Bouton({ libelle, publication, accentue = false }: { libelle: string; publication?: "brouillon" | "publier"; accentue?: boolean }) {
+  const { pending, data } = useFormStatus();
+  const actionCourante = data?.get("publication");
   return (
     <button
       type="submit"
-      data-testid="devoir-valider"
+      data-testid={publication === "brouillon" ? "devoir-garder-brouillon" : "devoir-valider"}
+      name={publication === undefined ? undefined : "publication"}
+      value={publication}
       disabled={pending}
-      className="bouton bouton-primaire mt-5 w-full min-w-0 whitespace-normal py-3 text-center leading-5 sm:w-auto"
+      className={`bouton ${accentue || publication === undefined ? "bouton-primaire" : "bouton-secondaire"} w-full min-w-0 whitespace-normal py-3 text-center leading-5 sm:w-auto ${publication === undefined ? "mt-5" : ""}`}
     >
-      {pending ? "Enregistrement…" : libelle}
+      {pending && (publication === undefined || actionCourante === publication) ? "Enregistrement…" : libelle}
     </button>
   );
 }

@@ -39,8 +39,10 @@ const ETATS: Record<string, string> = {
 
 export default async function PageDevoirProfesseur({
   params,
+  searchParams,
 }: {
   params: Promise<{ devoir: string }>;
+  searchParams: Promise<{ publication?: string }>;
 }) {
   const personne = await sessionCourante();
   if (personne === null) redirect("/connexion");
@@ -51,6 +53,7 @@ export default async function PageDevoirProfesseur({
   if (jeton === null) redirect("/connexion");
 
   const { devoir: identifiant } = await params;
+  const retour = (await searchParams).publication;
   const leDevoir = await lireDevoir(jeton, identifiant);
   if (leDevoir === null) notFound();
 
@@ -95,6 +98,17 @@ export default async function PageDevoirProfesseur({
         {ETATS[leDevoir.etat] ?? leDevoir.etat}
         {leDevoir.echeance !== null ? ` — à rendre le ${instantLisible(leDevoir.echeance)}` : ""}
       </p>
+
+      {retour === "publie" && leDevoir.etat !== "brouillon" ? (
+        <p role="status" className="message-nouveau mt-4 rounded-xl border border-[color:var(--color-succes)] bg-[color:var(--color-succes-fond)] p-4 font-semibold text-[color:var(--color-succes)]">
+          C&apos;est publié ! Les élèves de cette classe peuvent maintenant consulter le devoir.
+        </p>
+      ) : null}
+      {retour === "echec" ? (
+        <p role="alert" className="mt-4 rounded-xl border border-[color:var(--color-erreur)] bg-[color:var(--color-erreur-fond)] p-4 text-[color:var(--color-erreur)]">
+          Le devoir est bien enregistré en brouillon, mais sa publication a échoué. Tu peux réessayer avec le bouton de publication ci-dessous, sans recréer le devoir.
+        </p>
+      ) : null}
 
       <div className="mt-5 rounded-2xl border border-[color:var(--color-bordure)] p-4 print:hidden sm:p-6">
         <h2 className="titre-section">Diffusion et aperçu</h2>
