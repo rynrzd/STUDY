@@ -198,3 +198,37 @@ test("une phrase courte ne devient pas un faux titre à chaque retour de ligne d
   ]));
   assert.deepEqual(document.blocs.map((bloc) => bloc.type), ["titre", "paragraphe", "paragraphe", "titre", "paragraphe"]);
 });
+
+test("une figure PDF reste privée et rattachée à sa page de texte", async () => {
+  const { default: PDFDocument } = await import("pdfkit");
+  const { default: sharp } = await import("sharp");
+  const { referenceImageStudio } = await import("../../src/lib/images-studio.ts");
+  const pixels = { create: { width: 24, height: 24, channels: 3 as const, background: "#880077" } };
+  const source = new PDFDocument();
+  const morceaux: Buffer[] = [];
+  const termine = new Promise<Buffer>((resolve, reject) => {
+    source.on("data", (chunk: Buffer) => morceaux.push(chunk));
+    source.on("end", () => resolve(Buffer.concat(morceaux)));
+    source.on("error", reject);
+  });
+  source.text("Premiere page").addPage().text("Deuxieme page");
+  source.rect(20, 50, 10, 10).stroke();
+  source.image(await sharp(pixels).png().toBuffer(), 72, 160);
+  source.end();
+  const fichier = await termine;
+  const uuid = "11111111-1111-4111-8111-111111111111";
+  const document = await extraire(fichier, {
+    async conserverImage(image, extension) {
+      const { data, info } = await sharp(image).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+      assert.equal(info.width, 24);
+      assert.deepEqual([...data.subarray(0, 3)], [136, 0, 119]);
+      return referenceImageStudio(uuid, uuid, image, extension);
+    },
+  });
+  assert.equal(document.rapport.imagesConservees, 1);
+  assert.equal(document.blocs.find(bloc => bloc.type === "image")?.origine?.page, 2);
+  assert.ok(document.rapport.alertes.some(alerte => alerte.page === 2 && /vectoriels/.test(alerte.message)));
+  const sansStockage = await extraire(fichier);
+  assert.equal(sansStockage.rapport.imagesConservees, 0);
+  assert.ok(sansStockage.rapport.alertes.some(alerte => alerte.page === 2 && /illustrations/.test(alerte.message)));
+});
