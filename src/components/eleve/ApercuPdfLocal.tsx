@@ -23,8 +23,12 @@ export function ApercuPdfLocal({ fichier }: { fichier: File }) {
         const octets = new Uint8Array(await fichier.arrayBuffer());
         if (annule) return;
         const { getDocumentProxy } = await import("unpdf");
-        documentPdf = await getDocumentProxy(octets);
-        if (annule) return;
+        const charge = await getDocumentProxy(octets);
+        if (annule) {
+          void charge.cleanup();
+          return;
+        }
+        documentPdf = charge;
 
         const page = await documentPdf.getPage(1);
         const canevas = toile.current;

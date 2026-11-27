@@ -11,6 +11,7 @@ export function ApercuDevoirEleve({
   codeEtat = "non_commence",
   echeancePassee = false,
   simulation = false,
+  publie = false,
 }: {
   classe: string;
   titre: string;
@@ -21,6 +22,7 @@ export function ApercuDevoirEleve({
   codeEtat?: string;
   echeancePassee?: boolean;
   simulation?: boolean;
+  publie?: boolean;
 }) {
   const remise = mode === "numerique" || mode === "mixte"
     ? "Un fichier à déposer ici"
@@ -30,7 +32,7 @@ export function ApercuDevoirEleve({
     <div className="min-w-0">
       {simulation ? (
         <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-[color:var(--color-rose-clair)] px-3 py-1 text-xs font-bold text-[color:var(--color-accent)]">
-          <BookOpen aria-hidden="true" size={14} /> Aperçu côté élève · non publié
+          <BookOpen aria-hidden="true" size={14} /> Aperçu côté élève · {publie ? "publié" : "non publié"}
         </p>
       ) : null}
       <p className="m-0 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">{classe}</p>
