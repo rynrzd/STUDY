@@ -634,6 +634,10 @@
       overscroll-behavior: contain;
     }
 
+    .app-coque .app-nav-mobile-animee:has(> details[open]) .app-plus-panneau {
+      animation: arrivee-onglet 230ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+
     /* Le composeur des messages reste accessible au-dessus de la capsule. */
     .app-coque .composeur { bottom: 84px; }
   }

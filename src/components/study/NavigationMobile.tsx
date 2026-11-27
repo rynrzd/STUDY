@@ -8,6 +8,7 @@ import {
 } from "react";
 import { etapeRessort } from "@/lib/animation-navigation-mobile";
 import { indexNavigationMobile, type CibleNavigationMobile } from "@/lib/navigation-mobile";
+import { niveauEffets } from "./mouvement";
 
 const CLE_TRANSITION = "study:nav-mobile:transition";
 
@@ -49,7 +50,7 @@ export function NavigationMobile({
     const mouvement = ressort.current;
     mouvement.cible = pourcentage;
 
-    if (document.hidden || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (document.hidden || niveauEffets() !== "complet") {
       if (mouvement.image) cancelAnimationFrame(mouvement.image);
       mouvement.position = pourcentage;
       mouvement.vitesse = 0;
@@ -103,12 +104,13 @@ export function NavigationMobile({
     animerVers(premiereCible.current);
 
     const limiterMouvement = () => {
-      if (document.hidden || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (document.hidden || niveauEffets() !== "complet") {
         animerVers(mouvement.cible);
       }
     };
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     preference.addEventListener("change", limiterMouvement);
+    window.addEventListener("study:effets", limiterMouvement);
     document.addEventListener("visibilitychange", limiterMouvement);
 
     return () => {
@@ -118,6 +120,7 @@ export function NavigationMobile({
         sessionStorage.setItem(CLE_TRANSITION, JSON.stringify({ position: mouvement.position, date: Date.now() }));
       } catch { /* Continuer sans conserver la position. */ }
       preference.removeEventListener("change", limiterMouvement);
+      window.removeEventListener("study:effets", limiterMouvement);
       document.removeEventListener("visibilitychange", limiterMouvement);
       if (minuteur.current) clearTimeout(minuteur.current);
     };

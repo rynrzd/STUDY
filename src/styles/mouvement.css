@@ -1,10 +1,9 @@
 /* ===========================================================================
    Mouvement R2 — cahier « refonte complète, sans 3D », §09.
 
-   Seules animations admises : couleur (120 ms), ouverture de panneau
-   (160–200 ms), petit déplacement de 6 px au plus, une fois, après une
-   action. Aucune perspective, aucun volume, aucune animation infinie hors
-   indicateur de chargement réel, aucun texte initialement invisible.
+   Transitions courtes et perceptibles des pages (260 ms) et panneaux,
+   sans perspective ni effet permanent hors chargement réel. Le contenu
+   reste lisible dès la première image de l'animation.
    Trois niveaux : complet, réduit (préférence « Réduits » ou système),
    aucun (« Désactivés »).
    =========================================================================== */
@@ -31,10 +30,21 @@
     to { opacity: 1; }
   }
 
-  /* Classes historiques : neutralisées (aucune entrée de page ni de section). */
-  .entree-texte > *,
-  .entree-page,
-  .entree-section { animation: none; }
+  @keyframes arrivee-page {
+    from { opacity: 0.55; transform: translate3d(0, 11px, 0); }
+    to { opacity: 1; transform: translate3d(0, 0, 0); }
+  }
+
+  @keyframes arrivee-onglet {
+    from { opacity: 0.58; transform: translate3d(0, 7px, 0) scale(0.992); }
+    to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  }
+
+  /* Le template Next est remonté uniquement à un changement de route.
+     L'en-tête et la navigation, eux, restent en place. */
+  .entree-page { animation: arrivee-page 270ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .onglet-entree { animation: arrivee-onglet 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .entree-texte > *, .entree-section { animation: none; }
 
   /* --- Panneau ouvert après une action : 180 ms, 6 px -------------------- */
   .correction-entree,
@@ -48,6 +58,8 @@
   .parcours-etape-active { animation: entree-courte 180ms ease-out both; }
 
   @media (prefers-reduced-motion: reduce) {
+    .entree-page,
+    .onglet-entree,
     .studio-apercu-entree,
     .parcours-etape-active { animation: none; }
   }
