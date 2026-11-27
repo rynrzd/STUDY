@@ -212,6 +212,7 @@ test("une figure PDF reste privée et rattachée à sa page de texte", async () 
     source.on("error", reject);
   });
   source.text("Premiere page").addPage().text("Deuxieme page");
+  source.rect(20, 50, 10, 10).stroke();
   source.image(await sharp(pixels).png().toBuffer(), 72, 160);
   source.end();
   const fichier = await termine;
@@ -226,7 +227,8 @@ test("une figure PDF reste privée et rattachée à sa page de texte", async () 
   });
   assert.equal(document.rapport.imagesConservees, 1);
   assert.equal(document.blocs.find(bloc => bloc.type === "image")?.origine?.page, 2);
+  assert.ok(document.rapport.alertes.some(alerte => alerte.page === 2 && /vectoriels/.test(alerte.message)));
   const sansStockage = await extraire(fichier);
   assert.equal(sansStockage.rapport.imagesConservees, 0);
-  assert.ok(sansStockage.rapport.alertes.some(alerte => alerte.page === 2));
+  assert.ok(sansStockage.rapport.alertes.some(alerte => alerte.page === 2 && /illustrations/.test(alerte.message)));
 });

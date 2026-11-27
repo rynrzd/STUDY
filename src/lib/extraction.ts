@@ -142,7 +142,11 @@ async function extrairePdf(octets: Buffer, options: OptionsExtraction): Promise<
         const peintures = ops.fnArray.filter((op: number) => op === OPS.paintImageXObject).length;
         const autres = ops.fnArray.some((op: number) => [OPS.paintInlineImageXObject, OPS.paintImageMaskXObject,
           OPS.paintImageXObjectRepeat, OPS.paintInlineImageXObjectGroup].includes(op));
-        if (!peintures && !autres || !pages[numero - 1]?.trim()) continue;
+        if (!pages[numero - 1]?.trim()) continue;
+        if (ops.fnArray.includes(OPS.constructPath) || ops.fnArray.includes(OPS.shadingFill)) {
+          alertesFigures.push({ gravite: "verifier", page: numero, message: `Les tracés vectoriels de la page ${numero} sont visibles dans le PDF original. Vérifiez les schémas dans la version transformée.` });
+        }
+        if (!peintures && !autres) continue;
         imagesVues += peintures;
         let reprises = 0;
         if (peintures && options.conserverImage && imagesVues <= MAX_IMAGES_DOCX && octetsImages < MAX_OCTETS_IMAGES) {
@@ -159,7 +163,9 @@ async function extrairePdf(octets: Buffer, options: OptionsExtraction): Promise<
             imagesConservees++;
           }
         }
-        if (reprises < peintures || autres) throw new Error("figure absente");
+        if (reprises < peintures || autres) {
+          alertesFigures.push({ gravite: "verifier", page: numero, message: `Certaines illustrations de la page ${numero} sont disponibles uniquement dans le PDF original.` });
+        }
       } catch {
         alertesFigures.push({ gravite: "verifier", page: numero, message: `Vérifiez les illustrations de la page ${numero} dans le PDF original : la reprise est incomplète.` });
       } finally {
