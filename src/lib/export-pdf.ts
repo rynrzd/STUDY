@@ -71,21 +71,32 @@ export async function fabriquerPdfCours(
 
   if (reglages.sommaire) dessinerSommaire(pdf, document, reglages);
   for (const [index, bloc] of document.blocs.entries()) {
+    // L'extracteur retrouve souvent le titre dans le premier bloc. Il est
+    // déjà dessiné en couverture : le répéter donnait deux titres identiques
+    // l'un sous l'autre et faisait croire à une transformation inchangée.
+    if (index === 0 && bloc.type === "titre" && bloc.texte.trim() === document.titre.trim()) continue;
     if (reglages.modele === "projection" && index > 0 && bloc.type === "titre" && bloc.niveau === 1) pdf.addPage();
     pdf.x = MARGE;
     dessinerBloc(pdf, bloc, reglages);
   }
 
-  if (reglages.numerosDePage) {
-    const pages = pdf.bufferedPageRange();
-    for (let index = pages.start; index < pages.start + pages.count; index += 1) {
-      pdf.switchToPage(index);
-      const numero = String(index - pages.start + 1);
-      pdf.font("AvecStudy").fontSize(8).fillColor("#6e6872");
-      // Une largeur active la pagination de PDFKit, même dans le pied de page.
-      const gauche = (pdf.page.width - pdf.widthOfString(numero)) / 2;
-      pdf.text(numero, gauche, pdf.page.height - 38, { lineBreak: false });
+  const pages = pdf.bufferedPageRange();
+  for (let index = pages.start; index < pages.start + pages.count; index += 1) {
+    pdf.switchToPage(index);
+    const largeur = pdf.page.width;
+    const hauteur = pdf.page.height;
+    pdf.save();
+    pdf.fillColor(COULEUR_ACCENT).font("AvecStudy Gras").fontSize(8)
+      .text("AVECSTUDY · COURS", MARGE, 20, { lineBreak: false });
+    pdf.strokeColor("#e8d4dc").lineWidth(0.5).moveTo(MARGE, hauteur - 51).lineTo(largeur - MARGE, hauteur - 51).stroke();
+    if (reglages.numerosDePage) {
+      const numero = `${index - pages.start + 1} / ${pages.count}`;
+      pdf.font("AvecStudy Gras").fontSize(8).fillColor(COULEUR_ACCENT);
+      // Donner `width` à PDFKit réactive sa pagination jusque dans le pied
+      // de page. On place la ligne par sa largeur mesurée, sans largeur active.
+      pdf.text(numero, (largeur - pdf.widthOfString(numero)) / 2, hauteur - 38, { lineBreak: false });
     }
+    pdf.restore();
   }
 
   pdf.end();
@@ -125,19 +136,49 @@ function dessinerBloc(pdf: PDFKit.PDFDocument, bloc: BlocCours, reglages: Reglag
     case "titre": {
       const taille = (bloc.niveau === 1 ? 17 : bloc.niveau === 2 ? 14 : 12) * reglages.taille;
       assurerPlace(pdf, taille * 2.2);
-      pdf.moveDown(bloc.niveau === 1 ? 0.65 : 0.35).font("AvecStudy Gras").fontSize(taille).fillColor(COULEUR_TEXTE).text(bloc.texte, options);
-      pdf.moveDown(0.35);
+      pdf.moveDown(bloc.niveau === 1 ? 0.65 : 0.35);
+      if (reglages.modele === "fiche") {
+        pdf.font("AvecStudy Gras").fontSize(taille);
+        const largeur = pdf.page.width - MARGE * 2;
+        const hauteur = pdf.heightOfString(bloc.texte, { width: largeur - 30 }) + 18;
+        assurerPlace(pdf, hauteur + 14);
+        const y = pdf.y;
+        pdf.roundedRect(MARGE, y, largeur, hauteur, 5).fill(COULEUR_DOUCE);
+        pdf.rect(MARGE, y, 4, hauteur).fill(COULEUR_ACCENT);
+        pdf.fillColor(COULEUR_ACCENT).text(bloc.texte, MARGE + 15, y + 8, { width: largeur - 30 });
+        pdf.y = y + hauteur + 12;
+        return;
+      }
+      pdf.font("AvecStudy Gras").fontSize(taille)
+        .fillColor(reglages.modele === "classique" ? COULEUR_TEXTE : COULEUR_ACCENT).text(bloc.texte, options);
+      if (reglages.modele === "synthese" && bloc.niveau <= 2) {
+        const y = pdf.y + 3;
+        pdf.strokeColor("#dfa5bd").lineWidth(1).moveTo(MARGE, y).lineTo(MARGE + 84, y).stroke();
+        pdf.y = y + 6;
+      }
+      pdf.moveDown(reglages.modele === "aere" ? 0.8 : 0.35);
       return;
     }
     case "paragraphe":
     case "brut":
-      pdf.font("AvecStudy").fontSize(corps).fillColor(bloc.type === "brut" ? "#615b65" : COULEUR_TEXTE).text(bloc.texte, options).moveDown(0.65);
+      pdf.font("AvecStudy").fontSize(corps).fillColor(bloc.type === "brut" ? "#615b65" : COULEUR_TEXTE).text(bloc.texte, options).moveDown(reglages.modele === "aere" ? 1.1 : 0.65);
       return;
     case "encadre": {
       pdf.font("AvecStudy").fontSize(corps);
       const largeur = pdf.page.width - MARGE * 2 - 24;
       const hauteurTexte = pdf.heightOfString(bloc.texte, { width: largeur, lineGap: interligne });
       const hauteur = 37 + hauteurTexte;
+      // Une définition très longue doit traverser les pages. Une seule carte
+      // pleine hauteur sortait de la feuille et masquait la fin de la phrase.
+      if (hauteur > pdf.page.height - MARGE * 2 - 32) {
+        assurerPlace(pdf, 55);
+        pdf.fillColor(COULEUR_ACCENT).font("AvecStudy Gras").fontSize(10 * reglages.taille)
+          .text(bloc.intitule, options);
+        pdf.moveDown(0.25);
+        pdf.fillColor(COULEUR_TEXTE).font("AvecStudy").fontSize(corps)
+          .text(bloc.texte, options).moveDown(0.8);
+        return;
+      }
       assurerPlace(pdf, Math.min(hauteur, pdf.page.height - MARGE * 2));
       const haut = pdf.y;
       pdf.roundedRect(MARGE, haut, pdf.page.width - MARGE * 2, hauteur, 5).fill(COULEUR_DOUCE);
@@ -187,6 +228,7 @@ function dessinerTableau(pdf: PDFKit.PDFDocument, bloc: Extract<BlocCours, { typ
     assurerPlace(pdf, hauteur);
     const haut = pdf.y;
     if (index === 0) pdf.rect(MARGE, haut, largeurTotale, hauteur).fill("#f1dce5");
+    else if (index % 2 === 0) pdf.rect(MARGE, haut, largeurTotale, hauteur).fill("#fcf8fa");
     for (let colonne = 0; colonne < colonnes; colonne += 1) {
       const gauche = MARGE + colonne * largeur;
       pdf.strokeColor("#cfc8d1").lineWidth(0.6).rect(gauche, haut, largeur, hauteur).stroke();

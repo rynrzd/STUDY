@@ -187,3 +187,14 @@ test("une définition sur deux lignes reste un seul encadré du cours", async ()
   assert.deepEqual(document.blocs.map(b => b.type), ["titre", "encadre", "liste"]);
   assert.equal(document.blocs[1]?.type === "encadre" && document.blocs[1].texte, "Une fonction affine associe x a ax + b.");
 });
+
+test("une phrase courte ne devient pas un faux titre à chaque retour de ligne du PDF", async () => {
+  const document = await extraire(pdf([
+    "Cours de sciences",
+    "Cette phrase démarre un paragraphe",
+    "Une autre phrase démarre aussi sans ponctuation",
+    "Chapitre 2 - Les systèmes",
+    "Une description du fonctionnement",
+  ]));
+  assert.deepEqual(document.blocs.map((bloc) => bloc.type), ["titre", "paragraphe", "paragraphe", "titre", "paragraphe"]);
+});

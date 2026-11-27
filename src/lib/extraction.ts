@@ -231,7 +231,7 @@ function structurer(lignes: readonly string[], page: number): BlocCours[] {
       continue;
     }
 
-    if (estTitre(ligne)) {
+    if (estTitre(ligne, page === 1 && i === 0)) {
       blocs.push({ type: "titre", niveau: niveauDeTitre(ligne), texte: ligne, origine: { page } });
       continue;
     }
@@ -243,13 +243,18 @@ function structurer(lignes: readonly string[], page: number): BlocCours[] {
   return blocs;
 }
 
-function estTitre(ligne: string): boolean {
+function estTitre(ligne: string, debutDocument: boolean): boolean {
   if (ligne.length > 70) return false;
   if (/[.;:,]$/.test(ligne)) return false;
-  if (/^\d+[.)]/.test(ligne)) return false;
-  // Un titre compte peu de mots et commence par une majuscule.
-  const mots = ligne.split(" ").length;
-  return mots <= 9 && /^[A-ZÀ-Ý0-9]/.test(ligne);
+  if (debutDocument) return true;
+
+  // La longueur et une majuscule ne suffisent pas : sur les anciens PDF,
+  // chaque ligne d'un paragraphe devenait un faux sous-titre. Un signal de
+  // structure identifiable est nécessaire pour les lignes suivantes.
+  if (/^(chapitre|partie|leçon|lecon|cours|activité|activite|fiche|séance|seance)\b/iu.test(ligne)) return true;
+  if (/^(?:[IVX]+|\d+(?:\.\d+)*)\s*[-–.)]\s+\S/u.test(ligne)) return true;
+  const lettres = ligne.replace(/[^\p{L}]/gu, "");
+  return lettres.length >= 4 && ligne.length <= 60 && lettres === lettres.toLocaleUpperCase("fr");
 }
 
 function niveauDeTitre(ligne: string): NiveauTitre {
