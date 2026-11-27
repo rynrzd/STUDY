@@ -73,9 +73,12 @@ export async function scenarioRemises({ navigateur, base, terrain, sql, verifier
     const demain = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
 
     await prof.page.selectOption('[data-testid="devoir-cours"]', terrain.cours.cible);
+    await prof.page.click('[data-testid="devoir-suivant"]');
     await prof.page.fill('[data-testid="devoir-titre-champ"]', `Devoir ${marque}`);
     await prof.page.fill('[data-testid="devoir-consigne"]', `Consigne ${marque}`);
+    await prof.page.click('[data-testid="devoir-suivant"]');
     await prof.page.check('[data-testid="mode-numerique"]');
+    await prof.page.getByText("Date de remise (facultatif)").click();
     await prof.page.fill('[data-testid="devoir-date"]', demain);
     await prof.page.fill('[data-testid="devoir-heure"]', "23:59");
     await soumettre(prof.page, '[data-testid="devoir-valider"]');
@@ -366,7 +369,9 @@ export async function scenarioRemises({ navigateur, base, terrain, sql, verifier
       marqueur: '[data-testid="devoir-formulaire"]',
     });
     await prof.page.selectOption('[data-testid="devoir-cours"]', terrain.cours.cible);
+    await prof.page.click('[data-testid="devoir-suivant"]');
     await prof.page.fill('[data-testid="devoir-titre-champ"]', `Papier ${marque}`);
+    await prof.page.click('[data-testid="devoir-suivant"]');
     await prof.page.check('[data-testid="mode-papier"]');
     await soumettre(prof.page, '[data-testid="devoir-valider"]');
 
