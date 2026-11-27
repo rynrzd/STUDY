@@ -16,6 +16,7 @@ import {
   publierRetour,
 } from "@/lib/devoirs";
 import { deposerPieceJointe } from "@/lib/documents";
+import { echeanceDevoirVersIso } from "@/lib/echeances-devoirs";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { coursDuProfesseur } from "@/lib/studio";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
@@ -61,14 +62,6 @@ async function professeur() {
   return { personne, jeton };
 }
 
-/** L'échéance saisie, ramenée à un instant. Vide veut dire « sans date ». */
-function echeanceDe(date: string, heure: string): string | null {
-  if (date.trim() === "") return null;
-  const moment = heure.trim() === "" ? "23:59" : heure.trim();
-  const instant = new Date(`${date}T${moment}:00`);
-  return Number.isNaN(instant.getTime()) ? null : instant.toISOString();
-}
-
 const SCHEMA_DEVOIR = z.object({
   titre: z.string().trim().min(1).max(160),
   consigne: z.string().trim().max(5000),
@@ -108,6 +101,10 @@ export async function creerUnDevoir(
   if (!analyse.success) {
     return { etat: "erreur", message: "Vérifiez le titre et la classe : ils sont obligatoires." };
   }
+  const echeance = echeanceDevoirVersIso(analyse.data.date, analyse.data.heure);
+  if (analyse.data.date !== "" && echeance === null) {
+    return { etat: "erreur", message: "Vérifie la date et l'heure de remise : elles doivent exister à Paris." };
+  }
 
   // Le cours doit être l'un des siens. RLS le redirait, mais le dire ici donne
   // une phrase utile plutôt qu'un échec muet.
@@ -129,7 +126,7 @@ export async function creerUnDevoir(
     auteur: session.personne.profileId,
     titre: analyse.data.titre,
     consigne: analyse.data.consigne,
-    echeance: echeanceDe(analyse.data.date, analyse.data.heure),
+    echeance,
     mode: analyse.data.mode,
     remplacementAutorise: analyse.data.remplacement === "oui",
     politiqueRetard: analyse.data.retard,
@@ -165,13 +162,17 @@ export async function modifierUnDevoir(
   });
 
   if (!analyse.success) return { etat: "erreur", message: "Un titre est nécessaire." };
+  const echeance = echeanceDevoirVersIso(analyse.data.date, analyse.data.heure);
+  if (analyse.data.date !== "" && echeance === null) {
+    return { etat: "erreur", message: "Vérifie la date et l'heure de remise : elles doivent exister à Paris." };
+  }
 
   const fait = await majDevoir({
     jeton: session.jeton,
     devoir: analyse.data.devoir,
     titre: analyse.data.titre,
     consigne: analyse.data.consigne,
-    echeance: echeanceDe(analyse.data.date, analyse.data.heure),
+    echeance,
     mode: analyse.data.mode,
     remplacementAutorise: analyse.data.remplacement === "oui",
     politiqueRetard: analyse.data.retard,

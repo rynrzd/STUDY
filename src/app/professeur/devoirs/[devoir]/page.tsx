@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { FormulaireDevoir } from "@/components/professeur/FormulaireDevoir";
+import { champsEcheanceDevoir } from "@/lib/echeances-devoirs";
 import { SuiviRemises } from "@/components/professeur/SuiviRemises";
 import { BasculeDevoir } from "@/components/professeur/BasculeDevoir";
 import { CorrectionCommune } from "@/components/professeur/CorrectionCommune";
@@ -59,7 +60,6 @@ export default async function PageDevoirProfesseur({
   ]);
 
   const libelle = cours.find((unCours) => unCours.id === leDevoir.cours)?.libelle ?? "Cours";
-  const echeance = leDevoir.echeance === null ? null : new Date(leDevoir.echeance);
   const client = clientUtilisateur(jeton);
   const [notions, choix] = await Promise.all([
     client.from("notions").select("id, label").eq("teaching_space_id", leDevoir.cours).is("archived_at", null).order("label"),
@@ -125,15 +125,7 @@ export default async function PageDevoirProfesseur({
             id: leDevoir.id,
             titre: leDevoir.titre,
             consigne: leDevoir.consigne,
-            date: echeance === null ? "" : echeance.toISOString().slice(0, 10),
-            heure:
-              echeance === null
-                ? ""
-                : new Intl.DateTimeFormat("fr-FR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    timeZone: "Europe/Paris",
-                  }).format(echeance),
+            ...champsEcheanceDevoir(leDevoir.echeance),
             mode: leDevoir.mode,
             remplacement: leDevoir.remplacementAutorise,
             retard: leDevoir.politiqueRetard,
