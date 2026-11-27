@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { EtapesParcours } from "@/components/study/EtapesParcours";
 
 /**
  * Suivi d'un import — S05.
@@ -84,39 +85,9 @@ export function SuiviTraitement({ document: id, titre }: { document: string; tit
         {titre}
       </h1>
 
-      <ol className="m-0 mt-8 list-none space-y-4 p-0">
-        {ETAPES.map((etape, index) => {
-          const faite = index < rang;
-          const courante = index === rang;
-          return (
-            <li key={etape.cle} className="flex items-center gap-3">
-              <span
-                aria-hidden="true"
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[0.625rem] font-bold ${
-                  faite
-                    ? "bg-[color:var(--color-succes-fond)] text-[color:var(--color-succes)]"
-                    : courante
-                      ? "bg-[color:var(--color-rose-clair)] text-[color:var(--color-accent)]"
-                      : "bg-[color:var(--color-survol)] text-[color:var(--color-encre-tres-faible)]"
-                }`}
-              >
-                {faite ? "✓" : index + 1}
-              </span>
-              <span
-                className={
-                  courante
-                    ? "font-semibold"
-                    : faite
-                      ? "text-[color:var(--color-encre-faible)]"
-                      : "text-[color:var(--color-encre-tres-faible)]"
-                }
-              >
-                {etape.libelle}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
+      <div className="mt-8">
+        <EtapesParcours etapes={ETAPES.map((etape) => etape.libelle)} active={Math.max(0, rang)} titre="Avancement du traitement du document" />
+      </div>
 
       <p role="status" className="m-0 mt-8 text-[length:var(--text-tableau)] leading-[var(--text-tableau--line-height)] text-[color:var(--color-encre-faible)]">
         {erreur ??

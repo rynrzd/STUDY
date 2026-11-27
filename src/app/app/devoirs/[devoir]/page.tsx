@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { RemiseCopie } from "@/components/eleve/RemiseCopie";
+import { ApercuDevoirEleve } from "@/components/devoirs/ApercuDevoirEleve";
 import { correctionCommune, devoir as lireDevoir, maRemise } from "@/lib/devoirs";
 import { coursDeLEleve } from "@/lib/espace-eleve";
 import { instantLisible, jourLisible } from "@/lib/horodatage";
@@ -81,51 +82,16 @@ export default async function PageDevoirEleve({
         </Link>
       </nav>
 
-      <p className="m-0 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
-        {libelle}
-      </p>
-
-      <h1
-        data-testid="devoir-titre"
-        className="m-0 mt-1 text-[length:var(--text-h1-app)] leading-[var(--text-h1-app--line-height)]"
-      >
-        {leDevoir.titre}
-      </h1>
-
-      <dl className="m-0 mt-5 grid gap-x-8 gap-y-2 text-[length:var(--text-tableau)] sm:grid-cols-[auto_minmax(0,1fr)]">
-        <dt className="font-semibold">À rendre</dt>
-        <dd className="m-0" data-testid="devoir-echeance">
-          {leDevoir.echeance === null
-            ? "Sans date limite"
-            : `${instantLisible(leDevoir.echeance)} (heure de Paris)`}
-          {echu && leDevoir.etat === "publie_en_retard" ? (
-            <span className="ml-2 text-[color:var(--color-erreur)]">échéance passée</span>
-          ) : null}
-        </dd>
-
-        <dt className="font-semibold">Remise</dt>
-        <dd className="m-0" data-testid="devoir-mode">
-          {leDevoir.mode === "numerique" || leDevoir.mode === "mixte"
-            ? "Un fichier à déposer ici"
-            : leDevoir.mode === "papier"
-              ? "À rendre sur papier"
-              : "Rien à rendre"}
-        </dd>
-
-        <dt className="font-semibold">Mon état</dt>
-        <dd className="m-0" data-testid="devoir-etat-remise" data-etat={remise?.etat ?? "non_commence"}>
-          {ETIQUETTES[remise?.etat ?? "non_commence"] ?? "Pas encore remis"}
-        </dd>
-      </dl>
-
-      {leDevoir.consigne !== "" ? (
-        <section className="mt-8">
-          <h2 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
-            Consigne
-          </h2>
-          <p className="m-0 mt-3 whitespace-pre-line">{leDevoir.consigne}</p>
-        </section>
-      ) : null}
+      <ApercuDevoirEleve
+        classe={libelle}
+        titre={leDevoir.titre}
+        consigne={leDevoir.consigne}
+        echeance={leDevoir.echeance === null ? "Sans date limite" : `${instantLisible(leDevoir.echeance)} (heure de Paris)`}
+        mode={leDevoir.mode}
+        etat={ETIQUETTES[remise?.etat ?? "non_commence"] ?? "Pas encore remis"}
+        codeEtat={remise?.etat ?? "non_commence"}
+        echeancePassee={echu && leDevoir.etat === "publie_en_retard"}
+      />
 
       {/* ----------------------------------------------------- Ma remise -- */}
 

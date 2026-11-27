@@ -4,6 +4,8 @@ import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { creerUnDevoir, modifierUnDevoir } from "@/app/professeur/devoirs/actions";
 import { ETAT_DEVOIR_INITIAL, type EtatDevoirAction } from "@/app/professeur/devoirs/etats";
+import { ApercuDevoirEleve } from "@/components/devoirs/ApercuDevoirEleve";
+import { EtapesParcours } from "@/components/study/EtapesParcours";
 
 /**
  * Créer ou modifier un devoir — cahier V5, §2.1.
@@ -77,12 +79,6 @@ export function FormulaireDevoir({
   const attendUnFichier = mode === "numerique" || mode === "mixte";
   const seancesDuCours = seances.filter((seance) => seance.cours === coursChoisi);
   const libelleCours = cours.find((unCours) => unCours.id === coursChoisi)?.libelle ?? "Classe non choisie";
-  const libelleMode = {
-    numerique: "Fichier en ligne",
-    papier: "Sur papier",
-    mixte: "Papier ou fichier",
-    aucune: "Rien à rendre",
-  }[mode];
 
   function avancer() {
     if (etape === 2) {
@@ -113,22 +109,9 @@ export function FormulaireDevoir({
           <p className="m-0 mt-2 text-sm text-[color:var(--color-encre-faible)]">
             Trois petites étapes, puis un brouillon à relire avant la publication.
           </p>
-          <ol className="mt-5 grid list-none grid-cols-3 gap-2 p-0" aria-label="Progression du devoir">
-            {(["Pour qui ?", "Quoi faire ?", "Quand et comment ?"] as const).map((libelle, index) => (
-              <li
-                key={libelle}
-                aria-current={etape === index + 1 ? "step" : undefined}
-                className={`rounded-lg border px-2 py-3 text-center text-xs font-semibold sm:text-sm ${
-                  etape === index + 1
-                    ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)] text-[color:var(--color-accent)]"
-                    : "border-[color:var(--color-bordure)] text-[color:var(--color-encre-faible)]"
-                }`}
-              >
-                <span className="block text-[11px]">Étape {index + 1}/3</span>
-                {libelle}
-              </li>
-            ))}
-          </ol>
+          <div className="mt-5">
+            <EtapesParcours etapes={["Pour qui ?", "Quoi faire ?", "Quand et comment ?"]} active={etape - 1} titre="Progression du devoir" />
+          </div>
         </div>
       ) : null}
 
@@ -335,15 +318,16 @@ export function FormulaireDevoir({
       )}
 
       {!modification ? (
-        <aside className="mt-6 rounded-xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-4" data-testid="devoir-recapitulatif">
-          <h5 className="m-0 text-base font-bold">Avant d&apos;enregistrer le brouillon</h5>
-          <dl className="mb-0 mt-3 grid gap-2 text-sm sm:grid-cols-[8rem_minmax(0,1fr)]">
-            <dt className="font-semibold">Classe</dt><dd className="m-0">{libelleCours}</dd>
-            <dt className="font-semibold">Devoir</dt><dd className="m-0 break-words">{titre.trim() || "Titre à compléter"}</dd>
-            <dt className="font-semibold">Consigne</dt><dd className="m-0 whitespace-pre-wrap break-words">{consigne.trim() || "Aucune consigne supplémentaire"}</dd>
-            <dt className="font-semibold">Remise</dt><dd className="m-0">{libelleMode}</dd>
-            <dt className="font-semibold">Échéance</dt><dd className="m-0">{date ? `${date.split("-").reverse().join("/")} à ${heure || "23 h 59"}` : "Aucune date limite"}</dd>
-          </dl>
+        <aside className="mt-6 rounded-2xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-4 shadow-[var(--shadow-flottant)] sm:p-6" data-testid="devoir-recapitulatif">
+          <ApercuDevoirEleve
+            classe={libelleCours}
+            titre={titre.trim()}
+            consigne={consigne}
+            mode={mode}
+            echeance={date ? `${date.split("-").reverse().join("/")} à ${heure || "23 h 59"} (heure de Paris)` : "Sans date limite"}
+            etat="Pas encore remis"
+            simulation
+          />
           <p className="m-0 mt-3 text-sm font-semibold text-[color:var(--color-accent)]">
             Les élèves ne verront rien tant que tu n&apos;auras pas publié ce devoir.
           </p>
