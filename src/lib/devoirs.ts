@@ -761,6 +761,10 @@ export async function creerDevoir(options: {
   const { data, error } = await client
     .from("assignments")
     .insert({
+      // L'identifiant de ligne est deja UNIQUE en production. Le reutiliser
+      // pour la tentative de creation rend les requetes rejouables sans
+      // ajouter de colonne ni appliquer de migration.
+      ...(options.idempotence ? { id: options.idempotence } : {}),
       organization_id: options.organisation,
       teaching_space_id: options.cours,
       lesson_id: options.seance,
@@ -774,7 +778,6 @@ export async function creerDevoir(options: {
       state: "brouillon",
       published_at: null,
       created_by: options.auteur,
-      client_creation_id: options.idempotence ?? null,
     })
     .select("id")
     .single();
@@ -786,8 +789,8 @@ export async function creerDevoir(options: {
     const { data: dejaCree, error: erreurRelecture } = await client
       .from("assignments")
       .select("id")
+      .eq("id", options.idempotence)
       .eq("created_by", options.auteur)
-      .eq("client_creation_id", options.idempotence)
       .maybeSingle();
     if (erreurRelecture === null && dejaCree !== null) return dejaCree.id;
   }

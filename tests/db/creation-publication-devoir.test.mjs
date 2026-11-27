@@ -10,18 +10,19 @@ test("creation de devoir : une cle rejouee ne cree jamais une seconde ligne ; la
 
   const inserer = () => enTantQue(db, ACTEURS.profMartin, () => db.query(
     `insert into study.assignments
-      (organization_id, teaching_space_id, title, created_by, client_creation_id)
-     values ($1, $2, 'Travail de recette', $3, $4) returning id`,
-    [ACTEURS.lyceeA, OBJETS.espaceMathsA1, ACTEURS.profMartin, cle],
+      (id, organization_id, teaching_space_id, title, created_by)
+     values ($1, $2, $3, 'Travail de recette', $4) returning id`,
+    [cle, ACTEURS.lyceeA, OBJETS.espaceMathsA1, ACTEURS.profMartin],
   ));
 
   const premier = await inserer();
   const devoir = premier.rows[0].id;
+  assert.equal(devoir, cle);
   await assert.rejects(inserer(), /duplicate key|unique constraint/i);
 
   const existants = await lirePour(db, ACTEURS.profMartin,
-    "select id from study.assignments where created_by = $1 and client_creation_id = $2",
-    [ACTEURS.profMartin, cle],
+    "select id from study.assignments where id = $1 and created_by = $2",
+    [cle, ACTEURS.profMartin],
   );
   assert.deepEqual(existants.map((r) => r.id), [devoir]);
 
