@@ -28,6 +28,7 @@ export interface EtatSauvegarde {
   readonly etat: "vierge" | "enregistre" | "conflit" | "erreur";
   readonly message?: string;
   readonly revision?: number;
+  readonly revisionId?: string;
 }
 
 export const ETAT_SAUVEGARDE_INITIAL: EtatSauvegarde = { etat: "vierge" };

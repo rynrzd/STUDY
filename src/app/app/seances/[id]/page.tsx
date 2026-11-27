@@ -114,7 +114,7 @@ export default async function PageSeance({
                   {seance.etat !== "publiee" ? <Etiquette ton="attention">Aperçu enseignant — non publiée</Etiquette> : null}
                 </p>
                 {seance.document ? (
-                  <RenduDocument document={seance.document.document} reglages={seance.document.reglages} />
+                  <RenduDocument document={seance.document.document} reglages={seance.document.reglages} revisionId={seance.versionId ?? undefined} />
                 ) : null}
                 {seance.blocs.length > 0 ? (
                   <VueSeance

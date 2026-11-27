@@ -145,6 +145,7 @@ export default async function PageMiseEnPage({
             id: doc.id,
             etat: doc.etat,
             revision: courante.numero,
+            revisionId: courante.id,
             document: courante.document,
             reglages: courante.reglages,
             fichierSource: doc.fichierSourceId ?? null,

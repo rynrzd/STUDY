@@ -189,7 +189,7 @@ export async function enregistrerRevision(
     .eq("id", doc.id);
 
   revalidatePath(`/professeur/studio/${doc.id}`);
-  return { etat: "enregistre", revision: nouvelle.version_number };
+  return { etat: "enregistre", revision: nouvelle.version_number, revisionId: nouvelle.id };
 }
 
 /* ------------------------------------------------------------ Revue ----- */

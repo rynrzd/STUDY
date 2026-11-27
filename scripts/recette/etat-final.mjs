@@ -19,6 +19,7 @@
 import { createClient } from "@supabase/supabase-js";
 import pg from "pg";
 import { chargerEnv, titre } from "../_commun.mjs";
+import { clesImagesStudio } from "./images-studio.mjs";
 
 chargerEnv();
 
@@ -212,6 +213,7 @@ if (!CONFIGURE) {
   /* Les objets du seau, comparés aux lignes de la base. */
   const { rows: cles } = await sql.query("select storage_key from study.files");
   const connus = new Set(cles.map((ligne) => ligne.storage_key));
+  for (const image of await clesImagesStudio(sql)) connus.add(image);
 
   const lister = async (prefixe = "", profondeur = 0) => {
     if (profondeur > 3) return [];

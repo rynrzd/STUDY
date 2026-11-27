@@ -25,6 +25,7 @@
 import { createClient } from "@supabase/supabase-js";
 import pg from "pg";
 import { chargerEnv, titre, exiger } from "../_commun.mjs";
+import { clesImagesStudio } from "./images-studio.mjs";
 
 chargerEnv();
 exiger(
@@ -105,6 +106,7 @@ try {
   );
 
   const cles = new Set(enBase.map((ligne) => ligne.storage_key));
+  for (const image of await clesImagesStudio(sql)) cles.add(image);
   const presents = new Set(dansLeStockage.map((objet) => objet.chemin));
 
   /* --- Les orphelins : dans le stockage, inconnus de la base ------------- */
