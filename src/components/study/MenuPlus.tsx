@@ -44,8 +44,8 @@ export function MenuPlus({
   return (
     <details ref={menu} data-actif={unActif ? "oui" : "non"}>
       <summary aria-label="Plus de destinations">
-        <MoreHorizontal size={22} strokeWidth={1.75} aria-hidden="true" />
-        <span aria-hidden="true">Plus</span>
+        <span className="app-nav-icone"><MoreHorizontal size={22} strokeWidth={1.85} aria-hidden="true" /></span>
+        <span className="app-nav-libelle" aria-hidden="true">Plus</span>
       </summary>
       <div className="app-plus-panneau">
         {espaces.length > 0 ? (
