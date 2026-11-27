@@ -236,26 +236,49 @@ export async function importer(options: {
   }
 
   // 4. Finalisation.
-  await service.rpc("finaliser_support_de_seance", {
+  const { error: erreurFinalisation } = await service.rpc("finaliser_support_de_seance", {
     p_fichier: fileId,
     p_mime_detecte: format.mime,
     p_taille: octets.length,
     p_sha256: `\\x${empreinte}`,
   });
 
-  await client
+  if (erreurFinalisation !== null) {
+    console.error("studio.import.finalisation", { reference: documentId, code: erreurFinalisation.code });
+    await client.from("studio_documents").update({
+      state: "echec", erreur: "Le fichier a été transféré, mais son enregistrement n'a pas abouti.",
+      updated_at: new Date().toISOString(),
+    }).eq("id", documentId);
+    return { etat: "refus", message: "Le document n'a pas pu être finalisé. Réessaie l'import." };
+  }
+
+  const { error: erreurEtat } = await client
     .from("studio_documents")
     .update({ source_file_id: fileId, state: "traitement", updated_at: new Date().toISOString() })
     .eq("id", documentId);
 
+  if (erreurEtat !== null) {
+    console.error("studio.import.etat", { reference: documentId, code: erreurEtat.code });
+    return { etat: "refus", message: "Le document a été reçu, mais son traitement n'a pas pu démarrer. Réessaie." };
+  }
+
   // 5. Le travail part dans la file. La clé d'idempotence est l'empreinte du
   //    document : redéposer deux fois le même fichier ne relance pas deux
   //    conversions identiques (T08, O02).
-  await service.rpc("programmer_import_cours", {
+  const { error: erreurFile } = await service.rpc("programmer_import_cours", {
     p_organisation: options.organisation,
     p_document: documentId,
     p_fichier: fileId,
   });
+
+  if (erreurFile !== null) {
+    console.error("studio.import.file", { reference: documentId, code: erreurFile.code });
+    await client.from("studio_documents").update({
+      state: "echec", erreur: "La conversion n'a pas pu être programmée.",
+      updated_at: new Date().toISOString(),
+    }).eq("id", documentId);
+    return { etat: "refus", message: "La conversion n'a pas pu démarrer. Réessaie dans un instant." };
+  }
 
   // Le traitement peut commencer tout de suite. Si le reveil n'aboutit pas, la
   // tache planifiee prendra le travail : la file est durable, rien n'est perdu.

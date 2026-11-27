@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { z } from "zod";
 import { relireDocument, relireReglages } from "@/lib/document-cours";
 import { importer, restaurerVersion } from "@/lib/studio-documents";
@@ -65,6 +66,21 @@ export async function importerDocument(
 
   if (resultat.etat === "refus") {
     return { etat: "erreur", message: resultat.message };
+  }
+
+  // Le réveil HTTP lancé sans attente depuis `importer` reste un filet de
+  // sécurité, mais il peut être interrompu quand la fonction Vercel termine.
+  // `after` garde explicitement la fonction en vie pour prendre le travail
+  // durable dès la fin de la réponse. La tâche cron rattrape un éventuel échec.
+  if (!resultat.deja) {
+    after(async () => {
+      try {
+        const { drainer } = await import("@/lib/travaux");
+        await drainer({ budgetMs: 5_000, nom: "studio-import-immediat" });
+      } catch {
+        console.error("studio.import.declenchement_immediat");
+      }
+    });
   }
 
   revalidatePath("/professeur/studio");
