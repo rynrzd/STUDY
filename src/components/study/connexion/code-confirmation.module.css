@@ -24,7 +24,7 @@
   font-size: clamp(1.25rem, 5vw, 1.7rem);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease, transform var(--duree-section, 260ms) ease, opacity var(--duree-section, 260ms) ease;
 }
 .case[data-remplie="oui"] { border-color: var(--color-accent); background: var(--color-rose-clair); }
 .controle:focus-within .case[data-active="oui"] {
@@ -36,6 +36,7 @@
 .point { color: var(--color-bordure-forte); font-weight: 500; }
 .aide { margin: 0; color: var(--color-encre-faible); font-size: 0.8125rem; line-height: 1.45; }
 .controle:has(.champ:disabled) { opacity: 0.6; }
+.controle:has(.champ:disabled) .case { opacity: .2; transform: translateY(-4px) scale(.96); }
 @keyframes chiffre-entre { from { opacity: 0.5; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {
   .case { transition: none; }

@@ -61,7 +61,7 @@ export function CodeConfirmation({ id, invalide, attente, autoFocus = false }: {
         </div>
       </div>
       <p id={`${id}-aide`} className={styles.aide} role="status">
-        {complet ? "Les 6 chiffres sont saisis. Tu peux vérifier ton code." : "Tu peux saisir ou coller les 6 chiffres."}
+        {attente ? "Code en cours de vérification." : complet ? "Les 6 chiffres sont saisis. Tu peux vérifier ton code." : "Tu peux saisir ou coller les 6 chiffres."}
       </p>
     </div>
   );

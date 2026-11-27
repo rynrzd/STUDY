@@ -137,7 +137,11 @@ export async function confirmerAdresse(jeton: string, _etat: EtatInscriptionProf
   if (error || !data.user?.email_confirmed_at || !data.session) {
     return { etat: "refus", message: "Ce lien a expiré ou a déjà servi. Demande un nouveau lien ou connecte-toi." };
   }
-  return preparerCompteProfesseur(auth, data.user, data.session);
+  const resultat = await preparerCompteProfesseur(auth, data.user, data.session);
+  // Le parcours par lien conserve sa navigation directe ; le parcours par
+  // code peut, lui, afficher une vraie animation après la validation serveur.
+  if (resultat.etat === "confirmee") redirect("/professeur?bienvenue=1");
+  return resultat;
 }
 
 async function preparerCompteProfesseur(
@@ -215,7 +219,7 @@ async function preparerCompteProfesseur(
     // toujours : la connexion classique avec son mot de passe reste possible.
     redirect("/connexion?confirmation=1");
   }
-  redirect("/professeur?bienvenue=1");
+  return { etat: "confirmee", message: "Ton adresse e-mail a bien été confirmée." };
 }
 
 export async function reinitialiserProfesseur(
