@@ -66,7 +66,8 @@ test("Invitation : usage unique, etats distincts, aucun role ajoute", async (t) 
   assert.equal(m.etat, "actif");
   assert.equal(m.must_change_password, false);
 
-  // Expiration.
+  // Expiration d'un lien de récupération d'un compte désormais actif.
+  await db.query("insert into study.demandes_recuperation (organization_id, profile_id) values ($1, $2)", [ACTEURS.lyceeA, ACTEURS.eleveA1Lina]);
   await lirePourAdmin(db, ACTEURS.adminA, "select study.invitation_creer($1, $2, 1)", [ACTEURS.eleveA1Lina, empreinte("trois")]);
   await db.query("update study_prive.activation_tokens set expires_at = now() - interval '1 minute' where token_sha256 = $1", [empreinte("trois")]);
   assert.equal((await etat("trois")).etat, "expiree");
