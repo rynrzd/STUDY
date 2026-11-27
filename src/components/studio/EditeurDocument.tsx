@@ -16,6 +16,7 @@ import {
 } from "@/lib/document-cours";
 import { RenduDocument } from "./RenduDocument";
 import { LecteurPdf } from "@/components/seance/LecteurPdf";
+import { Columns2 } from "lucide-react";
 
 /**
  * Éditeur du Studio — S07 à S12.
@@ -63,6 +64,7 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
   const [message, setMessage] = useState<string | null>(null);
   const [sale, setSale] = useState(false);
   const [panneau, setPanneau] = useState<"resultat" | "original" | "reglages">("resultat");
+  const [comparaison, setComparaison] = useState(false);
   const [pageSource, setPageSource] = useState<number | null>(null);
   const ouvrirSource = (page: number) => {
     setPanneau("original");
@@ -176,6 +178,16 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            aria-pressed={comparaison}
+            data-testid="studio-comparer"
+            onClick={() => setComparaison((precedente) => !precedente)}
+            className="bouton bouton-secondaire bouton-compact inline-flex items-center gap-2"
+          >
+            <Columns2 size={16} aria-hidden="true" />
+            {comparaison ? "Quitter la comparaison" : "Comparer avant / après"}
+          </button>
           <Link
             href={`/professeur/studio/${initial.id}/apercu?mode=a4`}
             aria-disabled={sale}
@@ -211,7 +223,7 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
       ) : null}
 
       {/* ---- Onglets de repli, sous 1024 px ---------------------------- */}
-      <div role="tablist" aria-label="Panneaux" className="mt-4 flex gap-1 lg:hidden">
+      {!comparaison ? <div role="tablist" aria-label="Panneaux" className="mt-4 flex gap-1 lg:hidden">
         {(
           [
             ["resultat", "Résultat"],
@@ -234,19 +246,25 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
             {libelle}
           </button>
         ))}
-      </div>
+      </div> : null}
+
+      {comparaison ? (
+        <p role="status" className="message-nouveau m-0 mt-4 rounded-xl bg-[color:var(--color-rose-clair)] px-4 py-3 text-sm text-[color:var(--color-accent)]">
+          <strong>Comparaison en direct :</strong> la colonne « Original » reste inchangée ; la version de droite suit tes réglages sans modifier le texte source.
+        </p>
+      ) : null}
 
       {/* ---- Trois colonnes -------------------------------------------- */}
-      <div className="mt-5 grid flex-1 gap-6 lg:grid-cols-[220px_minmax(0,1fr)_240px] lg:items-start">
+      <div className={`mt-5 grid flex-1 gap-6 lg:items-start ${comparaison ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]" : "lg:grid-cols-[220px_minmax(0,1fr)_240px]"}`}>
         {/* Original */}
         <aside
           ref={documentSource}
           tabIndex={-1}
-          hidden={panneau !== "original"}
+          hidden={!comparaison && panneau !== "original"}
           className="lg:!block lg:sticky lg:top-24 lg:max-h-[calc(100dvh-160px)] lg:overflow-y-auto"
         >
           <h2 className="titre-bloc m-0 font-bold">
-            Original
+            Original {comparaison ? "· avant" : ""}
           </h2>
           {initial.fichierSource !== null ? (
             <p className="m-0 mt-2">
@@ -259,19 +277,27 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
             </p>
           ) : null}
           {initial.document.format === "pdf" && initial.fichierSource ? (
-            pageSource === null
+            pageSource === null && !comparaison
               ? <button type="button" className="bouton bouton-secondaire bouton-compact mt-2" onClick={() => ouvrirSource(1)}>Voir le PDF original</button>
-              : <LecteurPdf key={pageSource} fichier={initial.fichierSource} nom="PDF original" pageInitiale={pageSource} />
+              : <LecteurPdf key={pageSource ?? 1} fichier={initial.fichierSource} nom="PDF original" pageInitiale={pageSource ?? 1} />
           ) : null}
-          <pre className="mt-3 whitespace-pre-wrap rounded-[var(--radius-champ)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-3 font-mono text-[0.6875rem] leading-relaxed text-[color:var(--color-encre-faible)]">
-            {original}
-          </pre>
+          {!comparaison || initial.document.format !== "pdf" || initial.fichierSource === null ? (
+            <>
+              <p className="m-0 mt-3 text-xs text-[color:var(--color-encre-faible)]">Texte récupéré à l&apos;import, avant toute correction.</p>
+              <pre className="mt-2 whitespace-pre-wrap break-words rounded-[var(--radius-champ)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-3 font-mono text-[0.6875rem] leading-relaxed text-[color:var(--color-encre-faible)]">
+                {original}
+              </pre>
+            </>
+          ) : null}
         </aside>
 
         {/* Document mis en page */}
-        <div hidden={panneau !== "resultat"} className="lg:!block">
+        <div hidden={!comparaison && panneau !== "resultat"} className="lg:!block min-w-0">
+          {comparaison ? <h2 className="titre-bloc m-0 mb-3 font-bold">Version AvecStudy · après</h2> : null}
           <div className="rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-6 shadow-[var(--shadow-flottant)] sm:p-10">
-            <RenduDocument document={document} reglages={reglages} />
+            <div key={reglages.modele} className="studio-apercu-entree">
+              <RenduDocument document={document} reglages={reglages} />
+            </div>
           </div>
 
           <Blocs document={document} surChangement={changerDocument} />
@@ -279,8 +305,8 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
 
         {/* Présentation */}
         <aside
-          hidden={panneau !== "reglages"}
-          className="lg:!block lg:sticky lg:top-24"
+          hidden={comparaison || panneau !== "reglages"}
+          className={comparaison ? "hidden" : "lg:!block lg:sticky lg:top-24"}
         >
           <h2 className="titre-bloc m-0 font-bold">
             Présentation

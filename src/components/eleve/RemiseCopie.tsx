@@ -10,6 +10,7 @@ import { instantLisible } from "@/lib/horodatage";
 import { ACCEPT_SUPPORTS, FORMATS_ACCEPTES, tailleLisible } from "@/lib/formats-documents";
 import { LIMITE_DEPOT_LIBELLE } from "@/lib/limites-depot";
 import { verifierSelectionCopie } from "@/lib/validation-copie";
+import { ApercuPdfLocal } from "@/components/eleve/ApercuPdfLocal";
 
 /**
  * Remettre une copie — cahier V5, §3.2.
@@ -171,6 +172,7 @@ export function RemiseCopie({
           {apercu !== null && choisi.type.startsWith("image/") ? (
             <Image src={apercu} alt="Aperçu local de la copie sélectionnée" width={440} height={260} unoptimized className="mt-3 max-h-64 w-full rounded-lg object-contain" />
           ) : null}
+          {(choisi.type === "application/pdf" || /\.pdf$/i.test(choisi.name)) ? <ApercuPdfLocal key={choisi.name + choisi.lastModified} fichier={choisi} /> : null}
           <button
             type="button"
             data-testid="remise-retirer-fichier"
@@ -220,7 +222,7 @@ function BoutonRemettre({ dejaRemis, disponible }: { dejaRemis: boolean; disponi
         disabled={pending || !disponible}
         className="bouton bouton-primaire mt-4"
       >
-        {pending ? "Envoi en cours…" : dejaRemis ? "Confirmer le remplacement" : "Confirmer et remettre ma copie"}
+        {pending ? "Envoi sécurisé de la copie…" : dejaRemis ? "Confirmer le remplacement" : "Confirmer et remettre ma copie"}
       </button>
 
       {/* Annoncé aux lecteurs d'écran : un envoi silencieux laisse croire que
@@ -228,6 +230,11 @@ function BoutonRemettre({ dejaRemis, disponible }: { dejaRemis: boolean; disponi
       <p role="status" aria-live="polite" className="sr-only">
         {pending ? "Envoi de votre copie en cours." : ""}
       </p>
+      {pending ? (
+        <div className="message-nouveau mt-3 rounded-xl border border-[color:var(--color-bordure)] bg-[color:var(--color-rose-clair)] p-3 text-sm" role="status">
+          <span className="font-semibold">Ta copie part vers AvecStudy.</span> Patiente jusqu&apos;à l&apos;apparition de la référence de remise, puis tu pourras quitter cette page.
+        </div>
+      ) : null}
     </>
   );
 }

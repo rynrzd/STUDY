@@ -42,6 +42,16 @@
   .statut-change,
   .panneau-fil { animation: entree-courte 180ms ease-out both; }
 
+  /* Les étapes du Studio et le changement de gabarit sont de véritables
+     changements d'état ; le contenu reste lisible même sans animation. */
+  .studio-apercu-entree { animation: entree-courte 180ms ease-out both; }
+  .parcours-etape-active { animation: entree-courte 180ms ease-out both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .studio-apercu-entree,
+    .parcours-etape-active { animation: none; }
+  }
+
   /* --- Réponse de quiz : un état clair, jamais une secousse --------------- */
   .choix-reponse {
     transition: border-color 160ms ease, background-color 160ms ease;
