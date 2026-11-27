@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BookOpen, CalendarCheck, MessagesSquare, School, ArrowLeft, Check, UserRound, Users, ChevronRight, NotebookPen } from "lucide-react";
 import m from "./connexion-mobile.module.css";
 import scolaire from "./connexion-scolaire.module.css";
+import rose from "./auth-maquette-mobile.module.css";
 import { MotSymbole } from "@/components/site/MotSymbole";
 import { ConteneurEffets } from "@/components/study/ConteneurEffets";
 
@@ -22,11 +23,14 @@ export function CadreConnexion({
   etapeMobile,
   publicCible = "eleve",
   ambianceScolaire = false,
+  maquetteMobile,
 }: {
   etapeMobile?: 1 | 2;
   publicCible?: "eleve" | "professeur";
   /** Uniquement pour /connexion : amélioration visuelle sans modifier les autres parcours. */
   ambianceScolaire?: boolean;
+  /** Maquette rose et bordeaux validée sur téléphone. Ne touche pas au bureau. */
+  maquetteMobile?: "connexion" | "inscription";
   titre: string;
   sousTitre?: React.ReactNode;
   children: React.ReactNode;
@@ -45,17 +49,30 @@ export function CadreConnexion({
   ];
   return (
     <ConteneurEffets>
-      <div className={`sans-debordement min-h-dvh bg-[color:var(--color-fond)] ${etapeMobile ? m.root : ""} ${ambianceScolaire ? scolaire.scolaire : ""}`} data-etape={etapeMobile}>
+      <div className={`sans-debordement min-h-dvh bg-[color:var(--color-fond)] ${etapeMobile ? m.root : ""} ${ambianceScolaire ? scolaire.scolaire : ""} ${maquetteMobile ? rose.mobileScene : ""}`} data-etape={etapeMobile}>
         <header className="mx-auto flex h-16 w-full max-w-[1200px] items-center px-5 sm:px-8 lg:h-[72px]">
           <Link href="/" aria-label="AvecStudy, retour au site" className="inline-flex min-h-[44px] items-center text-[color:var(--color-encre)]">
-            <MotSymbole titre="Study" className="block h-auto w-[80px] lg:w-[92px]" />
-            {professeur ? <span aria-hidden="true" className="ml-3 border-l border-[color:var(--color-bordure-forte)] pl-3 text-xs font-semibold tracking-wide text-[color:var(--color-encre-faible)]">
+            <MotSymbole titre="Study" className={`${maquetteMobile ? rose.brandDesktop : ""} block h-auto w-[80px] lg:w-[92px]`} />
+            {maquetteMobile ? <span aria-hidden="true" className={rose.brandMobile}>study<span>.</span></span> : null}
+            {professeur && !maquetteMobile ? <span aria-hidden="true" className="ml-3 border-l border-[color:var(--color-bordure-forte)] pl-3 text-xs font-semibold tracking-wide text-[color:var(--color-encre-faible)]">
               AvecStudy
             </span> : null}
           </Link>
           {etapeMobile ? <Link href="/" className={m.back}><ArrowLeft size={16} aria-hidden="true" /> Retour au site</Link> : null}
         </header>
-        <div className="mx-auto grid w-full max-w-[1200px] gap-10 px-5 pb-[max(40px,env(safe-area-inset-bottom))] sm:px-8 lg:grid-cols-[2fr_3fr] lg:items-center lg:gap-16 lg:py-10">
+        {maquetteMobile ? <section className={rose.hero} aria-label={maquetteMobile === "connexion" ? "Bienvenue sur AvecStudy" : "Créer un compte AvecStudy"}>
+          <div className={rose.heroText}>
+            {maquetteMobile === "connexion" ? <>
+              <span className={rose.eyebrow}>AvecStudy</span>
+              <h1 className={rose.heroTitle}>On se retrouve ?</h1>
+              <p className={rose.heroSubtitle}>Tout reprend ici.</p>
+            </> : <>
+              <h1 className={rose.heroTitle}>Bienvenue chez toi.</h1>
+              <p className={rose.heroSubtitle}>Crée ton espace professeur.</p>
+            </>}
+          </div>
+        </section> : null}
+        <div className={`mx-auto grid w-full max-w-[1200px] gap-10 px-5 pb-[max(40px,env(safe-area-inset-bottom))] sm:px-8 lg:grid-cols-[2fr_3fr] lg:items-center lg:gap-16 lg:py-10 ${maquetteMobile ? rose.layout : ""}`}>
           <aside className={`relative hidden bg-[color:var(--color-rose-clair)] p-12 lg:block ${ambianceScolaire ? "overflow-hidden rounded-[26px] border border-white/80 shadow-[0_16px_45px_-26px_rgba(91,48,66,0.3)]" : "rounded-[var(--radius-grand)]"}`} aria-label="AvecStudy en bref">
             {ambianceScolaire ? <span aria-hidden="true" className="absolute right-6 top-5 grid size-14 -rotate-12 place-items-center rounded-[18px] bg-white/55 text-[color:var(--color-accent)] shadow-sm"><NotebookPen size={29} strokeWidth={1.6} /></span> : null}
             <p className={`relative m-0 text-[2.75rem] font-extrabold leading-[1.08] tracking-[-0.045em] ${ambianceScolaire ? "max-w-[290px]" : ""}`}>{professeur ? "Tes idées méritent une belle classe." : "Ta classe commence ici."}</p>
@@ -75,7 +92,7 @@ export function CadreConnexion({
           </aside>
 
           <main id="contenu" className="w-full">
-            <div className={`mx-auto w-full max-w-[440px] lg:border lg:border-[color:var(--color-bordure)] lg:bg-[color:var(--color-surface)] lg:p-8 ${ambianceScolaire ? "lg:rounded-[24px] lg:border-[#eee1e6] lg:shadow-[0_18px_50px_-28px_rgba(91,48,66,0.24)]" : "lg:rounded-[var(--radius-carte)]"}`}>
+            <div className={`mx-auto w-full max-w-[440px] lg:border lg:border-[color:var(--color-bordure)] lg:bg-[color:var(--color-surface)] lg:p-8 ${ambianceScolaire ? "lg:rounded-[24px] lg:border-[#eee1e6] lg:shadow-[0_18px_50px_-28px_rgba(91,48,66,0.24)]" : "lg:rounded-[var(--radius-carte)]"} ${maquetteMobile ? rose.card : ""}`}>
               {etapeMobile ? <div className={m.mobile}>
                 <ol className={m.progress} aria-label="Étapes de connexion">
                   <li aria-current={etapeMobile === 1 ? "step" : undefined}><span className={m.active}>{etapeMobile === 2 ? <Check size={16} aria-hidden="true" /> : "1"}</span>Établissement</li>
@@ -83,13 +100,13 @@ export function CadreConnexion({
                 </ol>
                 {etapeMobile === 1 ? <div className={m.school}><School size={32} strokeWidth={1.5} aria-hidden="true" /></div> : null}
               </div> : null}
-              <h1 className="m-0 mt-4 text-[1.75rem] font-extrabold leading-[1.15] tracking-[-0.035em] sm:text-[2rem] lg:mt-0">
+              <h1 className={`m-0 mt-4 text-[1.75rem] font-extrabold leading-[1.15] tracking-[-0.035em] sm:text-[2rem] lg:mt-0 ${maquetteMobile ? rose.desktopTitle : ""}`}>
                 <span className={etapeMobile ? m.desktop : undefined}>{titre}</span>
                 {etapeMobile ? <span className={m.mobile}>{etapeMobile === 1 ? <>Retrouve <em>ta classe.</em></> : <>Heureux de <em>te revoir.</em></>}</span> : null}
               </h1>
               {etapeMobile ? <p className={m.intro}>{etapeMobile === 1 ? "Commence par le code remis par ton établissement." : "Connecte-toi avec les accès de ton établissement."}</p> : null}
-              {sousTitre ? <p className={`m-0 mt-2 text-[1rem] text-[color:var(--color-encre-faible)] ${etapeMobile ? m.desktop : ""}`}>{sousTitre}</p> : null}
-              <div className="mt-7">{children}</div>
+              {sousTitre ? <p className={`m-0 mt-2 text-[1rem] text-[color:var(--color-encre-faible)] ${etapeMobile ? m.desktop : ""} ${maquetteMobile ? rose.desktopTitle : ""}`}>{sousTitre}</p> : null}
+              <div className={`mt-7 ${maquetteMobile ? rose.content : ""}`}>{children}</div>
               {etapeMobile ? <div className={m.mobileFooter}>{etapeMobile === 2 ? <><Link href="/acces-oublie">Accès oublié ?</Link><p>Besoin d’aide ? Contacte ton établissement.</p></> : <p>Les cours. La classe. Le lien.</p>}</div> : null}
             </div>
           </main>
