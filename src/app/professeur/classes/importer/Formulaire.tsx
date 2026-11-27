@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useRef, useState } from "react";
 import { FileUp } from "lucide-react";
+import { FormulaireInvitationEleve } from "@/components/study/classe-formulaires";
 import type { EleveImporte } from "@/lib/liste-classe";
 import { analyserListe, appliquerListe, type EtatImportClasse } from "./actions";
 
@@ -100,21 +101,36 @@ function ApercuImport({ classe, initiaux, message }: { classe: string; initiaux:
   }
 
   if (application.etat === "termine") {
+    const resultats = application.resultats ?? [];
+    const visibles = resultats.slice(0, 20);
     return (
-      <section className="min-w-0">
-        <p role="status" className="rounded-lg bg-[color:var(--color-succes-fond)] p-4 font-semibold text-[color:var(--color-succes)]">{application.message}</p>
-        <ul className="mt-4 divide-y divide-[color:var(--color-bordure)] pl-0">
-          {application.resultats?.map((eleve) => (
-            <li key={`${eleve.login}-${eleve.nom}`} className="flex min-w-0 flex-wrap items-start justify-between gap-x-4 gap-y-1 py-3">
-              <span className="min-w-0 break-words font-medium">{eleve.nom.toUpperCase()} {eleve.prenom}</span>
-              <span className="max-w-full break-all font-mono text-sm text-[color:var(--color-encre-faible)]">
-                {eleve.login}{eleve.deja ? " · déjà connu" : ""}
-              </span>
+      <section className="min-w-0 max-w-3xl">
+        <div className="rounded-2xl border border-[color:var(--color-bordure)] bg-[color:var(--color-rose-clair)] p-4 sm:p-6">
+          <p role="status" className="m-0 font-bold text-[color:var(--color-succes)]">{application.message}</p>
+          <h2 className="mb-1 mt-3 text-xl font-bold">Maintenant, invite tes élèves</h2>
+          <p className="m-0 text-sm leading-6 text-[color:var(--color-encre-faible)]">
+            Prépare un lien ou un QR code pour chacun. Remets-le uniquement à l’élève concerné : il pourra activer son compte et choisir son mot de passe.
+          </p>
+        </div>
+        <ul className="mt-4 grid list-none gap-3 p-0 sm:grid-cols-2">
+          {visibles.map((eleve) => (
+            <li key={eleve.profileId} className="grid min-w-0 content-start gap-3 rounded-xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-4">
+              <div className="min-w-0">
+                <p className="m-0 break-words font-semibold">{eleve.prenom} {eleve.nom.toUpperCase()}</p>
+                <p className="m-0 mt-1 break-all font-mono text-xs text-[color:var(--color-encre-faible)]">{eleve.login}</p>
+                {eleve.deja ? <p className="m-0 mt-1 text-xs text-[color:var(--color-encre-faible)]">Compte déjà présent : une nouvelle invitation remplacera l’ancienne.</p> : null}
+              </div>
+              <FormulaireInvitationEleve classe={classe} profil={eleve.profileId} nom={`${eleve.prenom} ${eleve.nom}`} />
             </li>
           ))}
         </ul>
-        <Link className="bouton bouton-primaire mt-6 w-full min-w-0 whitespace-normal py-3 text-center leading-5 sm:w-auto" href={`/app/classes/${classe}/membres`}>
-          Créer les liens ou QR codes d’invitation
+        {resultats.length > visibles.length ? (
+          <p className="mt-5 text-sm leading-6 text-[color:var(--color-encre-faible)]">
+            Les {resultats.length - visibles.length} autres élèves sont disponibles dans la gestion des invitations de cette classe.
+          </p>
+        ) : null}
+        <Link className="bouton bouton-secondaire mt-6 w-full min-w-0 whitespace-normal py-3 text-center leading-5 sm:w-auto" href={`/app/classes/${classe}/membres`}>
+          Voir et gérer toutes les invitations
         </Link>
       </section>
     );

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { TitreEspace } from "@/components/app/Cadre";
+import { FormulaireInvitationEleve } from "@/components/study/classe-formulaires";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { coursDuProfesseur } from "@/lib/studio";
 import { clientUtilisateur } from "@/lib/supabase-serveur";
@@ -125,9 +126,21 @@ export default async function PageClasses({
               {choisie.matieres.join(" · ")}
             </p>
           </div>
+          {eleves.length === 0 ? (
+            <div className="mt-5 rounded-2xl border border-[#e7cad6] bg-[#fff3f7] p-5">
+              <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-[#874b62]">Ta prochaine étape</p>
+              <h3 className="mb-1 mt-2 text-lg font-bold text-[#44333d]">Ajoute les élèves de {choisie.label}.</h3>
+              <p className="mt-0 text-sm leading-6 text-[#65545e]">Ajoute un élève par son nom ou importe une liste, puis crée son invitation directement. Chacun recevra son propre lien ou QR code.</p>
+              <div className="flex flex-wrap gap-2">
+                <Link className="bouton bouton-primaire" href={`/professeur/classes/importer?classe=${choisie.id}`}>Ajouter mes élèves</Link>
+                <Link className="bouton bouton-secondaire" href="/studio">Préparer un cours</Link>
+              </div>
+            </div>
+          ) : null}
           <div className="mt-4 flex flex-wrap gap-3">
-            <Link className="bouton bouton-primaire" href={`/professeur/classes/importer?classe=${choisie.id}`}>Ajouter des élèves</Link>
-            <Link className="bouton bouton-secondaire" href={`/app/classes/${choisie.id}/membres`}>Invitations et demandes</Link>
+            {eleves.length ? <Link className="bouton bouton-primaire" href="#inviter-eleves">Inviter mes élèves</Link> : null}
+            <Link className="bouton bouton-secondaire" href={`/professeur/classes/importer?classe=${choisie.id}`}>Ajouter des élèves</Link>
+            <Link className="bouton bouton-secondaire" href={`/app/classes/${choisie.id}/membres`}>Gérer les invitations</Link>
           </div>
 
           <section aria-label="Enseignements de la classe" className="my-6">
@@ -148,19 +161,27 @@ export default async function PageClasses({
             </p>
           ) : (
             <>
-              <p className="m-0 mt-5 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
+              <p id="inviter-eleves" className="m-0 mt-5 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
                 {eleves.length} élève{eleves.length > 1 ? "s" : ""}
+                {creationAutonome ? " · Choisis « Inviter » à côté du nom pour préparer un lien personnel." : ""}
               </p>
-              <ul className="m-0 mt-3 grid list-none gap-x-8 p-0 sm:grid-cols-2 xl:grid-cols-3">
+              <ul className="m-0 mt-3 grid list-none gap-3 p-0 sm:grid-cols-2">
                 {eleves.map((eleve) => (
                   <li
                     key={eleve.id}
-                    className="flex min-h-[var(--spacing-cible)] items-center border-b border-[color:var(--color-bordure)] px-1"
+                    className="min-w-0 rounded-xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-3"
                   >
-                    <span className="truncate">
+                    <p className="m-0 truncate">
                       <span className="font-medium">{eleve.nom.toUpperCase()}</span>{" "}
                       {eleve.prenom}
-                    </span>
+                    </p>
+                    {creationAutonome ? (
+                      <details className="mt-2 min-w-0 border-t border-[color:var(--color-bordure)] pt-2">
+                        <summary className="min-h-10 cursor-pointer py-2 text-sm font-semibold text-[color:var(--color-accent)]">Inviter cet élève</summary>
+                        <p className="mb-2 mt-1 text-xs leading-5 text-[color:var(--color-encre-faible)]">Le lien sera à remettre à {eleve.prenom} uniquement.</p>
+                        <FormulaireInvitationEleve classe={choisie.id} profil={eleve.id} nom={`${eleve.prenom} ${eleve.nom}`} />
+                      </details>
+                    ) : null}
                   </li>
                 ))}
               </ul>

@@ -3,7 +3,8 @@
 import { Copy, Printer } from "lucide-react";
 import Image from "next/image";
 import QRCode from "qrcode";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import {
   changerDecision,
   creerCode,
@@ -89,31 +90,69 @@ export function FormulaireCode({ classe }: { classe: string }) {
   );
 }
 
+/** La fiche imprimable est séparée du résultat à l'écran : `.fiche-impression` est masquée sur mobile et ordinateur. */
+function FicheInvitationImprimable({ url, nom }: { url: string; nom: string }) {
+  const dansLeNavigateur = useSyncExternalStore(() => () => {}, () => true, () => false);
+
+  useEffect(() => {
+    if (!dansLeNavigateur) return;
+    document.body.classList.add("avec-fiche");
+    return () => {
+      if (document.querySelectorAll(".fiche-impression").length <= 1) {
+        document.body.classList.remove("avec-fiche");
+      }
+    };
+  }, [dansLeNavigateur]);
+
+  if (!dansLeNavigateur) return null;
+
+  return createPortal(
+    <section className="fiche-impression" aria-hidden="true">
+      <div className="mx-auto max-w-[140mm] text-center text-black">
+        <p className="m-0 text-2xl font-bold">AvecStudy.</p>
+        <h2 className="mb-0 mt-8 text-2xl font-bold">Ton invitation personnelle</h2>
+        <p className="mt-2 text-lg">{nom}</p>
+        <p className="mt-6 text-base">Scanne ce QR code pour activer ton compte et choisir ton mot de passe.</p>
+        <div className="flex justify-center"><CodeQr texte={url} nom={nom} /></div>
+        <p className="mt-5 break-all font-mono text-sm">{url}</p>
+        <p className="mt-6 text-sm">Ce lien est personnel, utilisable une seule fois et valable 7 jours. Ne le partage pas.</p>
+      </div>
+    </section>,
+    document.body,
+  );
+}
+
 /** Lien d'invitation nominatif : montré une fois, à remettre en main propre ou imprimer. */
-export function FormulaireInvitationEleve({ classe, profil, nom }: { classe: string; profil: string; nom: string }) {
+export function FormulaireInvitationEleve({ classe, profil, nom, impression = true }: { classe: string; profil: string; nom: string; impression?: boolean }) {
   const [etat, action] = useActionState<EtatFormulaire, FormData>(creerInvitation.bind(null, classe), {});
   if (etat.ok && etat.message) {
     return (
-      <div className="fiche-impression rounded-[var(--rayon-m)] border border-[color:var(--color-bordure)] p-4">
-        <p className="m-0 font-semibold">Invitation de {nom}</p>
-        <p className="m-0 mt-2 break-all font-mono text-[0.8125rem]">{etat.message}</p>
+      <div className="min-w-0 rounded-[var(--rayon-m)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-4">
+        {impression ? <FicheInvitationImprimable url={etat.message} nom={nom} /> : null}
+        <p role="status" className="m-0 font-bold text-[color:var(--color-succes)]">Invitation prête pour {nom}</p>
+        <p className="m-0 mt-2 text-sm leading-6 text-[color:var(--color-encre-faible)]">
+          Envoie ce lien uniquement à cet élève, ou montre-lui le QR code. Il pourra choisir son mot de passe.
+        </p>
+        <p className="m-0 mt-3 break-all rounded-lg bg-[color:var(--color-surface-douce)] p-3 font-mono text-xs">{etat.message}</p>
         <CodeQr texte={etat.message} nom={nom} />
-        <p className="meta m-0 mt-2">Valable 7 jours, une seule fois. Il ne sera plus affiché : copiez-le ou imprimez-le maintenant.</p>
+        <p className="m-0 mt-2 text-xs leading-5 text-[color:var(--color-encre-faible)]">Lien valable 7 jours, à usage unique. Copie-le maintenant : il ne sera plus affiché après avoir quitté cette page.</p>
         <div className="mt-3 flex flex-wrap gap-2 print:hidden">
           <Copier texte={etat.message} />
-          <button type="button" className="bouton bouton-secondaire bouton-compact" onClick={() => window.print()}>
-            <Printer size={16} strokeWidth={1.75} aria-hidden="true" /> Imprimer
-          </button>
+          {impression ? (
+            <button type="button" className="bouton bouton-secondaire bouton-compact" onClick={() => window.print()}>
+              <Printer size={16} strokeWidth={1.75} aria-hidden="true" /> Imprimer le QR code
+            </button>
+          ) : null}
         </div>
       </div>
     );
   }
   return (
-    <form action={action}>
+    <form action={action} className="min-w-0">
       <input type="hidden" name="profil" value={profil} />
       <RetourFormulaire etat={etat} />
-      <BoutonEnvoi enCours="Création…" variante="secondaire" className="bouton-compact">
-        Créer un lien d&apos;invitation
+      <BoutonEnvoi enCours="Préparation…" variante="secondaire" className="bouton-compact max-w-full whitespace-normal text-center">
+        Préparer son invitation
       </BoutonEnvoi>
     </form>
   );
