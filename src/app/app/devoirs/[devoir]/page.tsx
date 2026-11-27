@@ -202,6 +202,7 @@ export default async function PageDevoirEleve({
             ) : (
               <RemiseCopie
                 devoir={leDevoir.id}
+                titreDevoir={leDevoir.titre}
                 remplacement={leDevoir.remplacementAutorise}
                 dejaRemis={dejaRemis}
                 enRetardSiRemisMaintenant={echu}
