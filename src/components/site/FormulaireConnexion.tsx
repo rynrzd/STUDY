@@ -3,7 +3,7 @@
 import tissu from "@/components/site/bouton-tissu.module.css";
 import Link from "next/link";
 import m from "@/components/study/connexion/connexion-mobile.module.css";
-import { Loader2 } from "lucide-react";
+import { ArrowRight, Laptop, Loader2 } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { seConnecter } from "@/app/connexion/actions";
@@ -212,10 +212,10 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
           ) : null}
         </div>
 
-        <label className="flex min-h-[48px] cursor-pointer items-start gap-3 rounded-[4px] border border-[color:var(--color-bordure)] px-4 py-3">
+        <label data-connexion-partage className="flex min-h-[48px] cursor-pointer items-start gap-3 rounded-[4px] border border-[color:var(--color-bordure)] px-4 py-3">
           <input type="checkbox" name="postePartage" value="oui" className="mt-1 size-5 shrink-0 accent-[color:var(--color-accent)]" aria-describedby="aide-poste-partage" />
           <span>
-            <span className="block font-semibold"><span className={mobileDesign ? m.desktop : undefined}>Appareil partagé</span>{mobileDesign ? <span className={m.mobile}>J’utilise un appareil partagé</span> : null}</span>
+            <span className="flex items-center gap-2 font-semibold"><Laptop size={17} strokeWidth={1.8} className="shrink-0 text-[color:var(--color-accent)]" aria-hidden="true" /><span><span className={mobileDesign ? m.desktop : undefined}>Appareil partagé</span>{mobileDesign ? <span className={m.mobile}>J’utilise un appareil partagé</span> : null}</span></span>
             <span id="aide-poste-partage" className="aide-champ m-0 mt-0.5">
               <span className={mobileDesign ? m.desktop : undefined}>Pour un ordinateur du lycée ou utilisé par plusieurs personnes. La session se ferme à la fermeture du navigateur
               ou après 30 minutes sans activité, et ton établissement n&apos;est pas mémorisé.</span>
@@ -233,7 +233,7 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
 function BoutonConnexion() {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" data-testid="connexion-valider" disabled={pending} aria-disabled={pending} className={`${tissu.tissu} mt-6 w-full`}>
+    <button type="submit" data-testid="connexion-valider" disabled={pending} aria-disabled={pending} className={`${tissu.tissu} group mt-6 w-full`}>
       {pending ? (
         <>
           {/* Indicateur simple, sans fausse progression. Le bouton reste désactivé : pas de double envoi. */}
@@ -241,7 +241,7 @@ function BoutonConnexion() {
           Connexion…
         </>
       ) : (
-        "Se connecter"
+        <><span>Se connecter</span><ArrowRight size={18} strokeWidth={2} aria-hidden="true" className="transition-transform duration-200 motion-safe:group-hover:translate-x-1 motion-reduce:transition-none" /></>
       )}
     </button>
   );

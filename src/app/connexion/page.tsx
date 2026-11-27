@@ -50,7 +50,7 @@ export default async function PageConnexion({
     }
     if (utilisable) {
       return (
-        <CadreConnexion titre="Changer de compte" sousTitre="Une session est déjà ouverte dans ce navigateur.">
+        <CadreConnexion ambianceScolaire titre="Changer de compte" sousTitre="Une session est déjà ouverte dans ce navigateur.">
           <div className="rounded-[4px] border border-[color:var(--color-bordure)] p-4">
             <p className="m-0 text-[0.875rem] text-[color:var(--color-encre-faible)]">Session ouverte</p>
             <p className="m-0 mt-0.5 font-semibold">
@@ -78,7 +78,7 @@ export default async function PageConnexion({
 
   if (!historique) {
     return (
-      <CadreConnexion titre="Connecte-toi à AvecStudy." sousTitre="Un seul compte pour toutes tes classes et toutes tes matières.">
+      <CadreConnexion ambianceScolaire titre="Connecte-toi à AvecStudy." sousTitre="Un seul compte pour toutes tes classes et toutes tes matières.">
         {fin ? <NettoyageApresDeconnexion /> : null}
         <Messages motif={p.motif} fin={p.fin} invitation={p.invitation} confirmation={p.confirmation} recuperation={p.recuperation} sessionInutilisable={personne !== null} />
         <FormulaireConnexion mobileDesign direct suite={suite} />
@@ -93,6 +93,7 @@ export default async function PageConnexion({
 
   return (
     <CadreConnexion
+      ambianceScolaire
       etapeMobile={contexte ? 2 : 1}
       titre={contexte ? "Connecte-toi à Study." : "Quel est ton établissement ?"}
       sousTitre={contexte ? undefined : "Étape 1 sur 2 — ton identifiant n'existe que dans ton établissement."}
