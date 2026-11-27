@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { FormulaireDevoir } from "@/components/professeur/FormulaireDevoir";
+import { ApercuDevoirEleve } from "@/components/devoirs/ApercuDevoirEleve";
 import { champsEcheanceDevoir } from "@/lib/echeances-devoirs";
 import { SuiviRemises } from "@/components/professeur/SuiviRemises";
 import { BasculeDevoir } from "@/components/professeur/BasculeDevoir";
@@ -95,16 +96,25 @@ export default async function PageDevoirProfesseur({
         {leDevoir.echeance !== null ? ` — à rendre le ${instantLisible(leDevoir.echeance)}` : ""}
       </p>
 
-      <div className="mt-5 print:hidden">
-        <h2 className="titre-section">Avant de publier</h2>
+      <div className="mt-5 rounded-2xl border border-[color:var(--color-bordure)] p-4 print:hidden sm:p-6">
+        <h2 className="titre-section">Diffusion et aperçu</h2>
         <p>Destinataires · {libelle}</p>
         <p>À rendre · {leDevoir.echeance ? instantLisible(leDevoir.echeance) : "Sans échéance"}</p>
         <p>Notions · {(notions.data ?? []).filter(n => selection.includes(n.id)).map(n => n.label).join(", ") || "Aucune notion sélectionnée"}</p>
-        <details className="mb-4">
-          <summary>Voir l’aperçu élève</summary>
-          <h3>{leDevoir.titre}</h3>
-          <p className="whitespace-pre-wrap">{leDevoir.consigne}</p>
-          <p>{libelle}</p>
+        <details className="mb-4 rounded-xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)] p-4" data-testid="devoir-apercu-eleve">
+          <summary className="cursor-pointer font-bold text-[color:var(--color-accent)]">Voir exactement la fiche côté élève</summary>
+          <div className="mt-5 rounded-xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-4 sm:p-6">
+            <ApercuDevoirEleve
+              classe={libelle}
+              titre={leDevoir.titre}
+              consigne={leDevoir.consigne}
+              mode={leDevoir.mode}
+              echeance={leDevoir.echeance ? `${instantLisible(leDevoir.echeance)} (heure de Paris)` : "Sans date limite"}
+              etat="Pas encore remis"
+              simulation
+              publie={leDevoir.etat !== "brouillon" && leDevoir.etat !== "archive"}
+            />
+          </div>
         </details>
         <BasculeDevoir
           devoir={leDevoir.id}

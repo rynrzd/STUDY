@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useId, useRef, useState } from "react";
 import Image from "next/image";
+import { FileText } from "lucide-react";
 import { useFormStatus } from "react-dom";
 import { remettreUneCopie } from "@/app/app/devoirs/actions";
 import { EnteteRemise } from "@/components/study/Celebrations";
@@ -173,6 +174,12 @@ export function RemiseCopie({
             <Image src={apercu} alt="Aperçu local de la copie sélectionnée" width={440} height={260} unoptimized className="mt-3 max-h-64 w-full rounded-lg object-contain" />
           ) : null}
           {(choisi.type === "application/pdf" || /\.pdf$/i.test(choisi.name)) ? <ApercuPdfLocal key={choisi.name + choisi.lastModified} fichier={choisi} /> : null}
+          {/\.docx$/i.test(choisi.name) ? (
+            <p className="mt-3 flex items-center gap-3 rounded-xl bg-[color:var(--color-surface-douce)] p-3 text-left text-sm text-[color:var(--color-encre-faible)]">
+              <FileText aria-hidden="true" className="shrink-0 text-[color:var(--color-accent)]" />
+              Document Word sélectionné. Le nom et la taille sont vérifiés ici ; le contenu n&apos;a pas d&apos;aperçu dans ce navigateur.
+            </p>
+          ) : null}
           <button
             type="button"
             data-testid="remise-retirer-fichier"
