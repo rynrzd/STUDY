@@ -9,6 +9,7 @@ import { chiffrer, lireCles } from "@/lib/chiffrement";
 import { lireGroupe } from "@/lib/config";
 import { DepotSupabase, DepotSupabaseDirect } from "@/lib/depot-authentification";
 import { controlerMotDePasse, MESSAGES_MOT_DE_PASSE } from "@/lib/mot-de-passe";
+import { COOKIE_INTRO } from "@/lib/mouvement";
 import { dedoublonnerEnseignements, MAX_ENSEIGNEMENTS_SOUHAITES, schemaProjetProfesseur } from "@/lib/projet-professeur";
 import { schemaConfirmationProfesseur } from "@/lib/confirmation-professeur";
 import { cookieSession, empreinteJeton, NOM_COOKIE_SESSION } from "@/lib/session";
@@ -208,6 +209,9 @@ async function preparerCompteProfesseur(
       httpOnly: cookie.httpOnly, secure: cookie.secure, sameSite: cookie.sameSite,
       path: cookie.path, maxAge: cookie.maxAge,
     });
+    // Le même accueil animé qu'après une connexion classique, uniquement
+    // une fois la session et les droits du professeur vérifiés côté serveur.
+    magasin.set(COOKIE_INTRO, "1", { path: "/", maxAge: 300, sameSite: "lax", secure: cookie.secure, httpOnly: false });
   } catch (e) {
     console.error(JSON.stringify({ niveau: "erreur", contexte: "connexion_apres_code_professeur", code: e instanceof Error ? e.message : "inconnu" }));
     // En cas de panne de la session applicative, le compte confirmé existe

@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { CodeConfirmation } from "@/components/study/connexion/CodeConfirmation";
 import { verifierSecondFacteur } from "@/app/second-facteur/actions";
 import {
   ETAT_SECOND_FACTEUR_INITIAL,
@@ -32,7 +33,7 @@ export function SecondFacteur({
   dejaEnrole: boolean;
   destination: string;
 }) {
-  const [etat, verifier] = useActionState<EtatSecondFacteur, FormData>(
+  const [etat, verifier, attente] = useActionState<EtatSecondFacteur, FormData>(
     verifierSecondFacteur,
     ETAT_SECOND_FACTEUR_INITIAL,
   );
@@ -120,22 +121,11 @@ export function SecondFacteur({
           Six chiffres, qui changent toutes les trente secondes.
         </p>
 
-        <div className="mt-5 max-w-[14rem]">
+        <div className="mt-5 max-w-[20rem]">
           <label className="etiquette" htmlFor="code">
             Code
           </label>
-          <input
-            id="code"
-            name="code"
-            type="text"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            pattern="[0-9]{6}"
-            maxLength={6}
-            required
-            autoFocus
-            className="champ text-center font-mono text-[1.5rem] tracking-[0.3em]"
-          />
+          <div className="mt-2"><CodeConfirmation id="code" invalide={etat.etat === "erreur"} attente={attente} autoFocus /></div>
         </div>
 
         {etat.etat === "erreur" ? (

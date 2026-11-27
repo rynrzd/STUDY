@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { confirmerAdresse, confirmerCodeProfesseur, envoyerLienProfesseur, reinitialiserProfesseur } from "./actions";
 import { ETAT_INSCRIPTION_PROFESSEUR } from "./etats";
+import { CodeConfirmation } from "@/components/study/connexion/CodeConfirmation";
 
 export function DemandeLien({ mode, adresse }: { mode: "confirmation" | "recuperation"; adresse?: string }) {
   const [etat, action, attente] = useActionState(envoyerLienProfesseur.bind(null, mode), ETAT_INSCRIPTION_PROFESSEUR);
@@ -29,20 +30,7 @@ export function UtiliserCode({ adresse }: { adresse?: string }) {
         <label className="etiquette" htmlFor="confirmation-code-email">Adresse e-mail du compte</label>
         <input id="confirmation-code-email" className="champ champ-acces -mt-3" name="email" type="email" autoComplete="email" defaultValue={adresse} maxLength={180} required />
         <label className="etiquette" htmlFor="confirmation-code-valeur">Code à 6 chiffres</label>
-        <input
-          id="confirmation-code-valeur"
-          className="champ champ-acces -mt-3 text-center text-2xl font-bold tracking-[0.3em]"
-          name="code"
-          type="text"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          pattern="[0-9]{6}"
-          minLength={6}
-          maxLength={6}
-          placeholder="000000"
-          required
-          aria-invalid={etat.etat === "refus" ? true : undefined}
-        />
+        <div className="max-w-[380px]"><CodeConfirmation id="confirmation-code-valeur" invalide={etat.etat === "refus"} attente={attente} /></div>
         {etat.message ? <p role="alert" className="m-0 text-sm text-[color:var(--color-erreur)]">{etat.message}</p> : null}
         <button className="bouton bouton-primaire w-full" disabled={attente}>
           {attente ? "Vérification en cours…" : "Valider mon adresse e-mail"}
