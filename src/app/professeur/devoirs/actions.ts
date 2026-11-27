@@ -357,16 +357,10 @@ export async function enregistrerUneCorrection(
     auteur: session.personne.profileId,
     commentaire: analyse.data.commentaire,
     fichier,
+    publier: analyse.data.publier === "oui",
   });
 
   if (retour === null) return { etat: "erreur", message: "La correction n'a pas pu être enregistrée." };
-
-  if (analyse.data.publier === "oui") {
-    const publiee = await publierRetour(session.jeton, retour, true);
-    if (!publiee) {
-      return { etat: "erreur", message: "La correction est enregistrée, mais non publiée." };
-    }
-  }
 
   revalidatePath(`/professeur/devoirs/${analyse.data.devoir}`);
   revalidatePath("/app/devoirs");
@@ -469,19 +463,10 @@ export async function enregistrerLaCorrectionCommune(
     auteur: session.personne.profileId,
     texte: analyse.data.texte,
     fichier,
+    publier: analyse.data.publier === "oui",
   });
 
   if (!enregistree.ok) return { etat: "erreur", message: enregistree.message };
-
-  if (analyse.data.publier === "oui") {
-    const publiee = await publierCorrectionCommune(session.jeton, enregistree.id, true);
-    if (!publiee) {
-      return {
-        etat: "erreur",
-        message: "La correction est enregistrée, mais la publication a échoué.",
-      };
-    }
-  }
 
   revalidatePath(`/professeur/devoirs/${analyse.data.devoir}`);
   revalidatePath(`/app/devoirs/${analyse.data.devoir}`);

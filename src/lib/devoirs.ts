@@ -517,26 +517,41 @@ export async function suiviDuDevoir(jeton: string, devoirId: string): Promise<Re
   const classe = (espace as { class_id: string | null }).class_id;
   if (classe === null) return { ok: true, lignes: [] };
 
-  const { data: inscrits } = await client
+  const { data: inscrits, error: refusInscriptions } = await client
     .from("class_enrollments")
     .select("profile_id")
     .eq("class_id", classe)
     .is("ends_on", null)
     .limit(400);
 
+  if (refusInscriptions !== null) {
+    journaliser("devoirs.suivi.inscriptions", refusInscriptions.code);
+    return { ok: false, message: SUIVI_INDISPONIBLE };
+  }
+
   const identifiants = ((inscrits ?? []) as { profile_id: string }[]).map((l) => l.profile_id);
   // Une classe sans inscrit est une classe vide, pas une panne.
   if (identifiants.length === 0) return { ok: true, lignes: [] };
 
-  const { data: profils } = await client
+  const { data: profils, error: refusProfils } = await client
     .from("profiles")
     .select("id, first_name, last_name")
     .in("id", identifiants);
 
-  const { data: copies } = await client
+  if (refusProfils !== null) {
+    journaliser("devoirs.suivi.profils", refusProfils.code);
+    return { ok: false, message: SUIVI_INDISPONIBLE };
+  }
+
+  const { data: copies, error: refusCopies } = await client
     .from("submissions")
     .select("id, profile_id, state")
     .eq("assignment_id", devoirId);
+
+  if (refusCopies !== null) {
+    journaliser("devoirs.suivi.copies", refusCopies.code);
+    return { ok: false, message: SUIVI_INDISPONIBLE };
+  }
 
   const parEleve = new Map(
     ((copies ?? []) as { id: string; profile_id: string; state: EtatRemise }[]).map((c) => [
@@ -545,11 +560,18 @@ export async function suiviDuDevoir(jeton: string, devoirId: string): Promise<Re
     ]),
   );
 
-  const { data: versions } = await client
-    .from("submission_versions")
-    .select("id, submission_id, version_number, submitted_at, late, file_id")
-    .in("submission_id", [...parEleve.values()].map((c) => c.id))
-    .order("version_number", { ascending: false });
+  const { data: versions, error: refusVersions } = parEleve.size === 0
+    ? { data: [], error: null }
+    : await client
+      .from("submission_versions")
+      .select("id, submission_id, version_number, submitted_at, late, file_id")
+      .in("submission_id", [...parEleve.values()].map((c) => c.id))
+      .order("version_number", { ascending: false });
+
+  if (refusVersions !== null) {
+    journaliser("devoirs.suivi.versions", refusVersions.code);
+    return { ok: false, message: SUIVI_INDISPONIBLE };
+  }
 
   // Le professeur lit la table directement : `mes_remises` est bornée à son
   // appelant, et c'est très bien ainsi. Les colonnes sont donc celles de la
@@ -888,6 +910,7 @@ export async function enregistrerCorrectionCommune(options: {
   auteur: string;
   texte: string;
   fichier: string | null;
+  publier: boolean;
 }): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
   const client = clientUtilisateur(options.jeton);
   const texte = options.texte.trim();
@@ -909,6 +932,10 @@ export async function enregistrerCorrectionCommune(options: {
     const id = (existante as { id: string }).id;
     const champs: Record<string, unknown> = {
       body: texte === "" ? null : texte,
+      // L'enregistrement en brouillon doit retirer la version publiée dans
+      // la même écriture. Sinon les élèves verraient les changements avant
+      // que le professeur ne clique sur « Publier ».
+      published_at: options.publier ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     };
     if (options.fichier !== null) champs.file_id = options.fichier;
@@ -928,6 +955,7 @@ export async function enregistrerCorrectionCommune(options: {
       assignment_id: options.devoir,
       body: texte === "" ? null : texte,
       file_id: options.fichier,
+      published_at: options.publier ? new Date().toISOString() : null,
       created_by: options.auteur,
     })
     .select("id")
@@ -1049,6 +1077,7 @@ export async function enregistrerRetour(options: {
   auteur: string;
   commentaire: string;
   fichier: string | null;
+  publier: boolean;
 }): Promise<string | null> {
   const client = clientUtilisateur(options.jeton);
 
@@ -1062,6 +1091,7 @@ export async function enregistrerRetour(options: {
     const id = (existant as { id: string }).id;
     const champs: Record<string, unknown> = {
       general_comment: options.commentaire,
+      published_at: options.publier ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     };
     // Un fichier absent de l'envoi ne retire pas celui qui est déjà là : on ne
@@ -1083,6 +1113,7 @@ export async function enregistrerRetour(options: {
       submission_version_id: options.version,
       general_comment: options.commentaire,
       file_id: options.fichier,
+      published_at: options.publier ? new Date().toISOString() : null,
       created_by: options.auteur,
     })
     .select("id")
