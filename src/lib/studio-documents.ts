@@ -11,6 +11,7 @@ import {
 } from "./document-cours.ts";
 import { extraire, ImportRefuse, TAILLE_MAXIMALE_IMPORT } from "./extraction.ts";
 import { clientExploitation, clientUtilisateur } from "./supabase-serveur.ts";
+import { FORMATS_SUPPORTS, reconnaitre } from "./formats-documents.ts";
 import { reveiller } from "./travaux.ts";
 
 /**
@@ -157,6 +158,12 @@ export async function importer(options: {
   }
 
   const octets = Buffer.from(await options.fichier.arrayBuffer());
+  const extension = options.fichier.name.split(".").pop()?.toLowerCase();
+  const attendu = FORMATS_SUPPORTS.find((format) => format.extension === extension);
+  const format = reconnaitre(octets, attendu?.mime ?? null);
+  if (!format || format.extension !== extension || !["pdf", "docx"].includes(format.extension)) {
+    return { etat: "refus", message: "Le contenu ne correspond pas à un PDF ou à un document Word (.docx). Exporte à nouveau le document dans ce format." };
+  }
   const client = clientUtilisateur(options.jeton);
   const titre = titreDepuisNom(options.fichier.name);
   const empreinte = createHash("sha256").update(octets).digest("hex");
@@ -220,17 +227,18 @@ export async function importer(options: {
   // 3. Transfert.
   const { error: erreurDepot } = await service.storage
     .from(BUCKET_IMPORTS)
-    .upload(cle, octets, { contentType: "application/octet-stream", upsert: false });
+    .upload(cle, octets, { contentType: format.mime, upsert: false });
 
   if (erreurDepot !== null) {
     await client.from("studio_documents").delete().eq("id", documentId);
-    return { etat: "refus", message: "Le dépôt a échoué. Réessayez dans un instant." };
+    console.error("studio.import.stockage", { reference: documentId, type: format.extension, erreur: erreurDepot.name });
+    return { etat: "refus", message: `Le stockage a refusé le transfert. Réessaie avec le même fichier. Si le problème persiste, indique cette référence au support : ${documentId}.` };
   }
 
   // 4. Finalisation.
   await service.rpc("finaliser_support_de_seance", {
     p_fichier: fileId,
-    p_mime_detecte: "application/octet-stream",
+    p_mime_detecte: format.mime,
     p_taille: octets.length,
     p_sha256: `\\x${empreinte}`,
   });

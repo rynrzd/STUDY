@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { aplatir } from "@/lib/assistant-rentree";
 import { lireGroupe } from "@/lib/config";
-import { lireListeEleves, type EleveImporte } from "@/lib/liste-classe";
+import { elevesDepuisTableau, lireListeEleves, type EleveImporte } from "@/lib/liste-classe";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { clientExploitation, clientUtilisateur } from "@/lib/supabase-serveur";
 import { FichierIllisible } from "@/lib/tableur";
@@ -21,6 +21,17 @@ async function contexte() {
 
 export async function analyserListe(_precedent: EtatImportClasse, donnees: FormData): Promise<EtatImportClasse> {
   await contexte();
+  if (donnees.get("mode") === "manuel") {
+    const nom = String(donnees.get("nom") ?? "").trim();
+    const prenom = String(donnees.get("prenom") ?? "").trim();
+    if (!nom || !prenom || Math.max(nom.length, prenom.length) > 80) return { etat: "erreur", message: "Vérifie le nom et le prénom." };
+    try {
+      const eleves = elevesDepuisTableau("saisie.csv", Buffer.byteLength(nom + prenom), { entetes: ["nom", "prenom"], lignes: [[nom, prenom]] });
+      return { etat: "apercu", eleves, message: "Nom prêt à confirmer." };
+    } catch {
+      return { etat: "erreur", message: "Vérifie le nom et le prénom saisis." };
+    }
+  }
   const fichier = donnees.get("fichier");
   if (!(fichier instanceof File) || fichier.size === 0) return { etat: "erreur", message: "Choisis un fichier PDF, CSV ou XLSX." };
   try {

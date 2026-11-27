@@ -1,10 +1,11 @@
-import { FilePen, FileText } from "lucide-react";
+import Link from "next/link";
+import { ClipboardPen, FilePen, FileText } from "lucide-react";
 import { NouveauChapitre, NouvelleSeance } from "@/components/studio/Creation";
 import { GestesChapitre } from "@/components/studio/GestesChapitre";
 import { ChoixCours } from "@/components/studio/ChoixCours";
 import { CopierStructure } from "@/components/studio/CopierStructure";
 import { RubriqueCours } from "@/components/study/Rubriques";
-import { EnTetePage, EtatVide, Etiquette, Ligne, ListeLignes } from "@/components/study/ui";
+import { EtatVide, Etiquette, Ligne, ListeLignes } from "@/components/study/ui";
 import type { StatistiqueSeance, chapitresDuCours, coursDuProfesseur, seancesDuCours } from "@/lib/studio";
 
 /** Vue de la page, rendue avec des données réelles (page.tsx) ou fictives (aperçu de développement). */
@@ -31,21 +32,21 @@ export function VueStudio({ cours, choisi, chapitres, seances, sansChapitre, bro
   return (
     <>
       <RubriqueCours actif="/studio" />
-      <EnTetePage
-        sourcil="Mes cours"
-        titre={choisi.libelle}
-        sousTitre={`${seances.length} séance${seances.length > 1 ? "s" : ""}, dont ${brouillons} brouillon${brouillons > 1 ? "s" : ""}. Un brouillon reste invisible des élèves.`}
-        actions={<a href="#creer-une-seance" className="bouton bouton-rose">Créer une séance</a>}
-      />
-
-      {cours.length > 1 ? <ChoixCours cours={cours} choisi={choisi.id} favoris={favoris} /> : null}
-      <section id="creer-une-seance" aria-labelledby="creation-seance-titre" className="mb-7 scroll-mt-24 rounded-2xl border border-[color:var(--color-bordure)] bg-[color:var(--color-rose-clair)] p-4 sm:p-6">
-        <div className="mb-5 max-w-2xl">
-          <p className="m-0 mb-1 text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--color-accent)]">Préparer un cours</p>
-          <h2 id="creation-seance-titre" className="m-0 text-xl font-bold">Tu veux créer quoi ?</h2>
-          <p className="m-0 mt-2 text-sm leading-6 text-[color:var(--color-encre-faible)]">Choisis comment commencer. On préparera un brouillon que tu pourras compléter avant de le partager avec tes élèves.</p>
+      <header className="mb-6 overflow-hidden rounded-3xl bg-[#49283a] px-5 py-6 text-white sm:px-8">
+        <p className="m-0 text-sm text-[#f0dce6]">Mon cahier de cours</p>
+        <h1 className="my-2 text-3xl font-semibold tracking-tight sm:text-4xl">{choisi.libelle}</h1>
+        <p className="m-0 text-sm text-[#f0dce6]">{total ?? seances.length} séances · {brouillons} brouillons</p>
+      </header>
+      {cours.length > 1 && <details className="mb-5 rounded-2xl border border-[color:var(--color-bordure)] px-4">
+        <summary className="cursor-pointer py-3 font-semibold">Changer de cours</summary>
+        <ChoixCours cours={cours} choisi={choisi.id} favoris={favoris} />
+      </details>}
+      <section id="creer-une-seance" className="mb-6 scroll-mt-24" aria-label="Préparer le cours">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="m-0 text-xl font-bold">Préparer</h2>
+          <Link href={`/professeur/devoirs?cours=${choisi.id}#donner`} className="bouton bouton-secondaire bouton-compact"><ClipboardPen size={16} aria-hidden="true" /> Donner un devoir</Link>
         </div>
-        <NouvelleSeance cours={choisi.id} chapitres={chapitres} menu />
+        <NouvelleSeance key={choisi.id} cours={choisi.id} chapitres={chapitres} menu />
       </section>
       <div className="mb-6">
         <CopierStructure cible={choisi.id} sources={sourcesCopie} />
@@ -53,11 +54,11 @@ export function VueStudio({ cours, choisi, chapitres, seances, sansChapitre, bro
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
         <div className="space-y-8">
-          {chapitres.length === 0 && seances.length === 0 ? (
+          {chapitres.length === 0 && (total ?? seances.length) === 0 ? (
             <EtatVide
               icone={FilePen}
               titre="Ce cours est encore vide."
-              texte="Tu peux créer ta première séance juste au-dessus. Ajouter un chapitre pour la ranger est facultatif : commence par ton cours, on s'occupera du classement après."
+              texte="Tes séances apparaîtront ici."
             />
           ) : null}
 

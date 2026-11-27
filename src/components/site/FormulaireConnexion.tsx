@@ -1,5 +1,6 @@
 "use client";
 
+import tissu from "@/components/site/bouton-tissu.module.css";
 import Link from "next/link";
 import m from "@/components/study/connexion/connexion-mobile.module.css";
 import { Loader2 } from "lucide-react";
@@ -232,7 +233,7 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
 function BoutonConnexion() {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" data-testid="connexion-valider" disabled={pending} aria-disabled={pending} className="bouton bouton-primaire bouton-acces mt-6 w-full">
+    <button type="submit" data-testid="connexion-valider" disabled={pending} aria-disabled={pending} className={`${tissu.tissu} mt-6 w-full`}>
       {pending ? (
         <>
           {/* Indicateur simple, sans fausse progression. Le bouton reste désactivé : pas de double envoi. */}

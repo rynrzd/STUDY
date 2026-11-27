@@ -11,6 +11,8 @@ export function FormulaireImportClasse({ classe }: { classe: string }) {
   const fichierRef = useRef<HTMLInputElement>(null);
   const [nomFichier, setNomFichier] = useState("");
 
+  const [manuel, setManuel] = useState(true);
+
   if (analyse.etat === "apercu" && analyse.eleves?.length) {
     return <ApercuImport classe={classe} initiaux={analyse.eleves} message={analyse.message} />;
   }
@@ -22,6 +24,17 @@ export function FormulaireImportClasse({ classe }: { classe: string }) {
       className="grid w-full min-w-0 max-w-2xl gap-5 rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] p-4 sm:p-6"
       encType="multipart/form-data"
     >
+      <div className="flex flex-wrap gap-2" aria-label="Mode d’ajout">
+        {["Un élève", "Importer une liste"].map((label, index) => (
+          <button type="button" key={label} aria-pressed={manuel === (index === 0)} onClick={() => setManuel(index === 0)}
+            className={`bouton ${manuel === (index === 0) ? "bouton-primaire" : "bouton-secondaire"}`}>{label}</button>
+        ))}
+      </div>
+      {manuel ? <div className="grid gap-3 sm:grid-cols-2">
+        <input type="hidden" name="mode" value="manuel" />
+        <label className="etiquette">Prénom<input className="champ" name="prenom" maxLength={80} required /></label>
+        <label className="etiquette">Nom<input className="champ" name="nom" maxLength={80} required /></label>
+      </div> : <>
       <div className="min-w-0">
         <label className="etiquette mb-2" htmlFor="fichier">Liste des élèves</label>
         <p className="m-0 text-sm leading-6 text-[color:var(--color-encre-faible)]">
@@ -63,15 +76,16 @@ export function FormulaireImportClasse({ classe }: { classe: string }) {
       <p id="fichier-formats" className="aide-champ m-0 text-sm leading-6">
         PDF avec texte sélectionnable, CSV ou Excel (.xlsx) · 4 Mo maximum. La liste doit contenir les noms et prénoms.
       </p>
+      </>}
       {analyse.etat === "erreur" ? (
         <p role="alert" className="m-0 break-words text-sm text-[color:var(--color-erreur)]">{analyse.message}</p>
       ) : null}
 
       <button
         className="bouton bouton-primaire w-full min-w-0 whitespace-normal py-3 text-center leading-5 sm:w-fit"
-        disabled={analyseEnCours || !nomFichier}
+        disabled={analyseEnCours || (!manuel && !nomFichier)}
       >
-        {analyseEnCours ? "Lecture…" : "Analyser et vérifier"}
+        {analyseEnCours ? "Lecture…" : manuel ? "Vérifier le nom" : "Analyser et vérifier"}
       </button>
     </form>
   );

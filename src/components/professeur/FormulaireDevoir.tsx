@@ -70,15 +70,12 @@ export function FormulaireDevoir({
 
       {!modification ? (
         <div className="mb-6 border-b border-[color:var(--color-bordure)] pb-5">
-          <p className="m-0 mb-1 text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--color-accent)]">Nouveau devoir</p>
-          <h3 className="m-0 text-xl font-bold">Qu’est-ce que tes élèves doivent faire ?</h3>
-          <p className="m-0 mt-2 text-sm leading-6 text-[color:var(--color-encre-faible)]">Choisis une classe, explique le travail et précise comment le rendre. On gardera un brouillon jusqu’à sa publication.</p>
+          <h3 className="m-0 text-xl font-bold">Nouveau devoir</h3>
         </div>
       ) : null}
 
       {!modification ? (
         <>
-        <h4 className="m-0 mb-3 text-base font-bold">À quelle classe ?</h4>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="etiquette" htmlFor={`${base}-cours`}>
@@ -127,7 +124,6 @@ export function FormulaireDevoir({
         </>
       ) : null}
 
-      {!modification ? <h4 className="m-0 mt-6 text-base font-bold">Quel travail ?</h4> : null}
       <div className={modification ? "" : "mt-4"}>
         <label className="etiquette" htmlFor={`${base}-titre`}>
           Titre du devoir
@@ -163,13 +159,13 @@ export function FormulaireDevoir({
       <fieldset className="m-0 mt-5 border-0 p-0">
         <legend className="mb-2 text-base font-bold">Comment les élèves rendent-ils le travail ?</legend>
 
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+        <div className="mt-2 grid grid-cols-2 gap-2">
           {[
-            ["numerique", "Un fichier sur AvecStudy", "Les élèves déposent leur copie en ligne."],
+            ["numerique", "Fichier en ligne", "Les élèves déposent leur copie en ligne."],
             ["papier", "Sur papier", "La copie est remise en classe."],
-            ["mixte", "Au choix", "Papier ou fichier, selon l’élève."],
+            ["mixte", "Papier ou fichier", "Papier ou fichier, selon l’élève."],
             ["aucune", "Rien à rendre", "Un travail à faire, sans dépôt de copie."],
-          ].map(([valeur, libelle, detail]) => (
+          ].map(([valeur, libelle]) => (
             <label key={valeur} className={`flex min-w-0 cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition-colors ${mode === valeur ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)] hover:border-[color:var(--color-accent)]"}`}>
               <input
                 type="radio"
@@ -180,13 +176,14 @@ export function FormulaireDevoir({
                 onChange={() => setMode(valeur!)}
                 className="mt-1 size-4 shrink-0 accent-[color:var(--color-accent)]"
               />
-              <span className="min-w-0"><span className="block font-bold">{libelle}</span><span className="mt-1 block leading-5 text-[color:var(--color-encre-faible)]">{detail}</span></span>
+              <span className="min-w-0"><span className="block font-bold">{libelle}</span></span>
             </label>
           ))}
         </div>
       </fieldset>
 
-      <h4 className="m-0 mt-6 text-base font-bold">Pour quand ? <span className="text-sm font-normal text-[color:var(--color-encre-faible)]">(facultatif)</span></h4>
+      <details open={Boolean(valeurs?.date)} className="mt-4 rounded-xl border border-[color:var(--color-bordure)] p-4">
+        <summary className="cursor-pointer font-semibold">Date de remise (facultatif)</summary>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <div>
           <label className="etiquette" htmlFor={`${base}-date`}>
@@ -219,6 +216,7 @@ export function FormulaireDevoir({
         </div>
       </div>
 
+      </details>
       {attendUnFichier ? (
         <details className="mt-6 rounded-xl border border-[color:var(--color-bordure)] p-4">
           <summary className="cursor-pointer text-sm font-bold text-[color:var(--color-accent)]">Options de remise (facultatif)</summary>

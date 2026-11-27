@@ -45,7 +45,7 @@ export default async function PageRejoindre({ searchParams }: { searchParams: Pr
           Tant qu&apos;elle n&apos;est pas acceptée, vous ne voyez ni cours ni membres, et la classe ne voit que votre nom.
         </AvisVisibilite>
       </div>
-      <FormulaireRejoindre codeInitial={codePropre} professeur={personne.roles.includes("professeur")} />
+      {envoyee === "1" ? <Link href="/professeur/classes" className="bouton bouton-primaire">Retour à mes classes</Link> : <FormulaireRejoindre codeInitial={codePropre} professeur={personne.roles.includes("professeur")} />}
     </CarteAcces>
   );
 }
