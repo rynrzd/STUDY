@@ -1,0 +1,204 @@
+/* La confirmation est un petit moment de marque : lumière nacrée, sans 3D. */
+.carte {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(20px, 5vw, 30px);
+  border: 1px solid #e4cbd5;
+  border-radius: 25px;
+  background: linear-gradient(153deg, #fffafd 0%, #fff 50%, #f9edf3 100%);
+  box-shadow: 0 14px 40px -30px rgba(94, 37, 66, .46), inset 0 1px 0 rgba(255,255,255,.9);
+}
+.carte::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  top: -78px;
+  right: -68px;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(220, 141, 179, .21), rgba(255, 255, 255, 0) 72%);
+}
+.iconeCourriel {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 17px;
+  border: 1px solid #e8cbd8;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fff, #f4dfe9);
+  color: var(--color-accent-fonce);
+  box-shadow: 0 5px 14px rgba(129, 68, 91, .09);
+}
+.surtitre {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 0 0 7px;
+  color: var(--color-accent);
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+.carte:not(.carteReussie) .surtitre { justify-content: flex-start; }
+.titre {
+  margin: 0;
+  color: var(--color-encre);
+  font-size: clamp(1.43rem, 4.8vw, 1.8rem);
+  font-weight: 850;
+  letter-spacing: -.035em;
+  line-height: 1.2;
+}
+.introduction {
+  margin: 10px 0 4px;
+  max-width: 44ch;
+  color: var(--color-encre-faible);
+  font-size: .93rem;
+  line-height: 1.55;
+}
+.cadreCode { position: relative; width: min(100%, 380px); }
+.cinematique {
+  position: absolute;
+  inset: 0 0 auto;
+  display: grid;
+  place-items: center;
+  height: 58px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.fragment {
+  --depart: 0px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 32px;
+  border: 1px solid rgba(129, 68, 91, .35);
+  border-radius: 9px;
+  background: linear-gradient(145deg, rgba(255,255,255,.95), #e9b9ce);
+  box-shadow: 0 3px 9px rgba(94, 37, 66, .13), inset 0 1px 0 #fff;
+  animation: rejoindre var(--duree-fin, 720ms) var(--courbe-entree, ease-out) both;
+}
+.fragment:nth-child(1) { --depart: -122px; }
+.fragment:nth-child(2) { --depart: -74px; animation-delay: 40ms; }
+.fragment:nth-child(3) { --depart: -25px; animation-delay: 80ms; }
+.fragment:nth-child(4) { --depart: 25px; animation-delay: 80ms; }
+.fragment:nth-child(5) { --depart: 74px; animation-delay: 40ms; }
+.fragment:nth-child(6) { --depart: 122px; }
+.noyau {
+  display: grid;
+  place-items: center;
+  width: 47px;
+  height: 47px;
+  border: 1px solid rgba(255,255,255,.85);
+  border-radius: 17px;
+  background: linear-gradient(135deg, #a96984, #713750 68%, #57263e);
+  color: white;
+  box-shadow: 0 0 0 6px rgba(229, 186, 206, .34), 0 6px 22px rgba(97, 43, 70, .3), inset 0 1px 0 rgba(255,255,255,.48);
+  animation: noyau-apparait var(--duree-fin, 720ms) var(--courbe-entree, ease-out) both;
+}
+.noyau::after {
+  content: "";
+  position: absolute;
+  width: 55px;
+  height: 55px;
+  border: 1.5px solid rgba(129, 68, 91, .4);
+  border-radius: 21px;
+  animation: attente-vivante 1.5s ease-in-out infinite;
+}
+.messageAttente {
+  margin: -5px 0 0;
+  color: var(--color-accent-fonce);
+  font-size: .89rem;
+  font-weight: 650;
+  text-align: center;
+}
+.pointsAttente { display: inline-block; animation: attente-vivante 1.5s ease-in-out infinite; }
+.boutonValidation { min-height: 48px; border-radius: 14px; }
+
+/* Le succès n'apparaît que si le serveur a créé une session autorisée. */
+.carteReussie {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 345px;
+  justify-content: center;
+  text-align: center;
+  background: linear-gradient(155deg, #fff 0%, #fff5f9 58%, #f6e1eb 100%);
+}
+.succesVisuel { position: relative; display: grid; place-items: center; width: 140px; height: 140px; margin-bottom: 10px; }
+.halo {
+  position: absolute;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(228, 161, 191, .46), rgba(228, 161, 191, 0) 70%);
+  animation: halo-arrive var(--duree-fin, 720ms) var(--courbe-entree, ease-out) both;
+}
+.medaille {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 85px;
+  height: 85px;
+  border: 2px solid rgba(255,255,255,.9);
+  border-radius: 28px;
+  background: linear-gradient(145deg, #a96984 0%, #773c56 58%, #57263e 100%);
+  box-shadow: 0 0 0 8px rgba(230, 187, 207, .35), 0 11px 25px rgba(92, 42, 65, .24), inset 0 2px 0 rgba(255,255,255,.3);
+  color: white;
+  animation: medaille-arrive var(--duree-fin, 720ms) var(--courbe-entree, ease-out) both;
+}
+.medaille svg path, .medaille svg polyline {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: coche-dessinee var(--duree-fin, 720ms) ease-out 220ms forwards;
+}
+.paillette {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  transform: rotate(45deg);
+  background: #d79db6;
+  opacity: 0;
+  animation: briller var(--duree-fin, 720ms) ease-out both;
+}
+.paillette:nth-of-type(2) { top: 22px; left: 17px; animation-delay: 80ms; }
+.paillette:nth-of-type(3) { top: 10px; right: 38px; width: 5px; height: 5px; animation-delay: 160ms; }
+.paillette:nth-of-type(4) { top: 48px; right: 5px; animation-delay: 240ms; }
+.paillette:nth-of-type(5) { bottom: 14px; right: 25px; width: 6px; height: 6px; animation-delay: 120ms; }
+.paillette:nth-of-type(6) { bottom: 24px; left: 8px; animation-delay: 200ms; }
+.paillette:nth-of-type(7) { top: 5px; left: 59px; width: 5px; height: 5px; animation-delay: 280ms; }
+.titreReussi { margin: 0; color: var(--color-encre); font-size: clamp(1.5rem, 5vw, 1.9rem); letter-spacing: -.035em; line-height: 1.25; }
+.texteReussi { max-width: 33ch; margin: 12px 0 22px; color: var(--color-encre-faible); line-height: 1.55; }
+.accesDirect { width: min(100%, 310px); border-radius: 14px; }
+
+@keyframes rejoindre {
+  0% { opacity: 0; transform: translate(calc(-50% + var(--depart)), -50%) scale(1); }
+  20% { opacity: 1; }
+  78% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(.35); }
+}
+@keyframes noyau-apparait {
+  0%, 42% { opacity: 0; transform: scale(.68); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes attente-vivante { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+@keyframes halo-arrive { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
+@keyframes medaille-arrive { from { opacity: 0; transform: translateY(5px) scale(.93); } to { opacity: 1; transform: none; } }
+@keyframes coche-dessinee { to { stroke-dashoffset: 0; } }
+@keyframes briller { 0%, 100% { opacity: 0; transform: scale(.65) rotate(45deg); } 45% { opacity: .95; transform: scale(1) rotate(45deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .fragment, .noyau, .noyau::after, .pointsAttente, .halo, .medaille, .medaille svg path,
+  .medaille svg polyline, .paillette { animation: none; }
+  .fragment { display: none; }
+  .medaille svg path, .medaille svg polyline { stroke-dashoffset: 0; }
+  .paillette { opacity: .6; }
+}
