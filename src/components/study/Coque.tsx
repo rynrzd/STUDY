@@ -30,6 +30,7 @@ import { GardienBrouillons } from "./connexion/NettoyageLocal";
 import { ServiceHorsLigne } from "./HorsLigne";
 import { LienNavigation } from "./LienNavigation";
 import { MenuPlus } from "./MenuPlus";
+import { NavigationMobile } from "./NavigationMobile";
 import { COOKIE_BARRE } from "@/lib/preferences-affichage";
 import { ReplierBarre } from "./ReplierBarre";
 
@@ -320,18 +321,21 @@ export async function Coque({ ctx, children }: { ctx: ContexteApp; children: Rea
         </main>
       </div>
 
-      <nav className="app-nav-mobile" aria-label="Destinations">
+      <NavigationMobile
+        principales={mobile.map((d) => ({ href: d.href, exact: d.exact, aussi: d.aussi }))}
+        autres={plus.map((d) => ({ href: d.href, exact: d.exact, aussi: d.aussi }))}
+      >
         {mobile.map((d) => (
           <LienNavigation key={d.href} href={d.href} exact={d.exact} aussi={d.aussi}>
-            <d.icone size={22} strokeWidth={1.75} aria-hidden="true" />
-            <span>{d.court ?? d.libelle}</span>
+            <span className="app-nav-icone"><d.icone size={22} strokeWidth={1.85} aria-hidden="true" /></span>
+            <span className="app-nav-libelle">{d.court ?? d.libelle}</span>
           </LienNavigation>
         ))}
         <MenuPlus
           liens={plus.map((d) => ({ href: d.href, libelle: d.libelle, aussi: d.aussi ?? [], exact: d.exact ?? false }))}
           espaces={espaces.length > 1 ? espaces.map((e) => ({ href: e.href, libelle: e.libelle, actif: e.espace === espace })) : []}
         />
-      </nav>
+      </NavigationMobile>
     </div>
   );
 }
