@@ -1,12 +1,15 @@
 "use client";
 
-import { useActionState, useId, useState } from "react";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
+import Image from "next/image";
 import { useFormStatus } from "react-dom";
 import { remettreUneCopie } from "@/app/app/devoirs/actions";
 import { EnteteRemise } from "@/components/study/Celebrations";
 import { ETAT_REMISE_INITIAL, type EtatRemiseAction } from "@/app/app/devoirs/etats";
 import { instantLisible } from "@/lib/horodatage";
-import { tailleLisible } from "@/lib/formats-documents";
+import { ACCEPT_SUPPORTS, FORMATS_ACCEPTES, tailleLisible } from "@/lib/formats-documents";
+import { LIMITE_DEPOT_LIBELLE } from "@/lib/limites-depot";
+import { verifierSelectionCopie } from "@/lib/validation-copie";
 
 /**
  * Remettre une copie — cahier V5, §3.2.
@@ -28,11 +31,13 @@ import { tailleLisible } from "@/lib/formats-documents";
  */
 export function RemiseCopie({
   devoir,
+  titreDevoir,
   remplacement,
   dejaRemis,
   enRetardSiRemisMaintenant,
 }: {
   devoir: string;
+  titreDevoir: string;
   remplacement: boolean;
   dejaRemis: boolean;
   enRetardSiRemisMaintenant: boolean;
@@ -43,7 +48,38 @@ export function RemiseCopie({
   );
 
   const champ = useId();
-  const [choisi, setChoisi] = useState<{ nom: string; taille: number } | null>(null);
+  const champFichier = useRef<HTMLInputElement>(null);
+  const urlLocale = useRef<string | null>(null);
+  const [choisi, setChoisi] = useState<File | null>(null);
+  const [apercu, setApercu] = useState<string | null>(null);
+  const [survol, setSurvol] = useState(false);
+  const [erreurFichier, setErreurFichier] = useState<string | null>(null);
+
+  useEffect(() => () => {
+    if (urlLocale.current !== null) URL.revokeObjectURL(urlLocale.current);
+  }, []);
+
+  function selectionner(fichier: File | null) {
+    if (urlLocale.current !== null) URL.revokeObjectURL(urlLocale.current);
+    urlLocale.current = null;
+    setApercu(null);
+    setChoisi(null);
+
+    const erreur = verifierSelectionCopie(fichier);
+    setErreurFichier(fichier === null ? null : erreur);
+    if (erreur !== null || fichier === null) {
+      if (champFichier.current !== null) champFichier.current.value = "";
+      return;
+    }
+
+    // Une image est décodée par le navigateur comme image. Pas de document
+    // tiers dans une iframe ni de lien blob : le serveur vérifie les octets.
+    if (["image/png", "image/jpeg", "image/webp"].includes(fichier.type)) {
+      urlLocale.current = URL.createObjectURL(fichier);
+      setApercu(urlLocale.current);
+    }
+    setChoisi(fichier);
+  }
 
   // Tirée une fois, à l'ouverture de l'écran, et lisible pendant le rendu —
   // c'est pourquoi c'est un état à initialisation paresseuse et non une ref :
@@ -70,39 +106,85 @@ export function RemiseCopie({
       <input type="hidden" name="devoir" value={devoir} />
       <input type="hidden" name="idempotence" value={cle} />
 
-      <label className="etiquette" htmlFor={champ}>
-        {dejaRemis ? "Remplacer ma copie" : "Ma copie"}
-      </label>
-
-      <input
-        id={champ}
-        data-testid="remise-fichier"
-        name="copie"
-        type="file"
-        required
-        aria-describedby={`${champ}-aide`}
-        className="champ h-auto py-2"
-        onChange={(evenement) => {
-          const fichier = evenement.target.files?.[0];
-          setChoisi(fichier === undefined ? null : { nom: fichier.name, taille: fichier.size });
+      <div
+        onDragOver={(evenement) => {
+          if (!evenement.dataTransfer.types.includes("Files")) return;
+          evenement.preventDefault();
+          setSurvol(true);
         }}
-      />
+        onDragLeave={() => setSurvol(false)}
+        onDrop={(evenement) => {
+          evenement.preventDefault();
+          setSurvol(false);
+          const fichier = evenement.dataTransfer.files[0] ?? null;
+          if (fichier !== null && champFichier.current !== null) {
+            const transfert = new DataTransfer();
+            transfert.items.add(fichier);
+            champFichier.current.files = transfert.files;
+          }
+          selectionner(fichier);
+        }}
+        className={`rounded-xl border-2 border-dashed p-5 text-center transition-colors focus-within:border-[color:var(--color-accent)] ${survol ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)]" : "border-[color:var(--color-bordure)] bg-[color:var(--color-surface-douce)]"}`}
+        data-testid="remise-zone-fichier"
+      >
+        <label className="etiquette mb-3 block text-center" htmlFor={champ}>
+          {dejaRemis ? "Choisir une nouvelle version" : "Choisir ma copie"}
+        </label>
+        <input
+          ref={champFichier}
+          id={champ}
+          data-testid="remise-fichier"
+          name="copie"
+          type="file"
+          accept={ACCEPT_SUPPORTS}
+          required
+          aria-describedby={`${champ}-aide`}
+          className="sr-only"
+          onChange={(evenement) => selectionner(evenement.target.files?.[0] ?? null)}
+        />
+        <label htmlFor={champ} className="bouton bouton-secondaire inline-flex cursor-pointer items-center justify-center">
+          Choisir mon fichier
+        </label>
+        <p className="m-0 mt-3 text-sm text-[color:var(--color-encre-faible)]">
+          Ou glisse-le ici depuis ton ordinateur.
+        </p>
+      </div>
 
       <p id={`${champ}-aide`} className="aide-champ">
-        PDF, image ou document. 4 Mo au maximum. Le fichier est vérifié sur son
-        contenu, pas sur son nom.
+        {FORMATS_ACCEPTES} · {LIMITE_DEPOT_LIBELLE} maximum. Le format est vérifié sur le contenu du fichier.
       </p>
 
-      {choisi !== null ? (
-        <p
-          data-testid="remise-choisi"
-          className="m-0 mt-3 rounded-[var(--radius-champ)] border border-[color:var(--color-bordure)] p-3 text-[length:var(--text-tableau)]"
-        >
-          Prêt à envoyer : <strong>{choisi.nom}</strong>{" "}
-          <span className="text-[color:var(--color-encre-faible)]">
-            ({tailleLisible(choisi.taille)})
-          </span>
+      {erreurFichier !== null ? (
+        <p role="alert" data-testid="remise-erreur-fichier" className="m-0 mt-3 text-sm font-semibold text-[color:var(--color-erreur)]">
+          {erreurFichier}
         </p>
+      ) : null}
+
+      {choisi !== null ? (
+        <div data-testid="remise-choisi" className="mt-4 rounded-xl border border-[color:var(--color-bordure)] p-4">
+          <h3 className="m-0 text-lg font-bold">Vérifie avant d&apos;envoyer</h3>
+          <dl className="mt-3 grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[7rem_minmax(0,1fr)]">
+            <dt className="font-semibold">Devoir</dt><dd className="m-0 break-words">{titreDevoir}</dd>
+            <dt className="font-semibold">Fichier</dt><dd className="m-0 break-all">{choisi.name}</dd>
+            <dt className="font-semibold">Taille</dt><dd className="m-0">{tailleLisible(choisi.size)}</dd>
+          </dl>
+          {apercu !== null && choisi.type.startsWith("image/") ? (
+            <Image src={apercu} alt="Aperçu local de la copie sélectionnée" width={440} height={260} unoptimized className="mt-3 max-h-64 w-full rounded-lg object-contain" />
+          ) : null}
+          <button
+            type="button"
+            data-testid="remise-retirer-fichier"
+            onClick={() => selectionner(null)}
+            className="bouton bouton-secondaire bouton-compact mt-4"
+          >
+            Retirer et choisir un autre fichier
+          </button>
+          {dejaRemis ? (
+            <p className="m-0 mt-3 text-sm text-[color:var(--color-encre-faible)]">
+              La nouvelle version deviendra la copie courante. L&apos;historique de l&apos;ancienne sera conservé.
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       {enRetardSiRemisMaintenant ? (
@@ -122,12 +204,12 @@ export function RemiseCopie({
         </p>
       ) : null}
 
-      <BoutonRemettre dejaRemis={dejaRemis} />
+      <BoutonRemettre dejaRemis={dejaRemis} disponible={choisi !== null} />
     </form>
   );
 }
 
-function BoutonRemettre({ dejaRemis }: { dejaRemis: boolean }) {
+function BoutonRemettre({ dejaRemis, disponible }: { dejaRemis: boolean; disponible: boolean }) {
   const { pending } = useFormStatus();
 
   return (
@@ -135,10 +217,10 @@ function BoutonRemettre({ dejaRemis }: { dejaRemis: boolean }) {
       <button
         type="submit"
         data-testid="remise-envoyer"
-        disabled={pending}
+        disabled={pending || !disponible}
         className="bouton bouton-primaire mt-4"
       >
-        {pending ? "Envoi en cours…" : dejaRemis ? "Remplacer ma copie" : "Remettre ma copie"}
+        {pending ? "Envoi en cours…" : dejaRemis ? "Confirmer le remplacement" : "Confirmer et remettre ma copie"}
       </button>
 
       {/* Annoncé aux lecteurs d'écran : un envoi silencieux laisse croire que
