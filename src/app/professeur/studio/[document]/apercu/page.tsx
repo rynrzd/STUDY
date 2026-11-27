@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { BoutonImprimer } from "@/components/study/Actualisation";
+import { LecteurPdf } from "@/components/seance/LecteurPdf";
 import { RenduDocument, type ModeRendu } from "@/components/studio/RenduDocument";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { document as lireDocument, revision } from "@/lib/studio-documents";
@@ -49,6 +50,7 @@ export default async function PageApercu({
 
   const { mode: demande } = await searchParams;
   const mode = MODES[demande ?? "eleve"] ?? "ecran";
+  const fichierPdf = `/professeur/studio/${id}/pdf?revision=${courante.id}`;
 
   return (
     <div className={mode === "projection" ? "bg-[color:var(--color-surface)]" : ""}>
@@ -85,10 +87,15 @@ export default async function PageApercu({
         </nav>
       </div>
 
+      {mode === "a4" && (
+        <section aria-label="Pages du PDF à télécharger" className="mt-6 print:hidden">
+          <LecteurPdf fichier={id} nom={courante.document.titre} source={fichierPdf} />
+        </section>
+      )}
       <div
         className={
           mode === "a4"
-            ? "mx-auto mt-8 w-full max-w-[210mm] bg-white p-[12mm] shadow-[var(--shadow-flottant)] print:mt-0 print:p-0 print:shadow-none"
+            ? "sr-only print:not-sr-only"
             : mode === "projection"
               ? "mt-12"
               : "mx-auto mt-8 w-full max-w-[860px] rounded-[var(--radius-carte)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-6 sm:p-10"
@@ -99,10 +106,10 @@ export default async function PageApercu({
 
       {mode === "a4" ? (
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3 print:hidden">
-          <a href={`/professeur/studio/${id}/pdf?revision=${courante.id}`} className="bouton bouton-primaire">
+          <a href={fichierPdf} className="bouton bouton-primaire">
             Télécharger le PDF
           </a>
-          <BoutonImprimer libelle="Imprimer avec le navigateur" />
+          <BoutonImprimer libelle="Imprimer la version texte" />
           <p className="m-0 w-full text-center text-[length:var(--text-aide)] text-[color:var(--color-encre-tres-faible)]">
             Le téléchargement reprend cette révision enregistrée.
           </p>

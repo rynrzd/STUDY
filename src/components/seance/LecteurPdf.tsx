@@ -86,7 +86,9 @@ export function LecteurPdf({ fichier, nom, source, pageInitiale = 1 }: { fichier
         return;
       }
       if (!reponse.ok) {
-        if (!annule) setEtat({ genre: "erreur", message: "Ce document n'est plus disponible, ou vous n'y avez plus accès.", telechargeable: false });
+        if (!annule) setEtat({ genre: "erreur", message: reponse.status === 409
+          ? "Le document a changé. Rechargez l’aperçu pour afficher la dernière version enregistrée."
+          : "Ce document n'est plus disponible, ou vous n'y avez plus accès.", telechargeable: false });
         return;
       }
       try {
@@ -204,7 +206,7 @@ export function LecteurPdf({ fichier, nom, source, pageInitiale = 1 }: { fichier
           <span className="truncate font-semibold">{nom}</span>
         </span>
         {etat.genre === "erreur" && !etat.telechargeable ? null : (
-          <a href={`/documents/${fichier}`} className="lecteur-pdf-bouton" aria-label={`Télécharger ${nom}`} title="Télécharger">
+          <a href={adresse} className="lecteur-pdf-bouton" aria-label={`Télécharger ${nom}`} title="Télécharger">
             <Download size={18} strokeWidth={1.75} aria-hidden="true" />
           </a>
         )}
@@ -217,7 +219,7 @@ export function LecteurPdf({ fichier, nom, source, pageInitiale = 1 }: { fichier
           <div className="px-4 py-10 text-center" role="alert">
             <p className="m-0">{etat.message}</p>
             {etat.telechargeable ? (
-              <a href={`/documents/${fichier}`} className="bouton bouton-secondaire mt-4">
+              <a href={adresse} className="bouton bouton-secondaire mt-4">
                 <Download size={18} strokeWidth={1.75} aria-hidden="true" /> Télécharger le PDF
               </a>
             ) : null}
