@@ -929,7 +929,7 @@
 
   @media (min-width: 1100px) {
     .app-coque {
-      grid-template-columns: 224px minmax(0, 1fr);
+      grid-template-columns: calc(var(--barre-largeur-pc) + 2 * var(--barre-retrait-pc)) minmax(0, 1fr);
     }
 
     .app-barre {

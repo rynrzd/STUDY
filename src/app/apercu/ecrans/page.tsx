@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Signalements } from "@/components/admin/Signalements";
 import { Coque } from "@/components/study/Coque";
-import { VueIntro } from "@/components/study/IntroConnexion";
+import { VueIntro } from "@/components/study/VueIntro";
 import { EtapesImport } from "@/components/admin/EtapesImport";
 import { VerificationRentree } from "@/components/admin/VerificationRentree";
 import { EnTetePage } from "@/components/study/ui";
