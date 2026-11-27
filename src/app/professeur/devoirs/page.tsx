@@ -5,6 +5,7 @@ import { TitreEspace, Vide } from "@/components/app/Cadre";
 import { FormulaireDevoir } from "@/components/professeur/FormulaireDevoir";
 import { devoirsDuProfesseur, type Devoir } from "@/lib/devoirs";
 import { instantLisible } from "@/lib/horodatage";
+import { prioritesDevoirs } from "@/lib/priorites-devoirs";
 import { jetonAccesDe, sessionCourante } from "@/lib/session-serveur";
 import { coursDuProfesseur, seancesDuCours } from "@/lib/studio";
 
@@ -73,6 +74,14 @@ export default async function PageDevoirsProfesseur({ searchParams }: { searchPa
       (rang[a.etat] ?? 9) - (rang[b.etat] ?? 9) ||
       (a.echeance ?? "").localeCompare(b.echeance ?? ""),
   );
+  const priorites = prioritesDevoirs(tries);
+  const groupes = cours.map((unCours) => ({
+    id: unCours.id,
+    libelle: unCours.libelle,
+    devoirs: tries.filter((devoir) => devoir.cours === unCours.id),
+  })).filter((groupe) => groupe.devoirs.length > 0);
+  const inconnus = tries.filter((devoir) => !libelles.has(devoir.cours));
+  if (inconnus.length > 0) groupes.push({ id: "autres", libelle: "Autres cours", devoirs: inconnus });
 
   return (
     <>
@@ -94,20 +103,21 @@ export default async function PageDevoirsProfesseur({ searchParams }: { searchPa
         </div>
       ) : (
         <>
-          <section id="donner" className="mt-8 scroll-mt-24 print:hidden">
-            <h2 className="m-0 mb-4 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
-              Donner un devoir
-            </h2>
-            <FormulaireDevoir
-              coursInitial={parametres.cours}
-              cours={cours.map((unCours) => ({ id: unCours.id, libelle: unCours.libelle }))}
-              seances={seances}
-            />
+          <section className="mt-8 print:hidden" aria-labelledby="devoirs-priorites-titre">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 id="devoirs-priorites-titre" className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">À suivre maintenant</h2>
+              <Link href="#donner" className="bouton bouton-primaire">Préparer un devoir</Link>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3" data-testid="devoirs-priorites">
+              <Priorite titre="Brouillons à terminer" nombre={priorites.brouillons.length} description="À relire avant de publier" devoirs={priorites.brouillons.slice(0, 2)} />
+              <Priorite titre="Échéances sous 7 jours" nombre={priorites.aRendreBientot.length} description="Devoirs publiés à surveiller" devoirs={priorites.aRendreBientot.slice(0, 2)} />
+              <Priorite titre="Devoirs en cours" nombre={priorites.actifs.length} description="Publié ou en période de retard" devoirs={priorites.actifs.slice(0, 2)} />
+            </div>
           </section>
 
-          <section className="mt-12">
+          <section className="mt-10">
             <h2 className="m-0 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
-              Mes devoirs
+              Mes devoirs, par classe
             </h2>
 
             {tries.length === 0 ? (
@@ -115,18 +125,61 @@ export default async function PageDevoirsProfesseur({ searchParams }: { searchPa
                 Vous n&apos;avez encore donné aucun devoir.
               </p>
             ) : (
-              <ul className="m-0 mt-4 list-none space-y-2 p-0" data-testid="liste-devoirs">
-                {tries.map((devoir) => (
-                  <li key={devoir.id}>
-                    <Lien devoir={devoir} cours={libelles.get(devoir.cours) ?? "Cours"} />
+              <ul className="m-0 mt-4 list-none space-y-6 p-0" data-testid="liste-devoirs">
+                {groupes.map((groupe) => (
+                  <li key={groupe.id}>
+                    <h3 className="m-0 mb-2 flex flex-wrap items-center gap-2 text-base font-bold">
+                      {groupe.libelle}
+                      <span className="text-sm font-normal text-[color:var(--color-encre-faible)]">({groupe.devoirs.length})</span>
+                    </h3>
+                    <ul className="m-0 list-none space-y-2 p-0">
+                      {groupe.devoirs.map((devoir) => (
+                        <li key={devoir.id}><Lien devoir={devoir} cours={groupe.libelle} /></li>
+                      ))}
+                    </ul>
                   </li>
                 ))}
               </ul>
             )}
           </section>
+
+          <section id="donner" className="mt-12 scroll-mt-24 print:hidden">
+            <h2 className="m-0 mb-4 text-[length:var(--text-h2-app)] leading-[var(--text-h2-app--line-height)]">
+              Préparer un devoir
+            </h2>
+            <FormulaireDevoir
+              coursInitial={parametres.cours}
+              cours={cours.map((unCours) => ({ id: unCours.id, libelle: unCours.libelle }))}
+              seances={seances}
+            />
+          </section>
         </>
       )}
     </>
+  );
+}
+
+function Priorite({ titre, nombre, description, devoirs }: {
+  titre: string;
+  nombre: number;
+  description: string;
+  devoirs: readonly Devoir[];
+}) {
+  return (
+    <article className="min-w-0 rounded-xl border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-4">
+      <p className="m-0 text-sm font-semibold text-[color:var(--color-encre-faible)]">{titre}</p>
+      <p className="m-0 mt-2 text-3xl font-bold tabular-nums text-[color:var(--color-accent)]">{nombre}</p>
+      <p className="m-0 mt-1 text-xs text-[color:var(--color-encre-faible)]">{description}</p>
+      {devoirs.length > 0 ? (
+        <ul className="m-0 mt-3 list-none space-y-1 border-t border-[color:var(--color-bordure)] pt-3">
+          {devoirs.map((devoir) => (
+            <li key={devoir.id}>
+              <Link href={`/professeur/devoirs/${devoir.id}`} className="block min-w-0 truncate py-1 text-sm underline" title={devoir.titre}>{devoir.titre}</Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </article>
   );
 }
 
