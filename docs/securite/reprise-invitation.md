@@ -1,0 +1,9 @@
+# Reprise d’une invitation réservée
+
+La réservation porte sur le profil. Une révocation ou une nouvelle invitation ne lève pas l’exclusion entre deux changements de mot de passe. Aucun délai ne libère automatiquement une tentative. Un refus explicite de mot de passe faible permet de réessayer. Une interruption, un délai dépassé ou une erreur de finalisation demande une réconciliation par l’exploitant.
+
+1. Vérifier l’identité du demandeur selon la procédure de récupération de l’établissement. Retrouver le profil, l’établissement et la tentative réservée dans le périmètre d’exploitation. Garder les empreintes, identifiants de tentative et secrets hors des tickets.
+2. Confirmer que l’appel Auth est terminé et déterminer son résultat avec les traces du fournisseur. Un changement de date sur le profil ou une simple absence de trace ne suffit pas. Si le résultat reste ambigu, maintenir la réservation et escalader au fournisseur.
+3. Si la mise à jour est confirmée et que le lien est toujours valide pour cette personne, finaliser cette même tentative avec la fonction de service. Si la finalisation a déjà abouti, vérifier la consommation et orienter vers la connexion.
+4. Si le fournisseur confirme que la mutation n’a pas eu lieu, libérer uniquement la tentative correspondante. Si le lien a été révoqué ou si le compte a changé d’état après une mutation confirmée, suivre la procédure de récupération administrateur et de révocation des sessions, puis retirer la réservation sous contrôle d’exploitation. Ne jamais réactiver un ancien lien.
+5. Avant déploiement, répéter ces cas sur une cible de recette distincte, vérifier la sauvegarde et planifier une bascule qui draine les anciens serveurs avant de rouvrir les activations. Un ancien serveur pourrait appeler Auth avant de rencontrer les nouveaux droits SQL. La migration et le code applicatif doivent être déployés de façon coordonnée.
