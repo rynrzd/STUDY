@@ -29,7 +29,7 @@ const MODELES = {
   classique: {
     // Georgia pour le corps : c'est le modèle « document », celui qui ressemble
     // à un polycopié. La référence l'emploie.
-    police: "var(--font-marque)",
+    police: 'Georgia, "Times New Roman", serif',
     titre: "text-[1.75rem] sm:text-[2rem]",
     sousTitre: "text-[1.25rem]",
     espace: "space-y-5",
@@ -52,6 +52,16 @@ const MODELES = {
     espace: "space-y-8",
     encadre: "bg-[color:var(--color-rose-clair)] rounded-[var(--radius-carte)] p-6",
   },
+  synthese: {
+    police: "var(--font-texte)", titre: "bg-[color:var(--color-accent-fonce)] text-white p-5 text-3xl",
+    sousTitre: "border-b border-[color:var(--color-rose-decor)] pb-2 text-xl",
+    espace: "space-y-5", encadre: "border-y border-[color:var(--color-rose-decor)] py-3",
+  },
+  projection: {
+    police: "var(--font-texte)", titre: "text-4xl",
+    sousTitre: "border-l-4 border-[color:var(--color-accent)] pl-4 text-3xl",
+    espace: "space-y-8", encadre: "rounded-xl bg-[color:var(--color-rose-clair)] p-6",
+  },
 } as const;
 
 export function RenduDocument({
@@ -69,7 +79,7 @@ export function RenduDocument({
   // La projection force une taille bien plus grande : ce qui compte au fond de
   // la salle, c'est la hauteur des lettres, pas le réglage de confort du
   // professeur.
-  const facteur = mode === "projection" ? Math.max(reglages.taille, 1.5) : reglages.taille;
+  const facteur = mode === "projection" || reglages.modele === "projection" ? Math.max(reglages.taille, 1.5) : reglages.taille;
 
   return (
     <article

@@ -34,6 +34,20 @@ test("le nom du PDF ne peut pas devenir un chemin", () => {
   assert.equal(nomPdf(" ../Cours : énergie? "), ".. Cours énergie.pdf");
 });
 
+test("les quatre présentations exportent le texte original et la projection en paysage", async () => {
+  for (const modele of ["classique", "fiche", "synthese", "projection"] as const) {
+    const octets = await fabriquerPdfCours(cours, { ...REGLAGES_PAR_DEFAUT, modele });
+    const pdf = await getDocumentProxy(new Uint8Array(octets));
+    const page = await pdf.getPage(1);
+    const { width, height } = page.getViewport({ scale: 1 });
+    assert.equal(width > height, modele === "projection");
+    const { text } = await extractText(pdf, { mergePages: true });
+    for (const passage of [cours.titre, "Définition", "L’énergie se conserve : entrée, stockage et sortie.", "Mesurer la puissance", "Comparer les rendements"]) {
+      assert.ok(text.includes(passage), `${modele} : passage absent`);
+    }
+  }
+});
+
 test("numéroter un support de plusieurs pages conserve chaque page et son contenu", async () => {
   const longCours = { ...cours, blocs: Array.from({ length: 45 }, (_, i) => ({
     type: "paragraphe" as const, texte: `Mesure ${i + 1} : Δt = 0,25 s.`, origine: { page: 1 },

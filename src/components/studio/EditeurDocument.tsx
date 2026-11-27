@@ -48,8 +48,10 @@ export interface DocumentInitial {
 type EtatSauvegarde = "repos" | "enregistrement" | "enregistre" | "conflit" | "echec";
 
 const MODELES: readonly { cle: Modele; libelle: string; aide: string }[] = [
-  { cle: "classique", libelle: "Classique", aide: "Titres en serif, encadrés roses, marges larges." },
-  { cle: "fiche", libelle: "Fiche", aide: "Plus compact, pour réviser. Rien n'est retiré." },
+  { cle: "classique", libelle: "Cours élégant", aide: "Une page de lecture avec des titres à empattements et des encadrés poudrés." },
+  { cle: "fiche", libelle: "Fiche de révision", aide: "Une composition compacte avec des repères en marge des encadrés." },
+  { cle: "synthese", libelle: "Synthèse moderne", aide: "Un bandeau de titre et des sections délimitées pour retrouver chaque notion." },
+  { cle: "projection", libelle: "Support de projection", aide: "Un PDF en paysage. Chaque grande partie commence sur une nouvelle page." },
   { cle: "aere", libelle: "Aéré", aide: "Texte plus grand et plus espacé." },
 ];
 
@@ -284,16 +286,15 @@ export function EditeurDocument({ initial }: { initial: DocumentInitial }) {
             Présentation
           </h2>
 
-          <div role="radiogroup" aria-label="Modèle" className="mt-3 grid grid-cols-3 gap-2">
+          <div role="group" aria-label="Modèle de présentation" className="mt-3 grid gap-2">
             {MODELES.map((modele) => (
               <button
                 key={modele.cle}
                 type="button"
-                role="radio"
-                aria-checked={reglages.modele === modele.cle}
+                aria-pressed={reglages.modele === modele.cle}
                 title={modele.aide}
                 onClick={() => changerReglages({ modele: modele.cle })}
-                className={`rounded-[var(--radius-champ)] border px-2 py-3 text-[0.6875rem] ${
+                className={`min-h-11 rounded-[var(--radius-champ)] border px-3 py-2 text-left text-sm ${
                   reglages.modele === modele.cle
                     ? "border-[color:var(--color-accent)] bg-[color:var(--color-rose-clair)] font-semibold text-[color:var(--color-accent)]"
                     : "border-[color:var(--color-bordure)]"

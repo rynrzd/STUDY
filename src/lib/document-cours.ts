@@ -81,7 +81,7 @@ export interface RapportConversion {
   readonly alertes: readonly AlerteConversion[];
 }
 
-export type Modele = "classique" | "fiche" | "aere";
+export type Modele = "classique" | "fiche" | "aere" | "synthese" | "projection";
 
 export interface ReglagesPresentation {
   readonly modele: Modele;
@@ -282,7 +282,7 @@ export function relireReglages(valeur: unknown): ReglagesPresentation {
   const modele = brut.modele;
 
   return {
-    modele: modele === "fiche" || modele === "aere" ? modele : "classique",
+    modele: modele === "fiche" || modele === "aere" || modele === "synthese" || modele === "projection" ? modele : "classique",
     taille: borner(brut.taille, 0.9, 1.4, 1),
     interligne: borner(brut.interligne, 1.4, 2, 1.6),
     numerosDePage: brut.numerosDePage !== false,
