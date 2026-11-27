@@ -78,7 +78,7 @@ export default async function PageConnexion({
 
   if (!historique) {
     return (
-      <CadreConnexion ambianceScolaire titre="Connecte-toi à AvecStudy." sousTitre="Un seul compte pour toutes tes classes et toutes tes matières.">
+      <CadreConnexion ambianceScolaire maquetteMobile="connexion" titre="Connecte-toi à AvecStudy." sousTitre="Un seul compte pour toutes tes classes et toutes tes matières.">
         {fin ? <NettoyageApresDeconnexion /> : null}
         <Messages motif={p.motif} fin={p.fin} invitation={p.invitation} confirmation={p.confirmation} recuperation={p.recuperation} sessionInutilisable={personne !== null} />
         <FormulaireConnexion mobileDesign direct suite={suite} />

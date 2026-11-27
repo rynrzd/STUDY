@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 390" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Rubans roses abstraits sur fond bordeaux">
+  <defs>
+    <radialGradient id="fond" cx="78%" cy="28%" r="89%">
+      <stop stop-color="#793759"/>
+      <stop offset=".42" stop-color="#4e1938"/>
+      <stop offset="1" stop-color="#230b20"/>
+    </radialGradient>
+    <linearGradient id="rubanHaut" x1=".15" y1=".03" x2=".83" y2=".98" objectBoundingBox="true">
+      <stop stop-color="#f2aac7" stop-opacity=".05"/>
+      <stop offset=".28" stop-color="#ed91bb" stop-opacity=".83"/>
+      <stop offset=".41" stop-color="#b85e92" stop-opacity=".42"/>
+      <stop offset=".67" stop-color="#f5b3ca" stop-opacity=".88"/>
+      <stop offset="1" stop-color="#632a50" stop-opacity=".18"/>
+    </linearGradient>
+    <linearGradient id="rubanBas" x1=".05" y1=".98" x2="1" y2=".18" objectBoundingBox="true">
+      <stop stop-color="#f3a6c0" stop-opacity=".78"/>
+      <stop offset=".19" stop-color="#d974a7" stop-opacity=".9"/>
+      <stop offset=".43" stop-color="#67294c" stop-opacity=".4"/>
+      <stop offset=".68" stop-color="#ffcade" stop-opacity=".97"/>
+      <stop offset=".84" stop-color="#ad5a86" stop-opacity=".52"/>
+      <stop offset="1" stop-color="#b65785" stop-opacity=".1"/>
+    </linearGradient>
+    <linearGradient id="reflet" x1="0" x2="1" y1=".5" y2=".5" objectBoundingBox="true">
+      <stop stop-color="#fff0f5" stop-opacity="0"/>
+      <stop offset=".53" stop-color="#fff0f5" stop-opacity=".82"/>
+      <stop offset="1" stop-color="#ffc5d8" stop-opacity=".07"/>
+    </linearGradient>
+    <radialGradient id="lueur" cx=".55" cy=".5" r=".54">
+      <stop stop-color="#ec9cba" stop-opacity=".53"/>
+      <stop offset="1" stop-color="#e78ab0" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="flou"><feGaussianBlur stdDeviation="14"/></filter>
+  </defs>
+  <rect width="560" height="390" fill="url(#fond)"/>
+  <ellipse cx="440" cy="148" rx="205" ry="149" fill="url(#lueur)" filter="url(#flou)"/>
+  <path d="M 192 242 C 248 143, 386 131, 573 21 L 582 96 C 468 144, 361 177, 306 266 C 279 311, 246 324, 180 337 C 228 295, 237 276, 192 242 Z" fill="url(#rubanHaut)" opacity=".89"/>
+  <path d="M 192 242 C 263 174, 393 132, 573 21" fill="none" stroke="url(#reflet)" stroke-width="3.5" opacity=".72"/>
+  <path d="M 171 323 C 273 257, 390 272, 551 137 L 575 233 C 465 268, 401 325, 322 348 C 235 370, 156 348, 45 403 L -24 380 C 46 356, 109 354, 171 323 Z" fill="url(#rubanBas)" opacity=".95"/>
+  <path d="M -4 379 C 113 323, 237 332, 340 294 C 434 259, 490 191, 558 164" fill="none" stroke="url(#reflet)" stroke-width="4" opacity=".65"/>
+  <path d="M 245 365 C 337 316, 410 337, 556 250" fill="none" stroke="#ffbdce" stroke-width="2" opacity=".32"/>
+  <ellipse cx="373" cy="283" rx="151" ry="22" fill="#efb1cb" opacity=".18" filter="url(#flou)" transform="rotate(-18 373 283)"/>
+</svg>

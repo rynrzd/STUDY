@@ -3,7 +3,8 @@
 import tissu from "@/components/site/bouton-tissu.module.css";
 import Link from "next/link";
 import m from "@/components/study/connexion/connexion-mobile.module.css";
-import { ArrowRight, Laptop, Loader2 } from "lucide-react";
+import rose from "@/components/study/connexion/auth-maquette-mobile.module.css";
+import { ArrowRight, Eye, EyeOff, Laptop, Loader2, LockKeyhole, Mail, UserRound } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { seConnecter } from "@/app/connexion/actions";
@@ -48,6 +49,7 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
     }
   }, ETAT_INITIAL);
   const [motDePasse, setMotDePasse] = useState("");
+  const [profil, setProfil] = useState<"eleve" | "professeur">("professeur");
   const [visible, setVisible] = useState(false);
   const [manquants, setManquants] = useState<Partial<Record<Champ, string>>>({});
   const [efface, setEfface] = useState(false);
@@ -107,16 +109,22 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
 
   const general = etat.etat === "refus" && etat.type !== "saisie" && etat.type !== "identifiants" ? etat : null;
   const refusIdentifiants = etat.etat === "refus" && etat.type === "identifiants" ? etat.message : null;
+  const lienOublie = direct && profil === "professeur" ? "/inscription/professeur/acces" : "/acces-oublie";
   const decrit = (champ: Champ, aide?: string) => {
     const ids = [aide, manquants[champ] ? `erreur-${champ}` : null, champ === "motDePasse" && refusIdentifiants ? "erreur-connexion" : null].filter(Boolean);
     return ids.length ? ids.join(" ") : undefined;
   };
 
   return (
-    <form ref={formulaire} action={action} onSubmit={verifier} noValidate>
+    <form ref={formulaire} action={action} onSubmit={verifier} noValidate className={rose.signInForm}>
       {suite ? <input type="hidden" name="suite" value={suite} /> : null}
       {code ? <input type="hidden" name="code" value={code} /> : null}
       {direct ? <input type="hidden" name="mode" value="direct" /> : null}
+
+      {direct ? <div className={rose.tabs} role="group" aria-label="Je me connecte en tant que">
+        <button type="button" className={rose.tab} aria-pressed={profil === "eleve"} data-active={profil === "eleve"} onClick={() => setProfil("eleve")}>Élève</button>
+        <button type="button" className={rose.tab} aria-pressed={profil === "professeur"} data-active={profil === "professeur"} onClick={() => setProfil("professeur")}>Professeur</button>
+      </div> : null}
 
       {general ? (
         <div
@@ -136,29 +144,34 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
       <div className="grid gap-5">
         <div>
           <label className="etiquette" htmlFor="identifiant">
-            {direct ? "E-mail professeur ou identifiant élève" : "Identifiant"}
+            {direct ? <><span className={rose.desktopLabel}>E-mail professeur ou identifiant élève</span><span className={rose.mobileLabel}>{profil === "professeur" ? "Adresse e-mail" : "Identifiant élève"}</span></> : "Identifiant"}
           </label>
-          <input
-            className="champ champ-acces"
+          <div className="relative">
+            {profil === "professeur" ? <Mail size={18} strokeWidth={1.7} className={rose.inputIcon} aria-hidden="true" /> : <UserRound size={18} strokeWidth={1.7} className={rose.inputIcon} aria-hidden="true" />}
+            <input
+            className={`champ champ-acces ${rose.iconField}`}
             id="identifiant"
             name="identifiant"
             type="text"
             autoComplete="username"
+            inputMode={direct && profil === "professeur" ? "email" : "text"}
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
             maxLength={direct ? 180 : 40}
             defaultValue={etat.saisie?.identifiant ?? ""}
+            placeholder={direct ? (profil === "professeur" ? "Ton adresse e-mail" : "L’identifiant de ta fiche") : undefined}
             required
             aria-invalid={manquants.identifiant || refusIdentifiants ? true : undefined}
             aria-describedby={decrit("identifiant", "aide-identifiant")}
           />
+          </div>
           {manquants.identifiant ? (
             <p id="erreur-identifiant" className="aide-champ m-0 font-semibold text-[color:var(--color-erreur)]">
               {manquants.identifiant}
             </p>
           ) : null}
-          <p id="aide-identifiant" className="aide-champ m-0">
+          <p id="aide-identifiant" className={`aide-champ m-0 ${rose.identifierHelp}`}>
             {direct ? <>Un professeur utilise son e-mail. Un élève utilise l’identifiant de sa fiche, pour toutes ses matières.</> : <>Celui de ta fiche de connexion, par exemple <span className="font-mono">camille.martin</span>.</>}
           </p>
         </div>
@@ -168,13 +181,14 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
             <label className="etiquette" htmlFor="motDePasse">
               Mot de passe
             </label>
-            <Link href={direct ? "/inscription/professeur/acces" : "/acces-oublie"} className={`text-[0.875rem] font-semibold text-[color:var(--color-accent)] ${mobileDesign && !direct ? m.desktop : ""}`}>
+            <Link href={lienOublie} className={`text-[0.875rem] font-semibold text-[color:var(--color-accent)] ${rose.desktopForgot} ${mobileDesign && !direct ? m.desktop : ""}`}>
               Mot de passe oublié ?
             </Link>
           </div>
           <div className="relative">
+            <LockKeyhole size={18} strokeWidth={1.7} className={rose.inputIcon} aria-hidden="true" />
             <input
-              className="champ champ-acces pr-[6rem]"
+              className={`champ champ-acces pr-[6rem] ${rose.iconField}`}
               id="motDePasse"
               name="motDePasse"
               type={visible ? "text" : "password"}
@@ -184,6 +198,7 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
               spellCheck={false}
               maxLength={200}
               value={motDePasse}
+              placeholder="Ton mot de passe"
               onChange={(e) => setMotDePasse(e.target.value)}
               required
               aria-invalid={manquants.motDePasse || refusIdentifiants ? true : undefined}
@@ -196,9 +211,11 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
               aria-controls="motDePasse"
               className="absolute inset-y-0 right-0 flex min-w-[5.5rem] items-center justify-center px-3 text-[0.875rem] font-semibold text-[color:var(--color-accent)]"
             >
-              {visible ? "Masquer" : "Afficher"}
+              <span className={rose.desktopLabel}>{visible ? "Masquer" : "Afficher"}</span>
+              <span className={rose.mobileLabel}>{visible ? <EyeOff size={19} aria-hidden="true" /> : <Eye size={19} aria-hidden="true" />}</span>
             </button>
           </div>
+          <Link href={lienOublie} className={rose.mobileForgot}>Mot de passe oublié ?</Link>
           {manquants.motDePasse ? (
             <p id="erreur-motDePasse" className="aide-champ m-0 font-semibold text-[color:var(--color-erreur)]">
               {manquants.motDePasse}
@@ -215,8 +232,8 @@ export function FormulaireConnexion({ suite = null, code = null, mobileDesign = 
         <label data-connexion-partage className="flex min-h-[48px] cursor-pointer items-start gap-3 rounded-[4px] border border-[color:var(--color-bordure)] px-4 py-3">
           <input type="checkbox" name="postePartage" value="oui" className="mt-1 size-5 shrink-0 accent-[color:var(--color-accent)]" aria-describedby="aide-poste-partage" />
           <span>
-            <span className="flex items-center gap-2 font-semibold"><Laptop size={17} strokeWidth={1.8} className="shrink-0 text-[color:var(--color-accent)]" aria-hidden="true" /><span><span className={mobileDesign ? m.desktop : undefined}>Appareil partagé</span>{mobileDesign ? <span className={m.mobile}>J’utilise un appareil partagé</span> : null}</span></span>
-            <span id="aide-poste-partage" className="aide-champ m-0 mt-0.5">
+            <span className="flex items-center gap-2 font-semibold"><Laptop size={17} strokeWidth={1.8} className={`${rose.partageIcon} shrink-0 text-[color:var(--color-accent)]`} aria-hidden="true" /><span><span className={mobileDesign ? m.desktop : undefined}>Appareil partagé</span>{mobileDesign ? <span className={m.mobile}>J’utilise un appareil partagé</span> : null}</span></span>
+            <span id="aide-poste-partage" className={`aide-champ m-0 mt-0.5 ${rose.partageHint}`}>
               <span className={mobileDesign ? m.desktop : undefined}>Pour un ordinateur du lycée ou utilisé par plusieurs personnes. La session se ferme à la fermeture du navigateur
               ou après 30 minutes sans activité, et ton établissement n&apos;est pas mémorisé.</span>
               {mobileDesign ? <span className={m.mobile}>Sur un ordinateur du lycée, par exemple. L’établissement ne sera pas mémorisé.</span> : null}
@@ -241,7 +258,7 @@ function BoutonConnexion() {
           Connexion…
         </>
       ) : (
-        <><span>Se connecter</span><ArrowRight size={18} strokeWidth={2} aria-hidden="true" className="transition-transform duration-200 motion-safe:group-hover:translate-x-1 motion-reduce:transition-none" /></>
+        <><span>Se connecter</span><ArrowRight size={18} strokeWidth={2} aria-hidden="true" className={`${rose.buttonArrow} transition-transform duration-200 motion-safe:group-hover:translate-x-1 motion-reduce:transition-none`} /></>
       )}
     </button>
   );

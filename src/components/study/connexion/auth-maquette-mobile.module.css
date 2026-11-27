@@ -1,0 +1,261 @@
+/* Maquette validée : rubans bordeaux, carte blush, formulaire compact.
+   Le bureau et le parcours de connexion historique gardent leur interface. */
+.hero, .brandMobile, .tabs, .mobileLabel, .mobileForgot, .inputIcon,
+.eyeButton, .steps, .classesLaterToggle, .mobileAction { display: none; }
+
+@media (max-width: 767px) {
+  .mobileScene {
+    position: relative;
+    isolation: isolate;
+    min-height: 100dvh;
+    background: linear-gradient(180deg, #f5d7e5 0%, #f6e6ec 72%, #f9eef2 100%);
+    color: #382332;
+  }
+
+  .mobileScene > header {
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 67px;
+    padding-inline: 24px;
+  }
+  .mobileScene > header > a:first-child { color: #fff; }
+  .mobileScene .brandDesktop { display: none; }
+  .mobileScene .brandMobile {
+    display: inline-block;
+    color: #fff;
+    font-size: 23px;
+    font-weight: 850;
+    letter-spacing: -.07em;
+    line-height: 1;
+  }
+  .brandMobile span { color: #ed91b5; }
+
+  .mobileScene .hero {
+    position: relative;
+    display: flex;
+    min-height: 314px;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    padding: 86px 26px 93px;
+    background-color: #310c26;
+    background-image: url('/illustrations/auth-rubans-roses.svg');
+    background-position: 50% 52%;
+    background-size: cover;
+    color: #fff;
+  }
+  .hero::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+    background: linear-gradient(90deg, rgb(37 10 29 / 84%) 0%, rgb(44 12 32 / 48%) 50%, rgb(44 12 32 / 7%) 100%);
+    pointer-events: none;
+  }
+  .heroText { position: relative; z-index: 1; }
+  .eyebrow { display: block; margin-bottom: 10px; color: #f9d7e6; font-size: 13px; font-weight: 600; letter-spacing: .005em; }
+  .heroTitle {
+    max-width: 350px;
+    margin: 0;
+    font-size: clamp(29px, 8.2vw, 36px);
+    font-weight: 850;
+    letter-spacing: -.055em;
+    line-height: 1.12;
+    text-wrap: balance;
+    text-shadow: 0 1px 10px rgb(26 7 19 / 22%);
+  }
+  .heroSubtitle { margin: 7px 0 0; font-size: 15px; line-height: 1.45; color: #ffe1ed; }
+
+  .mobileScene .layout {
+    position: relative;
+    z-index: 2;
+    display: block;
+    width: 100%;
+    max-width: 510px;
+    margin: -68px auto 0;
+    padding: 0 15px max(35px, env(safe-area-inset-bottom));
+  }
+  .mobileScene .card {
+    width: 100%;
+    max-width: none;
+    padding: 23px 19px 27px;
+    border: 1px solid rgb(255 255 255 / 78%);
+    border-radius: 25px;
+    background: linear-gradient(158deg, rgb(255 242 247 / 95%) 0%, rgb(244 213 226 / 97%) 100%);
+    box-shadow: 0 20px 45px -25px rgb(64 21 42 / 38%), inset 0 1px 0 rgb(255 255 255 / 68%);
+  }
+  .mobileScene .desktopTitle { display: none; }
+  .mobileScene .content { margin-top: 0; }
+
+  .mobileScene :global(.etiquette) {
+    display: block;
+    margin-bottom: 6px;
+    color: #4e3041;
+    font-size: 14px;
+    font-weight: 750;
+  }
+  .mobileScene :global(.champ-acces) {
+    min-height: 49px;
+    border: 1px solid #dcb9c9;
+    border-radius: 13px;
+    background: rgb(255 255 255 / 53%);
+    box-shadow: inset 0 1px 2px rgb(100 36 64 / 4%);
+    color: #352432;
+    font-size: 16px;
+  }
+  .mobileScene :global(.champ-acces)::placeholder { color: #887582; opacity: 1; font-size: 14px; }
+  .mobileScene :global(.champ-acces):focus-visible {
+    border-color: #78314e;
+    outline: 3px solid #e6b0c9;
+    outline-offset: 1px;
+  }
+  .mobileScene :global(.champ-acces)[aria-invalid="true"] { border-color: var(--color-erreur); }
+  .mobileScene .iconField { padding-left: 43px; }
+  .mobileScene .inputIcon {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    left: 14px;
+    display: block;
+    width: 18px;
+    height: 18px;
+    transform: translateY(-50%);
+    color: #81546b;
+    pointer-events: none;
+  }
+  .mobileScene .eyeButton {
+    position: absolute;
+    top: 0;
+    right: 2px;
+    display: grid;
+    min-width: 48px;
+    min-height: 49px;
+    place-items: center;
+    color: #75435d;
+  }
+  .mobileScene .eyeButton:focus-visible { outline: 2px solid #81445b; outline-offset: 2px; border-radius: 10px; }
+
+  .mobileScene .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin: 0 0 22px;
+    padding: 4px;
+    border: 1px solid rgb(255 255 255 / 72%);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 35%);
+  }
+  .tab {
+    display: grid;
+    min-height: 42px;
+    place-items: center;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #674d5b;
+    font-size: 14px;
+    font-weight: 700;
+    transition: background 170ms ease, color 170ms ease, box-shadow 170ms ease;
+  }
+  .tab[data-active="true"] {
+    background: linear-gradient(155deg, #81405d, #57203f);
+    box-shadow: 0 3px 9px rgb(99 37 67 / 24%);
+    color: #fff;
+  }
+  .tab:focus-visible { outline: 3px solid #a96383; outline-offset: 2px; }
+  .mobileScene .mobileLabel { display: inline; }
+  .mobileScene .desktopLabel, .mobileScene .desktopForgot { display: none; }
+  .mobileScene .mobileForgot {
+    display: block;
+    width: fit-content;
+    margin: 7px 0 0 auto;
+    padding: 6px 0;
+    color: #783b57;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .mobileScene .signInForm :global(button[aria-controls="motDePasse"]) { min-width: 48px; }
+  .mobileScene .identifierHelp { display: none; }
+  .mobileScene .signInForm > div:global(.grid) { gap: 14px; }
+  .mobileScene :global([data-connexion-partage]) {
+    min-height: 26px;
+    margin-top: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #705668;
+    font-size: 13px;
+  }
+  .mobileScene :global([data-connexion-partage] input[type="checkbox"]) { width: 18px; height: 18px; margin-top: 2px; }
+  .mobileScene .partageIcon { display: none; }
+  .mobileScene .partageHint {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .mobileScene :global(button[data-testid="connexion-valider"]) {
+    min-height: 49px;
+    margin-top: 17px;
+    border: 1px solid #662643;
+    border-radius: 13px;
+    background: linear-gradient(112deg, #762d52, #5a2041);
+    box-shadow: 0 6px 13px rgb(94 36 61 / 19%);
+    font-size: 15px;
+    font-weight: 760;
+  }
+  .mobileScene :global(button[data-testid="connexion-valider"])::before,
+  .mobileScene :global(button[data-testid="connexion-valider"])::after { display: none; }
+  .mobileScene .buttonArrow { display: none; }
+
+  .mobileScene .steps {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 21px;
+    color: #8c7282;
+    font-size: 12px;
+    font-weight: 650;
+  }
+  .step { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .step strong {
+    display: grid;
+    width: 27px;
+    height: 27px;
+    place-items: center;
+    border-radius: 50%;
+    background: #f8eaf0;
+    color: #816075;
+    font-size: 11px;
+  }
+  .step[data-active="true"] { color: #592840; }
+  .step[data-active="true"] strong { background: #692b49; color: #fff; }
+  .stepLine { flex: 1; height: 1px; background: #d4bac8; }
+  .mobileScene .signupForm { gap: 12px; }
+  .mobileScene .signupIntro { display: none; }
+  .mobileScene .classesLaterToggle { display: flex; align-items: center; gap: 9px; min-height: 34px; font-size: 13px; color: #685060; }
+  .classesLaterToggle input { width: 17px; height: 17px; accent-color: #81445b; }
+  .mobileScene .classesLater { display: none; }
+  .mobileScene .signupForm :global(.aide-champ) { font-size: 12px; line-height: 1.5; }
+  .mobileScene .signupForm :global(.bouton-primaire) {
+    min-height: 49px;
+    border: 1px solid #662643;
+    border-radius: 13px;
+    background: linear-gradient(112deg, #762d52, #5a2041);
+    box-shadow: 0 6px 13px rgb(94 36 61 / 19%);
+    font-weight: 760;
+  }
+  .mobileScene .mobileAction { display: inline; }
+  .mobileScene .desktopAction { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab { transition: none; }
+}
