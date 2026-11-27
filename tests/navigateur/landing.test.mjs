@@ -67,7 +67,7 @@ test("L02 — un visiteur cherche maths, se trompe, prend un indice puis réussi
   await onglet.getByRole("heading", { name: /On commence/ }).waitFor();
   assert.equal(await onglet.getByText("Mathématiques", { exact: true }).isVisible(), true);
   await onglet.getByRole("button", { name: "Sinus", exact: true }).click();
-  assert.equal(await onglet.getByText(/Essaie encore/).isVisible(), true);
+  await onglet.getByText("Pas encore. Essaie à nouveau, ou prends un indice.").waitFor();
   await onglet.getByRole("button", { name: "Voir un indice" }).click();
   assert.equal(await onglet.getByText(/Regarde l’angle marqué/).isVisible(), true);
   assert.equal(await onglet.getByRole("link", { name: "Activer mon accès" }).count(), 0);
@@ -132,7 +132,10 @@ test("L06 — la recherche français propose des méthodes avec un exemple", asy
   await champ(onglet).press("Enter");
   assert.equal(await onglet.getByRole("heading", { name: "Qu'est-ce que tu veux travailler ?" }).isVisible(), true);
   await onglet.getByText("Commentaire de texte", { exact: true }).click();
-  await onglet.getByText("Voir un exemple de réponse").click();
+  const commentaire = onglet.locator('details[name="methodes-francais"]').filter({
+    has: onglet.getByText("Commentaire de texte", { exact: true }),
+  });
+  await commentaire.getByText("Voir un exemple de réponse").click();
   assert.equal(await onglet.getByText(/personnifie la nuit/).isVisible(), true);
   await onglet.getByRole("button", { name: "Figures de style" }).click();
   assert.equal(await onglet.getByRole("heading", { name: /figure de style reconnais-tu/ }).isVisible(), true);
