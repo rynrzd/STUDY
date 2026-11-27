@@ -8,8 +8,6 @@ const dossierPolices = path.join(process.cwd(), "node_modules", "dejavu-fonts-tt
 const POLICE_REGULIERE = path.join(dossierPolices, "ttf", "DejaVuSans.ttf");
 const POLICE_GRASSE = path.join(dossierPolices, "ttf", "DejaVuSans-Bold.ttf");
 
-const LARGEUR_A4 = 595.28;
-const HAUTEUR_A4 = 841.89;
 const MARGE = 48;
 const COULEUR_TEXTE = "#17151a";
 const COULEUR_ACCENT = "#9b315f";
@@ -39,12 +37,14 @@ export async function fabriquerPdfCours(
 ): Promise<Buffer> {
   const pdf = new PDFDocument({
     size: "A4",
+    layout: reglages.modele === "projection" ? "landscape" : "portrait",
     margins: { top: MARGE, right: MARGE, bottom: MARGE + 16, left: MARGE },
     bufferPages: true,
     info: { Title: document.titre, Creator: "AvecStudy Studio" },
   });
-  pdf.registerFont("AvecStudy", POLICE_REGULIERE);
-  pdf.registerFont("AvecStudy Gras", POLICE_GRASSE);
+  const classique = reglages.modele === "classique";
+  pdf.registerFont("AvecStudy", classique ? path.join(dossierPolices, "ttf", "DejaVuSerif.ttf") : POLICE_REGULIERE);
+  pdf.registerFont("AvecStudy Gras", classique ? path.join(dossierPolices, "ttf", "DejaVuSerif-Bold.ttf") : POLICE_GRASSE);
   pdf.font("AvecStudy").fillColor(COULEUR_TEXTE);
 
   const morceaux: Buffer[] = [];
@@ -54,15 +54,27 @@ export async function fabriquerPdfCours(
     pdf.once("error", reject);
   });
 
-  pdf.font("AvecStudy Gras").fontSize(24 * reglages.taille).text(document.titre, {
-    lineGap: 2,
-  });
+  pdf.font("AvecStudy Gras").fontSize((reglages.modele === "projection" ? 32 : 24) * reglages.taille);
+  if (reglages.modele === "synthese") {
+    const largeur = pdf.page.width - 2 * MARGE;
+    const hauteur = pdf.heightOfString(document.titre, { width: largeur - 24 }) + 24;
+    pdf.rect(MARGE, MARGE, largeur, hauteur).fill("#69374a");
+    pdf.fillColor("#ffffff").text(document.titre, MARGE + 12, MARGE + 12, { width: largeur - 24 });
+    pdf.x = MARGE;
+    pdf.moveDown();
+  } else {
+    pdf.text(document.titre, { lineGap: 2 });
+  }
   pdf.moveDown(0.35);
-  pdf.strokeColor("#dca7be").lineWidth(1).moveTo(MARGE, pdf.y).lineTo(LARGEUR_A4 - MARGE, pdf.y).stroke();
+  pdf.strokeColor("#dca7be").lineWidth(1).moveTo(MARGE, pdf.y).lineTo(pdf.page.width - MARGE, pdf.y).stroke();
   pdf.moveDown(0.8);
 
   if (reglages.sommaire) dessinerSommaire(pdf, document, reglages);
-  for (const bloc of document.blocs) dessinerBloc(pdf, bloc, reglages);
+  for (const [index, bloc] of document.blocs.entries()) {
+    if (reglages.modele === "projection" && index > 0 && bloc.type === "titre" && bloc.niveau === 1) pdf.addPage();
+    pdf.x = MARGE;
+    dessinerBloc(pdf, bloc, reglages);
+  }
 
   if (reglages.numerosDePage) {
     const pages = pdf.bufferedPageRange();
@@ -86,7 +98,7 @@ function dessinerSommaire(pdf: PDFKit.PDFDocument, document: DocumentCours, regl
   assurerPlace(pdf, 46 + entrees.length * 18);
   const haut = pdf.y;
   const hauteur = 34 + entrees.length * 17;
-  pdf.roundedRect(MARGE, haut, LARGEUR_A4 - MARGE * 2, hauteur, 5).fill(COULEUR_DOUCE);
+  pdf.roundedRect(MARGE, haut, pdf.page.width - MARGE * 2, hauteur, 5).fill(COULEUR_DOUCE);
   pdf.fillColor(COULEUR_ACCENT).font("AvecStudy Gras").fontSize(9).text("SOMMAIRE", MARGE + 14, haut + 11);
   let y = haut + 29;
   for (const entree of entrees) {
@@ -95,7 +107,7 @@ function dessinerSommaire(pdf: PDFKit.PDFDocument, document: DocumentCours, regl
       .font("AvecStudy")
       .fontSize(10 * reglages.taille)
       .text(entree.texte, MARGE + 14 + (entree.niveau - 1) * 14, y, {
-        width: LARGEUR_A4 - MARGE * 2 - 28 - (entree.niveau - 1) * 14,
+        width: pdf.page.width - MARGE * 2 - 28 - (entree.niveau - 1) * 14,
         lineBreak: false,
         ellipsis: true,
       });
@@ -105,9 +117,9 @@ function dessinerSommaire(pdf: PDFKit.PDFDocument, document: DocumentCours, regl
 }
 
 function dessinerBloc(pdf: PDFKit.PDFDocument, bloc: BlocCours, reglages: ReglagesPresentation) {
-  const corps = 11 * reglages.taille;
+  const corps = (reglages.modele === "projection" ? 18 : reglages.modele === "aere" ? 13 : 11) * reglages.taille;
   const interligne = Math.max(1, (reglages.interligne - 1) * corps);
-  const options = { width: LARGEUR_A4 - MARGE * 2, lineGap: interligne };
+  const options = { width: pdf.page.width - MARGE * 2, lineGap: interligne };
 
   switch (bloc.type) {
     case "titre": {
@@ -123,13 +135,14 @@ function dessinerBloc(pdf: PDFKit.PDFDocument, bloc: BlocCours, reglages: Reglag
       return;
     case "encadre": {
       pdf.font("AvecStudy").fontSize(corps);
-      const largeur = LARGEUR_A4 - MARGE * 2 - 24;
+      const largeur = pdf.page.width - MARGE * 2 - 24;
       const hauteurTexte = pdf.heightOfString(bloc.texte, { width: largeur, lineGap: interligne });
       const hauteur = 37 + hauteurTexte;
-      assurerPlace(pdf, Math.min(hauteur, HAUTEUR_A4 - MARGE * 2));
+      assurerPlace(pdf, Math.min(hauteur, pdf.page.height - MARGE * 2));
       const haut = pdf.y;
-      pdf.roundedRect(MARGE, haut, LARGEUR_A4 - MARGE * 2, hauteur, 5).fill(COULEUR_DOUCE);
-      pdf.fillColor(COULEUR_ACCENT).font("AvecStudy Gras").fontSize(9).text(bloc.intitule.toLocaleUpperCase("fr-FR"), MARGE + 12, haut + 10, { lineBreak: false });
+      pdf.roundedRect(MARGE, haut, pdf.page.width - MARGE * 2, hauteur, 5).fill(COULEUR_DOUCE);
+      if (reglages.modele === "fiche") pdf.rect(MARGE, haut, 3, hauteur).fill(COULEUR_ACCENT);
+      pdf.fillColor(COULEUR_ACCENT).font("AvecStudy Gras").fontSize(9).text(bloc.intitule, MARGE + 12, haut + 10, { lineBreak: false });
       pdf.fillColor(COULEUR_TEXTE).font("AvecStudy").fontSize(corps).text(bloc.texte, MARGE + 12, haut + 27, { width: largeur, lineGap: interligne });
       pdf.y = haut + hauteur + 12;
       return;
@@ -140,7 +153,7 @@ function dessinerBloc(pdf: PDFKit.PDFDocument, bloc: BlocCours, reglages: Reglag
         assurerPlace(pdf, corps * 2.4);
         const haut = pdf.y;
         pdf.font("AvecStudy Gras").fontSize(corps).fillColor(COULEUR_ACCENT).text(marque, MARGE, haut, { width: 22, lineBreak: false });
-        pdf.font("AvecStudy").fillColor(COULEUR_TEXTE).text(element, MARGE + 25, haut, { width: LARGEUR_A4 - MARGE * 2 - 25, lineGap: interligne });
+        pdf.font("AvecStudy").fillColor(COULEUR_TEXTE).text(element, MARGE + 25, haut, { width: pdf.page.width - MARGE * 2 - 25, lineGap: interligne });
         pdf.moveDown(0.25);
       });
       pdf.moveDown(0.4);
@@ -152,8 +165,8 @@ function dessinerBloc(pdf: PDFKit.PDFDocument, bloc: BlocCours, reglages: Reglag
     case "image": {
       assurerPlace(pdf, 92);
       const haut = pdf.y;
-      pdf.save().dash(4, { space: 3 }).strokeColor("#aaa3ad").roundedRect(MARGE, haut, LARGEUR_A4 - MARGE * 2, 76, 5).stroke().restore();
-      pdf.font("AvecStudy").fontSize(9).fillColor("#6e6872").text(bloc.legende ?? bloc.alt ?? "Image à reprendre depuis l'original", MARGE + 16, haut + 28, { width: LARGEUR_A4 - MARGE * 2 - 32, align: "center" });
+      pdf.save().dash(4, { space: 3 }).strokeColor("#aaa3ad").roundedRect(MARGE, haut, pdf.page.width - MARGE * 2, 76, 5).stroke().restore();
+      pdf.font("AvecStudy").fontSize(9).fillColor("#6e6872").text(bloc.legende ?? bloc.alt ?? "Image à reprendre depuis l'original", MARGE + 16, haut + 28, { width: pdf.page.width - MARGE * 2 - 32, align: "center" });
       pdf.y = haut + 88;
       return;
     }
@@ -162,7 +175,7 @@ function dessinerBloc(pdf: PDFKit.PDFDocument, bloc: BlocCours, reglages: Reglag
 
 function dessinerTableau(pdf: PDFKit.PDFDocument, bloc: Extract<BlocCours, { type: "tableau" }>, taille: number) {
   const colonnes = Math.max(1, bloc.entetes.length, ...bloc.lignes.map((ligne) => ligne.length));
-  const largeurTotale = LARGEUR_A4 - MARGE * 2;
+  const largeurTotale = pdf.page.width - MARGE * 2;
   const largeur = largeurTotale / colonnes;
   const lignes = [bloc.entetes, ...bloc.lignes];
   lignes.forEach((ligne, index) => {
@@ -184,5 +197,5 @@ function dessinerTableau(pdf: PDFKit.PDFDocument, bloc: Extract<BlocCours, { typ
 }
 
 function assurerPlace(pdf: PDFKit.PDFDocument, hauteur: number) {
-  if (pdf.y + hauteur > HAUTEUR_A4 - MARGE - 16) pdf.addPage();
+  if (pdf.y + hauteur > pdf.page.height - MARGE - 16) pdf.addPage();
 }

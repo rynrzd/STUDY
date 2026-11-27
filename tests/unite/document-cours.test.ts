@@ -50,7 +50,7 @@ const COURS: DocumentCours = {
 /* ------------------------------------------------------------ Fidélité --- */
 
 test("changer de modèle ne change pas un caractère du cours", () => {
-  const modeles: Modele[] = ["classique", "fiche", "aere"];
+  const modeles: Modele[] = ["classique", "fiche", "aere", "synthese", "projection"];
   const reference = texteIntegral(COURS);
 
   for (const modele of modeles) {
