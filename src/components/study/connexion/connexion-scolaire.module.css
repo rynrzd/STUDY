@@ -1,0 +1,45 @@
+/* Habillage de /connexion uniquement : aucun changement au parcours d'inscription. */
+.scolaire :global(.champ-acces) {
+  min-height: 52px;
+  border: 1px solid #e5cfd9;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgb(91 48 66 / 3%);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.scolaire :global(.champ-acces):focus-visible {
+  border-color: #874b65;
+  outline: 3px solid #f0d8e2;
+  outline-offset: 2px;
+  box-shadow: 0 3px 10px rgb(91 48 66 / 8%);
+}
+
+.scolaire :global(.champ-acces)[aria-invalid="true"] {
+  border-color: var(--color-erreur);
+}
+
+.scolaire :global([data-connexion-partage]) {
+  border-color: #ead9e1;
+  border-radius: 14px;
+  background: #fcf7f9;
+}
+
+.scolaire :global([data-connexion-partage]):focus-within {
+  outline: 2px solid #e5c1d0;
+  outline-offset: 2px;
+}
+
+.scolaire :global([data-testid="connexion-valider"]) {
+  min-height: 52px;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 750;
+}
+
+@media (max-width: 767px) {
+  .scolaire :global(.champ-acces) {
+    border-color: #e5cfd9;
+    border-radius: 14px;
+  }
+}

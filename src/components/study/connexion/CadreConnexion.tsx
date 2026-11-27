@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { BookOpen, CalendarCheck, MessagesSquare, School, ArrowLeft, Check, UserRound, Users, ChevronRight } from "lucide-react";
+import { BookOpen, CalendarCheck, MessagesSquare, School, ArrowLeft, Check, UserRound, Users, ChevronRight, NotebookPen } from "lucide-react";
 import m from "./connexion-mobile.module.css";
+import scolaire from "./connexion-scolaire.module.css";
 import { MotSymbole } from "@/components/site/MotSymbole";
 import { ConteneurEffets } from "@/components/study/ConteneurEffets";
 
@@ -20,9 +21,12 @@ export function CadreConnexion({
   children,
   etapeMobile,
   publicCible = "eleve",
+  ambianceScolaire = false,
 }: {
   etapeMobile?: 1 | 2;
   publicCible?: "eleve" | "professeur";
+  /** Uniquement pour /connexion : amélioration visuelle sans modifier les autres parcours. */
+  ambianceScolaire?: boolean;
   titre: string;
   sousTitre?: React.ReactNode;
   children: React.ReactNode;
@@ -41,7 +45,7 @@ export function CadreConnexion({
   ];
   return (
     <ConteneurEffets>
-      <div className={`sans-debordement min-h-dvh bg-[color:var(--color-fond)] ${etapeMobile ? m.root : ""}`} data-etape={etapeMobile}>
+      <div className={`sans-debordement min-h-dvh bg-[color:var(--color-fond)] ${etapeMobile ? m.root : ""} ${ambianceScolaire ? scolaire.scolaire : ""}`} data-etape={etapeMobile}>
         <header className="mx-auto flex h-16 w-full max-w-[1200px] items-center px-5 sm:px-8 lg:h-[72px]">
           <Link href="/" aria-label="AvecStudy, retour au site" className="inline-flex min-h-[44px] items-center text-[color:var(--color-encre)]">
             <MotSymbole titre="Study" className="block h-auto w-[80px] lg:w-[92px]" />
@@ -52,12 +56,13 @@ export function CadreConnexion({
           {etapeMobile ? <Link href="/" className={m.back}><ArrowLeft size={16} aria-hidden="true" /> Retour au site</Link> : null}
         </header>
         <div className="mx-auto grid w-full max-w-[1200px] gap-10 px-5 pb-[max(40px,env(safe-area-inset-bottom))] sm:px-8 lg:grid-cols-[2fr_3fr] lg:items-center lg:gap-16 lg:py-10">
-          <aside className="hidden rounded-[var(--radius-grand)] bg-[color:var(--color-rose-clair)] p-12 lg:block" aria-label="AvecStudy en bref">
-            <p className="m-0 text-[2.75rem] font-extrabold leading-[1.08] tracking-[-0.045em]">{professeur ? "Tes idées méritent une belle classe." : "Ta classe commence ici."}</p>
-            <ul className="m-0 mt-10 grid list-none gap-6 p-0">
+          <aside className={`relative hidden bg-[color:var(--color-rose-clair)] p-12 lg:block ${ambianceScolaire ? "overflow-hidden rounded-[26px] border border-white/80 shadow-[0_16px_45px_-26px_rgba(91,48,66,0.3)]" : "rounded-[var(--radius-grand)]"}`} aria-label="AvecStudy en bref">
+            {ambianceScolaire ? <span aria-hidden="true" className="absolute right-6 top-5 grid size-14 -rotate-12 place-items-center rounded-[18px] bg-white/55 text-[color:var(--color-accent)] shadow-sm"><NotebookPen size={29} strokeWidth={1.6} /></span> : null}
+            <p className={`relative m-0 text-[2.75rem] font-extrabold leading-[1.08] tracking-[-0.045em] ${ambianceScolaire ? "max-w-[290px]" : ""}`}>{professeur ? "Tes idées méritent une belle classe." : "Ta classe commence ici."}</p>
+            <ul className="relative m-0 mt-10 grid list-none gap-6 p-0">
               {points.map((l) => (
                 <li key={l.titre} className="flex items-start gap-4">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[var(--rayon-m)] bg-[color:var(--color-surface)] text-[color:var(--color-accent)]">
+                  <span className={`grid h-11 w-11 shrink-0 place-items-center bg-[color:var(--color-surface)] text-[color:var(--color-accent)] ${ambianceScolaire ? "rounded-[14px] border border-white/90 shadow-[0_4px_12px_-7px_rgba(91,48,66,0.35)]" : "rounded-[var(--rayon-m)]"}`}>
                     <l.icone size={22} strokeWidth={1.75} aria-hidden="true" />
                   </span>
                   <span>
@@ -70,7 +75,7 @@ export function CadreConnexion({
           </aside>
 
           <main id="contenu" className="w-full">
-            <div className="mx-auto w-full max-w-[440px] lg:rounded-[var(--radius-carte)] lg:border lg:border-[color:var(--color-bordure)] lg:bg-[color:var(--color-surface)] lg:p-8">
+            <div className={`mx-auto w-full max-w-[440px] lg:border lg:border-[color:var(--color-bordure)] lg:bg-[color:var(--color-surface)] lg:p-8 ${ambianceScolaire ? "lg:rounded-[24px] lg:border-[#eee1e6] lg:shadow-[0_18px_50px_-28px_rgba(91,48,66,0.24)]" : "lg:rounded-[var(--radius-carte)]"}`}>
               {etapeMobile ? <div className={m.mobile}>
                 <ol className={m.progress} aria-label="Étapes de connexion">
                   <li aria-current={etapeMobile === 1 ? "step" : undefined}><span className={m.active}>{etapeMobile === 2 ? <Check size={16} aria-hidden="true" /> : "1"}</span>Établissement</li>
