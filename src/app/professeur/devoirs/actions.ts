@@ -86,6 +86,8 @@ export async function creerUnDevoir(
   const analyse = SCHEMA_DEVOIR.extend({
     cours: z.string().uuid(),
     seance: z.string().uuid().nullable(),
+    idempotence: z.string().uuid(),
+    publication: z.enum(["brouillon", "publier"]),
   }).safeParse({
     cours: donnees.get("cours"),
     seance: donnees.get("seance") === "" ? null : donnees.get("seance"),
@@ -96,6 +98,8 @@ export async function creerUnDevoir(
     mode: donnees.get("mode") ?? "numerique",
     remplacement: donnees.get("remplacement") ?? "oui",
     retard: donnees.get("retard") ?? "accepter_avec_retard",
+    idempotence: donnees.get("idempotence"),
+    publication: donnees.get("publication") ?? "brouillon",
   });
 
   if (!analyse.success) {
@@ -130,13 +134,24 @@ export async function creerUnDevoir(
     mode: analyse.data.mode,
     remplacementAutorise: analyse.data.remplacement === "oui",
     politiqueRetard: analyse.data.retard,
+    idempotence: analyse.data.idempotence,
   });
 
   if (identifiant === null) {
     return { etat: "erreur", message: "Le devoir n'a pas pu être créé." };
   }
 
-  redirect(`/professeur/devoirs/${identifiant}`);
+  if (analyse.data.publication === "publier") {
+    const publication = await publierDevoir({ jeton: session.jeton, devoir: identifiant, publier: true });
+    revalidatePath("/professeur/devoirs");
+    revalidatePath("/app/devoirs");
+    revalidatePath("/app");
+    // Le devoir existe deja si la publication echoue : toujours rediriger
+    // dessus plutot que proposer un second envoi qui pourrait le dupliquer.
+    redirect(`/professeur/devoirs/${identifiant}?publication=${publication.ok ? "publie" : "echec"}`);
+  }
+
+  redirect(`/professeur/devoirs/${identifiant}?publication=brouillon`);
 }
 
 /* -------------------------------------------------------------------------- */

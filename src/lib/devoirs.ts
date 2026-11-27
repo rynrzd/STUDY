@@ -743,6 +743,7 @@ export async function creerDevoir(options: {
   mode: ModeRemise;
   remplacementAutorise: boolean;
   politiqueRetard: "accepter_avec_retard" | "fermer";
+  idempotence?: string;
 }): Promise<string | null> {
   const client = clientUtilisateur(options.jeton);
   let exercices = client.from("exercices").select("notion_id")
@@ -760,6 +761,10 @@ export async function creerDevoir(options: {
   const { data, error } = await client
     .from("assignments")
     .insert({
+      // L'identifiant de ligne est deja UNIQUE en production. Le reutiliser
+      // pour la tentative de creation rend les requetes rejouables sans
+      // ajouter de colonne ni appliquer de migration.
+      ...(options.idempotence ? { id: options.idempotence } : {}),
       organization_id: options.organisation,
       teaching_space_id: options.cours,
       lesson_id: options.seance,
@@ -776,6 +781,19 @@ export async function creerDevoir(options: {
     })
     .select("id")
     .single();
+
+  // La contrainte unique arbitre aussi deux requetes qui arrivent exactement
+  // au meme instant. Retrouver le devoir deja cree evite un nouveau brouillon
+  // si le reseau a perdu la premiere redirection.
+  if (error?.code === "23505" && options.idempotence) {
+    const { data: dejaCree, error: erreurRelecture } = await client
+      .from("assignments")
+      .select("id")
+      .eq("id", options.idempotence)
+      .eq("created_by", options.auteur)
+      .maybeSingle();
+    if (erreurRelecture === null && dejaCree !== null) return dejaCree.id;
+  }
 
   if (error !== null || data === null) {
     journaliser("devoirs.creer", error?.code);
