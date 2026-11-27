@@ -62,6 +62,29 @@ test("numéroter un support de plusieurs pages conserve chaque page et son conte
   assert.ok(originales.length > 1);
   assert.equal(numerotees.length, originales.length);
   originales.forEach((texte, i) => {
-    assert.equal(numerotees[i]?.trimEnd(), `${texte.trimEnd()}\n${i + 1}`);
+    assert.ok(texte.includes("AVECSTUDY · COURS"), "le document garde son en-tête");
+    assert.ok(numerotees[i]?.includes(texte.trim()), "la pagination ne doit retirer aucun contenu");
+    assert.ok(numerotees[i]?.includes(`${i + 1} / ${originales.length}`), "le pied de page indique le total");
   });
+});
+
+test("le titre importé n'apparaît qu'une fois sur la première page", async () => {
+  const document = { ...cours, titre: "Énergie", blocs: [
+    { type: "titre" as const, niveau: 1 as const, texte: "Énergie" },
+    { type: "paragraphe" as const, texte: "Cours de physique" },
+  ] };
+  const pdf = await getDocumentProxy(new Uint8Array(await fabriquerPdfCours(document, REGLAGES_PAR_DEFAUT)));
+  const { text } = await extractText(pdf, { mergePages: true });
+  assert.equal(text.split("\n").filter((ligne) => ligne === "Énergie").length, 1);
+});
+
+test("un encadré très long se poursuit sur plusieurs pages sans perdre sa conclusion", async () => {
+  const long = "Une propriété importante du système.".repeat(180);
+  const document = { ...cours, blocs: [
+    { type: "encadre" as const, intitule: "Théorème", texte: `${long} CONCLUSION INTACTE.`, origine: { page: 1 } },
+  ] };
+  const pdf = await getDocumentProxy(new Uint8Array(await fabriquerPdfCours(document, { ...REGLAGES_PAR_DEFAUT, modele: "fiche" })));
+  const { text } = await extractText(pdf, { mergePages: true });
+  assert.ok(pdf.numPages >= 2, "l'encadré doit pouvoir continuer sur la page suivante");
+  assert.ok(text.includes("CONCLUSION INTACTE."));
 });
