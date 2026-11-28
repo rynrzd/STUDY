@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Printer } from "lucide-react";
+import { Copy, Printer, Share2 } from "lucide-react";
 import Image from "next/image";
 import QRCode from "qrcode";
 import { useActionState, useEffect, useState, useSyncExternalStore } from "react";
@@ -25,7 +25,7 @@ import { AvisVisibilite } from "./ui";
 /* Accès                                                                       */
 /* -------------------------------------------------------------------------- */
 
-function Copier({ texte }: { texte: string }) {
+function Copier({ texte, libelle = "Copier" }: { texte: string; libelle?: string }) {
   const [copie, setCopie] = useState(false);
   return (
     <button
@@ -40,7 +40,7 @@ function Copier({ texte }: { texte: string }) {
         }
       }}
     >
-      <Copy size={16} strokeWidth={1.75} aria-hidden="true" /> {copie ? "Copié" : "Copier"}
+      <Copy size={16} strokeWidth={1.75} aria-hidden="true" /> {copie ? "Copié" : libelle}
     </button>
   );
 }
@@ -125,25 +125,40 @@ function FicheInvitationImprimable({ url, nom }: { url: string; nom: string }) {
 /** Lien d'invitation nominatif : montré une fois, à remettre en main propre ou imprimer. */
 export function FormulaireInvitationEleve({ classe, profil, nom, impression = true }: { classe: string; profil: string; nom: string; impression?: boolean }) {
   const [etat, action] = useActionState<EtatFormulaire, FormData>(creerInvitation.bind(null, classe), {});
+  const partageDisponible = useSyncExternalStore(() => () => {}, () => typeof navigator.share === "function", () => false);
+  const [erreurPartage, setErreurPartage] = useState(false);
   if (etat.ok && etat.message) {
+    const url = etat.message;
     return (
       <div className="min-w-0 rounded-[var(--rayon-m)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-4">
         {impression ? <FicheInvitationImprimable url={etat.message} nom={nom} /> : null}
         <p role="status" className="m-0 font-bold text-[color:var(--color-succes)]">Invitation prête pour {nom}</p>
-        <p className="m-0 mt-2 text-sm leading-6 text-[color:var(--color-encre-faible)]">
-          Envoie ce lien uniquement à cet élève, ou montre-lui le QR code. Il pourra choisir son mot de passe.
-        </p>
-        <p className="m-0 mt-3 break-all rounded-lg bg-[color:var(--color-surface-douce)] p-3 font-mono text-xs">{etat.message}</p>
-        <CodeQr texte={etat.message} nom={nom} />
-        <p className="m-0 mt-2 text-xs leading-5 text-[color:var(--color-encre-faible)]">Lien valable 7 jours, à usage unique. Copie-le maintenant : il ne sera plus affiché après avoir quitté cette page.</p>
-        <div className="mt-3 flex flex-wrap gap-2 print:hidden">
-          <Copier texte={etat.message} />
-          {impression ? (
-            <button type="button" className="bouton bouton-secondaire bouton-compact" onClick={() => window.print()}>
-              <Printer size={16} strokeWidth={1.75} aria-hidden="true" /> Imprimer le QR code
+        <p className="meta mt-1">Lien personnel à usage unique, valable 7 jours. Transmets-le avant de quitter cette page.</p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {partageDisponible && (
+            <button type="button" className="bouton bouton-primaire" onClick={async () => {
+              setErreurPartage(false);
+              try {
+                await navigator.share({ title: "Invitation AvecStudy", url });
+              } catch (erreur) {
+                if (!(erreur instanceof DOMException && erreur.name === "AbortError")) setErreurPartage(true);
+              }
+            }}>
+              <Share2 size={16} aria-hidden="true" /> Partager le lien
             </button>
-          ) : null}
+          )}
+          <Copier texte={url} libelle="Copier le lien" />
         </div>
+        {erreurPartage && <p role="status" className="meta">Partage indisponible. Tu peux copier le lien ci-dessous.</p>}
+        <details className="mt-2">
+          <summary className="cursor-pointer py-2 text-sm font-semibold text-[color:var(--color-accent)]">Montrer le QR à {nom}</summary>
+          <CodeQr texte={url} nom={nom} />
+          {impression && <button type="button" className="bouton bouton-secondaire mt-2" onClick={() => window.print()}><Printer size={16} aria-hidden="true" /> Imprimer</button>}
+        </details>
+        <details>
+          <summary className="cursor-pointer py-2 text-sm text-[color:var(--color-encre-faible)]">Afficher le lien personnel</summary>
+          <p className="m-0 select-all break-all font-mono text-xs">{url}</p>
+        </details>
       </div>
     );
   }

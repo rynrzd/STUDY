@@ -164,7 +164,7 @@ export default async function PageClasses({
             <>
               <p id="inviter-eleves" className="m-0 mt-5 text-[length:var(--text-tableau)] text-[color:var(--color-encre-faible)]">
                 {eleves.length} élève{eleves.length > 1 ? "s" : ""}
-                {creationAutonome && eleves.some((eleve) => peutPreparerInvitationEleve(eleve.etatCompte)) ? " · Choisis « Inviter » à côté d'un compte à activer pour préparer un lien personnel." : ""}
+                {creationAutonome && eleves.some((eleve) => peutPreparerInvitationEleve(eleve.etatCompte)) ? " · Choisis « Préparer son invitation » à côté d'un compte à activer pour préparer un lien personnel." : ""}
               </p>
               <ul className="m-0 mt-3 grid list-none gap-3 p-0 sm:grid-cols-2">
                 {eleves.map((eleve) => (
@@ -177,11 +177,9 @@ export default async function PageClasses({
                       {eleve.prenom}
                     </p>
                     {creationAutonome && peutPreparerInvitationEleve(eleve.etatCompte) ? (
-                      <details className="mt-2 min-w-0 border-t border-[color:var(--color-bordure)] pt-2">
-                        <summary className="min-h-10 cursor-pointer py-2 text-sm font-semibold text-[color:var(--color-accent)]">Inviter cet élève</summary>
-                        <p className="mb-2 mt-1 text-xs leading-5 text-[color:var(--color-encre-faible)]">Le lien sera à remettre à {eleve.prenom} uniquement.</p>
+                      <div className="mt-2 min-w-0">
                         <FormulaireInvitationEleve classe={choisie.id} profil={eleve.id} nom={`${eleve.prenom} ${eleve.nom}`} />
-                      </details>
+                      </div>
                     ) : creationAutonome && eleve.etatCompte === "actif" ? (
                       <p className="meta mt-2">Compte déjà activé : aucune invitation nécessaire.</p>
                     ) : null}
