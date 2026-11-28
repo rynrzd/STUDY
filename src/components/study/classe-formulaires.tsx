@@ -3,7 +3,7 @@
 import { Copy, Printer, Share2 } from "lucide-react";
 import Image from "next/image";
 import QRCode from "qrcode";
-import { useActionState, useEffect, useState, useSyncExternalStore } from "react";
+import { useActionState, useEffect, useId, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import {
   changerDecision,
@@ -47,8 +47,45 @@ function Copier({ texte, libelle = "Copier" }: { texte: string; libelle?: string
 
 function CodeQr({ texte, nom }: { texte: string; nom: string }) {
   const [image, setImage] = useState<string | null>(null);
-  useEffect(() => { void QRCode.toDataURL(texte, { width: 220, margin: 2, errorCorrectionLevel: "M" }).then(setImage); }, [texte]);
+  useEffect(() => {
+    let actif = true;
+    void QRCode.toDataURL(texte, { width: 220, margin: 2, errorCorrectionLevel: "M" })
+      .then((url) => { if (actif) setImage(url); })
+      .catch(() => { if (actif) setImage(null); });
+    return () => { actif = false; };
+  }, [texte]);
   return image ? <Image src={image} width={220} height={220} unoptimized alt={`QR code personnel pour ${nom}`} className="mt-3 rounded bg-white p-2" /> : null;
+}
+
+/** La commande d'impression d'une invitation ne doit pas imprimer les jetons des autres élèves. */
+function imprimerInvitation(id: string) {
+  const fiche = document.getElementById(id);
+  if (!fiche?.classList.contains("fiche-impression")) return;
+
+  // Une impression précédente interrompue ne doit jamais sélectionner une autre fiche.
+  document.querySelectorAll(".fiche-impression--cible").forEach((element) => element.classList.remove("fiche-impression--cible"));
+  fiche.classList.add("fiche-impression--cible");
+  document.body.classList.add("avec-fiche-cible");
+
+  const media = window.matchMedia("print");
+  let termine = false;
+  const nettoyer = () => {
+    if (termine) return;
+    termine = true;
+    fiche.classList.remove("fiche-impression--cible");
+    document.body.classList.remove("avec-fiche-cible");
+    window.removeEventListener("afterprint", nettoyer);
+    media.removeEventListener("change", surChangement);
+    window.clearTimeout(secours);
+  };
+  const surChangement = (evenement: MediaQueryListEvent) => {
+    if (!evenement.matches) nettoyer();
+  };
+  window.addEventListener("afterprint", nettoyer);
+  media.addEventListener("change", surChangement);
+  // Certains navigateurs n'émettent ni afterprint ni le changement du media.
+  const secours = window.setTimeout(nettoyer, 60_000);
+  try { window.print(); } catch { nettoyer(); }
 }
 
 /** Code de classe : affiché une seule fois, puis seule son empreinte existe. */
@@ -91,7 +128,7 @@ export function FormulaireCode({ classe }: { classe: string }) {
 }
 
 /** La fiche imprimable est séparée du résultat à l'écran : `.fiche-impression` est masquée sur mobile et ordinateur. */
-function FicheInvitationImprimable({ url, nom }: { url: string; nom: string }) {
+function FicheInvitationImprimable({ url, nom, id }: { url: string; nom: string; id: string }) {
   const dansLeNavigateur = useSyncExternalStore(() => () => {}, () => true, () => false);
 
   useEffect(() => {
@@ -107,13 +144,13 @@ function FicheInvitationImprimable({ url, nom }: { url: string; nom: string }) {
   if (!dansLeNavigateur) return null;
 
   return createPortal(
-    <section className="fiche-impression" aria-hidden="true">
+    <section id={id} className="fiche-impression" aria-hidden="true">
       <div className="mx-auto max-w-[140mm] text-center text-black">
         <p className="m-0 text-2xl font-bold">AvecStudy.</p>
         <h2 className="mb-0 mt-8 text-2xl font-bold">Ton invitation personnelle</h2>
         <p className="mt-2 text-lg">{nom}</p>
         <p className="mt-6 text-base">Scanne ce QR code pour activer ton compte et choisir ton mot de passe.</p>
-        <div className="flex justify-center"><CodeQr texte={url} nom={nom} /></div>
+        <div className="flex justify-center"><CodeQr key={url} texte={url} nom={nom} /></div>
         <p className="mt-5 break-all font-mono text-sm">{url}</p>
         <p className="mt-6 text-sm">Ce lien est personnel, utilisable une seule fois et valable 7 jours. Ne le partage pas.</p>
       </div>
@@ -124,6 +161,7 @@ function FicheInvitationImprimable({ url, nom }: { url: string; nom: string }) {
 
 /** Lien d'invitation nominatif : montré une fois, à remettre en main propre ou imprimer. */
 export function FormulaireInvitationEleve({ classe, profil, nom, impression = true }: { classe: string; profil: string; nom: string; impression?: boolean }) {
+  const idImpression = useId();
   const [etat, action] = useActionState<EtatFormulaire, FormData>(creerInvitation.bind(null, classe), {});
   const partageDisponible = useSyncExternalStore(() => () => {}, () => typeof navigator.share === "function", () => false);
   const [erreurPartage, setErreurPartage] = useState(false);
@@ -131,7 +169,7 @@ export function FormulaireInvitationEleve({ classe, profil, nom, impression = tr
     const url = etat.message;
     return (
       <div className="min-w-0 rounded-[var(--rayon-m)] border border-[color:var(--color-bordure)] bg-[color:var(--color-surface)] p-4">
-        {impression ? <FicheInvitationImprimable url={etat.message} nom={nom} /> : null}
+        {impression ? <FicheInvitationImprimable url={etat.message} nom={nom} id={idImpression} /> : null}
         <p role="status" className="m-0 font-bold text-[color:var(--color-succes)]">Invitation prête pour {nom}</p>
         <p className="meta mt-1">Lien personnel à usage unique, valable 7 jours. Transmets-le avant de quitter cette page.</p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -152,8 +190,8 @@ export function FormulaireInvitationEleve({ classe, profil, nom, impression = tr
         {erreurPartage && <p role="status" className="meta">Partage indisponible. Tu peux copier le lien ci-dessous.</p>}
         <details className="mt-2">
           <summary className="cursor-pointer py-2 text-sm font-semibold text-[color:var(--color-accent)]">Montrer le QR à {nom}</summary>
-          <CodeQr texte={url} nom={nom} />
-          {impression && <button type="button" className="bouton bouton-secondaire mt-2" onClick={() => window.print()}><Printer size={16} aria-hidden="true" /> Imprimer</button>}
+          <CodeQr key={url} texte={url} nom={nom} />
+          {impression && <button type="button" className="bouton bouton-secondaire mt-2" onClick={() => imprimerInvitation(idImpression)}><Printer size={16} aria-hidden="true" /> Imprimer cette invitation</button>}
         </details>
         <details>
           <summary className="cursor-pointer py-2 text-sm text-[color:var(--color-encre-faible)]">Afficher le lien personnel</summary>

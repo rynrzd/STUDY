@@ -755,6 +755,16 @@
     page-break-inside: avoid;
   }
 
+  /* Le bouton d'une invitation nominative sélectionne uniquement sa fiche.
+     L'impression groupée des fiches d'accès reste inchangée sans cette classe. */
+  body.avec-fiche-cible .fiche-impression:not(.fiche-impression--cible) {
+    display: none !important;
+  }
+  body.avec-fiche-cible .fiche-impression--cible {
+    break-after: auto !important;
+    page-break-after: auto !important;
+  }
+
   .fiche-impression * {
     break-inside: avoid;
     page-break-inside: avoid;
